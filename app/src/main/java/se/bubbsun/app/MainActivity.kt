@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.lerp
@@ -69,6 +71,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -133,6 +136,7 @@ private val italian=mapOf(
     "Kosmiskt och Hjärtligt tema" to "Temi Cosmico e del Cuore","Exklusiva ikoner och färger" to "Icone e colori esclusivi","Supporterdekorationer och glow" to "Decorazioni supporter e bagliore","Klingon som appspråk" to "Klingon come lingua dell'app",
     "Ingen betalning genomförs. Knappen aktiverar bara Supporter Preview på den här enheten." to "Non viene effettuato alcun pagamento. Il pulsante attiva solo Supporter Preview su questo dispositivo.",
     "AKTIVERA SUPPORTER GRATIS" to "ATTIVA SUPPORTER GRATIS","Tack för att du stödjer Bubbsun!" to "Grazie per sostenere Bubbsun!","UTFORSKA SUPPORTERINNEHÅLL" to "ESPLORA I CONTENUTI SUPPORTER","ÅTERSTÄLL KÖP  •  KOMMER SENARE" to "RIPRISTINA ACQUISTI  •  PROSSIMAMENTE"
+    ,"VERSIONER & NYHETER" to "VERSIONI E NOVITÀ","NYTT" to "NOVITÀ"
     ,"Valfri mängd" to "Quantità facoltativa","Mängd/enhet, t.ex. 2 paket" to "Quantità/unità, es. 2 confezioni","Skriv listans namn…" to "Scrivi il nome della lista…","Skriv ett namn" to "Scrivi un nome","Namnet finns redan" to "Il nome esiste già",
     "MARKERA ALLA" to "SELEZIONA TUTTO","FÄRG" to "COLORE","1 VECKA" to "1 SETTIMANA","1 MÅNAD" to "1 MESE","1 ÅR" to "1 ANNO","LIVSTID" to "SEMPRE",
     "Alla saker i listan försvinner." to "Tutti gli articoli della lista verranno eliminati.","Det går inte att ångra." to "Questa azione non può essere annullata.","Neon" to "Neon",
@@ -154,6 +158,7 @@ private val klingon=mapOf(
     "Kosmiskt och Hjärtligt tema" to "QIb TIQ je ngoq","Exklusiva ikoner och färger" to "Deghmey rItlhmey le' je","Supporterdekorationer och glow" to "Supporter Deghmey wov je","Klingon som appspråk" to "tlhIngan Hol app Hol",
     "Ingen betalning genomförs. Knappen aktiverar bara Supporter Preview på den här enheten." to "DaH pagh DIl. janvamDaq Supporter Preview neH chu' leQ.",
     "AKTIVERA SUPPORTER GRATIS" to "SUPPORTER YICHU' DIlnISBE'","Tack för att du stödjer Bubbsun!" to "Bubbsun DaQaHmo' qatlho'!","UTFORSKA SUPPORTERINNEHÅLL" to "SUPPORTER Dochmey YIlegh","ÅTERSTÄLL KÖP  •  KOMMER SENARE" to "je'meH Dochmey cheghmoH  •  pIq"
+    ,"VERSIONER & NYHETER" to "MUGHMEY DE' CHU' JE","NYTT" to "CHU'"
     ,"Valfri mängd" to "mI' poQbe'","Mängd/enhet, t.ex. 2 paket" to "mI' pagh tup","Skriv listans namn…" to "tetlh pong yIghItlh…","Skriv ett namn" to "pong yIghItlh","Namnet finns redan" to "pong tu'lu'",
     "MARKERA ALLA" to "Hoch yIwIv","FÄRG" to "rItlh","1 VECKA" to "Hogh wa'","1 MÅNAD" to "jar wa'","1 ÅR" to "DIS wa'","LIVSTID" to "yIn Hoch",
     "Alla saker i listan försvinner." to "tetlh Dochmey Hoch teqlu'.","Det går inte att ångra." to "choHlaHbe'.","Neon" to "neon",
@@ -322,6 +327,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var activeUserId by remember{mutableStateOf(store.loadUserId(users.first().id))}
     var themeId by remember{mutableStateOf(store.loadThemeId())}
     var screen by remember{mutableStateOf("lists")}
+    val navigationHistory=remember{mutableStateListOf<String>()}
+    var openSupportSettings by remember{mutableStateOf(false)}
     var selectedListId by remember{mutableStateOf<String?>(null)}
     var menuOpen by remember{mutableStateOf(false)}
     val initialLanguage=remember{store.loadLanguage().also{appLanguageState.value=it}}
@@ -338,10 +345,17 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
     val theme=appThemes.firstOrNull{it.id==themeId}?:appThemes.first()
     val p=theme.palette
+    fun navigate(target:String){
+        if(target!=screen){navigationHistory.add(screen);screen=target}
+    }
+    fun navigateBack(){
+        screen=if(navigationHistory.isNotEmpty())navigationHistory.removeAt(navigationHistory.lastIndex) else "lists"
+        if(screen!="list")selectedListId=null
+    }
     BackHandler {
         when {
             menuOpen -> menuOpen=false
-            screen!="lists" -> {screen="lists";selectedListId=null}
+            screen!="lists" -> navigateBack()
             exitConfirmation -> showExitDialog=true
             else -> (context as? Activity)?.finish()
         }
@@ -353,20 +367,20 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 if(theme.id=="cosmic") CosmicBackground()
                 if(theme.id=="heart") HeartBackground()
                 Column(Modifier.fillMaxSize()){
-                    AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={screen="support"})
+                    AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={navigate("support")})
                     when(screen){
-                        "lists"->ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;screen="list"},onAdd={screen="addList"},onSave={store.saveLists(lists)})
-                        "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={screen="support"},onBack={screen="lists"},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color));store.saveLists(lists);screen="lists"})
-                        "stats"->StatsScreen(lists,events,users,p,onBack={screen="lists"})
-                        "settings"->SettingsScreen(p,language,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,onSupporterInfo={screen="support"},onBack={screen="lists"},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
-                        "users"->UsersScreen(users,lists,events,activeUserId,p,supporterPreview,onSupporterInfo={screen="support"},onBack={screen="lists"},onActivate={activeUserId=it;store.saveUserId(it)},onSave={if(users.none{it.id==activeUserId})activeUserId=users.first().id;store.saveUsers(users);store.saveLists(lists);store.saveEvents(events);store.saveUserId(activeUserId)})
-                        "about"->AboutScreen(p,supporterPreview,onSupporterInfo={screen="support"},onVersions={screen="versions"},onBack={screen="lists"})
-                        "support"->SupportScreen(p,supporterPreview,onBack={screen="lists"},onActivate={supporterPreview=true;store.saveSupporterPreview(true)})
-                        "versions"->VersionsScreen(p,onBack={screen="about"})
-                        else->{val l=lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,users,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={screen="support"},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={screen="lists"},onSave={store.saveLists(lists)},onEvent={events.add(it);store.saveEvents(events)})}
+                        "lists"->ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
+                        "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color));store.saveLists(lists);navigateBack()})
+                        "stats"->StatsScreen(lists,events,users,p,onBack={navigateBack()})
+                        "settings"->SettingsScreen(p,language,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,openSupportSettings,onSupporterInfo={navigate("support")},onBack={navigateBack()},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
+                        "users"->UsersScreen(users,lists,events,activeUserId,p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onActivate={activeUserId=it;store.saveUserId(it)},onSave={if(users.none{it.id==activeUserId})activeUserId=users.first().id;store.saveUsers(users);store.saveLists(lists);store.saveEvents(events);store.saveUserId(activeUserId)})
+                        "about"->AboutScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onVersions={navigate("versions")},onBack={navigateBack()})
+                        "support"->SupportScreen(p,supporterPreview,onBack={navigateBack()},onActivate={supporterPreview=true;store.saveSupporterPreview(true)},onExplore={openSupportSettings=true;navigate("settings")})
+                        "versions"->VersionsScreen(p,onBack={navigateBack()})
+                        else->{val l=lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,users,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={store.saveLists(lists)},onEvent={events.add(it);store.saveEvents(events)})}
                     }
                 }
-                if(menuOpen)SideMenu(users,activeUserId,p,supporterPreview,onSupporterInfo={menuOpen=false;screen="support"},onClose={menuOpen=false},onActivate={activeUserId=it;store.saveUserId(it)},onNavigate={menuOpen=false;screen=it})
+                if(menuOpen)SideMenu(users,activeUserId,p,supporterPreview,onSupporterInfo={menuOpen=false;navigate("support")},onClose={menuOpen=false},onActivate={activeUserId=it;store.saveUserId(it)},onNavigate={menuOpen=false;navigate(it)})
                 if(showExitDialog) ConfirmDialog(tr("Avsluta Bubbsun?","Exit Bubbsun?"),tr("Vill du stänga appen?","Do you want to close the app?"),p,{showExitDialog=false},{showExitDialog=false;(context as? Activity)?.finish()},confirmLabel=tr("AVSLUTA","EXIT"))
             }
         }
@@ -379,17 +393,21 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         drawCircle(Brush.radialGradient(listOf(Color(0x665E2A95),Color.Transparent),center=Offset(size.width*.18f,size.height*.28f),radius=size.width*.75f),radius=size.width*.75f,center=Offset(size.width*.18f,size.height*.28f))
         drawCircle(Brush.radialGradient(listOf(Color(0x553D68B8),Color.Transparent),center=Offset(size.width*.82f,size.height*.62f),radius=size.width*.72f),radius=size.width*.72f,center=Offset(size.width*.82f,size.height*.62f))
         drawCircle(Brush.radialGradient(listOf(Color(0x243B9AAE),Color.Transparent),center=Offset(size.width*.48f,size.height*.78f),radius=size.width*.52f),radius=size.width*.52f,center=Offset(size.width*.48f,size.height*.78f))
-        val stars=listOf(.08f to .11f,.22f to .19f,.41f to .09f,.62f to .16f,.84f to .08f,.93f to .27f,.13f to .43f,.34f to .36f,.55f to .47f,.76f to .39f,.88f to .55f,.20f to .68f,.47f to .73f,.71f to .66f,.91f to .82f,.09f to .89f,.38f to .91f,.64f to .86f,.29f to .55f,.67f to .25f,.96f to .48f,.04f to .61f,.58f to .94f,.81f to .72f,.16f to .30f,.27f to .82f,.44f to .22f,.52f to .61f,.73f to .12f,.79f to .91f,.97f to .68f,.05f to .35f)
-        stars.forEachIndexed{i,(x,y)->drawCircle(Color.White.copy(alpha=if(i%3==0).65f else .35f),radius=if(i%4==0)2.2f else 1.2f,center=Offset(size.width*x,size.height*y))}
+        val stars=listOf(.04f to .07f,.08f to .11f,.15f to .23f,.22f to .19f,.31f to .05f,.41f to .09f,.49f to .18f,.62f to .16f,.71f to .04f,.84f to .08f,.93f to .27f,.13f to .43f,.26f to .31f,.34f to .36f,.46f to .42f,.55f to .47f,.65f to .34f,.76f to .39f,.88f to .55f,.20f to .68f,.31f to .62f,.47f to .73f,.58f to .57f,.71f to .66f,.82f to .74f,.91f to .82f,.09f to .89f,.18f to .81f,.38f to .91f,.51f to .84f,.64f to .86f,.29f to .55f,.67f to .25f,.96f to .48f,.04f to .61f,.58f to .94f,.81f to .72f,.16f to .30f,.27f to .82f,.44f to .22f,.52f to .61f,.73f to .12f,.79f to .91f,.97f to .68f,.05f to .35f,.89f to .18f,.36f to .76f,.69f to .78f)
+        stars.forEachIndexed{i,(x,y)->
+            val radius=when{ i%11==0->3.1f;i%4==0->2.1f;else->1.15f}
+            drawCircle(Color.White.copy(alpha=when{ i%11==0->.78f;i%3==0->.58f;else->.34f}),radius=radius,center=Offset(size.width*x,size.height*y))
+            if(i%11==0){drawLine(Color.White.copy(alpha=.34f),Offset(size.width*x-radius*2.3f,size.height*y),Offset(size.width*x+radius*2.3f,size.height*y),1f);drawLine(Color.White.copy(alpha=.34f),Offset(size.width*x,size.height*y-radius*2.3f),Offset(size.width*x,size.height*y+radius*2.3f),1f)}
+        }
     }
 }
 
 @Composable private fun HeartBackground(){
     Canvas(Modifier.fillMaxSize()){
         drawRect(Brush.verticalGradient(listOf(Color(0xFFF4ECDD),Color(0xFFE8D8C5))))
-        val hearts=listOf(.10f to .16f,.83f to .12f,.22f to .43f,.73f to .55f,.12f to .78f,.91f to .86f)
-        hearts.forEach{(x,y)->
-            val cx=size.width*x;val cy=size.height*y;val r=5.dp.toPx();val tint=Color(0x20B9747F)
+        val hearts=listOf(Triple(.08f,.12f,.65f),Triple(.24f,.23f,1.05f),Triple(.50f,.09f,.48f),Triple(.83f,.12f,1.35f),Triple(.93f,.32f,.62f),Triple(.22f,.43f,.82f),Triple(.52f,.38f,1.42f),Triple(.73f,.55f,.70f),Triple(.09f,.61f,1.18f),Triple(.36f,.69f,.52f),Triple(.12f,.78f,.75f),Triple(.62f,.82f,1.12f),Triple(.91f,.86f,.92f),Triple(.45f,.94f,.58f))
+        hearts.forEachIndexed{i,(x,y,scale)->
+            val cx=size.width*x;val cy=size.height*y;val r=5.dp.toPx()*scale;val tint=listOf(Color(0x22B9747F),Color(0x1FCE8FA2),Color(0x1D91A386))[i%3]
             drawCircle(tint,radius=r,center=Offset(cx-r*.72f,cy))
             drawCircle(tint,radius=r,center=Offset(cx+r*.72f,cy))
             drawPath(Path().apply{moveTo(cx-r*1.7f,cy+r*.15f);lineTo(cx+r*1.7f,cy+r*.15f);lineTo(cx,cy+r*2.25f);close()},tint)
@@ -402,9 +420,11 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     Row(Modifier.fillMaxWidth().background(p.top).padding(horizontal=12.dp,vertical=5.dp),verticalAlignment=Alignment.CenterVertically){
         SquareIcon("☰",onMenu,p,large=true)
         Spacer(Modifier.width(7.dp))
-        Box(Modifier.weight(1f).height(69.dp),contentAlignment=Alignment.TopCenter){
-            if(supporterPreview&&supporterGlow) Image(painterResource(R.drawable.bubbsun_header_logo),null,contentScale=ContentScale.Fit,colorFilter=ColorFilter.tint(p.gold),modifier=Modifier.fillMaxWidth().height(49.dp).blur(5.dp).graphicsLayer{alpha=.65f})
-            Image(painterResource(R.drawable.bubbsun_header_logo),contentDescription="Bubbsun",contentScale=ContentScale.Fit,modifier=Modifier.fillMaxWidth().height(49.dp))
+        val hasSupporterMark=supporterPreview&&supporterStyle!="none"
+        Box(Modifier.weight(1f).height(69.dp),contentAlignment=Alignment.Center){
+            val logoOffset=if(hasSupporterMark)(-8).dp else 0.dp
+            if(supporterPreview&&supporterGlow) Image(painterResource(R.drawable.bubbsun_header_logo),null,contentScale=ContentScale.Fit,colorFilter=ColorFilter.tint(p.gold),modifier=Modifier.fillMaxWidth().height(49.dp).offset(y=logoOffset).blur(5.dp).graphicsLayer{alpha=.65f})
+            Image(painterResource(R.drawable.bubbsun_header_logo),contentDescription="Bubbsun",contentScale=ContentScale.Fit,modifier=Modifier.fillMaxWidth().height(49.dp).offset(y=logoOffset))
             if(supporterPreview&&supporterStyle!="none")Box(Modifier.align(Alignment.BottomCenter)){CompactSupporterMark(supporterStyle,p)}
         }
         Spacer(Modifier.width(7.dp))
@@ -602,7 +622,6 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         PageHeader(tr("LÄGG TILL NY LISTA","ADD NEW LIST"),p,onBack)
         Spacer(Modifier.height(12.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(10.dp)){
-            item{Text(tr("LISTNAMN","LIST NAME"),fontWeight=FontWeight.Black,color=p.pageText)}
             item{RetroField(name,{name=it.take(40)},tr("Skriv listans namn…","Enter list name…"),Modifier.fillMaxWidth(),p)}
             item{Text(tr("VÄLJ FÄRG","CHOOSE COLOR"),fontWeight=FontWeight.Black,color=p.pageText)}
             item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){iconColors.forEach{c->Box(Modifier.size(43.dp).clip(CircleShape).background(Color(c)).border(if(c==color)4.dp else 1.dp,if(c==color)p.gold else p.outline,CircleShape).clickable{color=c})}}}
@@ -824,9 +843,11 @@ private fun ShoppingListScreen(
 
 @Composable private fun AddUserDialog(users:List<UserProfile>,p:Palette,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onDismiss:()->Unit,onAdd:(String,Long)->Unit){var name by remember{mutableStateOf("")};var color by remember{mutableStateOf(userColors.first())};var error by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("LÄGG TILL ANVÄNDARE","ADD USER"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(name,{name=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(12.dp));UserColorGrid(color,p,supporterEnabled,onSupporterInfo){color=it};if(error.isNotBlank())Text(error,color=p.red)}},confirmButton={RetroButton(tr("SPARA","SAVE"),{val n=capitalized(name);error=when{n.isBlank()->tr("Skriv ett namn","Enter a name");users.any{it.name.equals(n,true)}->tr("Namnet finns redan","That name already exists");else->""};if(error.isBlank())onAdd(n,color)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 
-@Composable private fun SettingsScreen(p:Palette,language:String,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
+@Composable private fun SettingsScreen(p:Palette,language:String,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
     var reset by remember{mutableStateOf(false)}
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp)){
+    val scroll=rememberScrollState()
+    LaunchedEffect(startAtSupporter,supporterPreview){if(startAtSupporter&&supporterPreview){delay(220);scroll.animateScrollTo((scroll.maxValue*.72f).toInt())}}
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(14.dp)){
         PageHeader(tr("INSTÄLLNINGAR","SETTINGS"),p,onBack)
         Spacer(Modifier.height(14.dp))
         SettingsCard(R.drawable.stats_checked,tr("BEKRÄFTELSER","CONFIRMATIONS"),p){
@@ -900,7 +921,18 @@ private fun ShoppingListScreen(
         "cosmic"->Text("✧  COSMIC SUPPORTER  ✧",color=Color(0xFFC084FC),fontFamily=FontFamily.Serif,fontSize=7.sp,fontWeight=FontWeight.Black,letterSpacing=.7.sp,maxLines=1)
     }
 }
-@Composable private fun SettingsCard(icon:Int,title:String,p:Palette,content:@Composable ColumnScope.()->Unit){Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(14.dp)).padding(15.dp)){Row(verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(45.dp).clip(RoundedCornerShape(10.dp)).background(p.green.copy(alpha=.18f)),contentAlignment=Alignment.Center){Image(painterResource(icon),null,Modifier.fillMaxSize().padding(5.dp).graphicsLayer{translationX=if(icon==R.drawable.menu_stats)2.dp.toPx() else 0f})};Spacer(Modifier.width(11.dp));Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,color=p.text)};Spacer(Modifier.height(12.dp));content()}}
+@Composable private fun SettingsCard(icon:Int,title:String,p:Palette,content:@Composable ColumnScope.()->Unit){
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(14.dp)).padding(horizontal=15.dp,vertical=12.dp)){
+        Row(Modifier.fillMaxWidth().height(34.dp),verticalAlignment=Alignment.CenterVertically){
+            Image(painterResource(icon),null,Modifier.size(29.dp).graphicsLayer{translationX=if(icon==R.drawable.menu_stats)2.dp.toPx() else 0f})
+            Spacer(Modifier.width(9.dp))
+            Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp,color=p.text,modifier=Modifier.weight(1f))
+        }
+        HorizontalDivider(color=p.outline.copy(alpha=.68f),thickness=1.dp)
+        Spacer(Modifier.height(10.dp))
+        content()
+    }
+}
 @Composable private fun LanguageChoice(flag:String,label:String,selected:Boolean,p:Palette,modifier:Modifier=Modifier,locked:Boolean=false,onLocked:()->Unit={},onClick:()->Unit){
     Box(modifier.height(68.dp).clip(RoundedCornerShape(11.dp)).background(if(selected)p.gold.copy(alpha=.18f) else p.paper2).border(if(selected)3.dp else 1.dp,if(selected)p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{if(locked)onLocked()else onClick()}.padding(horizontal=10.dp).graphicsLayer{alpha=if(locked).48f else 1f},contentAlignment=Alignment.Center){
         Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){Text(flag,fontSize=27.sp);Text(label,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=15.sp)}
@@ -914,15 +946,46 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 @Composable private fun StatsScreen(lists:List<ShoppingListData>,events:List<StatEvent>,users:List<UserProfile>,p:Palette,onBack:()->Unit){
     var period by remember{mutableStateOf(StatsPeriod.LIFETIME)}
     var menu by remember{mutableStateOf(false)}
+    val dayMs=86_400_000L
+    val now=System.currentTimeMillis()
     val cutoff=period.days?.let{System.currentTimeMillis()-it*86400000L}
     val filtered=events.filter{cutoff==null||it.timestamp>=cutoff}
     val purchases=filtered.filter{it.kind=="purchase"}
+    val deleted=filtered.count{it.kind=="delete"}
     val topItems=purchases.groupingBy{it.itemName}.eachCount().entries.sortedByDescending{it.value}.take(5)
     val mostActive=users.maxByOrNull{u->purchases.count{it.userId==u.id}}
     val mostActiveCount=mostActive?.let{u->purchases.count{it.userId==u.id}}?:0
     val favoriteList=lists.maxByOrNull{it.items.size}
     val totalItems=lists.sumOf{it.items.size}
     val completedNow=lists.sumOf{l->l.items.count{it.completed}}
+    val completionRate=if(totalItems==0)0 else completedNow*100/totalItems
+    val activeItems=(totalItems-completedNow).coerceAtLeast(0)
+    val average=if(lists.isEmpty())0f else totalItems.toFloat()/lists.size
+    val completedLists=lists.count{it.items.isNotEmpty()&&it.items.all{item->item.completed}}
+    val allItems=lists.flatMap{it.items}
+    val fastest=allItems.filter{it.completedAt!=null&&it.completedAt!!>=it.createdAt}.minByOrNull{it.completedAt!!-it.createdAt}
+    val fastestSeconds=fastest?.let{((it.completedAt!!-it.createdAt)/1000).coerceAtLeast(1)}
+    val oldestOpen=allItems.filter{!it.completed}.minByOrNull{it.createdAt}
+    val lastSeven=List(7){index->
+        val daysAgo=6-index
+        val from=now-(daysAgo+1)*dayMs
+        val to=now-daysAgo*dayMs
+        purchases.count{it.timestamp in from until to}.toFloat()
+    }
+    val lastThirty=List(10){index->
+        val from=now-(30-index*3)*dayMs
+        val to=from+3*dayMs
+        purchases.count{it.timestamp in from until to}.toFloat()
+    }
+    val weekdayCounts=IntArray(7)
+    purchases.forEach{event->val cal=java.util.Calendar.getInstance().apply{timeInMillis=event.timestamp};weekdayCounts[(cal.get(java.util.Calendar.DAY_OF_WEEK)+5)%7]++}
+    val weekdayNames=listOf(tr("MÅN","MON"),tr("TIS","TUE"),tr("ONS","WED"),tr("TOR","THU"),tr("FRE","FRI"),tr("LÖR","SAT"),tr("SÖN","SUN"))
+    val bestDayIndex=weekdayCounts.indices.maxByOrNull{weekdayCounts[it]}?:0
+    val activityDays=purchases.map{it.timestamp/dayMs}.distinct().sortedDescending()
+    var streak=0
+    if(activityDays.isNotEmpty()){var expected=activityDays.first();for(day in activityDays){if(day==expected){streak++;expected--}else if(day<expected)break}}
+    val userCounts=users.map{u->u to purchases.count{it.userId==u.id}}.sortedByDescending{it.second}
+    val carts=(purchases.size/8f).toInt()
     Column(Modifier.fillMaxSize().padding(14.dp)){
         Row(verticalAlignment=Alignment.CenterVertically){
             PageBack(onBack,p);Spacer(Modifier.width(10.dp))
@@ -931,24 +994,70 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
         }
         Spacer(Modifier.height(12.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(9.dp)){
-            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.stats_lists,tr("SKAPADE LISTOR","CREATED LISTS"),lists.size.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.stats_items,tr("TILLAGDA VAROR","ADDED ITEMS"),totalItems.toString(),p,Modifier.weight(1f))}}
-            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.stats_checked,tr("AVPRICKADE","CHECKED OFF"),completedNow.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.stats_period,tr("UNDER PERIODEN","IN PERIOD"),purchases.size.toString(),p,Modifier.weight(1f))}}
+            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.list_checklist,tr("SKAPADE LISTOR","CREATED LISTS"),lists.size.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.list_basket,tr("TILLAGDA VAROR","ADDED ITEMS"),totalItems.toString(),p,Modifier.weight(1f))}}
+            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.list_cart,tr("AVPRICKADE","CHECKED OFF"),completedNow.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.list_food,tr("KLART","COMPLETE"),"$completionRate%",p,Modifier.weight(1f))}}
+            item{ActivityDashboard(lastSeven,weekdayNames,p)}
+            item{UserDonutCard(userCounts,p)}
+            item{LineHistoryCard(lastThirty,p)}
+            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+                RecordCard(R.drawable.list_supporter_emblem,tr("BÄSTA DAG","BEST DAY"),weekdayNames[bestDayIndex],weekdayCounts[bestDayIndex].toString(),p,Modifier.weight(1f))
+                RecordCard(R.drawable.list_fitness,tr("STREAK","STREAK"),tr("$streak DAGAR","$streak DAYS"),tr("Fortsätt så!","Keep it up!"),p,Modifier.weight(1f))
+                RecordCard(R.drawable.list_supporter_compass,tr("SNABBAST","FASTEST"),fastest?.name?:tr("Ingen ännu","None yet"),fastestSeconds?.let{"$it s"}?:"—",p,Modifier.weight(1f))
+            }}
             item{FeatureStatCard(R.drawable.stats_user,tr("MEST AKTIV ANVÄNDARE","MOST ACTIVE USER"),if(mostActiveCount>0)"${mostActive?.name} – $mostActiveCount ${tr("avprickningar","check-offs")}" else tr("Ingen statistik ännu","No statistics yet"),p)}
             item{FeatureStatCard(R.drawable.stats_trophy,tr("MEST ANVÄNDA LISTA","MOST USED LIST"),favoriteList?.let{"${it.name} – ${it.items.size} ${tr("varor","items")}"}?:tr("Ingen lista ännu","No list yet"),p)}
+            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){
+                MiniMetric(tr("AKTIVA","ACTIVE"),activeItems.toString(),p,Modifier.weight(1f))
+                MiniMetric(tr("FÄRDIGA LISTOR","FINISHED LISTS"),completedLists.toString(),p,Modifier.weight(1f))
+                MiniMetric(tr("SNITT/LISTA","AVG/LIST"),String.format(Locale.US,"%.1f",average),p,Modifier.weight(1f))
+                MiniMetric(tr("BORTTAGNA","DELETED"),deleted.toString(),p,Modifier.weight(1f))
+            }}
             item{Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp)){
                 Text(tr("MEST HANDLADE","MOST PURCHASED"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)
                 Spacer(Modifier.height(6.dp))
                 if(topItems.isEmpty())Text(tr("Ingen statistik ännu","No statistics yet"),color=p.muted)
                 topItems.forEachIndexed{i,x->Text("${i+1}. ${x.key}  ·  ${x.value}",fontWeight=FontWeight.Bold,color=p.text,modifier=Modifier.padding(vertical=3.dp))}
             }}
+            item{FunFactCard(R.drawable.list_cart,tr("NI HAR FYLLT","YOU HAVE FILLED"),carts.coerceAtLeast(0).toString(),tr("KUNDVAGNAR!","SHOPPING CARTS!"),p)}
+            if(oldestOpen!=null)item{FeatureStatCard(R.drawable.list_work,tr("ÄLDSTA OAVPRICKADE","OLDEST UNCHECKED"),"${oldestOpen.name} · ${(now-oldestOpen.createdAt)/dayMs} ${tr("dagar","days")}",p)}
             item{Spacer(Modifier.height(10.dp))}
         }
     }
 }
-@Composable private fun StatsCard(icon:Int,title:String,value:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp),horizontalAlignment=Alignment.CenterHorizontally){Box(Modifier.size(40.dp).clip(RoundedCornerShape(6.dp)),contentAlignment=Alignment.Center){Image(painterResource(icon),null,Modifier.fillMaxSize().graphicsLayer{if(icon==R.drawable.stats_lists||icon==R.drawable.stats_items){scaleX=1.35f;scaleY=1.35f;translationY=4.dp.toPx()}})};Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=11.sp,color=p.text,textAlign=TextAlign.Center);Text(value,fontSize=30.sp,fontWeight=FontWeight.Black,color=p.green)}}
+@Composable private fun StatsCard(icon:Int,title:String,value:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(12.dp),horizontalAlignment=Alignment.CenterHorizontally){Image(painterResource(icon),null,Modifier.size(44.dp));Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=11.sp,color=p.text,textAlign=TextAlign.Center);Text(value,fontSize=30.sp,fontWeight=FontWeight.Black,color=p.green)}}
 @Composable private fun FeatureStatCard(icon:Int,title:String,value:String,p:Palette){Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(43.dp));Spacer(Modifier.width(12.dp));Column{Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=13.sp,color=p.text);Text(value,fontWeight=FontWeight.Bold,color=p.green)}}}
+@Composable private fun ActivityDashboard(values:List<Float>,labels:List<String>,p:Palette){
+    StatPanel(tr("AKTIVITET","ACTIVITY"),R.drawable.list_fitness,p){
+        Canvas(Modifier.fillMaxWidth().height(145.dp)){
+            val max=(values.maxOrNull()?:1f).coerceAtLeast(1f);val gap=size.width/(values.size*1.65f);val bar=gap*.66f;val base=size.height-24.dp.toPx()
+            values.forEachIndexed{i,v->val x=gap*.45f+i*(gap*1.65f);val h=(base-8.dp.toPx())*(v/max);drawRoundRect(listOf(p.green,p.red,p.gold,Color(0xFF4E91B8))[i%4],Offset(x,base-h),androidx.compose.ui.geometry.Size(bar,h),CornerRadius(6f,6f))}
+        }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceAround){labels.forEach{Text(it,fontSize=9.sp,fontWeight=FontWeight.Bold,color=p.text)}}
+    }
+}
+@Composable private fun UserDonutCard(counts:List<Pair<UserProfile,Int>>,p:Palette){
+    StatPanel(tr("VEM PRICKAR AV?","WHO CHECKS OFF?"),R.drawable.list_pets,p){
+        val total=counts.sumOf{it.second}.coerceAtLeast(1)
+        Row(verticalAlignment=Alignment.CenterVertically){
+            Canvas(Modifier.size(112.dp)){var start=-90f;counts.take(4).forEach{(u,c)->val sweep=360f*c/total;drawArc(Color(u.colorHex),start,sweep,true);start+=sweep};drawCircle(p.paper,radius=size.minDimension*.22f)}
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)){counts.take(4).forEach{(u,c)->Row(Modifier.fillMaxWidth()){Box(Modifier.size(10.dp).clip(CircleShape).background(Color(u.colorHex)));Spacer(Modifier.width(6.dp));Text(u.name,color=p.text,fontWeight=FontWeight.Bold,fontSize=12.sp,modifier=Modifier.weight(1f));Text("${c*100/total}%",color=p.green,fontWeight=FontWeight.Black,fontSize=12.sp)}}}
+        }
+    }
+}
+@Composable private fun LineHistoryCard(values:List<Float>,p:Palette){
+    StatPanel(tr("SENASTE 30 DAGAR","LAST 30 DAYS"),R.drawable.list_vacation,p){
+        Canvas(Modifier.fillMaxWidth().height(130.dp)){val max=(values.maxOrNull()?:1f).coerceAtLeast(1f);val step=size.width/(values.size-1).coerceAtLeast(1);val path=Path();values.forEachIndexed{i,v->val point=Offset(i*step,size.height-8.dp.toPx()-(size.height-18.dp.toPx())*v/max);if(i==0)path.moveTo(point.x,point.y)else path.lineTo(point.x,point.y);drawCircle(p.gold,5f,point)};drawPath(path,p.green,style=Stroke(3.dp.toPx(),cap=StrokeCap.Round,join=StrokeJoin.Round))}
+    }
+}
+@Composable private fun StatPanel(title:String,icon:Int,p:Palette,content:@Composable ColumnScope.()->Unit){
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(12.dp)){Row(verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(31.dp));Spacer(Modifier.width(8.dp));Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text,fontSize=16.sp)};Spacer(Modifier.height(6.dp));content()}
+}
+@Composable private fun RecordCard(icon:Int,title:String,value:String,detail:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.heightIn(min=142.dp).clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(8.dp),horizontalAlignment=Alignment.CenterHorizontally){Image(painterResource(icon),null,Modifier.size(39.dp));Text(title,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,textAlign=TextAlign.Center);Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=13.sp,textAlign=TextAlign.Center,maxLines=2);Text(detail,color=p.text,fontSize=10.sp,textAlign=TextAlign.Center,maxLines=2)}}
+@Composable private fun MiniMetric(title:String,value:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.clip(RoundedCornerShape(8.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(8.dp)).padding(vertical=8.dp,horizontal=4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=18.sp);Text(title,color=p.text,fontWeight=FontWeight.Bold,fontSize=8.sp,textAlign=TextAlign.Center,maxLines=2)}}
+@Composable private fun FunFactCard(icon:Int,top:String,value:String,bottom:String,p:Palette){Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.gold.copy(alpha=.18f)).border(2.dp,p.gold,RoundedCornerShape(10.dp)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(76.dp));Spacer(Modifier.width(14.dp));Column(Modifier.weight(1f),horizontalAlignment=Alignment.CenterHorizontally){Text(top,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=14.sp);Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=42.sp);Text(bottom,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp)}}}
 
-@Composable private fun SupportScreen(p:Palette,supporterEnabled:Boolean,onBack:()->Unit,onActivate:()->Unit){
+@Composable private fun SupportScreen(p:Palette,supporterEnabled:Boolean,onBack:()->Unit,onActivate:()->Unit,onExplore:()->Unit){
     var success by remember{mutableStateOf(false)}
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),horizontalAlignment=Alignment.CenterHorizontally){
         PageHeader(tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),p,onBack)
@@ -975,7 +1084,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
         }else{
             Text(tr("Tack för att du stödjer Bubbsun!","Thank you for supporting Bubbsun!"),color=p.pageText,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center)
             Spacer(Modifier.height(10.dp))
-            RetroButton(tr("UTFORSKA SUPPORTERINNEHÅLL","EXPLORE SUPPORTER CONTENT"),onBack,p,modifier=Modifier.fillMaxWidth())
+            RetroButton(tr("UTFORSKA SUPPORTERINNEHÅLL","EXPLORE SUPPORTER CONTENT"),onExplore,p,modifier=Modifier.fillMaxWidth())
         }
         Spacer(Modifier.height(10.dp))
         Button(onClick={},enabled=false,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(9.dp)){Text(tr("ÅTERSTÄLL KÖP  •  KOMMER SENARE","RESTORE PURCHASES  •  COMING LATER"))}
@@ -983,29 +1092,30 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
-    "0.461" to listOf("Hela supportersidan översatt","Tätare supporterförmåner för mobilskärmar","Tydligare gråton på avprickade varor","Fincentrerade statistik- och porträttikoner"),
-    "0.460" to listOf("Ny supportersida med kostnadsfri demonstrationsaktivering","Versionshistorik i appen","Rensade och centrerade ikoner","Kompletta språk- och layoutfixar"),
-    "0.456" to listOf("Enhetlig platt ikonstil","Kompakt supporterpanel","Italiano och supporterexklusiv Klingon","Headeransluten Mina listor-flik"),
-    "0.455" to listOf("Hjärtlig supporter","Nya tema-, statistik- och Om-ikoner","Founding Supporter i sidomenyn"),
-    "0.454" to listOf("Ny kompakt Bubbsun-logga","Fancy Glow","Nya listikoner och färgpaletter"),
-    "0.453" to listOf("Kosmisk supporter synlig som låst val","Tätare popupfönster","Ny kosmisk temaikon"),
-    "0.452" to listOf("Buggfixar för edition, sparade teman och långa namn"),
-    "0.451" to listOf("Valbara supporterdekorationer"),
-    "0.450" to listOf("Supporter Preview och Kosmisk supporter"),
-    "0.401" to listOf("Direkt språkbyte utan omstart"),
-    "0.400" to listOf("Ny inställningssida, statistik och listredigering")
+    "0.470" to listOf("Playful statistics dashboard with charts, records and fun facts","Correct hierarchical physical-back navigation","Refined supporter flow, headers and theme backgrounds","Compact list and product forms","Polished About page, splash screen and version history"),
+    "0.461" to listOf("Fully translated supporter page","Mobile-friendly supporter benefits","Clearer completed-item shading","Centered statistics and portrait icons"),
+    "0.460" to listOf("New supporter page with free preview activation","In-app version history","Cleaned and centered icons","Complete language and layout fixes"),
+    "0.456" to listOf("Unified illustrated icon style","Compact supporter panel","Italian and supporter-exclusive Klingon","Header-connected My Lists tab"),
+    "0.455" to listOf("Heartfelt supporter theme","New theme, statistics and About icons","Founding Supporter in side menu"),
+    "0.454" to listOf("Compact Bubbsun image logo","Fancy Glow","New list icons and color palettes"),
+    "0.453" to listOf("Locked Cosmic supporter theme remains visible","Tighter popups","New cosmic theme icon"),
+    "0.452" to listOf("Fixes for edition, saved themes and long names"),
+    "0.451" to listOf("Selectable supporter decorations"),
+    "0.450" to listOf("Supporter Preview and Cosmic supporter"),
+    "0.401" to listOf("Instant language switching without restart"),
+    "0.400" to listOf("New settings page, statistics and list editing")
 )
 
 @Composable private fun VersionsScreen(p:Palette,onBack:()->Unit){
-    var expanded by remember{mutableStateOf("0.461")}
+    var expanded by remember{mutableStateOf("0.470")}
     Column(Modifier.fillMaxSize().padding(14.dp)){
-        PageHeader("VERSIONER & NYHETER",p,onBack)
+        PageHeader(tr("VERSIONER & NYHETER","VERSIONS & NEWS"),p,onBack)
         Spacer(Modifier.height(12.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
             items(patchNotes){(version,notes)->
                 val open=expanded==version
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.461")2.dp else 1.dp,if(version=="0.461")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
-                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.461")Text("NYTT",color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.470")2.dp else 1.dp,if(version=="0.470")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
+                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.470")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
                     if(open){Spacer(Modifier.height(7.dp));notes.forEach{Text("• $it",color=p.text,fontSize=14.sp,modifier=Modifier.padding(vertical=2.dp))}}
                 }
             }
@@ -1046,7 +1156,7 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
                 .background(p.panel)
                 .border(1.dp, p.outline, RoundedCornerShape(12.dp))
                 .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Column(Modifier.weight(1.35f)) {
                 CreditRow(R.drawable.about_man, "Daniel Grandin", tr("Utveckling & design","Development & design"), p)
@@ -1102,7 +1212,7 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
         Spacer(Modifier.height(9.dp))
         AboutActionButton(R.drawable.about_idea, tr("SKICKA FÖRSLAG","SEND SUGGESTION"), tr("Har du en idé? Vi vill gärna höra den!","Have an idea? We would love to hear it!"), Color(0xFF6B281D), p) { email(tr("Bubbsun – förslag","Bubbsun – suggestion")) }
         Spacer(Modifier.height(9.dp))
-        AboutActionButton(R.drawable.stats_lists,"VERSIONER & NYHETER","Patch notes • v${BuildConfig.VERSION_NAME}",p.green,p,onVersions)
+        AboutActionButton(R.drawable.list_checklist,tr("VERSIONER & NYHETER","VERSIONS & NEWS"),"Patch notes • v${BuildConfig.VERSION_NAME}",p.green,p,onVersions)
         Spacer(Modifier.height(9.dp))
         AboutActionButton(R.drawable.theme_heart,if(supporterEnabled)"SUPPORTERSTATUS" else tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),if(supporterEnabled)"♥ FOUNDING SUPPORTER" else tr("GRATIS UNDER FÖRHANDSVISNINGEN","Free during preview"),p.panel,p,onSupporterInfo)
 
@@ -1119,7 +1229,7 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
             Text("v${BuildConfig.VERSION_NAME} • $editionName", color = p.gold, fontFamily = FontFamily.Serif, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if(supporterEnabled){
                 Spacer(Modifier.height(7.dp))
-                Text("♥  FOUNDING SUPPORTER",color=p.gold,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=12.sp,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.gold,RoundedCornerShape(50)).padding(horizontal=12.dp,vertical=5.dp))
+                Text("♥  FOUNDING SUPPORTER",color=p.gold,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=12.sp,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.gold,RoundedCornerShape(50)).clickable{onSupporterInfo()}.padding(horizontal=12.dp,vertical=5.dp))
             }
             Spacer(Modifier.height(5.dp))
             Text("© 2026 Bubbsun", color = p.gold, fontFamily = FontFamily.Serif, fontSize = 15.sp)
@@ -1140,7 +1250,7 @@ private fun CreditRow(icon: Int, name: String, role: String, p: Palette, compact
                 .border(1.dp, p.gold, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Image(painterResource(icon),null,contentScale=ContentScale.Fit,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.16f;scaleY=1.16f;translationX=2.dp.toPx()})
+            Image(painterResource(icon),null,contentScale=ContentScale.Fit,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.38f;scaleY=1.38f;translationX=1.dp.toPx();translationY=1.dp.toPx()})
             Box(Modifier.matchParentSize().border(1.dp,p.gold,CircleShape))
         }
         Spacer(Modifier.width(9.dp))
@@ -1223,10 +1333,10 @@ private fun InputPanel(
             BoxWithConstraints(Modifier.fillMaxWidth()){
                 val narrow=maxWidth<350.dp;val gap=8.dp
                 Row(verticalAlignment=Alignment.Bottom){
-                    Column(Modifier.weight(if(narrow)1.35f else 1.45f)){InputLabel("product",tr("PRODUKT","PRODUCT"),p);Spacer(Modifier.height(6.dp));RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(58.dp),p,onDone=onAdd)}
+                    Column(Modifier.weight(if(narrow)1.35f else 1.45f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd)}
                     Spacer(Modifier.width(gap))
-                    Column(Modifier.weight(if(narrow).95f else 1f)){InputLabel("balance",tr("MÄNGD","QUANTITY"),p);Spacer(Modifier.height(6.dp));RetroField(quantity,onQuantityChange,tr("Valfri mängd","Optional quantity"),Modifier.fillMaxWidth().height(58.dp),p,onDone=onAdd,placeholderSize=if(narrow)13.sp else 14.sp)}
-                    Spacer(Modifier.width(gap));RetroButton("✓",onAdd,p,modifier=Modifier.size(58.dp),compact=true)
+                    Column(Modifier.weight(if(narrow).95f else 1f)){RetroField(quantity,onQuantityChange,tr("Valfri mängd","Optional quantity"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)13.sp else 14.sp)}
+                    Spacer(Modifier.width(gap));RetroButton("✓",onAdd,p,modifier=Modifier.size(54.dp),compact=true)
                 }
             }
         }
@@ -1352,9 +1462,8 @@ private fun BalanceScaleIcon(color: Color, modifier: Modifier = Modifier) {
 
 @Composable private fun RetroTitle(text:String,p:Palette,themeId:String){
     val decorated=when(themeId){"heart"->"♡  $text  ♡";"cosmic"->"☾  $text  ☽";else->text}
-    Box(Modifier.fillMaxWidth().height(38.dp),contentAlignment=Alignment.TopCenter){
-        Box(Modifier.fillMaxWidth().height(27.dp).align(Alignment.BottomCenter).background(p.green))
-        Box(Modifier.widthIn(min=220.dp).height(38.dp).clip(RoundedCornerShape(topStart=12.dp,topEnd=12.dp)).background(p.green).padding(horizontal=24.dp),contentAlignment=Alignment.Center){
+    Box(Modifier.fillMaxWidth().height(39.dp),contentAlignment=Alignment.TopCenter){
+        Box(Modifier.widthIn(min=220.dp).height(39.dp).clip(RoundedCornerShape(bottomStart=13.dp,bottomEnd=13.dp)).background(p.green).border(1.dp,p.outline,RoundedCornerShape(bottomStart=13.dp,bottomEnd=13.dp)).padding(horizontal=24.dp),contentAlignment=Alignment.Center){
             Text(decorated,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=16.sp,color=readableOn(p.green),maxLines=1)
         }
     }

@@ -1,3 +1,18 @@
+## 0.470
+- Byggde ut statistiksidan med stapelgraf, linjegraf, användarfördelning, rekord, topplistor, streak, snitt, färdiga listor och lekfulla kundvagnsfakta.
+- Rättade fysisk tillbaka-navigering så undersidor går till sin faktiska föregående sida.
+- Lät Utforska supporterinnehåll öppna Inställningar vid supporterpanelen.
+- Översatte knappen och sidtiteln Versioner & nyheter; patch notes visas konsekvent på engelska.
+- Återställde Mina listor som en separat nedhängande mittflik utan heltäckande färgremsa.
+- Centrerade Bubbsun-loggan dynamiskt när ingen supporterdekoration visas.
+- Gjorde Kosmisk mer stjärnrik och Hjärtlig rikare på hjärtan i varierade storlekar.
+- Tog bort överflödiga fältrubriker för listnamn, produkt och mängd.
+- Gjorde inställningssektionernas rubriker smalare med frilagd ikon och avdelningslinje.
+- Förstorade och finjusterade porträtten på Om-sidan samt flyttade personlistan uppåt.
+- Bytte Versioner & nyheter till en passande illustrerad retroikon.
+- Gjorde Founding Supporter-märket på Om-sidan klickbart.
+- Lade till en mörk Bubbsun-startskärm utan konstgjord väntetid.
+
 ## 0.461
 - Översatte hela supportersidan till svenska, engelska, italienska och Klingon.
 - Kortade supporterförmånerna så de ryms bättre på riktiga telefoner.

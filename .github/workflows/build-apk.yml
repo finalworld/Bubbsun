@@ -1,4 +1,4 @@
-name: Bygg Bubbsun v0.461 APK
+name: Bygg Bubbsun v0.470 APK
 
 on:
   workflow_dispatch:
@@ -67,11 +67,11 @@ jobs:
         shell: bash
         run: |
           APK=$(find "$PROJECT_DIR/app/build/outputs/apk/release" -name '*.apk' -print -quit)
-          cp "$APK" "$PROJECT_DIR/app/build/outputs/apk/release/Bubbsun-v0.461.apk"
+          cp "$APK" "$PROJECT_DIR/app/build/outputs/apk/release/Bubbsun-v0.470.apk"
 
       - name: Ladda upp APK
         uses: actions/upload-artifact@v4
         with:
-          name: Bubbsun-v0.461-APK
-          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/Bubbsun-v0.461.apk
+          name: Bubbsun-v0.470-APK
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/Bubbsun-v0.470.apk
           if-no-files-found: error

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "999127046153",
+    "project_id": "bubbsan-c3ec7",
+    "storage_bucket": "bubbsan-c3ec7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:999127046153:android:b513f6eef9dfe7e4d800d8",
+        "android_client_info": {
+          "package_name": "se.bubbsun.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "999127046153-4gp711hdh7ijrbtqjqt87ent1270k6n1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "se.bubbsun.app",
+            "certificate_hash": "dcb4cb7f114aceeee09e3d51d0ef46c2a8123f4c"
+          }
+        },
+        {
+          "client_id": "999127046153-gub3cnlvt64kpmckrhna7s49p56v8hbe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "se.bubbsun.app",
+            "certificate_hash": "7c31014f72519d7a49eca61719dcc3210a5f2f61"
+          }
+        },
+        {
+          "client_id": "999127046153-ik86946iup8gukr49khobsgo22dr392e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQVnyl5a7SksvtG9Xon2ZC6bQhRGVMBmc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "999127046153-ik86946iup8gukr49khobsgo22dr392e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

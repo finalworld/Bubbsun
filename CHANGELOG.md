@@ -1,3 +1,14 @@
+## 0.500 – Together Edition Beta
+- Lade till Google-inloggning och automatisk återinloggning.
+- Lade till familjegrupper med kod, ansökningar och godkännande.
+- Lade till storboss-, boss- och medlemsroller med Firestore-regler.
+- Lade till realtidssynk, offline-cache och säker import av lokala listor.
+- Synkar listor, varor, manuell ordning, NYTT-status och aktivitet.
+- Visar skaparens färg mellan listikon och text samt på varje vara.
+- Byggde om Användare-sidan för egen profil, grupp och familjemedlemmar.
+- Utökade språkväljaren till tio språk.
+- Uppdaterade guider, formulär, uppdateringsstatus och supporterstandarder.
+
 ## 0.480
 - Lade till panelen Sök & sortera från högerkanten i varje lista.
 - Lade till sökresultat grupperade i ej klara och klara varor.

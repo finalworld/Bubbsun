@@ -206,8 +206,8 @@ private fun themeLabel(id:String)=when(id){
 data class UserProfile(val id:String=UUID.randomUUID().toString(), var name:String, var colorHex:Long)
 class ShoppingItem(
     val id:String=UUID.randomUUID().toString(), name:String, quantity:String="", ownerId:String,
-    completed:Boolean=false, val createdAt:Long=System.currentTimeMillis(), completedAt:Long?=null
-){ var name by mutableStateOf(name); var quantity by mutableStateOf(quantity); var ownerId by mutableStateOf(ownerId); var completed by mutableStateOf(completed); var completedAt by mutableStateOf(completedAt) }
+    completed:Boolean=false, val createdAt:Long=System.currentTimeMillis(), completedAt:Long?=null, likedBy:List<String> = emptyList()
+){ var name by mutableStateOf(name); var quantity by mutableStateOf(quantity); var ownerId by mutableStateOf(ownerId); var completed by mutableStateOf(completed); var completedAt by mutableStateOf(completedAt); val likedBy=mutableStateListOf<String>().apply{addAll(likedBy)} }
 class ShoppingListData(
     val id:String=UUID.randomUUID().toString(), name:String, icon:String="🛒", iconColorHex:Long=0xFF2B6F73,
     items:List<ShoppingItem> = emptyList(), sortMode:String="custom", doneFirst:Boolean=false,
@@ -267,7 +267,7 @@ private class TogetherRepository{
     }
     fun listenLists(groupId:String,onChange:(List<ShoppingListData>)->Unit):ListenerRegistration=db.collection("groups").document(groupId).collection("lists").addSnapshotListener{s,_->
         val result=s?.documents?.map{d->
-            val items=(d.get("items") as? List<*>)?.mapNotNull{raw->(raw as? Map<*,*>)?.let{m->ShoppingItem(m["id"] as? String?:UUID.randomUUID().toString(),m["name"] as? String?:"",m["quantity"] as? String?:"",m["ownerId"] as? String?:"",m["completed"] as? Boolean?:false,(m["createdAt"] as? Number)?.toLong()?:System.currentTimeMillis(),(m["completedAt"] as? Number)?.toLong())}}?:emptyList()
+            val items=(d.get("items") as? List<*>)?.mapNotNull{raw->(raw as? Map<*,*>)?.let{m->ShoppingItem(m["id"] as? String?:UUID.randomUUID().toString(),m["name"] as? String?:"",m["quantity"] as? String?:"",m["ownerId"] as? String?:"",m["completed"] as? Boolean?:false,(m["createdAt"] as? Number)?.toLong()?:System.currentTimeMillis(),(m["completedAt"] as? Number)?.toLong(),(m["likedBy"] as? List<*>)?.filterIsInstance<String>()?:emptyList())}}?:emptyList()
             val seen=(d.get("seenAtByUser") as? Map<*,*>)?.mapNotNull{(k,v)->(k as? String)?.let{it to ((v as? Number)?.toLong()?:0L)}}?.toMap()?:emptyMap()
             ShoppingListData(d.id,d.getString("name")?:"List",d.getString("icon")?:"🛒",d.getLong("iconColor")?:0xFF2B6F73L,items,d.getString("sortMode")?:"custom",d.getBoolean("doneFirst")?:false,d.getBoolean("doneExpanded")?:false,seen,d.getString("creatorId")?:"")
         }?:emptyList();onChange(result.sortedBy{list->s?.documents?.firstOrNull{it.id==list.id}?.getLong("order")?:Long.MAX_VALUE})
@@ -276,7 +276,7 @@ private class TogetherRepository{
         val col=db.collection("groups").document(groupId).collection("lists")
         col.get().addOnSuccessListener{snap->db.runBatch{b->
             snap.documents.filter{d->lists.none{it.id==d.id}}.forEach{b.delete(it.reference)}
-            lists.forEachIndexed{index,l->if(l.creatorId.isBlank())l.creatorId=actorId;val items=l.items.map{i->mapOf("id" to i.id,"name" to i.name,"quantity" to i.quantity,"ownerId" to i.ownerId,"completed" to i.completed,"createdAt" to i.createdAt,"completedAt" to i.completedAt)};b.set(col.document(l.id),mapOf("name" to l.name,"icon" to l.icon,"iconColor" to l.iconColorHex,"creatorId" to l.creatorId,"sortMode" to l.sortMode,"doneFirst" to l.doneFirst,"doneExpanded" to l.doneExpanded,"seenAtByUser" to l.seenAtByUser.toMap(),"items" to items,"order" to index,"updatedAt" to FieldValue.serverTimestamp()))}
+            lists.forEachIndexed{index,l->if(l.creatorId.isBlank())l.creatorId=actorId;val items=l.items.map{i->mapOf("id" to i.id,"name" to i.name,"quantity" to i.quantity,"ownerId" to i.ownerId,"completed" to i.completed,"createdAt" to i.createdAt,"completedAt" to i.completedAt,"likedBy" to i.likedBy.toList())};b.set(col.document(l.id),mapOf("name" to l.name,"icon" to l.icon,"iconColor" to l.iconColorHex,"creatorId" to l.creatorId,"sortMode" to l.sortMode,"doneFirst" to l.doneFirst,"doneExpanded" to l.doneExpanded,"seenAtByUser" to l.seenAtByUser.toMap(),"items" to items,"order" to index,"updatedAt" to FieldValue.serverTimestamp()))}
         }.addOnCompleteListener{onDone(it.isSuccessful)}}.addOnFailureListener{onDone(false)}
     }
     fun listenActivity(groupId:String,onChange:(List<StatEvent>)->Unit):ListenerRegistration=db.collection("groups").document(groupId).collection("activity").limit(500).addSnapshotListener{s,_->onChange(s?.documents?.map{d->StatEvent(d.id,d.getString("kind")?:"",d.getString("itemName")?:"",d.getString("actorId")?:"",d.getLong("timestamp")?:System.currentTimeMillis())}?:emptyList())}
@@ -321,12 +321,12 @@ private class BubbsunStore(context:Context){
         val danne=users.firstOrNull{it.name.equals("Danne",true)}?.id?:users.first().id;val sanja=users.firstOrNull{it.name.equals("Sanja",true)}?.id?:users.first().id
         return runCatching{val a=JSONArray(raw);MutableList(a.length()){i->
             val o=a.getJSONObject(i);val loaded=mutableListOf<ShoppingItem>();val ia=o.optJSONArray("items")?:JSONArray()
-            repeat(ia.length()){j->val it=ia.getJSONObject(j);val legacy=it.optString("owner","DANNE");loaded+=ShoppingItem(it.optString("id",UUID.randomUUID().toString()),it.optString("name",""),it.optString("quantity",""),it.optString("ownerId",if(legacy=="SANJA")sanja else danne),it.optBoolean("completed",false),it.optLong("createdAt",System.currentTimeMillis()),if(it.isNull("completedAt"))null else it.optLong("completedAt"))}
+            repeat(ia.length()){j->val it=ia.getJSONObject(j);val legacy=it.optString("owner","DANNE");val likes=it.optJSONArray("likedBy");loaded+=ShoppingItem(it.optString("id",UUID.randomUUID().toString()),it.optString("name",""),it.optString("quantity",""),it.optString("ownerId",if(legacy=="SANJA")sanja else danne),it.optBoolean("completed",false),it.optLong("createdAt",System.currentTimeMillis()),if(it.isNull("completedAt"))null else it.optLong("completedAt"),if(likes==null)emptyList()else List(likes.length()){k->likes.optString(k)})}
             val seen=mutableMapOf<String,Long>();val so=o.optJSONObject("seenAtByUser")?:JSONObject();so.keys().forEach{key->seen[key]=so.optLong(key,0L)}
             ShoppingListData(o.optString("id",UUID.randomUUID().toString()),o.optString("name",if(loadLanguage()=="sv") "Lista" else "List"),o.optString("icon",listIcons[i%listIcons.size].id),o.optLong("iconColor",iconColors[i%iconColors.size]),loaded,o.optString("sortMode","custom"),o.optBoolean("doneFirst",false),o.optBoolean("doneExpanded",false),seen,o.optString("creatorId",""))
         }}.getOrElse{mutableListOf(ShoppingListData(name=if(loadLanguage()=="sv") "Matinköp" else "Shopping",icon=listIcons.first().id))}
     }
-    fun saveLists(lists:List<ShoppingListData>){val a=JSONArray();lists.forEach{l->val ia=JSONArray();l.items.forEach{it->ia.put(JSONObject().apply{put("id",it.id);put("name",it.name);put("quantity",it.quantity);put("ownerId",it.ownerId);put("completed",it.completed);put("createdAt",it.createdAt);put("completedAt",it.completedAt?:JSONObject.NULL)})};val seen=JSONObject();l.seenAtByUser.forEach{(id,time)->seen.put(id,time)};a.put(JSONObject().apply{put("id",l.id);put("name",l.name);put("icon",l.icon);put("iconColor",l.iconColorHex);put("creatorId",l.creatorId);put("sortMode",l.sortMode);put("doneFirst",l.doneFirst);put("doneExpanded",l.doneExpanded);put("seenAtByUser",seen);put("items",ia)})};prefs.edit().putString("lists",a.toString()).apply()}
+    fun saveLists(lists:List<ShoppingListData>){val a=JSONArray();lists.forEach{l->val ia=JSONArray();l.items.forEach{it->ia.put(JSONObject().apply{put("id",it.id);put("name",it.name);put("quantity",it.quantity);put("ownerId",it.ownerId);put("completed",it.completed);put("createdAt",it.createdAt);put("completedAt",it.completedAt?:JSONObject.NULL);put("likedBy",JSONArray(it.likedBy))})};val seen=JSONObject();l.seenAtByUser.forEach{(id,time)->seen.put(id,time)};a.put(JSONObject().apply{put("id",l.id);put("name",l.name);put("icon",l.icon);put("iconColor",l.iconColorHex);put("creatorId",l.creatorId);put("sortMode",l.sortMode);put("doneFirst",l.doneFirst);put("doneExpanded",l.doneExpanded);put("seenAtByUser",seen);put("items",ia)})};prefs.edit().putString("lists",a.toString()).apply()}
     fun loadEvents():MutableList<StatEvent>{val raw=prefs.getString("events_v010",null)?:return mutableListOf();return runCatching{val a=JSONArray(raw);MutableList(a.length()){i->val o=a.getJSONObject(i);StatEvent(o.getString("id"),o.getString("kind"),o.getString("itemName"),o.optString("userId",""),o.getLong("timestamp"))}}.getOrElse{mutableListOf()}}
     fun saveEvents(events:List<StatEvent>){val a=JSONArray();events.forEach{e->a.put(JSONObject().apply{put("id",e.id);put("kind",e.kind);put("itemName",e.itemName);put("userId",e.userId);put("timestamp",e.timestamp)})};prefs.edit().putString("events_v010",a.toString()).apply()}
     fun loadThemeId():String=prefs.getString("theme_v0340",null) ?: if(prefs.getBoolean("dark",true)) "retro_dark" else "retro_light"
@@ -435,15 +435,41 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     val bg=Color(0xFF15120E);val paper=Color(0xFFD8C294);val ink=Color(0xFF261E16);val gold=Color(0xFFD6A83D)
     Column(Modifier.fillMaxSize().background(bg).safeDrawingPadding().padding(26.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){
         Image(painterResource(R.drawable.bubbsun_header_logo),null,contentScale=ContentScale.Fit,modifier=Modifier.fillMaxWidth().height(130.dp))
-        Text("TOGETHER EDITION BETA",color=gold,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,letterSpacing=1.3.sp)
+        Text("TOGETHER EDITION BETA",color=gold,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,letterSpacing=1.1.sp,fontSize=14.sp,maxLines=1)
         Spacer(Modifier.height(28.dp))
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(paper).border(2.dp,gold,RoundedCornerShape(18.dp)).padding(22.dp),horizontalAlignment=Alignment.CenterHorizontally){
             Text(tr("VÄLKOMMEN TILL BUBBSUN","WELCOME TO BUBBSUN"),color=ink,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=23.sp,textAlign=TextAlign.Center)
             Spacer(Modifier.height(8.dp));Text(tr("Logga in för att spara dina listor och dela dem med familjen.","Sign in to save your lists and share them with your family."),color=ink,textAlign=TextAlign.Center,lineHeight=20.sp)
-            Spacer(Modifier.height(18.dp));Button(onClick=onSignIn,modifier=Modifier.fillMaxWidth().height(58.dp),shape=RoundedCornerShape(10.dp),colors=ButtonDefaults.buttonColors(containerColor=Color(0xFF315F5C))){Text("G  ${tr("FORTSÄTT MED GOOGLE","CONTINUE WITH GOOGLE")}",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color.White)}
+            Spacer(Modifier.height(18.dp));Button(onClick=onSignIn,modifier=Modifier.fillMaxWidth().height(58.dp),shape=RoundedCornerShape(10.dp),colors=ButtonDefaults.buttonColors(containerColor=Color(0xFF315F5C)),contentPadding=PaddingValues(horizontal=10.dp)){GoogleGIcon();Spacer(Modifier.width(9.dp));Text(tr("LOGGA IN MED GOOGLE","SIGN IN WITH GOOGLE"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color.White,fontSize=15.sp,maxLines=1)}
             if(error.isNotBlank()){Spacer(Modifier.height(10.dp));Text(error,color=Color(0xFFA83A28),fontSize=12.sp,textAlign=TextAlign.Center)}
         }
         Spacer(Modifier.height(14.dp));Text(tr("Första inloggningen kräver internet.","The first sign-in requires internet."),color=Color(0xFFC8B894),fontSize=12.sp)
+    }
+}
+
+@Composable private fun GoogleGIcon(){
+    Box(Modifier.size(24.dp).clip(CircleShape).background(Color.White),contentAlignment=Alignment.Center){
+        Text("G",fontWeight=FontWeight.Black,fontSize=17.sp,color=Color(0xFF4285F4))
+        Box(Modifier.align(Alignment.BottomEnd).size(7.dp).background(Color(0xFF34A853)))
+        Box(Modifier.align(Alignment.TopEnd).size(7.dp).background(Color(0xFFEA4335)))
+        Box(Modifier.align(Alignment.BottomStart).size(6.dp).background(Color(0xFFFBBC05)))
+    }
+}
+
+@Composable private fun PrivacyConsentScreen(onAccept:()->Unit,onCancel:()->Unit){
+    var accepted by remember{mutableStateOf(false)}
+    val bg=Color(0xFF15120E);val paper=Color(0xFFD8C294);val ink=Color(0xFF261E16);val gold=Color(0xFFD6A83D)
+    Column(Modifier.fillMaxSize().background(bg).safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center){
+        Text(tr("INTEGRITET & MOLNDATA","PRIVACY & CLOUD DATA"),color=gold,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=23.sp,textAlign=TextAlign.Center)
+        Spacer(Modifier.height(18.dp))
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(paper).border(2.dp,gold,RoundedCornerShape(16.dp)).padding(18.dp)){
+            Text(tr("Bubbsun sparar ditt visningsnamn, din valda färg, familjegrupp, listor och aktivitet i Firebase så att innehållet kan synkas mellan familjemedlemmar och enheter.","Bubbsun stores your display name, selected color, family group, lists and activity in Firebase so content can sync between family members and devices."),color=ink,lineHeight=20.sp)
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth().clickable{accepted=!accepted},verticalAlignment=Alignment.CenterVertically){Checkbox(accepted,{accepted=it});Text(tr("Jag godkänner att dessa uppgifter sparas och synkas.","I agree that this data may be stored and synced."),color=ink,modifier=Modifier.weight(1f))}
+            Spacer(Modifier.height(14.dp))
+            Button(onClick=onAccept,enabled=accepted,modifier=Modifier.fillMaxWidth(),colors=ButtonDefaults.buttonColors(containerColor=Color(0xFF315F5C))){Text(tr("GODKÄNN & FORTSÄTT","ACCEPT & CONTINUE"),fontWeight=FontWeight.Black)}
+            TextButton(onClick=onCancel,modifier=Modifier.fillMaxWidth()){Text(tr("AVBRYT & LOGGA UT","CANCEL & SIGN OUT"),color=Color(0xFFA83A28),fontWeight=FontWeight.Bold)}
+        }
     }
 }
 
@@ -477,8 +503,11 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
     DisposableEffect(Unit){val listener=FirebaseAuth.AuthStateListener{firebaseUser=it.currentUser};together.auth.addAuthStateListener(listener);onDispose{together.auth.removeAuthStateListener(listener)}}
     LaunchedEffect(Unit){if(firebaseUser==null)runCatching{googleClient.silentSignIn().addOnSuccessListener{a->together.auth.signInWithCredential(GoogleAuthProvider.getCredential(a.idToken,null))}}}
-    if(firebaseUser==null){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)};return}
     val store=remember{BubbsunStore(context)}
+    val authDensity=LocalDensity.current
+    if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides Density(authDensity.density,1f)){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
+    var privacyAccepted by remember(firebaseUser!!.uid){mutableStateOf(store.prefsBoolean("privacy_0501_${firebaseUser!!.uid}"))}
+    if(!privacyAccepted){CompositionLocalProvider(LocalDensity provides Density(authDensity.density,1f)){PrivacyConsentScreen(onAccept={store.setPrefsBoolean("privacy_0501_${firebaseUser!!.uid}");privacyAccepted=true},onCancel={together.auth.signOut();googleClient.signOut()})};return}
     val users=remember{mutableStateListOf<UserProfile>().apply{addAll(store.loadUsers())}}
     val lists=remember{mutableStateListOf<ShoppingListData>().apply{addAll(store.loadLists(users))}}
     val events=remember{mutableStateListOf<StatEvent>().apply{addAll(store.loadEvents())}}
@@ -556,7 +585,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 if(theme.id=="cosmic") CosmicBackground()
                 if(theme.id=="heart") HeartBackground()
                 Column(Modifier.fillMaxSize()){
-                    AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={navigate("support")})
+                    AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onHome={if(screen!="lists"){navigationHistory.clear();screen="lists";selectedListId=null}},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={navigate("support")})
                     when(screen){
                         "lists"->ListsScreen(lists,p,theme.id,activeUserId,cloudMembers,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={saveTogether()})
                         "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color,creatorId=activeUserId));saveTogether();navigateBack()})
@@ -610,7 +639,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
 }
 
-@Composable private fun AppHeader(theme:AppTheme,p:Palette,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,onMenu:()->Unit,onThemeSelected:(String)->Unit,onSupporterInfo:()->Unit){
+@Composable private fun AppHeader(theme:AppTheme,p:Palette,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,onMenu:()->Unit,onHome:()->Unit,onThemeSelected:(String)->Unit,onSupporterInfo:()->Unit){
     var themeMenu by remember{mutableStateOf(false)}
     Row(Modifier.fillMaxWidth().background(p.top).padding(horizontal=12.dp,vertical=5.dp),verticalAlignment=Alignment.CenterVertically){
         SquareIcon("☰",onMenu,p,large=true)
@@ -619,7 +648,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         Box(Modifier.weight(1f).height(69.dp),contentAlignment=Alignment.Center){
             val logoOffset=if(hasSupporterMark)(-8).dp else 0.dp
             if(supporterPreview&&supporterGlow) Image(painterResource(R.drawable.bubbsun_header_logo),null,contentScale=ContentScale.Fit,colorFilter=ColorFilter.tint(p.gold),modifier=Modifier.fillMaxWidth().height(49.dp).offset(y=logoOffset).blur(5.dp).graphicsLayer{alpha=.65f})
-            Image(painterResource(R.drawable.bubbsun_header_logo),contentDescription="Bubbsun",contentScale=ContentScale.Fit,modifier=Modifier.fillMaxWidth().height(49.dp).offset(y=logoOffset))
+            Image(painterResource(R.drawable.bubbsun_header_logo),contentDescription="Bubbsun",contentScale=ContentScale.Fit,modifier=Modifier.fillMaxWidth().height(49.dp).offset(y=logoOffset).clickable{onHome()})
             if(supporterPreview&&supporterStyle!="none")Box(Modifier.align(Alignment.BottomCenter)){CompactSupporterMark(supporterStyle,p)}
         }
         Spacer(Modifier.width(7.dp))
@@ -668,7 +697,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             Modifier.fillMaxHeight().fillMaxWidth(.84f).background(p.top).padding(18.dp).clickable(enabled=false){},
             verticalArrangement=Arrangement.Top
         ){
-            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){SquareIcon("×",onClose,p,large=false)}
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("☰",color=readableOn(p.top),fontSize=28.sp,fontWeight=FontWeight.Black);Spacer(Modifier.width(10.dp));Text(tr("MENY","MENU"),color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=25.sp,modifier=Modifier.weight(1f));SquareIcon("×",onClose,p,large=false)}
+            HorizontalDivider(color=p.gold.copy(alpha=.55f),thickness=1.dp)
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())){
             Spacer(Modifier.height(8.dp))
             profile?.let{active->
@@ -680,7 +710,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             Spacer(Modifier.height(18.dp))
             MenuCard(R.drawable.menu_user,tr("ANVÄNDARE","USERS"),tr("Hantera användare","Manage users"),p){onNavigate("users")}
             Spacer(Modifier.height(10.dp))
-            MenuCard(R.drawable.menu_stats,tr("STATISTIK","STATISTICS"),tr("Se listor, köp och aktivitet","View lists, purchases and activity"),p){onNavigate("stats")}
+            MenuCard(R.drawable.menu_stats,tr("STATISTIK","STATISTICS"),tr("Se listor, poster och aktivitet","View lists, entries and activity"),p){onNavigate("stats")}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.theme_steel,tr("INSTÄLLNINGAR","SETTINGS"),tr("Språk, bekräftelser & statistik","Language, confirmations & statistics"),p){onNavigate("settings")}
             Spacer(Modifier.height(10.dp))
@@ -726,12 +756,12 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                         val dropped=centerY>=deleteZoneTop
                         draggingId=null
                         overDeleteZone=false
-                        if(dropped) deleteTarget=l
+                        if(dropped) deleteTarget=l else onSave()
                     },
                     onMove={dir->
                         val from=lists.indexOf(l)
                         val to=(from+dir).coerceIn(0,lists.lastIndex)
-                        if(from!=to){lists.removeAt(from);lists.add(to,l);onSave();true}else false
+                        if(from!=to){lists.removeAt(from);lists.add(to,l);true}else false
                     }
                 )
             }
@@ -925,25 +955,28 @@ private fun ShoppingListScreen(
         LazyColumn(state=listState,modifier=Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
             if(search.isNotBlank()&&matches.isEmpty())item{Text(tr("Inga träffar.","No matches."),color=p.pageText,fontWeight=FontWeight.Bold,modifier=Modifier.padding(16.dp))}
             if(!list.doneFirst)items(active,key={it.id}) { item ->
-                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,activeUserId,
+                    onLike={if(activeUserId in item.likedBy)item.likedBy.remove(activeUserId)else item.likedBy.add(activeUserId);save()},
                     onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
                     onToggle={item.completed=true;item.completedAt=System.currentTimeMillis();onEvent(StatEvent(kind="purchase",itemName=item.name,userId=item.ownerId));save()},
-                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null},
-                    onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;save();true}else false})
+                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null;save()},
+                    onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;true}else false})
             }
             item { Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.green).clickable{list.doneExpanded=!list.doneExpanded;save()}.padding(10.dp)) { Text(if(list.doneExpanded)"${tr("KLART","DONE")} (${done.size})  ▲" else "${tr("KLART","DONE")} (${done.size})  ▼",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color.White) } }
             if(list.doneExpanded) items(done,key={"d${it.id}"}) { item ->
-                ItemRow(item,users,p,deleteMode,selected.contains(item.id),false,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),false,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,activeUserId,
+                    onLike={if(activeUserId in item.likedBy)item.likedBy.remove(activeUserId)else item.likedBy.add(activeUserId);save()},
                     onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
                     onToggle={item.completed=false;item.completedAt=null;list.items.remove(item);list.items.add(0,item);save()},
                     onEdit={editing=item},onDragStart={},onDragEnd={},onMove={false})
             }
             if(list.doneFirst)items(active,key={"a${it.id}"}) { item ->
-                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,activeUserId,
+                    onLike={if(activeUserId in item.likedBy)item.likedBy.remove(activeUserId)else item.likedBy.add(activeUserId);save()},
                     onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
                     onToggle={item.completed=true;item.completedAt=System.currentTimeMillis();onEvent(StatEvent(kind="purchase",itemName=item.name,userId=item.ownerId));save()},
-                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null},
-                    onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;save();true}else false})
+                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null;save()},
+                    onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;true}else false})
             }
         }
     }
@@ -984,7 +1017,7 @@ private fun ShoppingListScreen(
     }
 }
 
-@Composable private fun ItemRow(item:ShoppingItem,users:List<UserProfile>,p:Palette,deleteMode:Boolean,isSelected:Boolean,dragging:Boolean,isNew:Boolean,onSelect:()->Unit,onToggle:()->Unit,onEdit:()->Unit,onDragStart:()->Unit,onDragEnd:()->Unit,onMove:(Int)->Boolean){
+@Composable private fun ItemRow(item:ShoppingItem,users:List<UserProfile>,p:Palette,deleteMode:Boolean,isSelected:Boolean,dragging:Boolean,isNew:Boolean,activeUserId:String,onLike:()->Unit,onSelect:()->Unit,onToggle:()->Unit,onEdit:()->Unit,onDragStart:()->Unit,onDragEnd:()->Unit,onMove:(Int)->Boolean){
     val haptic=LocalHapticFeedback.current
     var dragY by remember{mutableStateOf(0f)}
     var reorderDrag by remember{mutableStateOf(0f)}
@@ -1030,7 +1063,7 @@ private fun ShoppingListScreen(
             verticalAlignment=Alignment.CenterVertically
         ){
             Column(Modifier.weight(1f)){
-                Row(verticalAlignment=Alignment.CenterVertically){Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(item.completed)lerp(p.text,Color.Gray,.78f) else p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null,modifier=Modifier.weight(1f));if(isNew&&!deleteMode)Text(tr("NYTT","NEW"),fontSize=9.sp,fontWeight=FontWeight.Black,color=p.red,modifier=Modifier.border(1.dp,p.red,RoundedCornerShape(4.dp)).padding(horizontal=4.dp,vertical=1.dp))}
+                Row(verticalAlignment=Alignment.CenterVertically){Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(item.completed)lerp(p.text,Color.Gray,.78f) else p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null,modifier=Modifier.weight(1f));if(!deleteMode){Row(Modifier.clickable{onLike()}.padding(start=4.dp,end=if(isNew)4.dp else 0.dp),verticalAlignment=Alignment.CenterVertically){Text("👍",fontSize=15.sp,color=if(activeUserId in item.likedBy)p.gold else p.muted);if(item.likedBy.isNotEmpty())Text(item.likedBy.size.toString(),fontSize=8.sp,fontWeight=FontWeight.Black,color=p.muted)}};if(isNew)Text(tr("NYTT","NEW"),fontSize=9.sp,fontWeight=FontWeight.Black,color=p.red,modifier=Modifier.border(1.dp,p.red,RoundedCornerShape(4.dp)).padding(horizontal=4.dp,vertical=1.dp))}
                 if(item.quantity.isNotBlank()) Text(item.quantity,fontSize=13.sp,fontWeight=FontWeight.Bold,color=if(item.completed)lerp(p.muted,Color.Gray,.52f) else p.muted,maxLines=1,overflow=TextOverflow.Ellipsis)
             }
         }
@@ -1039,7 +1072,7 @@ private fun ShoppingListScreen(
 }
 
 @Composable private fun TogetherUsersScreen(profile:CloudProfile,members:List<CloudProfile>,requests:List<JoinRequest>,groupName:String,joinCode:String,p:Palette,repo:TogetherRepository,onBack:()->Unit,onSignOut:()->Unit){
-    var joinInput by remember{mutableStateOf("")};var busy by remember{mutableStateOf(false)};var message by remember{mutableStateOf("")};var editProfile by remember{mutableStateOf(false)};var editGroup by remember{mutableStateOf(false)};var transferTarget by remember{mutableStateOf<CloudProfile?>(null)};var confirmLeave by remember{mutableStateOf(false)};val context=LocalContext.current
+    var joinInput by remember{mutableStateOf("")};var busy by remember{mutableStateOf(false)};var message by remember{mutableStateOf("")};var editProfile by remember{mutableStateOf(false)};var editGroup by remember{mutableStateOf(false)};var transferTarget by remember{mutableStateOf<CloudProfile?>(null)};var confirmLeave by remember{mutableStateOf(false)};var confirmSignOut by remember{mutableStateOf(false)};val context=LocalContext.current
     Column(Modifier.fillMaxSize().padding(14.dp)){PageHeader(tr("ANVÄNDARE & GRUPP","USERS & GROUP"),p,onBack);Spacer(Modifier.height(10.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(9.dp)){
             item{Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(p.paper).border(2.dp,p.gold,RoundedCornerShape(12.dp)).padding(14.dp)){
@@ -1070,13 +1103,14 @@ private fun ShoppingListScreen(
                 else item{Text(tr("Som storboss måste du överföra kronan innan du kan lämna gruppen.","As owner, transfer the crown before leaving the group."),color=p.pageMuted,fontSize=12.sp)}
             }
             if(message.isNotBlank())item{Text(message,color=if(message.contains("inte")||message.contains("not"))p.red else p.green,fontWeight=FontWeight.Bold)}
-            item{Spacer(Modifier.height(10.dp));RetroButton(tr("LOGGA UT","SIGN OUT"),onSignOut,p,danger=true,modifier=Modifier.fillMaxWidth())}
+            item{Spacer(Modifier.height(10.dp));RetroButton(tr("LOGGA UT","SIGN OUT"),{confirmSignOut=true},p,danger=true,modifier=Modifier.fillMaxWidth())}
         }
     }
     if(editProfile){var n by remember{mutableStateOf(profile.name)};var c by remember{mutableStateOf(profile.color)};AlertDialog(onDismissRequest={editProfile=false},containerColor=p.paper,title={Text(tr("MIN PROFIL","MY PROFILE"),color=p.text,fontWeight=FontWeight.Black)},text={Column{RetroField(n,{n=it.take(35)},tr("Namn","Name"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(10.dp));UserColorGrid(c,p,true){color->if(members.none{it.uid!=profile.uid&&it.color==color})c=color}}},confirmButton={RetroButton(tr("SPARA","SAVE"),{if(n.isNotBlank()&&members.none{it.uid!=profile.uid&&it.name.equals(n,true)}){repo.updateOwn(profile,n,c);editProfile=false}},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),{editProfile=false},p,danger=true)})}
     if(editGroup){var n by remember{mutableStateOf(groupName)};AlertDialog(onDismissRequest={editGroup=false},containerColor=p.paper,title={Text(tr("GRUPPNAMN","GROUP NAME"),color=p.text,fontWeight=FontWeight.Black)},text={RetroField(n,{n=it.take(40)},tr("Gruppnamn","Group name"),Modifier.fillMaxWidth(),p)},confirmButton={RetroButton(tr("SPARA","SAVE"),{if(n.isNotBlank()){repo.updateGroupName(profile.groupId,n);editGroup=false}},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),{editGroup=false},p,danger=true)})}
     transferTarget?.let{target->ConfirmDialog(tr("Göra ${target.name} till storboss?","Make ${target.name} the owner?"),tr("Du blir boss och kan inte ångra detta utan den nya storbossens hjälp.","You will become an admin and cannot undo this without the new owner's help."),p,{transferTarget=null},{repo.transferOwner(profile,target){ };transferTarget=null},confirmLabel=tr("ÖVERFÖR KRONAN","TRANSFER CROWN"))}
     if(confirmLeave)ConfirmDialog(tr("Lämna gruppen?","Leave the group?"),tr("Du förlorar åtkomsten till gruppens listor.","You will lose access to the group's lists."),p,{confirmLeave=false},{repo.leaveGroup(profile){};confirmLeave=false},confirmLabel=tr("LÄMNA","LEAVE"))
+    if(confirmSignOut)ConfirmDialog(tr("Logga ut?","Sign out?"),tr("Dina molnlistor och din familjegrupp finns kvar.","Your cloud lists and family group will remain."),p,{confirmSignOut=false},{confirmSignOut=false;onSignOut()},confirmLabel=tr("BEKRÄFTA","CONFIRM"))
 }
 
 @Composable private fun UsersScreen(users:SnapshotStateList<UserProfile>,lists:List<ShoppingListData>,events:SnapshotStateList<StatEvent>,activeId:String,p:Palette,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onActivate:(String)->Unit,onSave:()->Unit){
@@ -1156,7 +1190,7 @@ private fun ShoppingListScreen(
             Row(verticalAlignment=Alignment.CenterVertically){Checkbox(exitConfirmation,onExitConfirmation,colors=CheckboxDefaults.colors(checkedColor=p.green,uncheckedColor=p.green,checkmarkColor=Color.White));Text(tr("Visa 'Avsluta Bubbsun?'","Show 'Exit Bubbsun?'"),color=p.text,fontWeight=FontWeight.Bold)}
         }
         Spacer(Modifier.height(12.dp))
-        SettingsCard(R.drawable.language_globe,tr("SPRÅK","LANGUAGE"),p,onHeader={languagesExpanded=!languagesExpanded}){
+        SettingsCard(R.drawable.language_globe,"${tr("SPRÅK","LANGUAGE")}  •  ${if(languagesExpanded)tr("VISA FÄRRE ▲","SHOW LESS ▲") else tr("VISA ALLA ▼","SHOW ALL ▼")}",p,onHeader={languagesExpanded=!languagesExpanded}){
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
                 LanguageChoice("🇸🇪","Svenska",language=="sv",p,Modifier.weight(1f)){onLanguage("sv")}
                 LanguageChoice("🇬🇧","English",language=="en",p,Modifier.weight(1f)){onLanguage("en")}
@@ -1302,7 +1336,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
         }
         Spacer(Modifier.height(12.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(9.dp)){
-            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.list_checklist,tr("SKAPADE LISTOR","CREATED LISTS"),lists.size.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.list_basket,tr("TILLAGDA VAROR","ADDED ITEMS"),totalItems.toString(),p,Modifier.weight(1f))}}
+            item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.list_checklist,tr("SKAPADE LISTOR","CREATED LISTS"),lists.size.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.list_basket,tr("POSTER I LISTOR","LIST ENTRIES"),totalItems.toString(),p,Modifier.weight(1f))}}
             item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){StatsCard(R.drawable.list_cart,tr("AVPRICKADE","CHECKED OFF"),completedNow.toString(),p,Modifier.weight(1f));StatsCard(R.drawable.list_food,tr("KLART","COMPLETE"),"$completionRate%",p,Modifier.weight(1f))}}
             item{ActivityDashboard(lastSeven,weekdayNames,p)}
             item{UserDonutCard(userCounts,p)}
@@ -1313,7 +1347,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
                 RecordCard(R.drawable.list_supporter_compass,tr("SNABBAST","FASTEST"),fastest?.name?:tr("Ingen ännu","None yet"),fastestSeconds?.let{"$it s"}?:"—",p,Modifier.weight(1f))
             }}
             item{FeatureStatCard(R.drawable.stats_user,tr("MEST AKTIV ANVÄNDARE","MOST ACTIVE USER"),if(mostActiveCount>0)"${mostActive?.name} – $mostActiveCount ${tr("avprickningar","check-offs")}" else tr("Ingen statistik ännu","No statistics yet"),p)}
-            item{FeatureStatCard(R.drawable.stats_trophy,tr("MEST ANVÄNDA LISTA","MOST USED LIST"),favoriteList?.let{"${it.name} – ${it.items.size} ${tr("varor","items")}"}?:tr("Ingen lista ännu","No list yet"),p)}
+            item{FeatureStatCard(R.drawable.stats_trophy,tr("STÖRSTA LISTAN","LARGEST LIST"),favoriteList?.let{"${it.name} – ${it.items.size} ${tr("poster","entries")}"}?:tr("Ingen lista ännu","No list yet"),p)}
             item{Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(9.dp)){
                 MiniMetric(tr("AKTIVA","ACTIVE"),activeItems.toString(),p,Modifier.weight(1f))
                 MiniMetric(tr("FÄRDIGA LISTOR","FINISHED LISTS"),completedLists.toString(),p,Modifier.weight(1f))
@@ -1321,12 +1355,12 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
                 MiniMetric(tr("BORTTAGNA","DELETED"),deleted.toString(),p,Modifier.weight(1f))
             }}
             item{Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp)){
-                Text(tr("MEST HANDLADE","MOST PURCHASED"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)
+                Text(tr("OFTAST AVPRICKADE","MOST OFTEN CHECKED"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)
                 Spacer(Modifier.height(6.dp))
                 if(topItems.isEmpty())Text(tr("Ingen statistik ännu","No statistics yet"),color=p.muted)
                 topItems.forEachIndexed{i,x->Text("${i+1}. ${x.key}  ·  ${x.value}",fontWeight=FontWeight.Bold,color=p.text,modifier=Modifier.padding(vertical=3.dp))}
             }}
-            item{FunFactCard(R.drawable.list_cart,tr("NI HAR FYLLT","YOU HAVE FILLED"),carts.coerceAtLeast(0).toString(),tr("KUNDVAGNAR!","SHOPPING CARTS!"),p)}
+            item{FunFactCard(R.drawable.list_cart,tr("NI HAR AVPRICKAT","YOU HAVE CHECKED OFF"),purchases.size.toString(),tr("POSTER!","ENTRIES!"),p)}
             if(oldestOpen!=null)item{FeatureStatCard(R.drawable.list_work,tr("ÄLDSTA OAVPRICKADE","OLDEST UNCHECKED"),"${oldestOpen.name} · ${(now-oldestOpen.createdAt)/dayMs} ${tr("dagar","days")}",p)}
             item{Spacer(Modifier.height(10.dp))}
         }
@@ -1420,6 +1454,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.501" to listOf("Privacy consent before the first cloud sync","Mobile-safe Google sign-in screen","Stable drag-and-drop with one sync after release","Synced thumbs-up reactions on entries","Sign-out confirmation","Clickable logo shortcut to My Lists","Clearer menu, languages, dropdowns and statistics wording"),
     "0.500" to listOf("Together Edition Beta with Google sign-in","Real-time family groups with offline Firestore sync","Join codes, approval requests and unique member colors","Owner, admin and member roles protected by server rules","Safe migration of existing local lists","Creator color markers on lists and items","Expanded language selector and refreshed Help & Guides","Together privacy and account controls"),
     "0.480" to listOf("Search & Sort side panel with saved per-list choices","Grouped live search and persistent custom order","Per-user NEW badges and list status","Offline Help & Guides","Private in-app problem and suggestion forms","Responsive narrow-screen titles and fields","Daniel and Sanja portrait Easter egg","Improved update checking and manual check button"),
     "0.472" to listOf("Replaced control symbols with polished illustrated retro icons","New Heart supporter shopping-cart artwork","Tighter product-field icon and text spacing","Clearly grayer text on completed items"),
@@ -1468,7 +1503,7 @@ private val helpTopics=listOf(
     "Produkter" to "Skriv namn och valfri mängd. Tryck på en vara för att redigera och bocka av när den är klar.",
     "Manuell sortering" to "Välj Anpassad i Sök & sortera. Håll sedan inne en vara och dra den till rätt plats.",
     "Sök & sortera" to "Swipa från högerkanten eller tryck på handtaget. Sökningen visar både klara och ej klara träffar.",
-    "Användare & färger" to "Varje person har egen färg. Bubbsun minns vem som lagt till varje vara.",
+    "Användare & färger" to "Varje familjemedlem har en egen färg. Färgmarkeringen på listor och poster visar vem som skapade eller lade till dem. Upptagna färger är nedtonade och kan inte väljas.",
     "Teman" to "Tryck på temaikonen uppe till höger för att byta utseende.",
     "Supporter" to "Supporterläget är gratis under förhandsvisningen och låser upp extra teman, färger och ikoner.",
     "Statistik" to "Statistiksidan samlar roliga siffror om listor, varor och aktivitet.",
@@ -1512,7 +1547,7 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp)){PageHeader(if(problem)tr("RAPPORTERA PROBLEM","REPORT A PROBLEM") else tr("SKICKA FÖRSLAG","SEND SUGGESTION"),p,onBack);Spacer(Modifier.height(12.dp))
         if(sent){Text("♥",fontSize=88.sp,color=Color(0xFFC58B91),modifier=Modifier.align(Alignment.CenterHorizontally));Text(tr("Tack! Meddelandet är skickat.","Thank you! Your message has been sent."),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=22.sp,color=p.pageText,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth());return@Column}
         Text(if(problem)tr("TYP AV PROBLEM","TYPE OF PROBLEM") else tr("TYP AV FÖRSLAG","TYPE OF SUGGESTION"),color=p.pageText,fontWeight=FontWeight.Black,fontSize=12.sp)
-        Spacer(Modifier.height(5.dp));Box{Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(8.dp)).clickable{menu=true}.padding(horizontal=14.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){Text(category,color=p.text,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Text("▼",color=p.text,fontSize=14.sp)};DropdownMenu(menu,{menu=false},containerColor=p.paper){categories.forEach{DropdownMenuItem({Text(it,color=p.text)},{category=it;menu=false})}}}
+        Spacer(Modifier.height(5.dp));Box{Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(8.dp)).clickable{menu=true}.padding(horizontal=14.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){Text(category,color=p.text,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f));Text("▼",color=p.text,fontSize=14.sp)};DropdownMenu(menu,{menu=false},containerColor=popupColor(p.paper),shadowElevation=12.dp,modifier=Modifier.background(popupColor(p.paper)).border(2.dp,p.outline,RoundedCornerShape(8.dp))){categories.forEach{DropdownMenuItem({Text(it,color=p.text)},{category=it;menu=false},modifier=Modifier.background(if(it==category)p.gold.copy(alpha=.18f) else Color.Transparent))}}}
         Spacer(Modifier.height(9.dp));RetroField(title,{title=it.take(80)},tr("Rubrik","Title"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(9.dp));RetroField(message,{message=it.take(2000)},tr("Beskriv så tydligt du kan…","Describe it as clearly as you can…"),Modifier.fillMaxWidth().height(150.dp),p,multiline=true);Spacer(Modifier.height(9.dp));RetroField(email,{email=it.take(120)},tr("E-post för svar (valfritt)","Reply email (optional)"),Modifier.fillMaxWidth(),p)
         Row(verticalAlignment=Alignment.CenterVertically){Checkbox(info,{info=it},colors=CheckboxDefaults.colors(checkedColor=p.green));Text(tr("Bifoga appversion, Android och telefonmodell","Include app version, Android and device model"),color=p.pageText,fontSize=12.sp)}
         if(failed)Text(tr("Kunde inte skicka. Kontrollera internet och försök igen.","Could not send. Check your connection and try again."),color=p.red)

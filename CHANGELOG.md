@@ -165,3 +165,15 @@
 - Lade till sparat Supporter Preview-läge i Inställningar.
 - Lade till exklusivt kosmiskt supporter-tema med transparenta kort.
 - Lade grunden för att senare ersätta test-checkboxen med Google Play Billing.
+## 0.501 – Together Edition Beta 1
+- Lade till obligatoriskt integritetsgodkännande före den första molnsynken.
+- Rättade inloggningssidan för stora systemtexter och smala telefoner.
+- Bytte till Logga in med Google med en liten färgad Google-markering.
+- Stabiliserade dragning av listor och poster genom att synka först när fingret släpps.
+- Lade till synkade tummar på poster, en röst per familjemedlem.
+- Lade till bekräftelse innan utloggning.
+- Gjorde språkpanelens utfällning och formulärens dropdownmenyer tydligare.
+- Gjorde Bubbsun-loggan klickbar som genväg till Mina listor.
+- Balanserade sidomenyn med en ny MENY-rubrik.
+- Gjorde statistikens texter generella för alla slags listor.
+- Förtydligade färgmarkeringarna i Hjälp & guider.

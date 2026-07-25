@@ -1,3 +1,16 @@
+## 0.471
+- Lade till valfri bakgrundskontroll av GitHub Releases med direktlänkar till APK och releasesida.
+- Lade till en tydlig uppdateringssida med stora knappar för nedladdning och Inte nu.
+- Rättade Avsluta Bubbsun och gjorde sidomenyn scrollbar på mindre skärmar.
+- Låste appens typografi till avsedd storlek oavsett Androids systeminställning för textstorlek.
+- Bytte till de valda porträtten av Daniel och Sanja, baserade på skaparna.
+- Införde den godkända retroserien för tillbaka-, redigera- och papperskorgsikoner.
+- Använder samma papperskorg konsekvent i hela appen.
+- Rensade och centrerade eldtemats ikon och supporter-shoppingvagnen.
+- Gjorde avprickade varor tydligare grå.
+- Lade namn- och vågikon inuti produkt- och mängdfälten.
+- Bytte färger på problem och förslag samt förbättrade kontrasten på statistikkort.
+
 ## 0.470
 - Byggde ut statistiksidan med stapelgraf, linjegraf, användarfördelning, rekord, topplistor, streak, snitt, färdiga listor och lekfulla kundvagnsfakta.
 - Rättade fysisk tillbaka-navigering så undersidor går till sin faktiska föregående sida.

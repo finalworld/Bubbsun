@@ -6,6 +6,8 @@ import android.app.Activity
 import java.util.Locale
 import android.net.Uri
 import android.os.Bundle
+import java.net.HttpURLConnection
+import java.net.URL
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -79,6 +81,8 @@ import kotlin.math.abs
 import kotlin.math.sign
 import kotlin.random.Random
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private data class ListIconOption(val id:String,val drawable:Int,val supporter:Boolean=false)
 private val listIcons = listOf(
@@ -195,8 +199,33 @@ class ShoppingListData(
     items:List<ShoppingItem> = emptyList()
 ){ var name by mutableStateOf(name); var icon by mutableStateOf(icon); var iconColorHex by mutableStateOf(iconColorHex); val items=mutableStateListOf<ShoppingItem>().apply{addAll(items)} }
 data class StatEvent(val id:String=UUID.randomUUID().toString(),val kind:String,val itemName:String,val userId:String,val timestamp:Long=System.currentTimeMillis())
+private data class ReleaseInfo(val version:String,val pageUrl:String,val apkUrl:String,val notes:String)
 
-class MainActivity:ComponentActivity(){ override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContent{BubbsunApp(applicationContext)}} }
+private suspend fun fetchLatestRelease():ReleaseInfo?=withContext(Dispatchers.IO){
+    runCatching{
+        val connection=(URL("https://api.github.com/repos/finalworld/Bubbsun/releases/latest").openConnection() as HttpURLConnection).apply{
+            connectTimeout=4500;readTimeout=4500
+            setRequestProperty("Accept","application/vnd.github+json")
+            setRequestProperty("User-Agent","Bubbsun-Android/${BuildConfig.VERSION_NAME}")
+        }
+        try{
+            if(connection.responseCode !in 200..299)return@runCatching null
+            val json=JSONObject(connection.inputStream.bufferedReader().use{it.readText()})
+            val version=json.optString("tag_name").removePrefix("v")
+            val assets=json.optJSONArray("assets")?:JSONArray()
+            var apk=""
+            repeat(assets.length()){i->val asset=assets.getJSONObject(i);if(asset.optString("name").endsWith(".apk",true))apk=asset.optString("browser_download_url")}
+            if(version.isBlank()||apk.isBlank())null else ReleaseInfo(version,json.optString("html_url"),apk,json.optString("body"))
+        }finally{connection.disconnect()}
+    }.getOrNull()
+}
+
+private fun isNewerVersion(remote:String,local:String):Boolean{
+    val a=remote.split(".").map{it.toIntOrNull()?:0};val b=local.split(".").map{it.toIntOrNull()?:0}
+    return (0 until maxOf(a.size,b.size)).firstNotNullOfOrNull{i->((a.getOrElse(i){0}).compareTo(b.getOrElse(i){0})).takeIf{it!=0}}?.let{it>0}?:false
+}
+
+class MainActivity:ComponentActivity(){ override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContent{BubbsunApp(this)}} }
 
 private class BubbsunStore(context:Context){
     private val prefs=context.getSharedPreferences("bubbsun_store",Context.MODE_PRIVATE)
@@ -228,6 +257,10 @@ private class BubbsunStore(context:Context){
     fun saveSupporterStyle(value:String)=prefs.edit().putString("supporter_style_v0451",value).apply()
     fun loadSupporterGlow():Boolean=prefs.getBoolean("supporter_glow_v0454",true)
     fun saveSupporterGlow(value:Boolean)=prefs.edit().putBoolean("supporter_glow_v0454",value).apply()
+    fun loadUpdateChecks():Boolean=prefs.getBoolean("update_checks_v0471",true)
+    fun saveUpdateChecks(value:Boolean)=prefs.edit().putBoolean("update_checks_v0471",value).apply()
+    fun loadLastUpdateCheck():Long=prefs.getLong("last_update_check_v0471",0L)
+    fun saveLastUpdateCheck(value:Long)=prefs.edit().putLong("last_update_check_v0471",value).apply()
 }
 
 data class Palette(
@@ -338,10 +371,17 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var supporterPreview by remember{mutableStateOf(store.loadSupporterPreview())}
     var supporterStyle by remember{mutableStateOf(store.loadSupporterStyle().takeIf{it in supporterStyleIds}?:"none")}
     var supporterGlow by remember{mutableStateOf(store.loadSupporterGlow())}
+    var updateChecks by remember{mutableStateOf(store.loadUpdateChecks())}
+    var availableRelease by remember{mutableStateOf<ReleaseInfo?>(null)}
     var showExitDialog by remember{mutableStateOf(false)}
     LaunchedEffect(Unit){
         if(!supporterPreview&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)}
         if(store.loadSupporterStyle()!=supporterStyle)store.saveSupporterStyle(supporterStyle)
+        val now=System.currentTimeMillis()
+        if(updateChecks&&now-store.loadLastUpdateCheck()>=24*60*60*1000L){
+            store.saveLastUpdateCheck(now)
+            fetchLatestRelease()?.takeIf{isNewerVersion(it.version,BuildConfig.VERSION_NAME)}?.let{availableRelease=it;navigationHistory.add(screen);screen="update"}
+        }
     }
     val theme=appThemes.firstOrNull{it.id==themeId}?:appThemes.first()
     val p=theme.palette
@@ -361,7 +401,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         }
     }
     val systemDensity = LocalDensity.current
-    CompositionLocalProvider(LocalDensity provides Density(systemDensity.density, systemDensity.fontScale.coerceAtMost(1.35f))) {
+    CompositionLocalProvider(LocalDensity provides Density(systemDensity.density,1f)) {
         MaterialTheme(colorScheme=if(p.bg.luminance()<.45f)darkColorScheme() else lightColorScheme()){
             Box(Modifier.fillMaxSize().background(p.bg).safeDrawingPadding()){
                 if(theme.id=="cosmic") CosmicBackground()
@@ -372,11 +412,12 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                         "lists"->ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
                         "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color));store.saveLists(lists);navigateBack()})
                         "stats"->StatsScreen(lists,events,users,p,onBack={navigateBack()})
-                        "settings"->SettingsScreen(p,language,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,openSupportSettings,onSupporterInfo={navigate("support")},onBack={navigateBack()},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
+                        "settings"->SettingsScreen(p,language,updateChecks,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,openSupportSettings,onSupporterInfo={navigate("support")},onBack={navigateBack()},onUpdateChecks={updateChecks=it;store.saveUpdateChecks(it)},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
                         "users"->UsersScreen(users,lists,events,activeUserId,p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onActivate={activeUserId=it;store.saveUserId(it)},onSave={if(users.none{it.id==activeUserId})activeUserId=users.first().id;store.saveUsers(users);store.saveLists(lists);store.saveEvents(events);store.saveUserId(activeUserId)})
                         "about"->AboutScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onVersions={navigate("versions")},onBack={navigateBack()})
                         "support"->SupportScreen(p,supporterPreview,onBack={navigateBack()},onActivate={supporterPreview=true;store.saveSupporterPreview(true)},onExplore={openSupportSettings=true;navigate("settings")})
                         "versions"->VersionsScreen(p,onBack={navigateBack()})
+                        "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
                         else->{val l=lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,users,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={store.saveLists(lists)},onEvent={events.add(it);store.saveEvents(events)})}
                     }
                 }
@@ -476,6 +517,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             verticalArrangement=Arrangement.Top
         ){
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){SquareIcon("×",onClose,p,large=false)}
+            Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())){
             Spacer(Modifier.height(8.dp))
             Text(tr("AKTIV ANVÄNDARE","ACTIVE USER"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=12.sp,color=readableOn(p.top),letterSpacing=1.2.sp)
             Spacer(Modifier.height(8.dp))
@@ -501,9 +543,10 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             MenuCard(R.drawable.theme_steel,tr("INSTÄLLNINGAR","SETTINGS"),tr("Språk, bekräftelser & statistik","Language, confirmations & statistics"),p){onNavigate("settings")}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.about_info,tr("OM BUBBSUN","ABOUT BUBBSUN"),tr("Version, skapare & kontakt","Version, creators & contact"),p){onNavigate("about")}
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(18.dp))
             Text(if(supporterEnabled)"♥  FOUNDING SUPPORTER" else "♥  ${tr("STÖD BUBBSUN","SUPPORT BUBBSUN")}",color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.align(Alignment.CenterHorizontally).clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.outline,RoundedCornerShape(50)).clickable{onSupporterInfo()}.padding(horizontal=10.dp,vertical=5.dp));Spacer(Modifier.height(6.dp))
             Text("v${BuildConfig.VERSION_NAME}  •  $editionName",color=p.gold.copy(alpha=.85f),fontFamily=FontFamily.Serif,fontSize=13.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=6.dp))
+            }
         }
     }
 }
@@ -742,7 +785,7 @@ private fun ShoppingListScreen(
     var dragY by remember{mutableStateOf(0f)}
     var reorderDrag by remember{mutableStateOf(0f)}
     val rowStepPx=with(LocalDensity.current){72.dp.toPx()}
-    val bg by animateColorAsState(if(dragging)p.glow else if(item.completed)lerp(p.paper,Color.Gray,.19f) else p.paper,label="itemdrag")
+    val bg by animateColorAsState(if(dragging)p.glow else if(item.completed)lerp(p.paper,Color.Gray,.32f) else p.paper,label="itemdrag")
     val owner=users.firstOrNull{it.id==item.ownerId}
     Row(
         Modifier.fillMaxWidth()
@@ -843,13 +886,23 @@ private fun ShoppingListScreen(
 
 @Composable private fun AddUserDialog(users:List<UserProfile>,p:Palette,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onDismiss:()->Unit,onAdd:(String,Long)->Unit){var name by remember{mutableStateOf("")};var color by remember{mutableStateOf(userColors.first())};var error by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("LÄGG TILL ANVÄNDARE","ADD USER"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(name,{name=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(12.dp));UserColorGrid(color,p,supporterEnabled,onSupporterInfo){color=it};if(error.isNotBlank())Text(error,color=p.red)}},confirmButton={RetroButton(tr("SPARA","SAVE"),{val n=capitalized(name);error=when{n.isBlank()->tr("Skriv ett namn","Enter a name");users.any{it.name.equals(n,true)}->tr("Namnet finns redan","That name already exists");else->""};if(error.isBlank())onAdd(n,color)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 
-@Composable private fun SettingsScreen(p:Palette,language:String,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
+@Composable private fun SettingsScreen(p:Palette,language:String,updateChecks:Boolean,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onUpdateChecks:(Boolean)->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
     var reset by remember{mutableStateOf(false)}
     val scroll=rememberScrollState()
     LaunchedEffect(startAtSupporter,supporterPreview){if(startAtSupporter&&supporterPreview){delay(220);scroll.animateScrollTo((scroll.maxValue*.72f).toInt())}}
     Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(14.dp)){
         PageHeader(tr("INSTÄLLNINGAR","SETTINGS"),p,onBack)
         Spacer(Modifier.height(14.dp))
+        SettingsCard(R.drawable.about_info,tr("UPPDATERINGAR","UPDATES"),p){
+            Row(Modifier.fillMaxWidth().clickable{onUpdateChecks(!updateChecks)},verticalAlignment=Alignment.CenterVertically){
+                Checkbox(updateChecks,onUpdateChecks,colors=CheckboxDefaults.colors(checkedColor=p.green,uncheckedColor=p.green,checkmarkColor=Color.White))
+                Column(Modifier.weight(1f)){
+                    Text(tr("Sök efter nya versioner","Check for new versions"),color=p.text,fontWeight=FontWeight.Bold)
+                    Text(tr("Kontrolleras i bakgrunden vid uppstart.","Checked in the background at startup."),color=p.muted,fontSize=12.sp)
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
         SettingsCard(R.drawable.stats_checked,tr("BEKRÄFTELSER","CONFIRMATIONS"),p){
             Row(verticalAlignment=Alignment.CenterVertically){Checkbox(exitConfirmation,onExitConfirmation,colors=CheckboxDefaults.colors(checkedColor=p.green,uncheckedColor=p.green,checkmarkColor=Color.White));Text(tr("Visa 'Avsluta Bubbsun?'","Show 'Exit Bubbsun?'"),color=p.text,fontWeight=FontWeight.Bold)}
         }
@@ -1055,7 +1108,27 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 @Composable private fun RecordCard(icon:Int,title:String,value:String,detail:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.heightIn(min=142.dp).clip(RoundedCornerShape(10.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(10.dp)).padding(8.dp),horizontalAlignment=Alignment.CenterHorizontally){Image(painterResource(icon),null,Modifier.size(39.dp));Text(title,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,textAlign=TextAlign.Center);Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=13.sp,textAlign=TextAlign.Center,maxLines=2);Text(detail,color=p.text,fontSize=10.sp,textAlign=TextAlign.Center,maxLines=2)}}
 @Composable private fun MiniMetric(title:String,value:String,p:Palette,modifier:Modifier=Modifier){Column(modifier.clip(RoundedCornerShape(8.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(8.dp)).padding(vertical=8.dp,horizontal=4.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=18.sp);Text(title,color=p.text,fontWeight=FontWeight.Bold,fontSize=8.sp,textAlign=TextAlign.Center,maxLines=2)}}
-@Composable private fun FunFactCard(icon:Int,top:String,value:String,bottom:String,p:Palette){Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.gold.copy(alpha=.18f)).border(2.dp,p.gold,RoundedCornerShape(10.dp)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(76.dp));Spacer(Modifier.width(14.dp));Column(Modifier.weight(1f),horizontalAlignment=Alignment.CenterHorizontally){Text(top,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=14.sp);Text(value,color=p.green,fontWeight=FontWeight.Black,fontSize=42.sp);Text(bottom,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp)}}}
+@Composable private fun FunFactCard(icon:Int,top:String,value:String,bottom:String,p:Palette){val bg=lerp(p.paper,p.gold,.16f);val fg=readableOn(bg);Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(bg).border(2.dp,p.gold,RoundedCornerShape(10.dp)).padding(14.dp),verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(76.dp));Spacer(Modifier.width(14.dp));Column(Modifier.weight(1f),horizontalAlignment=Alignment.CenterHorizontally){Text(top,color=fg,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=14.sp);Text(value,color=if(p.green.luminance()>.35f)p.green else p.gold,fontWeight=FontWeight.Black,fontSize=42.sp);Text(bottom,color=fg,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp)}}}
+
+@Composable private fun UpdateAvailableScreen(release:ReleaseInfo,p:Palette,onBack:()->Unit){
+    val context=LocalContext.current
+    fun open(url:String){runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))}}
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),horizontalAlignment=Alignment.CenterHorizontally){
+        PageHeader(tr("NY VERSION","NEW VERSION"),p,onBack)
+        Spacer(Modifier.height(24.dp))
+        Text("♥",fontSize=62.sp,color=p.red)
+        Text(tr("NY VERSION FINNS!","A NEW VERSION IS AVAILABLE!"),color=p.pageText,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=23.sp,textAlign=TextAlign.Center)
+        Spacer(Modifier.height(7.dp))
+        Text("Bubbsun v${release.version}",color=p.gold,fontWeight=FontWeight.Black,fontSize=20.sp)
+        if(release.notes.isNotBlank()){Spacer(Modifier.height(16.dp));Text(release.notes.take(900),color=p.pageText,fontSize=13.sp,textAlign=TextAlign.Start,modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp))}
+        Spacer(Modifier.height(22.dp))
+        RetroButton(tr("LADDA NER NY VERSION","DOWNLOAD NEW VERSION"),{open(release.apkUrl)},p,modifier=Modifier.fillMaxWidth().heightIn(min=62.dp))
+        Spacer(Modifier.height(11.dp))
+        Button(onClick=onBack,modifier=Modifier.fillMaxWidth().heightIn(min=58.dp),shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.paper,contentColor=p.text),border=androidx.compose.foundation.BorderStroke(2.dp,p.outline)){Text(tr("INTE NU","NOT NOW"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp)}
+        Spacer(Modifier.height(11.dp))
+        TextButton({open(release.pageUrl)},modifier=Modifier.fillMaxWidth().heightIn(min=50.dp)){Text(tr("VISA PÅ GITHUB","VIEW ON GITHUB"),color=p.pageText,fontWeight=FontWeight.Bold)}
+    }
+}
 
 @Composable private fun SupportScreen(p:Palette,supporterEnabled:Boolean,onBack:()->Unit,onActivate:()->Unit,onExplore:()->Unit){
     var success by remember{mutableStateOf(false)}
@@ -1092,6 +1165,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.471" to listOf("Optional background update checks with direct APK and GitHub links","Fixed Exit Bubbsun and made the side menu scrollable","App typography is no longer affected by Android font scaling","New Daniel and Sanja portraits based on the creators","Unified retro back, edit and delete controls","Refined fire and supporter cart artwork","Clearer completed items, statistics text and About-page action colors","Compact product and quantity field icons"),
     "0.470" to listOf("Playful statistics dashboard with charts, records and fun facts","Correct hierarchical physical-back navigation","Refined supporter flow, headers and theme backgrounds","Compact list and product forms","Polished About page, splash screen and version history"),
     "0.461" to listOf("Fully translated supporter page","Mobile-friendly supporter benefits","Clearer completed-item shading","Centered statistics and portrait icons"),
     "0.460" to listOf("New supporter page with free preview activation","In-app version history","Cleaned and centered icons","Complete language and layout fixes"),
@@ -1114,8 +1188,8 @@ private val patchNotes=listOf(
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
             items(patchNotes){(version,notes)->
                 val open=expanded==version
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.470")2.dp else 1.dp,if(version=="0.470")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
-                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.470")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.471")2.dp else 1.dp,if(version=="0.471")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
+                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.471")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
                     if(open){Spacer(Modifier.height(7.dp));notes.forEach{Text("• $it",color=p.text,fontSize=14.sp,modifier=Modifier.padding(vertical=2.dp))}}
                 }
             }
@@ -1208,9 +1282,9 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
         }
 
         Spacer(Modifier.height(12.dp))
-        AboutActionButton(R.drawable.about_bug, tr("RAPPORTERA PROBLEM","REPORT A PROBLEM"), tr("Hjälp oss att göra Bubbsun ännu bättre","Help us make Bubbsun even better"), p.green, p) { email(tr("Bubbsun – rapportera problem","Bubbsun – report a problem")) }
+        AboutActionButton(R.drawable.about_bug, tr("RAPPORTERA PROBLEM","REPORT A PROBLEM"), tr("Hjälp oss att göra Bubbsun ännu bättre","Help us make Bubbsun even better"), Color(0xFF6B281D), p) { email(tr("Bubbsun – rapportera problem","Bubbsun – report a problem")) }
         Spacer(Modifier.height(9.dp))
-        AboutActionButton(R.drawable.about_idea, tr("SKICKA FÖRSLAG","SEND SUGGESTION"), tr("Har du en idé? Vi vill gärna höra den!","Have an idea? We would love to hear it!"), Color(0xFF6B281D), p) { email(tr("Bubbsun – förslag","Bubbsun – suggestion")) }
+        AboutActionButton(R.drawable.about_idea, tr("SKICKA FÖRSLAG","SEND SUGGESTION"), tr("Har du en idé? Vi vill gärna höra den!","Have an idea? We would love to hear it!"), p.green, p) { email(tr("Bubbsun – förslag","Bubbsun – suggestion")) }
         Spacer(Modifier.height(9.dp))
         AboutActionButton(R.drawable.list_checklist,tr("VERSIONER & NYHETER","VERSIONS & NEWS"),"Patch notes • v${BuildConfig.VERSION_NAME}",p.green,p,onVersions)
         Spacer(Modifier.height(9.dp))
@@ -1250,7 +1324,7 @@ private fun CreditRow(icon: Int, name: String, role: String, p: Palette, compact
                 .border(1.dp, p.gold, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Image(painterResource(icon),null,contentScale=ContentScale.Fit,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.38f;scaleY=1.38f;translationX=1.dp.toPx();translationY=1.dp.toPx()})
+            Image(painterResource(icon),null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.04f;scaleY=1.04f})
             Box(Modifier.matchParentSize().border(1.dp,p.gold,CircleShape))
         }
         Spacer(Modifier.width(9.dp))
@@ -1298,13 +1372,12 @@ private fun AboutActionButton(icon: Int, title: String, subtitle: String, backgr
 @Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){PageBack(onBack,p);Spacer(Modifier.width(10.dp));Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=when{title.length<=16->24.sp;title.length<=28->20.sp;else->17.sp},lineHeight=when{title.length<=16->26.sp;title.length<=28->22.sp;else->19.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=p.pageText,modifier=Modifier.weight(1f));trailing?.invoke()}}
 @Composable private fun PageBack(onBack:()->Unit,p:Palette){
     Button(onClick=onBack,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(58.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){
-        Canvas(Modifier.size(35.dp)){
-            val c=readableOn(p.panel);val sw=4.5.dp.toPx()
-            val y=size.height*.52f
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.18f,y),androidx.compose.ui.geometry.Offset(size.width*.84f,y),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.18f,y),androidx.compose.ui.geometry.Offset(size.width*.43f,size.height*.25f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.18f,y),androidx.compose.ui.geometry.Offset(size.width*.43f,size.height*.79f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.44f,size.height*.38f),androidx.compose.ui.geometry.Offset(size.width*.72f,size.height*.38f),sw*.55f,StrokeCap.Round)
+        Canvas(Modifier.size(38.dp)){
+            val outline=Color(0xFF201B16);val sw=2.5.dp.toPx()
+            val arrow=Path().apply{moveTo(size.width*.10f,size.height*.50f);lineTo(size.width*.43f,size.height*.18f);lineTo(size.width*.43f,size.height*.36f);lineTo(size.width*.88f,size.height*.36f);lineTo(size.width*.88f,size.height*.64f);lineTo(size.width*.43f,size.height*.64f);lineTo(size.width*.43f,size.height*.82f);close()}
+            drawPath(arrow,p.green);drawPath(arrow,outline,style=Stroke(sw,join=StrokeJoin.Round))
+            drawCircle(p.gold,size.minDimension*.045f,Offset(size.width*.68f,size.height*.50f))
+            drawCircle(p.red,size.minDimension*.045f,Offset(size.width*.79f,size.height*.50f))
         }
     }
 }
@@ -1333,9 +1406,9 @@ private fun InputPanel(
             BoxWithConstraints(Modifier.fillMaxWidth()){
                 val narrow=maxWidth<350.dp;val gap=8.dp
                 Row(verticalAlignment=Alignment.Bottom){
-                    Column(Modifier.weight(if(narrow)1.35f else 1.45f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd)}
+                    Column(Modifier.weight(if(narrow)1.35f else 1.45f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,leading="product")}
                     Spacer(Modifier.width(gap))
-                    Column(Modifier.weight(if(narrow).95f else 1f)){RetroField(quantity,onQuantityChange,tr("Valfri mängd","Optional quantity"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)13.sp else 14.sp)}
+                    Column(Modifier.weight(if(narrow).95f else 1f)){RetroField(quantity,onQuantityChange,tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)11.sp else 12.sp,leading="balance")}
                     Spacer(Modifier.width(gap));RetroButton("✓",onAdd,p,modifier=Modifier.size(54.dp),compact=true)
                 }
             }
@@ -1477,34 +1550,32 @@ private fun BalanceScaleIcon(color: Color, modifier: Modifier = Modifier) {
         contentPadding=PaddingValues(0.dp),
         modifier=Modifier.size(50.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))
     ){
-        Canvas(Modifier.size(27.dp)){
-            val c=readableOn(p.panel)
-            val sw=3.dp.toPx()
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.25f,size.height*.74f),androidx.compose.ui.geometry.Offset(size.width*.70f,size.height*.29f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.34f,size.height*.83f),androidx.compose.ui.geometry.Offset(size.width*.79f,size.height*.38f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.70f,size.height*.29f),androidx.compose.ui.geometry.Offset(size.width*.79f,size.height*.38f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.24f,size.height*.75f),androidx.compose.ui.geometry.Offset(size.width*.20f,size.height*.88f),sw*.75f,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.20f,size.height*.88f),androidx.compose.ui.geometry.Offset(size.width*.34f,size.height*.83f),sw*.75f,StrokeCap.Round)
+        Canvas(Modifier.size(31.dp)){
+            val outline=Color(0xFF201B16);val sw=4.dp.toPx()
+            drawLine(outline,Offset(size.width*.24f,size.height*.80f),Offset(size.width*.73f,size.height*.31f),sw*1.75f,StrokeCap.Round)
+            drawLine(p.green,Offset(size.width*.27f,size.height*.77f),Offset(size.width*.70f,size.height*.34f),sw,StrokeCap.Round)
+            drawLine(p.red,Offset(size.width*.69f,size.height*.35f),Offset(size.width*.80f,size.height*.24f),sw*1.05f,StrokeCap.Round)
+            val tip=Path().apply{moveTo(size.width*.18f,size.height*.87f);lineTo(size.width*.28f,size.height*.67f);lineTo(size.width*.38f,size.height*.77f);close()}
+            drawPath(tip,p.gold);drawPath(tip,outline,style=Stroke(1.5.dp.toPx(),join=StrokeJoin.Round))
         }
     }
 }
 
 @Composable private fun DeleteButton(onClick:()->Unit,p:Palette){
-    Button(onClick,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.red,contentColor=readableOn(p.red)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(50.dp)){
-        Canvas(Modifier.size(27.dp)){
-            val c=readableOn(p.red);val sw=3.1.dp.toPx()
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.25f,size.height*.28f),androidx.compose.ui.geometry.Offset(size.width*.75f,size.height*.28f),sw,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.40f,size.height*.18f),androidx.compose.ui.geometry.Offset(size.width*.60f,size.height*.18f),sw,StrokeCap.Round)
-            val path=Path().apply{moveTo(size.width*.30f,size.height*.34f);lineTo(size.width*.35f,size.height*.82f);lineTo(size.width*.65f,size.height*.82f);lineTo(size.width*.70f,size.height*.34f)}
-            drawPath(path,c,style=Stroke(width=sw,cap=StrokeCap.Round))
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.43f,size.height*.43f),androidx.compose.ui.geometry.Offset(size.width*.45f,size.height*.72f),sw*.72f,StrokeCap.Round)
-            drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.57f,size.height*.43f),androidx.compose.ui.geometry.Offset(size.width*.55f,size.height*.72f),sw*.72f,StrokeCap.Round)
+    Button(onClick,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(50.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))){
+        Canvas(Modifier.size(31.dp)){
+            val outline=Color(0xFF201B16);val sw=2.2.dp.toPx()
+            val body=Path().apply{moveTo(size.width*.25f,size.height*.35f);lineTo(size.width*.30f,size.height*.88f);lineTo(size.width*.70f,size.height*.88f);lineTo(size.width*.75f,size.height*.35f);close()}
+            drawPath(body,p.green);drawPath(body,outline,style=Stroke(sw,join=StrokeJoin.Round))
+            drawRoundRect(p.red,Offset(size.width*.18f,size.height*.25f),androidx.compose.ui.geometry.Size(size.width*.64f,size.height*.18f),CornerRadius(5.dp.toPx()),style=Stroke(sw))
+            drawRoundRect(p.red,Offset(size.width*.39f,size.height*.11f),androidx.compose.ui.geometry.Size(size.width*.22f,size.height*.18f),CornerRadius(4.dp.toPx()),style=Stroke(sw))
+            listOf(.39f,.50f,.61f).forEach{x->drawLine(outline,Offset(size.width*x,size.height*.50f),Offset(size.width*x,size.height*.76f),1.8.dp.toPx(),StrokeCap.Round)}
         }
     }
 }
 @Composable private fun SquareIcon(text:String,onClick:()->Unit,p:Palette,large:Boolean=false){Button(onClick,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(if(large)56.dp else 44.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))){Text(text,fontSize=if(large)31.sp else 22.sp,fontWeight=FontWeight.Black)}}
-@Composable private fun EditDialog(item:ShoppingItem,p:Palette,onDismiss:()->Unit,onSave:(String,String)->Unit){var n by remember{mutableStateOf(item.name)};var q by remember{mutableStateOf(item.quantity)};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("REDIGERA VARA","EDIT ITEM"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(n,{n=it},tr("Vara","Item"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(9.dp));RetroField(q,{q=it},tr("Mängd/enhet, t.ex. 2 paket","Quantity/unit, e.g. 2 packs"),Modifier.fillMaxWidth(),p)}},confirmButton={RetroButton(tr("SPARA","SAVE"),{if(n.isNotBlank())onSave(n,q)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
+@Composable private fun EditDialog(item:ShoppingItem,p:Palette,onDismiss:()->Unit,onSave:(String,String)->Unit){var n by remember{mutableStateOf(item.name)};var q by remember{mutableStateOf(item.quantity)};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("REDIGERA VARA","EDIT ITEM"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(n,{n=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p,leading="product");Spacer(Modifier.height(9.dp));RetroField(q,{q=it},tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth(),p,leading="balance")}},confirmButton={RetroButton(tr("SPARA","SAVE"),{if(n.isNotBlank())onSave(n,q)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 @Composable private fun ConfirmDialog(title:String,text:String,p:Palette,onDismiss:()->Unit,onConfirm:()->Unit,confirmLabel:String=tr("BEKRÄFTA","CONFIRM")){AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Text(text,color=p.text)},confirmButton={RetroButton(confirmLabel,onConfirm,p,danger=true)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p)})}
-@Composable private fun RetroField(value:String,onValueChange:(String)->Unit,placeholder:String,modifier:Modifier,p:Palette,onDone:()->Unit={},placeholderSize:androidx.compose.ui.unit.TextUnit=16.sp){OutlinedTextField(value,onValueChange,modifier=modifier,singleLine=true,placeholder={Text(placeholder,color=p.muted,fontSize=placeholderSize,maxLines=1)},keyboardOptions=KeyboardOptions(capitalization=KeyboardCapitalization.Sentences,imeAction=ImeAction.Done),keyboardActions=KeyboardActions(onDone={onDone()}),shape=RoundedCornerShape(8.dp),colors=OutlinedTextFieldDefaults.colors(focusedTextColor=p.text,unfocusedTextColor=p.text,focusedBorderColor=p.gold,unfocusedBorderColor=p.outline,cursorColor=p.gold,focusedContainerColor=p.paper,unfocusedContainerColor=p.paper))}
+@Composable private fun RetroField(value:String,onValueChange:(String)->Unit,placeholder:String,modifier:Modifier,p:Palette,onDone:()->Unit={},placeholderSize:androidx.compose.ui.unit.TextUnit=16.sp,leading:String?=null){OutlinedTextField(value,onValueChange,modifier=modifier,singleLine=true,leadingIcon=leading?.let{{if(it=="balance")BalanceScaleIcon(p.muted,Modifier.size(18.dp))else ProductBoxIcon(p.muted,Modifier.size(18.dp))}},placeholder={Text(placeholder,color=p.muted,fontSize=placeholderSize,maxLines=1)},keyboardOptions=KeyboardOptions(capitalization=KeyboardCapitalization.Sentences,imeAction=ImeAction.Done),keyboardActions=KeyboardActions(onDone={onDone()}),shape=RoundedCornerShape(8.dp),colors=OutlinedTextFieldDefaults.colors(focusedTextColor=p.text,unfocusedTextColor=p.text,focusedBorderColor=p.gold,unfocusedBorderColor=p.outline,cursorColor=p.gold,focusedContainerColor=p.paper,unfocusedContainerColor=p.paper))}
 @Composable private fun RetroButton(text:String,onClick:()->Unit,p:Palette,modifier:Modifier=Modifier,compact:Boolean=false,danger:Boolean=false){Button(onClick,modifier=modifier,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=if(danger)p.red else p.green,contentColor=Color(0xFFF4E4BA)),contentPadding=PaddingValues(horizontal=if(compact)10.dp else 14.dp,vertical=if(compact)9.dp else 13.dp)){Text(text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=if(compact)13.sp else 17.sp)}}
 private fun capitalized(s:String)=s.trim().replaceFirstChar{if(it.isLowerCase())it.titlecase()else it.toString()}

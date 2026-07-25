@@ -826,8 +826,8 @@ private fun ShoppingListScreen(
             verticalAlignment=Alignment.CenterVertically
         ){
             Column(Modifier.weight(1f)){
-                Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null)
-                if(item.quantity.isNotBlank()) Text(item.quantity,fontSize=13.sp,fontWeight=FontWeight.Bold,color=p.muted,maxLines=1,overflow=TextOverflow.Ellipsis)
+                Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(item.completed)lerp(p.text,Color.Gray,.62f) else p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null)
+                if(item.quantity.isNotBlank()) Text(item.quantity,fontSize=13.sp,fontWeight=FontWeight.Bold,color=if(item.completed)lerp(p.muted,Color.Gray,.52f) else p.muted,maxLines=1,overflow=TextOverflow.Ellipsis)
             }
         }
         if(deleteMode) Checkbox(isSelected,{onSelect()},colors=CheckboxDefaults.colors(checkedColor=p.red,uncheckedColor=p.red,checkmarkColor=Color.White))
@@ -1165,6 +1165,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.472" to listOf("Replaced control symbols with polished illustrated retro icons","New Heart supporter shopping-cart artwork","Tighter product-field icon and text spacing","Clearly grayer text on completed items"),
     "0.471" to listOf("Optional background update checks with direct APK and GitHub links","Fixed Exit Bubbsun and made the side menu scrollable","App typography is no longer affected by Android font scaling","New Daniel and Sanja portraits based on the creators","Unified retro back, edit and delete controls","Refined fire and supporter cart artwork","Clearer completed items, statistics text and About-page action colors","Compact product and quantity field icons"),
     "0.470" to listOf("Playful statistics dashboard with charts, records and fun facts","Correct hierarchical physical-back navigation","Refined supporter flow, headers and theme backgrounds","Compact list and product forms","Polished About page, splash screen and version history"),
     "0.461" to listOf("Fully translated supporter page","Mobile-friendly supporter benefits","Clearer completed-item shading","Centered statistics and portrait icons"),
@@ -1188,8 +1189,8 @@ private val patchNotes=listOf(
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
             items(patchNotes){(version,notes)->
                 val open=expanded==version
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.471")2.dp else 1.dp,if(version=="0.471")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
-                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.471")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.472")2.dp else 1.dp,if(version=="0.472")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
+                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.472")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
                     if(open){Spacer(Modifier.height(7.dp));notes.forEach{Text("• $it",color=p.text,fontSize=14.sp,modifier=Modifier.padding(vertical=2.dp))}}
                 }
             }
@@ -1372,13 +1373,7 @@ private fun AboutActionButton(icon: Int, title: String, subtitle: String, backgr
 @Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){PageBack(onBack,p);Spacer(Modifier.width(10.dp));Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=when{title.length<=16->24.sp;title.length<=28->20.sp;else->17.sp},lineHeight=when{title.length<=16->26.sp;title.length<=28->22.sp;else->19.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=p.pageText,modifier=Modifier.weight(1f));trailing?.invoke()}}
 @Composable private fun PageBack(onBack:()->Unit,p:Palette){
     Button(onClick=onBack,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(58.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){
-        Canvas(Modifier.size(38.dp)){
-            val outline=Color(0xFF201B16);val sw=2.5.dp.toPx()
-            val arrow=Path().apply{moveTo(size.width*.10f,size.height*.50f);lineTo(size.width*.43f,size.height*.18f);lineTo(size.width*.43f,size.height*.36f);lineTo(size.width*.88f,size.height*.36f);lineTo(size.width*.88f,size.height*.64f);lineTo(size.width*.43f,size.height*.64f);lineTo(size.width*.43f,size.height*.82f);close()}
-            drawPath(arrow,p.green);drawPath(arrow,outline,style=Stroke(sw,join=StrokeJoin.Round))
-            drawCircle(p.gold,size.minDimension*.045f,Offset(size.width*.68f,size.height*.50f))
-            drawCircle(p.red,size.minDimension*.045f,Offset(size.width*.79f,size.height*.50f))
-        }
+        Image(painterResource(R.drawable.control_back),null,contentScale=ContentScale.Fit,modifier=Modifier.size(43.dp))
     }
 }
 
@@ -1406,9 +1401,9 @@ private fun InputPanel(
             BoxWithConstraints(Modifier.fillMaxWidth()){
                 val narrow=maxWidth<350.dp;val gap=8.dp
                 Row(verticalAlignment=Alignment.Bottom){
-                    Column(Modifier.weight(if(narrow)1.35f else 1.45f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,leading="product")}
+                    Column(Modifier.weight(if(narrow)1.08f else 1.15f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,leading="product")}
                     Spacer(Modifier.width(gap))
-                    Column(Modifier.weight(if(narrow).95f else 1f)){RetroField(quantity,onQuantityChange,tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)11.sp else 12.sp,leading="balance")}
+                    Column(Modifier.weight(if(narrow)1.12f else 1.15f)){RetroField(quantity,onQuantityChange,tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)10.sp else 11.sp,leading="balance")}
                     Spacer(Modifier.width(gap));RetroButton("✓",onAdd,p,modifier=Modifier.size(54.dp),compact=true)
                 }
             }
@@ -1550,32 +1545,18 @@ private fun BalanceScaleIcon(color: Color, modifier: Modifier = Modifier) {
         contentPadding=PaddingValues(0.dp),
         modifier=Modifier.size(50.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))
     ){
-        Canvas(Modifier.size(31.dp)){
-            val outline=Color(0xFF201B16);val sw=4.dp.toPx()
-            drawLine(outline,Offset(size.width*.24f,size.height*.80f),Offset(size.width*.73f,size.height*.31f),sw*1.75f,StrokeCap.Round)
-            drawLine(p.green,Offset(size.width*.27f,size.height*.77f),Offset(size.width*.70f,size.height*.34f),sw,StrokeCap.Round)
-            drawLine(p.red,Offset(size.width*.69f,size.height*.35f),Offset(size.width*.80f,size.height*.24f),sw*1.05f,StrokeCap.Round)
-            val tip=Path().apply{moveTo(size.width*.18f,size.height*.87f);lineTo(size.width*.28f,size.height*.67f);lineTo(size.width*.38f,size.height*.77f);close()}
-            drawPath(tip,p.gold);drawPath(tip,outline,style=Stroke(1.5.dp.toPx(),join=StrokeJoin.Round))
-        }
+        Image(painterResource(R.drawable.control_edit),null,contentScale=ContentScale.Fit,modifier=Modifier.size(39.dp))
     }
 }
 
 @Composable private fun DeleteButton(onClick:()->Unit,p:Palette){
     Button(onClick,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(50.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))){
-        Canvas(Modifier.size(31.dp)){
-            val outline=Color(0xFF201B16);val sw=2.2.dp.toPx()
-            val body=Path().apply{moveTo(size.width*.25f,size.height*.35f);lineTo(size.width*.30f,size.height*.88f);lineTo(size.width*.70f,size.height*.88f);lineTo(size.width*.75f,size.height*.35f);close()}
-            drawPath(body,p.green);drawPath(body,outline,style=Stroke(sw,join=StrokeJoin.Round))
-            drawRoundRect(p.red,Offset(size.width*.18f,size.height*.25f),androidx.compose.ui.geometry.Size(size.width*.64f,size.height*.18f),CornerRadius(5.dp.toPx()),style=Stroke(sw))
-            drawRoundRect(p.red,Offset(size.width*.39f,size.height*.11f),androidx.compose.ui.geometry.Size(size.width*.22f,size.height*.18f),CornerRadius(4.dp.toPx()),style=Stroke(sw))
-            listOf(.39f,.50f,.61f).forEach{x->drawLine(outline,Offset(size.width*x,size.height*.50f),Offset(size.width*x,size.height*.76f),1.8.dp.toPx(),StrokeCap.Round)}
-        }
+        Image(painterResource(R.drawable.control_delete),null,contentScale=ContentScale.Fit,modifier=Modifier.size(39.dp))
     }
 }
 @Composable private fun SquareIcon(text:String,onClick:()->Unit,p:Palette,large:Boolean=false){Button(onClick,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(if(large)56.dp else 44.dp).border(2.dp,p.outline,RoundedCornerShape(8.dp))){Text(text,fontSize=if(large)31.sp else 22.sp,fontWeight=FontWeight.Black)}}
 @Composable private fun EditDialog(item:ShoppingItem,p:Palette,onDismiss:()->Unit,onSave:(String,String)->Unit){var n by remember{mutableStateOf(item.name)};var q by remember{mutableStateOf(item.quantity)};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("REDIGERA VARA","EDIT ITEM"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(n,{n=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p,leading="product");Spacer(Modifier.height(9.dp));RetroField(q,{q=it},tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth(),p,leading="balance")}},confirmButton={RetroButton(tr("SPARA","SAVE"),{if(n.isNotBlank())onSave(n,q)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 @Composable private fun ConfirmDialog(title:String,text:String,p:Palette,onDismiss:()->Unit,onConfirm:()->Unit,confirmLabel:String=tr("BEKRÄFTA","CONFIRM")){AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Text(text,color=p.text)},confirmButton={RetroButton(confirmLabel,onConfirm,p,danger=true)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p)})}
-@Composable private fun RetroField(value:String,onValueChange:(String)->Unit,placeholder:String,modifier:Modifier,p:Palette,onDone:()->Unit={},placeholderSize:androidx.compose.ui.unit.TextUnit=16.sp,leading:String?=null){OutlinedTextField(value,onValueChange,modifier=modifier,singleLine=true,leadingIcon=leading?.let{{if(it=="balance")BalanceScaleIcon(p.muted,Modifier.size(18.dp))else ProductBoxIcon(p.muted,Modifier.size(18.dp))}},placeholder={Text(placeholder,color=p.muted,fontSize=placeholderSize,maxLines=1)},keyboardOptions=KeyboardOptions(capitalization=KeyboardCapitalization.Sentences,imeAction=ImeAction.Done),keyboardActions=KeyboardActions(onDone={onDone()}),shape=RoundedCornerShape(8.dp),colors=OutlinedTextFieldDefaults.colors(focusedTextColor=p.text,unfocusedTextColor=p.text,focusedBorderColor=p.gold,unfocusedBorderColor=p.outline,cursorColor=p.gold,focusedContainerColor=p.paper,unfocusedContainerColor=p.paper))}
+@Composable private fun RetroField(value:String,onValueChange:(String)->Unit,placeholder:String,modifier:Modifier,p:Palette,onDone:()->Unit={},placeholderSize:androidx.compose.ui.unit.TextUnit=16.sp,leading:String?=null){OutlinedTextField(value,onValueChange,modifier=modifier,singleLine=true,prefix=leading?.let{{Row(Modifier.padding(end=4.dp),verticalAlignment=Alignment.CenterVertically){if(it=="balance")BalanceScaleIcon(p.muted,Modifier.size(17.dp))else ProductBoxIcon(p.muted,Modifier.size(17.dp))}}},placeholder={Text(placeholder,color=p.muted,fontSize=placeholderSize,maxLines=1)},keyboardOptions=KeyboardOptions(capitalization=KeyboardCapitalization.Sentences,imeAction=ImeAction.Done),keyboardActions=KeyboardActions(onDone={onDone()}),shape=RoundedCornerShape(8.dp),colors=OutlinedTextFieldDefaults.colors(focusedTextColor=p.text,unfocusedTextColor=p.text,focusedBorderColor=p.gold,unfocusedBorderColor=p.outline,cursorColor=p.gold,focusedContainerColor=p.paper,unfocusedContainerColor=p.paper))}
 @Composable private fun RetroButton(text:String,onClick:()->Unit,p:Palette,modifier:Modifier=Modifier,compact:Boolean=false,danger:Boolean=false){Button(onClick,modifier=modifier,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=if(danger)p.red else p.green,contentColor=Color(0xFFF4E4BA)),contentPadding=PaddingValues(horizontal=if(compact)10.dp else 14.dp,vertical=if(compact)9.dp else 13.dp)){Text(text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=if(compact)13.sp else 17.sp)}}
 private fun capitalized(s:String)=s.trim().replaceFirstChar{if(it.isLowerCase())it.titlecase()else it.toString()}

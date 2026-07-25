@@ -4,7 +4,7 @@ Bubbsun är en Android-app för delade inköpslistor med retrodesign och ett val
 
 ## Aktuell version
 
-**v0.471 • Supporter Preview Edition**
+**v0.472 • Supporter Preview Edition**
 
 ## Funktioner
 

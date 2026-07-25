@@ -29,8 +29,8 @@ android {
         applicationId = "se.bubbsun.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 471
-        versionName = "0.471"
+        versionCode = 472
+        versionName = "0.472"
     }
 
     buildTypes {

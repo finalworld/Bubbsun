@@ -1,3 +1,10 @@
+## 0.472
+- Ersatte de tunna programritade kontrollsymbolerna med fylliga illustrerade retroikoner.
+- Bytte supporter-shoppingvagnen till den valda turkosa hjärtvagnen.
+- Tryckte ihop avståndet mellan fältikoner och text i Lägg till produkt och Redigera vara.
+- Gav mängdfältet mer plats på smala telefoner.
+- Gjorde texten på avbockade varor tydligt gråare.
+
 ## 0.471
 - Lade till valfri bakgrundskontroll av GitHub Releases med direktlänkar till APK och releasesida.
 - Lade till en tydlig uppdateringssida med stora knappar för nedladdning och Inte nu.

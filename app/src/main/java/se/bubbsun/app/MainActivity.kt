@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -196,8 +197,14 @@ class ShoppingItem(
 ){ var name by mutableStateOf(name); var quantity by mutableStateOf(quantity); var ownerId by mutableStateOf(ownerId); var completed by mutableStateOf(completed); var completedAt by mutableStateOf(completedAt) }
 class ShoppingListData(
     val id:String=UUID.randomUUID().toString(), name:String, icon:String="🛒", iconColorHex:Long=0xFF2B6F73,
-    items:List<ShoppingItem> = emptyList()
-){ var name by mutableStateOf(name); var icon by mutableStateOf(icon); var iconColorHex by mutableStateOf(iconColorHex); val items=mutableStateListOf<ShoppingItem>().apply{addAll(items)} }
+    items:List<ShoppingItem> = emptyList(), sortMode:String="custom", doneFirst:Boolean=false,
+    doneExpanded:Boolean=false, seenAtByUser:Map<String,Long> = emptyMap()
+){
+    var name by mutableStateOf(name); var icon by mutableStateOf(icon); var iconColorHex by mutableStateOf(iconColorHex)
+    var sortMode by mutableStateOf(sortMode); var doneFirst by mutableStateOf(doneFirst); var doneExpanded by mutableStateOf(doneExpanded)
+    val seenAtByUser=mutableStateMapOf<String,Long>().apply{putAll(seenAtByUser)}
+    val items=mutableStateListOf<ShoppingItem>().apply{addAll(items)}
+}
 data class StatEvent(val id:String=UUID.randomUUID().toString(),val kind:String,val itemName:String,val userId:String,val timestamp:Long=System.currentTimeMillis())
 private data class ReleaseInfo(val version:String,val pageUrl:String,val apkUrl:String,val notes:String)
 
@@ -237,9 +244,14 @@ private class BubbsunStore(context:Context){
     fun loadLists(users:List<UserProfile>):MutableList<ShoppingListData>{
         val raw=prefs.getString("lists",null)?:return mutableListOf(ShoppingListData(name=if(loadLanguage()=="sv") "Matinköp" else "Shopping",icon=listIcons.first().id))
         val danne=users.firstOrNull{it.name.equals("Danne",true)}?.id?:users.first().id;val sanja=users.firstOrNull{it.name.equals("Sanja",true)}?.id?:users.first().id
-        return runCatching{val a=JSONArray(raw);MutableList(a.length()){i->val o=a.getJSONObject(i);val loaded=mutableListOf<ShoppingItem>();val ia=o.optJSONArray("items")?:JSONArray();repeat(ia.length()){j->val it=ia.getJSONObject(j);val legacy=it.optString("owner","DANNE");loaded+=ShoppingItem(it.optString("id",UUID.randomUUID().toString()),it.optString("name",""),it.optString("quantity",""),it.optString("ownerId",if(legacy=="SANJA")sanja else danne),it.optBoolean("completed",false),it.optLong("createdAt",System.currentTimeMillis()),if(it.isNull("completedAt"))null else it.optLong("completedAt"))};ShoppingListData(o.optString("id",UUID.randomUUID().toString()),o.optString("name",if(loadLanguage()=="sv") "Lista" else "List"),o.optString("icon",listIcons[i%listIcons.size].id),o.optLong("iconColor",iconColors[i%iconColors.size]),loaded)}}.getOrElse{mutableListOf(ShoppingListData(name=if(loadLanguage()=="sv") "Matinköp" else "Shopping",icon=listIcons.first().id))}
+        return runCatching{val a=JSONArray(raw);MutableList(a.length()){i->
+            val o=a.getJSONObject(i);val loaded=mutableListOf<ShoppingItem>();val ia=o.optJSONArray("items")?:JSONArray()
+            repeat(ia.length()){j->val it=ia.getJSONObject(j);val legacy=it.optString("owner","DANNE");loaded+=ShoppingItem(it.optString("id",UUID.randomUUID().toString()),it.optString("name",""),it.optString("quantity",""),it.optString("ownerId",if(legacy=="SANJA")sanja else danne),it.optBoolean("completed",false),it.optLong("createdAt",System.currentTimeMillis()),if(it.isNull("completedAt"))null else it.optLong("completedAt"))}
+            val seen=mutableMapOf<String,Long>();val so=o.optJSONObject("seenAtByUser")?:JSONObject();so.keys().forEach{key->seen[key]=so.optLong(key,0L)}
+            ShoppingListData(o.optString("id",UUID.randomUUID().toString()),o.optString("name",if(loadLanguage()=="sv") "Lista" else "List"),o.optString("icon",listIcons[i%listIcons.size].id),o.optLong("iconColor",iconColors[i%iconColors.size]),loaded,o.optString("sortMode","custom"),o.optBoolean("doneFirst",false),o.optBoolean("doneExpanded",false),seen)
+        }}.getOrElse{mutableListOf(ShoppingListData(name=if(loadLanguage()=="sv") "Matinköp" else "Shopping",icon=listIcons.first().id))}
     }
-    fun saveLists(lists:List<ShoppingListData>){val a=JSONArray();lists.forEach{l->val ia=JSONArray();l.items.forEach{it->ia.put(JSONObject().apply{put("id",it.id);put("name",it.name);put("quantity",it.quantity);put("ownerId",it.ownerId);put("completed",it.completed);put("createdAt",it.createdAt);put("completedAt",it.completedAt?:JSONObject.NULL)})};a.put(JSONObject().apply{put("id",l.id);put("name",l.name);put("icon",l.icon);put("iconColor",l.iconColorHex);put("items",ia)})};prefs.edit().putString("lists",a.toString()).apply()}
+    fun saveLists(lists:List<ShoppingListData>){val a=JSONArray();lists.forEach{l->val ia=JSONArray();l.items.forEach{it->ia.put(JSONObject().apply{put("id",it.id);put("name",it.name);put("quantity",it.quantity);put("ownerId",it.ownerId);put("completed",it.completed);put("createdAt",it.createdAt);put("completedAt",it.completedAt?:JSONObject.NULL)})};val seen=JSONObject();l.seenAtByUser.forEach{(id,time)->seen.put(id,time)};a.put(JSONObject().apply{put("id",l.id);put("name",l.name);put("icon",l.icon);put("iconColor",l.iconColorHex);put("sortMode",l.sortMode);put("doneFirst",l.doneFirst);put("doneExpanded",l.doneExpanded);put("seenAtByUser",seen);put("items",ia)})};prefs.edit().putString("lists",a.toString()).apply()}
     fun loadEvents():MutableList<StatEvent>{val raw=prefs.getString("events_v010",null)?:return mutableListOf();return runCatching{val a=JSONArray(raw);MutableList(a.length()){i->val o=a.getJSONObject(i);StatEvent(o.getString("id"),o.getString("kind"),o.getString("itemName"),o.optString("userId",""),o.getLong("timestamp"))}}.getOrElse{mutableListOf()}}
     fun saveEvents(events:List<StatEvent>){val a=JSONArray();events.forEach{e->a.put(JSONObject().apply{put("id",e.id);put("kind",e.kind);put("itemName",e.itemName);put("userId",e.userId);put("timestamp",e.timestamp)})};prefs.edit().putString("events_v010",a.toString()).apply()}
     fun loadThemeId():String=prefs.getString("theme_v0340",null) ?: if(prefs.getBoolean("dark",true)) "retro_dark" else "retro_light"
@@ -261,6 +273,10 @@ private class BubbsunStore(context:Context){
     fun saveUpdateChecks(value:Boolean)=prefs.edit().putBoolean("update_checks_v0471",value).apply()
     fun loadLastUpdateCheck():Long=prefs.getLong("last_update_check_v0471",0L)
     fun saveLastUpdateCheck(value:Long)=prefs.edit().putLong("last_update_check_v0471",value).apply()
+    fun loadLastFoundVersion():String=prefs.getString("last_found_version_v0480","")?:""
+    fun saveLastFoundVersion(value:String)=prefs.edit().putString("last_found_version_v0480",value).apply()
+    fun loadSortTipSeen():Boolean=prefs.getBoolean("sort_tip_seen_v0480",false)
+    fun saveSortTipSeen()=prefs.edit().putBoolean("sort_tip_seen_v0480",true).apply()
 }
 
 data class Palette(
@@ -373,22 +389,29 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var supporterGlow by remember{mutableStateOf(store.loadSupporterGlow())}
     var updateChecks by remember{mutableStateOf(store.loadUpdateChecks())}
     var availableRelease by remember{mutableStateOf<ReleaseInfo?>(null)}
+    var manualUpdateCheck by remember{mutableIntStateOf(0)}
     var showExitDialog by remember{mutableStateOf(false)}
-    LaunchedEffect(Unit){
+    LaunchedEffect(manualUpdateCheck){
         if(!supporterPreview&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)}
         if(store.loadSupporterStyle()!=supporterStyle)store.saveSupporterStyle(supporterStyle)
         val now=System.currentTimeMillis()
-        if(updateChecks&&now-store.loadLastUpdateCheck()>=24*60*60*1000L){
-            store.saveLastUpdateCheck(now)
-            fetchLatestRelease()?.takeIf{isNewerVersion(it.version,BuildConfig.VERSION_NAME)}?.let{availableRelease=it;navigationHistory.add(screen);screen="update"}
+        val alreadyFound=store.loadLastFoundVersion().isNotBlank()
+        val shouldCheck=manualUpdateCheck>0 || (updateChecks && (!alreadyFound || now-store.loadLastUpdateCheck()>=24*60*60*1000L))
+        if(shouldCheck){
+            fetchLatestRelease()?.takeIf{isNewerVersion(it.version,BuildConfig.VERSION_NAME)}?.let{
+                store.saveLastUpdateCheck(now);store.saveLastFoundVersion(it.version)
+                availableRelease=it;if(screen!="update"){navigationHistory.add(screen);screen="update"}
+            }
         }
     }
     val theme=appThemes.firstOrNull{it.id==themeId}?:appThemes.first()
     val p=theme.palette
     fun navigate(target:String){
+        if(screen=="list"&&target!="list")selectedListId?.let{id->lists.firstOrNull{it.id==id}?.seenAtByUser?.set(activeUserId,System.currentTimeMillis());store.saveLists(lists)}
         if(target!=screen){navigationHistory.add(screen);screen=target}
     }
     fun navigateBack(){
+        if(screen=="list")selectedListId?.let{id->lists.firstOrNull{it.id==id}?.seenAtByUser?.set(activeUserId,System.currentTimeMillis());store.saveLists(lists)}
         screen=if(navigationHistory.isNotEmpty())navigationHistory.removeAt(navigationHistory.lastIndex) else "lists"
         if(screen!="list")selectedListId=null
     }
@@ -409,16 +432,19 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 Column(Modifier.fillMaxSize()){
                     AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={navigate("support")})
                     when(screen){
-                        "lists"->ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
+                        "lists"->ListsScreen(lists,p,theme.id,activeUserId,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
                         "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color));store.saveLists(lists);navigateBack()})
                         "stats"->StatsScreen(lists,events,users,p,onBack={navigateBack()})
-                        "settings"->SettingsScreen(p,language,updateChecks,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,openSupportSettings,onSupporterInfo={navigate("support")},onBack={navigateBack()},onUpdateChecks={updateChecks=it;store.saveUpdateChecks(it)},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
+                        "settings"->SettingsScreen(p,language,updateChecks,exitConfirmation,supporterPreview,supporterStyle,supporterGlow,openSupportSettings,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCheckNow={manualUpdateCheck++},onUpdateChecks={updateChecks=it;store.saveUpdateChecks(it)},onLanguage={newLanguage->appLanguageState.value=newLanguage;language=newLanguage;store.saveLanguage(newLanguage)},onExitConfirmation={exitConfirmation=it;store.saveExitConfirmation(it)},onSupporterPreview={enabled->supporterPreview=enabled;store.saveSupporterPreview(enabled);if(!enabled&&themeId in setOf("cosmic","heart")){themeId="retro_dark";store.saveThemeId(themeId)};if(!enabled&&language=="tlh"){language="sv";appLanguageState.value="sv";store.saveLanguage("sv")}},onSupporterStyle={style->supporterStyle=style;store.saveSupporterStyle(style)},onSupporterGlow={supporterGlow=it;store.saveSupporterGlow(it)},onResetStats={events.clear();store.saveEvents(events)})
                         "users"->UsersScreen(users,lists,events,activeUserId,p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onActivate={activeUserId=it;store.saveUserId(it)},onSave={if(users.none{it.id==activeUserId})activeUserId=users.first().id;store.saveUsers(users);store.saveLists(lists);store.saveEvents(events);store.saveUserId(activeUserId)})
-                        "about"->AboutScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onVersions={navigate("versions")},onBack={navigateBack()})
+                        "about"->AboutScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onVersions={navigate("versions")},onHelp={navigate("help")},onProblem={navigate("problem")},onSuggestion={navigate("suggestion")},onBack={navigateBack()})
+                        "help"->HelpScreen(p,onBack={navigateBack()})
+                        "problem"->FeedbackScreen(true,p,onBack={navigateBack()})
+                        "suggestion"->FeedbackScreen(false,p,onBack={navigateBack()})
                         "support"->SupportScreen(p,supporterPreview,onBack={navigateBack()},onActivate={supporterPreview=true;store.saveSupporterPreview(true)},onExplore={openSupportSettings=true;navigate("settings")})
                         "versions"->VersionsScreen(p,onBack={navigateBack()})
-                        "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,p,theme.id,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
-                        else->{val l=lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,users,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={store.saveLists(lists)},onEvent={events.add(it);store.saveEvents(events)})}
+                        "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,p,theme.id,activeUserId,onOpen={selectedListId=it;navigate("list")},onAdd={navigate("addList")},onSave={store.saveLists(lists)})
+                        else->{val l=lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,users,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onHelp={navigate("help")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={store.saveLists(lists)},onEvent={events.add(it);store.saveEvents(events)})}
                     }
                 }
                 if(menuOpen)SideMenu(users,activeUserId,p,supporterPreview,onSupporterInfo={menuOpen=false;navigate("support")},onClose={menuOpen=false},onActivate={activeUserId=it;store.saveUserId(it)},onNavigate={menuOpen=false;navigate(it)})
@@ -543,6 +569,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             MenuCard(R.drawable.theme_steel,tr("INSTÄLLNINGAR","SETTINGS"),tr("Språk, bekräftelser & statistik","Language, confirmations & statistics"),p){onNavigate("settings")}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.about_info,tr("OM BUBBSUN","ABOUT BUBBSUN"),tr("Version, skapare & kontakt","Version, creators & contact"),p){onNavigate("about")}
+            Spacer(Modifier.height(10.dp))
+            MenuCard(R.drawable.list_checklist,tr("HJÄLP & GUIDER","HELP & GUIDES"),tr("Så fungerar Bubbsun","How Bubbsun works"),p){onNavigate("help")}
             Spacer(Modifier.height(18.dp))
             Text(if(supporterEnabled)"♥  FOUNDING SUPPORTER" else "♥  ${tr("STÖD BUBBSUN","SUPPORT BUBBSUN")}",color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.align(Alignment.CenterHorizontally).clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.outline,RoundedCornerShape(50)).clickable{onSupporterInfo()}.padding(horizontal=10.dp,vertical=5.dp));Spacer(Modifier.height(6.dp))
             Text("v${BuildConfig.VERSION_NAME}  •  $editionName",color=p.gold.copy(alpha=.85f),fontFamily=FontFamily.Serif,fontSize=13.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=6.dp))
@@ -554,11 +582,11 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
 @Composable private fun MenuCard(icon:Int,title:String,subtitle:String,p:Palette,onClick:()->Unit){
     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(p.panel).border(1.dp,p.outline,RoundedCornerShape(15.dp)).clickable{onClick()}.padding(horizontal=15.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){
         Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(12.dp)),contentAlignment=Alignment.Center){Image(painterResource(icon),null,Modifier.fillMaxSize().padding(7.dp).graphicsLayer{translationX=if(icon==R.drawable.menu_stats)2.dp.toPx() else 0f})}
-        Spacer(Modifier.width(13.dp));Column(Modifier.weight(1f)){Text(title,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp);Text(subtitle,color=readableOn(p.panel).copy(alpha=.70f),fontSize=11.sp,maxLines=1,overflow=TextOverflow.Ellipsis)};Text("›",color=readableOn(p.panel),fontSize=30.sp)
+        Spacer(Modifier.width(13.dp));Column(Modifier.weight(1f)){Text(title,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=if(title.length>13)16.sp else 18.sp,maxLines=1,overflow=TextOverflow.Ellipsis);Text(subtitle,color=readableOn(p.panel).copy(alpha=.70f),fontSize=11.sp,maxLines=1,overflow=TextOverflow.Ellipsis)};Text("›",color=readableOn(p.panel),fontSize=30.sp)
     }
 }
 
-@Composable private fun ListsScreen(lists:SnapshotStateList<ShoppingListData>,p:Palette,themeId:String,onOpen:(String)->Unit,onAdd:()->Unit,onSave:()->Unit){
+@Composable private fun ListsScreen(lists:SnapshotStateList<ShoppingListData>,p:Palette,themeId:String,activeUserId:String,onOpen:(String)->Unit,onAdd:()->Unit,onSave:()->Unit){
     var deleteTarget by remember{mutableStateOf<ShoppingListData?>(null)}
     var draggingId by remember{mutableStateOf<String?>(null)}
     var deleteZoneTop by remember{mutableStateOf(Float.MAX_VALUE)}
@@ -572,6 +600,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 ListRow(
                     list=l,
                     p=p,
+                    newCount=l.items.count{it.ownerId!=activeUserId&&it.createdAt>(l.seenAtByUser[activeUserId]?:0L)},
                     dragging=draggingId==l.id,
                     onOpen={onOpen(l.id)},
                     onDragStart={draggingId=l.id;overDeleteZone=false},
@@ -608,7 +637,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     deleteTarget?.let{l->ConfirmDialog(tr("Ta bort listan \"${l.name}\"?","Delete list \"${l.name}\"?"),tr("Alla saker i listan försvinner.","All items in the list will be deleted."),p,{deleteTarget=null},{lists.remove(l);deleteTarget=null;onSave()})}
 }
 
-@Composable private fun ListRow(list:ShoppingListData,p:Palette,dragging:Boolean,onOpen:()->Unit,onDragStart:()->Unit,onDragPosition:(Float)->Unit,onDragEnd:(Float)->Unit,onMove:(Int)->Boolean){
+@Composable private fun ListRow(list:ShoppingListData,p:Palette,newCount:Int,dragging:Boolean,onOpen:()->Unit,onDragStart:()->Unit,onDragPosition:(Float)->Unit,onDragEnd:(Float)->Unit,onMove:(Int)->Boolean){
     val haptic=LocalHapticFeedback.current
     var dragY by remember{mutableStateOf(0f)}
     var rowCenterY by remember{mutableStateOf(0f)}
@@ -653,7 +682,9 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         ){ListIconVisual(list.icon,Modifier.size(58.dp))}
         Column(Modifier.weight(1f).height(78.dp).padding(horizontal=12.dp,vertical=8.dp),verticalArrangement=Arrangement.Center){
             Text(list.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=when{list.name.length<=14->21.sp;list.name.length<=24->18.sp;else->15.sp},color=p.text,maxLines=2,overflow=TextOverflow.Ellipsis,lineHeight=when{list.name.length<=14->23.sp;list.name.length<=24->20.sp;else->17.sp})
-            Text("${list.items.size} ${tr("objekt","items")}",fontWeight=FontWeight.Bold,color=p.text,fontSize=13.sp)
+            val left=list.items.count{!it.completed};val done=list.items.size-left
+            Text("${left} ${tr("kvar","left")} • ${done} ${tr("klara","done")}",fontWeight=FontWeight.Bold,color=p.text,fontSize=12.sp)
+            if(newCount>0)Text("${newCount} ${tr("nya","new")}",fontWeight=FontWeight.Black,color=p.red,fontSize=11.sp)
         }
         Text("›",fontSize=35.sp,fontWeight=FontWeight.Bold,color=p.text,modifier=Modifier.padding(horizontal=14.dp))
     }
@@ -690,6 +721,7 @@ private fun ShoppingListScreen(
     supporterEnabled: Boolean,
     inputExpanded: Boolean,
     onSupporterInfo:()->Unit,
+    onHelp:()->Unit,
     onInputExpanded: (Boolean) -> Unit,
     onBack: () -> Unit,
     onSave: () -> Unit,
@@ -697,7 +729,9 @@ private fun ShoppingListScreen(
 ) {
     var input by remember { mutableStateOf("") }
     var quantityInput by remember { mutableStateOf("") }
-    var showDone by remember { mutableStateOf(true) }
+    var search by remember(list.id) { mutableStateOf("") }
+    var toolsOpen by remember { mutableStateOf(false) }
+    val visitBaseline=remember(list.id,activeUserId){list.seenAtByUser[activeUserId]?:0L}
     var editing by remember { mutableStateOf<ShoppingItem?>(null) }
     var renameList by remember { mutableStateOf(false) }
     var deleteMode by remember { mutableStateOf(false) }
@@ -706,9 +740,20 @@ private fun ShoppingListScreen(
     var draggingId by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val localContext=LocalContext.current
+    val tipPrefs=remember{localContext.getSharedPreferences("bubbsun_store",Context.MODE_PRIVATE)}
+    var showSortTip by remember{mutableStateOf(!tipPrefs.getBoolean("sort_tip_seen_v0480",false))}
 
-    val active = list.items.filter { !it.completed }
-    val done = list.items.filter { it.completed }.sortedByDescending { it.completedAt ?: 0L }
+    fun sorted(source:List<ShoppingItem>)=when(list.sortMode){
+        "az"->source.sortedBy{it.name.lowercase(Locale.getDefault())}
+        "za"->source.sortedByDescending{it.name.lowercase(Locale.getDefault())}
+        "new"->source.sortedByDescending{it.createdAt}
+        "old"->source.sortedBy{it.createdAt}
+        else->source
+    }
+    val matches=list.items.filter{search.isBlank()||it.name.contains(search,true)||it.quantity.contains(search,true)}
+    val active = sorted(matches.filter { !it.completed })
+    val done = sorted(matches.filter { it.completed })
     val suggestions = remember(input, list.items.size) {
         if (input.length < 1) emptyList() else list.items.map { it.name }.distinct()
             .filter { it.contains(input, ignoreCase = true) && !it.equals(input, true) }.take(5)
@@ -728,6 +773,7 @@ private fun ShoppingListScreen(
         scope.launch { if (list.items.isNotEmpty()) listState.animateScrollToItem(0) }
     }
 
+    Box(Modifier.fillMaxSize().pointerInput(Unit){detectHorizontalDragGestures{_,amount->if(amount< -18f)toolsOpen=true else if(amount>18f)toolsOpen=false}}) {
     Column(Modifier.fillMaxSize().imePadding().padding(12.dp)) {
         PageHeader(title = list.name, p = p, onBack = onBack, trailing = {
             Row {
@@ -758,29 +804,74 @@ private fun ShoppingListScreen(
                 Spacer(Modifier.weight(1f));Text(tr("AVBRYT","CANCEL"),fontWeight=FontWeight.Black,color=Color(0xFFF6E8C3),modifier=Modifier.clickable{selected.clear();deleteMode=false}.padding(8.dp))
             };Spacer(Modifier.height(8.dp))
         }
+        if(search.isNotBlank())Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.panel).padding(8.dp),verticalAlignment=Alignment.CenterVertically){
+            Text("${tr("SÖKRESULTAT","SEARCH RESULTS")}: “$search”",color=readableOn(p.panel),fontWeight=FontWeight.Black,modifier=Modifier.weight(1f))
+            Text("✕",color=readableOn(p.panel),fontSize=20.sp,modifier=Modifier.clickable{search=""}.padding(5.dp))
+        }
         LazyColumn(state=listState,modifier=Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-            items(active,key={it.id}) { item ->
-                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,
+            if(search.isNotBlank()&&matches.isEmpty())item{Text(tr("Inga träffar.","No matches."),color=p.pageText,fontWeight=FontWeight.Bold,modifier=Modifier.padding(16.dp))}
+            if(!list.doneFirst)items(active,key={it.id}) { item ->
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
                     onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
                     onToggle={item.completed=true;item.completedAt=System.currentTimeMillis();onEvent(StatEvent(kind="purchase",itemName=item.name,userId=item.ownerId));save()},
-                    onEdit={editing=item},onDragStart={draggingId=item.id},onDragEnd={draggingId=null},
+                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null},
                     onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;save();true}else false})
             }
-            item { Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.green).clickable{showDone=!showDone}.padding(10.dp)) { Text(if(showDone)"${tr("KLART","DONE")} (${done.size})  ▲" else "${tr("KLART","DONE")} (${done.size})  ▼",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color.White) } }
-            if(showDone) items(done,key={"d${it.id}"}) { item ->
-                ItemRow(item,users,p,deleteMode,selected.contains(item.id),false,
+            item { Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.green).clickable{list.doneExpanded=!list.doneExpanded;save()}.padding(10.dp)) { Text(if(list.doneExpanded)"${tr("KLART","DONE")} (${done.size})  ▲" else "${tr("KLART","DONE")} (${done.size})  ▼",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color.White) } }
+            if(list.doneExpanded) items(done,key={"d${it.id}"}) { item ->
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),false,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
                     onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
                     onToggle={item.completed=false;item.completedAt=null;list.items.remove(item);list.items.add(0,item);save()},
                     onEdit={editing=item},onDragStart={},onDragEnd={},onMove={false})
             }
+            if(list.doneFirst)items(active,key={"a${it.id}"}) { item ->
+                ItemRow(item,users,p,deleteMode,selected.contains(item.id),draggingId==item.id,item.ownerId!=activeUserId&&item.createdAt>visitBaseline,
+                    onSelect={if(item.id in selected)selected.remove(item.id) else selected.add(item.id)},
+                    onToggle={item.completed=true;item.completedAt=System.currentTimeMillis();onEvent(StatEvent(kind="purchase",itemName=item.name,userId=item.ownerId));save()},
+                    onEdit={editing=item},onDragStart={if(list.sortMode=="custom")draggingId=item.id},onDragEnd={draggingId=null},
+                    onMove={direction->val current=list.items.filter{!it.completed};val from=current.indexOf(item);val to=(from+direction).coerceIn(0,current.lastIndex);if(from!=to){val other=current[to];val a=list.items.indexOf(item);val b=list.items.indexOf(other);list.items[a]=other;list.items[b]=item;save();true}else false})
+            }
         }
     }
+    Box(Modifier.align(Alignment.CenterEnd).width(28.dp).height(74.dp).clip(RoundedCornerShape(topStart=14.dp,bottomStart=14.dp)).background(p.gold).clickable{toolsOpen=true},contentAlignment=Alignment.Center){
+        Column(verticalArrangement=Arrangement.spacedBy(4.dp)){repeat(3){Box(Modifier.width(13.dp).height(2.dp).background(readableOn(p.gold)))}} 
+        if(search.isNotBlank())Box(Modifier.align(Alignment.TopStart).padding(4.dp).size(7.dp).clip(CircleShape).background(p.red))
+    }
+    if(toolsOpen){
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha=.42f)).clickable{toolsOpen=false})
+        SearchSortPanel(search,{search=it},list,p,onSave={save()},onClose={toolsOpen=false},modifier=Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(.84f))
+    }
+    }
     if(renameList) EditListDialog(list,p,supporterEnabled,onSupporterInfo,{renameList=false}) { name,icon,color -> list.name=capitalized(name).take(40);list.icon=icon;list.iconColorHex=color;renameList=false;save() }
+    if(showSortTip)AlertDialog(onDismissRequest={},containerColor=p.paper,title={Text(tr("SÖK & SORTERA","SEARCH & SORT"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Text(tr("Swipa från höger för att öppna Sök & sortera.","Swipe from the right to open Search & sort."),color=p.text)},confirmButton={RetroButton(tr("FÖRSTÅTT","GOT IT"),{tipPrefs.edit().putBoolean("sort_tip_seen_v0480",true).apply();showSortTip=false},p)},dismissButton={TextButton({tipPrefs.edit().putBoolean("sort_tip_seen_v0480",true).apply();showSortTip=false;onHelp()}){Text(tr("LÄS MER","LEARN MORE"),color=p.text)}})
     editing?.let { item -> EditDialog(item,p,{editing=null}) { n,q -> item.name=capitalized(n);item.quantity=q.trim();editing=null;save() } }
     if(confirmDelete) ConfirmDialog(tr("Ta bort ${selected.size} markerade saker?","Delete ${selected.size} selected items?"),tr("Det går inte att ångra.","This cannot be undone."),p,{confirmDelete=false},{val doomed=list.items.filter{it.id in selected};doomed.forEach{onEvent(StatEvent(kind="delete",itemName=it.name,userId=it.ownerId))};list.items.removeAll(doomed);selected.clear();deleteMode=false;confirmDelete=false;save()})
 }
 
-@Composable private fun ItemRow(item:ShoppingItem,users:List<UserProfile>,p:Palette,deleteMode:Boolean,isSelected:Boolean,dragging:Boolean,onSelect:()->Unit,onToggle:()->Unit,onEdit:()->Unit,onDragStart:()->Unit,onDragEnd:()->Unit,onMove:(Int)->Boolean){
+@Composable private fun SearchSortPanel(search:String,onSearch:(String)->Unit,list:ShoppingListData,p:Palette,onSave:()->Unit,onClose:()->Unit,modifier:Modifier=Modifier){
+    Column(modifier.background(p.panel).padding(16.dp).imePadding()){
+        Row(verticalAlignment=Alignment.CenterVertically){Text(tr("SÖK & SORTERA","SEARCH & SORT"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=22.sp,color=readableOn(p.panel),modifier=Modifier.weight(1f));Text("✕",fontSize=24.sp,color=readableOn(p.panel),modifier=Modifier.clickable{onClose()}.padding(8.dp))}
+        Spacer(Modifier.height(10.dp))
+        RetroField(search,onSearch,tr("Sök i listan…","Search this list…"),Modifier.fillMaxWidth(),p)
+        Spacer(Modifier.height(18.dp));Text(tr("SORTERING","SORTING"),fontWeight=FontWeight.Black,color=readableOn(p.panel))
+        val modes=listOf("custom" to tr("Anpassad","Custom"),"az" to "A–Ö","za" to "Ö–A","new" to tr("Nyast först","Newest first"),"old" to tr("Äldst först","Oldest first"))
+        modes.forEach{(id,label)->SortChoice(label,list.sortMode==id,p){list.sortMode=id;onSave()}}
+        Spacer(Modifier.height(14.dp));Text(tr("KLARA VAROR","COMPLETED ITEMS"),fontWeight=FontWeight.Black,color=readableOn(p.panel))
+        SortChoice(tr("Ej klara först","Not done first"),!list.doneFirst,p){list.doneFirst=false;onSave()}
+        SortChoice(tr("Klara först","Done first"),list.doneFirst,p){list.doneFirst=true;list.doneExpanded=true;onSave()}
+        Spacer(Modifier.weight(1f))
+        Text(if(list.sortMode=="custom")tr("Håll inne och dra för att sortera manuellt.","Press and hold to reorder manually.") else tr("Manuell dragning pausas tills Anpassad väljs.","Manual dragging is paused until Custom is selected."),color=readableOn(p.panel).copy(alpha=.72f),fontSize=12.sp)
+    }
+}
+
+@Composable private fun SortChoice(label:String,selected:Boolean,p:Palette,onClick:()->Unit){
+    Row(Modifier.fillMaxWidth().padding(top=7.dp).clip(RoundedCornerShape(9.dp)).background(if(selected)p.gold else p.paper).border(1.dp,if(selected)p.glow else p.outline,RoundedCornerShape(9.dp)).clickable{onClick()}.padding(horizontal=12.dp,vertical=11.dp),verticalAlignment=Alignment.CenterVertically){
+        Text(label,color=if(selected)readableOn(p.gold) else p.text,fontWeight=FontWeight.Bold,modifier=Modifier.weight(1f))
+        if(selected)SelectionBadge(p.gold)
+    }
+}
+
+@Composable private fun ItemRow(item:ShoppingItem,users:List<UserProfile>,p:Palette,deleteMode:Boolean,isSelected:Boolean,dragging:Boolean,isNew:Boolean,onSelect:()->Unit,onToggle:()->Unit,onEdit:()->Unit,onDragStart:()->Unit,onDragEnd:()->Unit,onMove:(Int)->Boolean){
     val haptic=LocalHapticFeedback.current
     var dragY by remember{mutableStateOf(0f)}
     var reorderDrag by remember{mutableStateOf(0f)}
@@ -826,7 +917,7 @@ private fun ShoppingListScreen(
             verticalAlignment=Alignment.CenterVertically
         ){
             Column(Modifier.weight(1f)){
-                Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(item.completed)lerp(p.text,Color.Gray,.62f) else p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null)
+                Row(verticalAlignment=Alignment.CenterVertically){Text(item.name,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=when{item.name.length<=28->18.sp;item.name.length<=45->16.sp;else->14.sp},lineHeight=when{item.name.length<=28->20.sp;item.name.length<=45->18.sp;else->16.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(item.completed)lerp(p.text,Color.Gray,.78f) else p.text,textDecoration=if(item.completed)TextDecoration.LineThrough else null,modifier=Modifier.weight(1f));if(isNew&&!deleteMode)Text(tr("NYTT","NEW"),fontSize=9.sp,fontWeight=FontWeight.Black,color=p.red,modifier=Modifier.border(1.dp,p.red,RoundedCornerShape(4.dp)).padding(horizontal=4.dp,vertical=1.dp))}
                 if(item.quantity.isNotBlank()) Text(item.quantity,fontSize=13.sp,fontWeight=FontWeight.Bold,color=if(item.completed)lerp(p.muted,Color.Gray,.52f) else p.muted,maxLines=1,overflow=TextOverflow.Ellipsis)
             }
         }
@@ -886,7 +977,7 @@ private fun ShoppingListScreen(
 
 @Composable private fun AddUserDialog(users:List<UserProfile>,p:Palette,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onDismiss:()->Unit,onAdd:(String,Long)->Unit){var name by remember{mutableStateOf("")};var color by remember{mutableStateOf(userColors.first())};var error by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("LÄGG TILL ANVÄNDARE","ADD USER"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(name,{name=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(12.dp));UserColorGrid(color,p,supporterEnabled,onSupporterInfo){color=it};if(error.isNotBlank())Text(error,color=p.red)}},confirmButton={RetroButton(tr("SPARA","SAVE"),{val n=capitalized(name);error=when{n.isBlank()->tr("Skriv ett namn","Enter a name");users.any{it.name.equals(n,true)}->tr("Namnet finns redan","That name already exists");else->""};if(error.isBlank())onAdd(n,color)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 
-@Composable private fun SettingsScreen(p:Palette,language:String,updateChecks:Boolean,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onUpdateChecks:(Boolean)->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
+@Composable private fun SettingsScreen(p:Palette,language:String,updateChecks:Boolean,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,onSupporterInfo:()->Unit,onBack:()->Unit,onCheckNow:()->Unit,onUpdateChecks:(Boolean)->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
     var reset by remember{mutableStateOf(false)}
     val scroll=rememberScrollState()
     LaunchedEffect(startAtSupporter,supporterPreview){if(startAtSupporter&&supporterPreview){delay(220);scroll.animateScrollTo((scroll.maxValue*.72f).toInt())}}
@@ -894,6 +985,8 @@ private fun ShoppingListScreen(
         PageHeader(tr("INSTÄLLNINGAR","SETTINGS"),p,onBack)
         Spacer(Modifier.height(14.dp))
         SettingsCard(R.drawable.about_info,tr("UPPDATERINGAR","UPDATES"),p){
+            RetroButton(tr("SÖK EFTER UPPDATERING NU","CHECK FOR UPDATE NOW"),onCheckNow,p,modifier=Modifier.fillMaxWidth())
+            Spacer(Modifier.height(6.dp))
             Row(Modifier.fillMaxWidth().clickable{onUpdateChecks(!updateChecks)},verticalAlignment=Alignment.CenterVertically){
                 Checkbox(updateChecks,onUpdateChecks,colors=CheckboxDefaults.colors(checkedColor=p.green,uncheckedColor=p.green,checkmarkColor=Color.White))
                 Column(Modifier.weight(1f)){
@@ -1120,7 +1213,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
         Text(tr("NY VERSION FINNS!","A NEW VERSION IS AVAILABLE!"),color=p.pageText,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=23.sp,textAlign=TextAlign.Center)
         Spacer(Modifier.height(7.dp))
         Text("Bubbsun v${release.version}",color=p.gold,fontWeight=FontWeight.Black,fontSize=20.sp)
-        if(release.notes.isNotBlank()){Spacer(Modifier.height(16.dp));Text(release.notes.take(900),color=p.pageText,fontSize=13.sp,textAlign=TextAlign.Start,modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp))}
+        if(release.notes.isNotBlank()){Spacer(Modifier.height(16.dp));Text(release.notes.take(900),color=p.text,fontSize=13.sp,textAlign=TextAlign.Start,modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(10.dp)).padding(14.dp))}
         Spacer(Modifier.height(22.dp))
         RetroButton(tr("LADDA NER NY VERSION","DOWNLOAD NEW VERSION"),{open(release.apkUrl)},p,modifier=Modifier.fillMaxWidth().heightIn(min=62.dp))
         Spacer(Modifier.height(11.dp))
@@ -1165,6 +1258,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.480" to listOf("Search & Sort side panel with saved per-list choices","Grouped live search and persistent custom order","Per-user NEW badges and list status","Offline Help & Guides","Private in-app problem and suggestion forms","Responsive narrow-screen titles and fields","Daniel and Sanja portrait Easter egg","Improved update checking and manual check button"),
     "0.472" to listOf("Replaced control symbols with polished illustrated retro icons","New Heart supporter shopping-cart artwork","Tighter product-field icon and text spacing","Clearly grayer text on completed items"),
     "0.471" to listOf("Optional background update checks with direct APK and GitHub links","Fixed Exit Bubbsun and made the side menu scrollable","App typography is no longer affected by Android font scaling","New Daniel and Sanja portraits based on the creators","Unified retro back, edit and delete controls","Refined fire and supporter cart artwork","Clearer completed items, statistics text and About-page action colors","Compact product and quantity field icons"),
     "0.470" to listOf("Playful statistics dashboard with charts, records and fun facts","Correct hierarchical physical-back navigation","Refined supporter flow, headers and theme backgrounds","Compact list and product forms","Polished About page, splash screen and version history"),
@@ -1182,15 +1276,15 @@ private val patchNotes=listOf(
 )
 
 @Composable private fun VersionsScreen(p:Palette,onBack:()->Unit){
-    var expanded by remember{mutableStateOf("0.470")}
+    var expanded by remember{mutableStateOf("0.480")}
     Column(Modifier.fillMaxSize().padding(14.dp)){
         PageHeader(tr("VERSIONER & NYHETER","VERSIONS & NEWS"),p,onBack)
         Spacer(Modifier.height(12.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
             items(patchNotes){(version,notes)->
                 val open=expanded==version
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.472")2.dp else 1.dp,if(version=="0.472")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
-                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.472")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(if(version=="0.480")2.dp else 1.dp,if(version=="0.480")p.gold else p.outline,RoundedCornerShape(11.dp)).clickable{expanded=if(open)"" else version}.padding(13.dp)){
+                    Row(verticalAlignment=Alignment.CenterVertically){Text("v$version",color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp,modifier=Modifier.weight(1f));if(version=="0.480")Text(tr("NYTT","NEW"),color=readableOn(p.gold),fontSize=10.sp,fontWeight=FontWeight.Black,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold).padding(horizontal=8.dp,vertical=3.dp));Spacer(Modifier.width(8.dp));Text(if(open)"▲" else "▼",color=p.text)}
                     if(open){Spacer(Modifier.height(7.dp));notes.forEach{Text("• $it",color=p.text,fontSize=14.sp,modifier=Modifier.padding(vertical=2.dp))}}
                 }
             }
@@ -1198,20 +1292,66 @@ private val patchNotes=listOf(
     }
 }
 
+private val helpTopics=listOf(
+    "Kom igång" to "Skapa en lista, välj färg och ikon och lägg sedan till dina första varor.",
+    "Listor" to "Håll inne ett listkort och dra för att ändra ordning. Dra till papperskorgen för att ta bort.",
+    "Produkter" to "Skriv namn och valfri mängd. Tryck på en vara för att redigera och bocka av när den är klar.",
+    "Manuell sortering" to "Välj Anpassad i Sök & sortera. Håll sedan inne en vara och dra den till rätt plats.",
+    "Sök & sortera" to "Swipa från högerkanten eller tryck på handtaget. Sökningen visar både klara och ej klara träffar.",
+    "Användare & färger" to "Varje person har egen färg. Bubbsun minns vem som lagt till varje vara.",
+    "Teman" to "Tryck på temaikonen uppe till höger för att byta utseende.",
+    "Supporter" to "Supporterläget är gratis under förhandsvisningen och låser upp extra teman, färger och ikoner.",
+    "Statistik" to "Statistiksidan samlar roliga siffror om listor, varor och aktivitet.",
+    "Uppdateringar & APK" to "Bubbsun kan kontrollera GitHub efter nya versioner. APK-filen kan laddas hem direkt i appen.",
+    "Vanliga frågor" to "Dina listor lagras lokalt. Internet behövs bara för uppdateringar och för att skicka formulär."
+)
+
+@Composable private fun HelpScreen(p:Palette,onBack:()->Unit){
+    var search by remember{mutableStateOf("")};var open by remember{mutableStateOf("")}
+    Column(Modifier.fillMaxSize().padding(14.dp)){PageHeader(tr("HJÄLP & GUIDER","HELP & GUIDES"),p,onBack);Spacer(Modifier.height(10.dp));RetroField(search,{search=it},tr("Sök i guiderna…","Search guides…"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(10.dp))
+        LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){items(helpTopics.filter{search.isBlank()||it.first.contains(search,true)||it.second.contains(search,true)}){(title,body)->
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(10.dp)).clickable{open=if(open==title)"" else title}.padding(13.dp)){
+                Row{Text(title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text,modifier=Modifier.weight(1f));Text(if(open==title)"▲" else "▼",color=p.text)}
+                if(open==title){Spacer(Modifier.height(7.dp));Text(body,color=p.text,lineHeight=20.sp)}
+            }
+        }}
+    }
+}
+
+private suspend fun sendFeedback(problem:Boolean,category:String,title:String,message:String,email:String,includeInfo:Boolean):Boolean=withContext(Dispatchers.IO){
+    runCatching{
+        val c=(URL("https://formspree.io/f/mrenoalb").openConnection() as HttpURLConnection).apply{requestMethod="POST";doOutput=true;connectTimeout=6000;readTimeout=6000;setRequestProperty("Content-Type","application/json");setRequestProperty("Accept","application/json")}
+        val json=JSONObject().apply{put("type",if(problem)"Problem" else "Suggestion");put("category",category);put("title",title);put("message",message);put("reply_email",email);put("_subject","Bubbsun: ${if(problem)"Problem" else "Suggestion"} – $title");put("_gotcha","");if(includeInfo)put("app_info","Bubbsun ${BuildConfig.VERSION_NAME}; Android ${android.os.Build.VERSION.RELEASE}; ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")}
+        c.outputStream.use{it.write(json.toString().toByteArray())};val ok=c.responseCode in 200..299;c.disconnect();ok
+    }.getOrDefault(false)
+}
+
+@Composable private fun FeedbackScreen(problem:Boolean,p:Palette,onBack:()->Unit){
+    val categories=if(problem)listOf(tr("Krasch","Crash"),tr("Något fungerar inte","Not working"),tr("Utseende/layout","Appearance/layout"),tr("Språk","Language"),tr("Tema/supporter","Theme/supporter"),tr("Uppdatering/installation","Update/install"),tr("Annat","Other")) else listOf(tr("Ny funktion","New feature"),tr("Design","Design"),tr("Tema","Theme"),tr("Ikoner/färger","Icons/colors"),tr("Statistik","Statistics"),tr("Supporter","Supporter"),tr("Språk","Language"),tr("Annat","Other"))
+    var category by remember{mutableStateOf(categories.first())};var menu by remember{mutableStateOf(false)};var title by remember{mutableStateOf("")};var message by remember{mutableStateOf("")};var email by remember{mutableStateOf("")};var info by remember{mutableStateOf(true)};var sending by remember{mutableStateOf(false)};var sent by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)};val scope=rememberCoroutineScope()
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp)){PageHeader(if(problem)tr("RAPPORTERA PROBLEM","REPORT A PROBLEM") else tr("SKICKA FÖRSLAG","SEND SUGGESTION"),p,onBack);Spacer(Modifier.height(12.dp))
+        if(sent){Text("♥",fontSize=88.sp,color=Color(0xFFC58B91),modifier=Modifier.align(Alignment.CenterHorizontally));Text(tr("Tack! Meddelandet är skickat.","Thank you! Your message has been sent."),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=22.sp,color=p.pageText,textAlign=TextAlign.Center,modifier=Modifier.fillMaxWidth());return@Column}
+        Box{RetroButton(category,{menu=true},p,modifier=Modifier.fillMaxWidth());DropdownMenu(menu,{menu=false},containerColor=p.paper){categories.forEach{DropdownMenuItem({Text(it,color=p.text)},{category=it;menu=false})}}}
+        Spacer(Modifier.height(9.dp));RetroField(title,{title=it.take(80)},tr("Rubrik","Title"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(9.dp));RetroField(message,{message=it.take(2000)},tr("Beskriv så tydligt du kan…","Describe it as clearly as you can…"),Modifier.fillMaxWidth().height(150.dp),p);Spacer(Modifier.height(9.dp));RetroField(email,{email=it.take(120)},tr("E-post för svar (valfritt)","Reply email (optional)"),Modifier.fillMaxWidth(),p)
+        Row(verticalAlignment=Alignment.CenterVertically){Checkbox(info,{info=it},colors=CheckboxDefaults.colors(checkedColor=p.green));Text(tr("Bifoga appversion, Android och telefonmodell","Include app version, Android and device model"),color=p.pageText,fontSize=12.sp)}
+        if(failed)Text(tr("Kunde inte skicka. Kontrollera internet och försök igen.","Could not send. Check your connection and try again."),color=p.red)
+        RetroButton(if(sending)tr("SKICKAR…","SENDING…") else tr("SKICKA","SEND"),{if(!sending&&title.isNotBlank()&&message.isNotBlank()){sending=true;scope.launch{sent=sendFeedback(problem,category,title,message,email,info);failed=!sent;sending=false}}},p,modifier=Modifier.fillMaxWidth())
+    }
+}
+
 @Composable
-private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()->Unit,onVersions:()->Unit,onBack: () -> Unit) {
-    val context = LocalContext.current
+private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()->Unit,onVersions:()->Unit,onHelp:()->Unit,onProblem:()->Unit,onSuggestion:()->Unit,onBack: () -> Unit) {
     val scroll = rememberScrollState()
     var ducksVisible by remember { mutableStateOf(false) }
     var tapCount by remember { mutableStateOf(0) }
     var lastTap by remember { mutableStateOf(0L) }
-
-    fun email(subject: String) {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:finalworld@gmail.com")
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-        }
-        runCatching { context.startActivity(intent) }
+    var danielMode by remember{mutableIntStateOf(0)};var sanjaMode by remember{mutableIntStateOf(0)}
+    var danielTaps by remember{mutableIntStateOf(0)};var sanjaTaps by remember{mutableIntStateOf(0)}
+    var danielLast by remember{mutableLongStateOf(0L)};var sanjaLast by remember{mutableLongStateOf(0L)}
+    fun portraitTap(daniel:Boolean){
+        val now=System.currentTimeMillis()
+        if(daniel){danielTaps=if(now-danielLast<650)danielTaps+1 else 1;danielLast=now;if(danielTaps>=6)danielMode=2 else if(danielTaps>=3)danielMode=1}
+        else{sanjaTaps=if(now-sanjaLast<650)sanjaTaps+1 else 1;sanjaLast=now;if(sanjaTaps>=6)sanjaMode=2 else if(sanjaTaps>=3)sanjaMode=1}
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -1234,9 +1374,9 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
             verticalAlignment = Alignment.Top
         ) {
             Column(Modifier.weight(1.35f)) {
-                CreditRow(R.drawable.about_man, "Daniel Grandin", tr("Utveckling & design","Development & design"), p)
+                CreditRow(R.drawable.about_man, "Daniel Grandin", tr("Utveckling & design","Development & design"), p,spinning=danielMode==1,hidden=danielMode==2,onIconTap={portraitTap(true)})
                 DottedDivider(p)
-                CreditRow(R.drawable.about_woman, "Sanja Kropsu", tr("Idéer, testning & feedback","Ideas, testing & feedback"), p)
+                CreditRow(R.drawable.about_woman, "Sanja Kropsu", tr("Idéer, testning & feedback","Ideas, testing & feedback"), p,spinning=sanjaMode==1,hidden=sanjaMode==2,onIconTap={portraitTap(false)})
                 DottedDivider(p)
                 CreditRow(R.drawable.about_paws, "Frasse", tr("Support & kvalitetskontroll","Support & quality control"), p)
             }
@@ -1283,11 +1423,13 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
         }
 
         Spacer(Modifier.height(12.dp))
-        AboutActionButton(R.drawable.about_bug, tr("RAPPORTERA PROBLEM","REPORT A PROBLEM"), tr("Hjälp oss att göra Bubbsun ännu bättre","Help us make Bubbsun even better"), Color(0xFF6B281D), p) { email(tr("Bubbsun – rapportera problem","Bubbsun – report a problem")) }
+        AboutActionButton(R.drawable.about_bug, tr("RAPPORTERA PROBLEM","REPORT A PROBLEM"), tr("Hjälp oss att göra Bubbsun ännu bättre","Help us make Bubbsun even better"), Color(0xFF6B281D), p,onProblem)
         Spacer(Modifier.height(9.dp))
-        AboutActionButton(R.drawable.about_idea, tr("SKICKA FÖRSLAG","SEND SUGGESTION"), tr("Har du en idé? Vi vill gärna höra den!","Have an idea? We would love to hear it!"), p.green, p) { email(tr("Bubbsun – förslag","Bubbsun – suggestion")) }
+        AboutActionButton(R.drawable.about_idea, tr("SKICKA FÖRSLAG","SEND SUGGESTION"), tr("Har du en idé? Vi vill gärna höra den!","Have an idea? We would love to hear it!"), p.green, p,onSuggestion)
         Spacer(Modifier.height(9.dp))
         AboutActionButton(R.drawable.list_checklist,tr("VERSIONER & NYHETER","VERSIONS & NEWS"),"Patch notes • v${BuildConfig.VERSION_NAME}",p.green,p,onVersions)
+        Spacer(Modifier.height(9.dp))
+        AboutActionButton(R.drawable.about_info,tr("HJÄLP & GUIDER","HELP & GUIDES"),tr("Lär dig alla funktioner","Learn every feature"),p.green,p,onHelp)
         Spacer(Modifier.height(9.dp))
         AboutActionButton(R.drawable.theme_heart,if(supporterEnabled)"SUPPORTERSTATUS" else tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),if(supporterEnabled)"♥ FOUNDING SUPPORTER" else tr("GRATIS UNDER FÖRHANDSVISNINGEN","Free during preview"),p.panel,p,onSupporterInfo)
 
@@ -1312,11 +1454,13 @@ private fun AboutScreen(p: Palette, supporterEnabled:Boolean, onSupporterInfo:()
         Spacer(Modifier.height(12.dp))
     }
     if(ducksVisible) DuckOverlay()
+    if(danielMode==2||sanjaMode==2)PortraitBounceOverlay(danielMode==2,sanjaMode==2)
     }
 }
 
 @Composable
-private fun CreditRow(icon: Int, name: String, role: String, p: Palette, compact: Boolean = false) {
+private fun CreditRow(icon: Int, name: String, role: String, p: Palette, compact: Boolean = false,spinning:Boolean=false,hidden:Boolean=false,onIconTap:()->Unit={}) {
+    val rotation=if(spinning){val t=rememberInfiniteTransition(label="portraitSpin");t.animateFloat(0f,360f,infiniteRepeatable(tween(650,easing=LinearEasing)),label="spin").value}else 0f
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 7.dp)) {
         Box(
             Modifier
@@ -1325,7 +1469,7 @@ private fun CreditRow(icon: Int, name: String, role: String, p: Palette, compact
                 .border(1.dp, p.gold, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Image(painterResource(icon),null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.04f;scaleY=1.04f})
+            if(!hidden)Image(painterResource(icon),null,contentScale=ContentScale.Crop,modifier=Modifier.fillMaxSize().graphicsLayer{scaleX=1.04f;scaleY=1.04f;rotationZ=rotation}.clickable{onIconTap()})
             Box(Modifier.matchParentSize().border(1.dp,p.gold,CircleShape))
         }
         Spacer(Modifier.width(9.dp))
@@ -1370,7 +1514,7 @@ private fun AboutActionButton(icon: Int, title: String, subtitle: String, backgr
     }
 }
 
-@Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){PageBack(onBack,p);Spacer(Modifier.width(10.dp));Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=when{title.length<=16->24.sp;title.length<=28->20.sp;else->17.sp},lineHeight=when{title.length<=16->26.sp;title.length<=28->22.sp;else->19.sp},maxLines=2,overflow=TextOverflow.Ellipsis,color=p.pageText,modifier=Modifier.weight(1f));trailing?.invoke()}}
+@Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){PageBack(onBack,p);Spacer(Modifier.width(8.dp));BoxWithConstraints(Modifier.weight(1f)){val size=when{maxWidth<145.dp->14.sp;maxWidth<205.dp->17.sp;title.length>20->18.sp;else->24.sp};Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=size,lineHeight=size*1.08f,maxLines=1,overflow=TextOverflow.Ellipsis,color=p.pageText)};trailing?.invoke()}}
 @Composable private fun PageBack(onBack:()->Unit,p:Palette){
     Button(onClick=onBack,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(58.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){
         Image(painterResource(R.drawable.control_back),null,contentScale=ContentScale.Fit,modifier=Modifier.size(43.dp))
@@ -1401,9 +1545,9 @@ private fun InputPanel(
             BoxWithConstraints(Modifier.fillMaxWidth()){
                 val narrow=maxWidth<350.dp;val gap=8.dp
                 Row(verticalAlignment=Alignment.Bottom){
-                    Column(Modifier.weight(if(narrow)1.08f else 1.15f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,leading="product")}
+                    Column(Modifier.weight(1.38f)){RetroField(product,onProductChange,tr("Namn","Name"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,leading="product")}
                     Spacer(Modifier.width(gap))
-                    Column(Modifier.weight(if(narrow)1.12f else 1.15f)){RetroField(quantity,onQuantityChange,tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)10.sp else 11.sp,leading="balance")}
+                    Column(Modifier.weight(1f)){RetroField(quantity,onQuantityChange,tr("Mängd (valfritt)","Quantity (optional)"),Modifier.fillMaxWidth().height(54.dp),p,onDone=onAdd,placeholderSize=if(narrow)9.sp else 10.sp,leading="balance")}
                     Spacer(Modifier.width(gap));RetroButton("✓",onAdd,p,modifier=Modifier.size(54.dp),compact=true)
                 }
             }
@@ -1467,6 +1611,26 @@ private fun ProductBoxIcon(color:Color,modifier:Modifier=Modifier){
         drawLine(color,androidx.compose.ui.geometry.Offset(left,top),androidx.compose.ui.geometry.Offset(size.width*.5f,size.height*.08f),sw,StrokeCap.Round)
         drawLine(color,androidx.compose.ui.geometry.Offset(right,top),androidx.compose.ui.geometry.Offset(size.width*.5f,size.height*.08f),sw,StrokeCap.Round)
         drawLine(color,androidx.compose.ui.geometry.Offset(size.width*.5f,size.height*.08f),androidx.compose.ui.geometry.Offset(size.width*.5f,bottom),sw,StrokeCap.Round)
+    }
+}
+
+@Composable private fun PortraitBounceOverlay(showDaniel:Boolean,showSanja:Boolean){
+    BoxWithConstraints(Modifier.fillMaxSize()){
+        val density=LocalDensity.current;val width=with(density){maxWidth.toPx()};val height=with(density){maxHeight.toPx()};val portrait=with(density){62.dp.toPx()}
+        var dx by remember{mutableFloatStateOf(width*.18f)};var dy by remember{mutableFloatStateOf(height*.22f)};var sx by remember{mutableFloatStateOf(width*.70f)};var sy by remember{mutableFloatStateOf(height*.35f)}
+        var dvx by remember{mutableFloatStateOf(5.2f)};var dvy by remember{mutableFloatStateOf(4.1f)};var svx by remember{mutableFloatStateOf(-4.7f)};var svy by remember{mutableFloatStateOf(5.0f)}
+        var poff by remember{mutableStateOf(false)};var gone by remember{mutableStateOf(false)};var heartX by remember{mutableFloatStateOf(0f)};var heartY by remember{mutableFloatStateOf(0f)}
+        LaunchedEffect(showDaniel,showSanja,width,height){
+            while(!gone){
+                if(showDaniel){dx+=dvx;dy+=dvy;if(dx<0||dx>width-portrait){dvx=-dvx;dx=dx.coerceIn(0f,width-portrait)};if(dy<0||dy>height-portrait){dvy=-dvy;dy=dy.coerceIn(0f,height-portrait)}}
+                if(showSanja){sx+=svx;sy+=svy;if(sx<0||sx>width-portrait){svx=-svx;sx=sx.coerceIn(0f,width-portrait)};if(sy<0||sy>height-portrait){svy=-svy;sy=sy.coerceIn(0f,height-portrait)}}
+                if(showDaniel&&showSanja&&!poff&&kotlin.math.hypot((dx-sx).toDouble(),(dy-sy).toDouble())<portrait*.72){heartX=(dx+sx)/2;heartY=(dy+sy)/2;poff=true;delay(650);gone=true}
+                delay(16)
+            }
+        }
+        if(!gone&&!poff&&showDaniel)Image(painterResource(R.drawable.about_man),null,contentScale=ContentScale.Crop,modifier=Modifier.size(62.dp).graphicsLayer{translationX=dx;translationY=dy}.clip(CircleShape).border(2.dp,Color(0xFFFFC1DD),CircleShape))
+        if(!gone&&!poff&&showSanja)Image(painterResource(R.drawable.about_woman),null,contentScale=ContentScale.Crop,modifier=Modifier.size(62.dp).graphicsLayer{translationX=sx;translationY=sy}.clip(CircleShape).border(2.dp,Color(0xFFFFC1DD),CircleShape))
+        if(poff&&!gone)Column(Modifier.graphicsLayer{translationX=heartX-55.dp.toPx();translationY=heartY-38.dp.toPx()},horizontalAlignment=Alignment.CenterHorizontally){Text("💗💖💕",fontSize=34.sp);Text("POFF!",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color(0xFFFFD5E6),fontSize=20.sp)}
     }
 }
 

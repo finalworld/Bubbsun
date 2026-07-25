@@ -1,3 +1,16 @@
+## 0.480
+- Lade till panelen Sök & sortera från högerkanten i varje lista.
+- Lade till sökresultat grupperade i ej klara och klara varor.
+- Lade till flera sorteringar utan att förstöra den manuella ordningen.
+- Sparar placering och öppet/stängt läge för klara varor per lista.
+- Lade grunden för framtida synk med NYTT-märken per användare.
+- Lade till liststatus med kvarvarande och klara varor.
+- Lade till den sökbara sidan Hjälp & guider och en introduktion till sidpanelen.
+- Lade till privata problem- och förslagsformulär via Formspree.
+- Förbättrade uppdateringskontrollen och lade till manuell kontroll.
+- Anpassade titlar och produktfält bättre för smala telefoner.
+- Lade till Daniel och Sanjas hemliga snurr-, studs- och hjärtmolnseffekt.
+
 ## 0.472
 - Ersatte de tunna programritade kontrollsymbolerna med fylliga illustrerade retroikoner.
 - Bytte supporter-shoppingvagnen till den valda turkosa hjärtvagnen.

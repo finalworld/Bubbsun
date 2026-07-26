@@ -157,8 +157,17 @@ data class AdminMemberRecord(
     val titleColor: Long = 0L,
     val supporter: Boolean = false,
     val megaSuperBoss: Boolean = false,
+    val founder: Boolean = false,
+    val suspended: Boolean = false,
     val createdAt: Timestamp? = null,
     val lastActiveAt: Timestamp? = null
+)
+
+data class AdminMembershipRecord(
+    val groupId: String = "",
+    val groupName: String = "",
+    val role: String = GroupRole.MEMBER.wire,
+    val color: Long = 0L
 )
 
 data class AdminDashboard(

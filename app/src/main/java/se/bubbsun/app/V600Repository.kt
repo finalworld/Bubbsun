@@ -591,6 +591,8 @@ class V600Repository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
                 titleColor = d.getLong("titleColor") ?: 0L,
                 supporter = d.getBoolean("supporter") ?: false,
                 megaSuperBoss = d.getBoolean("megaSuperBoss") ?: false,
+                founder = d.getBoolean("founder") ?: false,
+                suspended = d.getBoolean("suspended") ?: false,
                 createdAt = d.getTimestamp("createdAt"),
                 lastActiveAt = d.getTimestamp("lastActiveAt")
             ) } ?: emptyList())
@@ -602,6 +604,54 @@ class V600Repository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
             "titleColor" to color,
             "updatedAt" to FieldValue.serverTimestamp()
         ), SetOptions.merge()).addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun syncSupporter(uid: String, enabled: Boolean, onDone: (Boolean) -> Unit = {}) {
+        val values = mutableMapOf<String, Any>("supporter" to enabled, "updatedAt" to FieldValue.serverTimestamp())
+        if (enabled) values["supporterSince"] = FieldValue.serverTimestamp()
+        users.document(uid).set(values, SetOptions.merge()).addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun deleteReport(reportId: String, onDone: (Boolean) -> Unit) {
+        db.collection("reports").document(reportId).delete().addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun setMemberSuspended(uid: String, suspended: Boolean, onDone: (Boolean) -> Unit) {
+        users.document(uid).update(mapOf("suspended" to suspended, "updatedAt" to FieldValue.serverTimestamp()))
+            .addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun setMemberMegaSuperBoss(uid: String, enabled: Boolean, onDone: (Boolean) -> Unit) {
+        users.document(uid).update(mapOf("megaSuperBoss" to enabled, "updatedAt" to FieldValue.serverTimestamp()))
+            .addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun loadAdminMemberships(uid: String, onDone: (List<AdminMembershipRecord>) -> Unit) {
+        users.document(uid).collection("memberships").get().addOnSuccessListener { membershipSnapshot ->
+            val docs = membershipSnapshot.documents
+            if (docs.isEmpty()) { onDone(emptyList()); return@addOnSuccessListener }
+            val results = mutableListOf<AdminMembershipRecord>(); var remaining = docs.size
+            docs.forEach { d ->
+                groups.document(d.id).get().addOnCompleteListener { task ->
+                    results += AdminMembershipRecord(d.id, task.result?.getString("name") ?: d.id, d.getString("role") ?: GroupRole.MEMBER.wire, d.getLong("color") ?: 0L)
+                    remaining--; if (remaining == 0) onDone(results.sortedBy { it.groupName.lowercase() })
+                }
+            }
+        }.addOnFailureListener { onDone(emptyList()) }
+    }
+
+    fun setAdminGroupRole(uid: String, membership: AdminMembershipRecord, role: String, onDone: (Boolean) -> Unit) {
+        val batch = db.batch()
+        batch.set(users.document(uid).collection("memberships").document(membership.groupId), mapOf("role" to role), SetOptions.merge())
+        batch.set(groups.document(membership.groupId).collection("members").document(uid), mapOf("role" to role), SetOptions.merge())
+        batch.commit().addOnCompleteListener { onDone(it.isSuccessful) }
+    }
+
+    fun adminRemoveFromGroup(uid: String, membership: AdminMembershipRecord, onDone: (Boolean) -> Unit) {
+        val batch = db.batch()
+        batch.delete(users.document(uid).collection("memberships").document(membership.groupId))
+        batch.delete(groups.document(membership.groupId).collection("members").document(uid))
+        batch.commit().addOnCompleteListener { onDone(it.isSuccessful) }
     }
 
     fun loadAdminDashboard(onDone: (AdminDashboard) -> Unit) {

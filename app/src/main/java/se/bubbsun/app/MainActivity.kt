@@ -7,9 +7,13 @@ import java.util.Locale
 import java.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Bundle
+import android.os.Build
+import android.Manifest
+import android.content.pm.PackageManager
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.activity.ComponentActivity
+import androidx.core.app.ActivityCompat
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -246,6 +250,7 @@ class ShoppingListData(
 }
 data class StatEvent(val id:String=UUID.randomUUID().toString(),val kind:String,val itemName:String,val userId:String,val timestamp:Long=System.currentTimeMillis())
 private data class ReleaseInfo(val version:String,val pageUrl:String,val apkUrl:String,val notes:String)
+private data class GithubReleaseStat(val name:String,val tag:String,val url:String,val date:String,val downloads:Int,val latest:Boolean)
 data class CloudProfile(val uid:String,val name:String,val color:Long,val groupId:String,val role:String)
 data class JoinRequest(val uid:String,val name:String,val color:Long,val createdAt:Long)
 
@@ -301,7 +306,7 @@ private class TogetherRepository{
         val col=db.collection("groups").document(groupId).collection("lists")
         col.get().addOnSuccessListener{snap->db.runBatch{b->
             snap.documents.filter{d->lists.none{it.id==d.id}}.forEach{b.delete(it.reference)}
-            lists.forEachIndexed{index,l->if(l.creatorId.isBlank())l.creatorId=actorId;val items=l.items.map{i->mapOf("id" to i.id,"name" to i.name,"quantity" to i.quantity,"ownerId" to i.ownerId,"completed" to i.completed,"createdAt" to i.createdAt,"completedAt" to i.completedAt,"likedBy" to i.likedBy.toList())};b.set(col.document(l.id),mapOf("name" to l.name,"icon" to l.icon,"iconColor" to l.iconColorHex,"creatorId" to l.creatorId,"sortMode" to l.sortMode,"doneFirst" to l.doneFirst,"doneExpanded" to l.doneExpanded,"seenAtByUser" to l.seenAtByUser.toMap(),"items" to items,"order" to index,"updatedAt" to FieldValue.serverTimestamp()))}
+            lists.forEachIndexed{index,l->if(l.creatorId.isBlank())l.creatorId=actorId;val items=l.items.map{i->mapOf("id" to i.id,"name" to i.name,"quantity" to i.quantity,"ownerId" to i.ownerId,"completed" to i.completed,"createdAt" to i.createdAt,"completedAt" to i.completedAt,"likedBy" to i.likedBy.toList())};b.set(col.document(l.id),mapOf("name" to l.name,"icon" to l.icon,"iconColor" to l.iconColorHex,"creatorId" to l.creatorId,"sortMode" to l.sortMode,"doneFirst" to l.doneFirst,"doneExpanded" to l.doneExpanded,"seenAtByUser" to l.seenAtByUser.toMap(),"items" to items,"order" to index,"updatedBy" to actorId,"updatedAt" to FieldValue.serverTimestamp()))}
         }.addOnCompleteListener{onDone(it.isSuccessful)}}.addOnFailureListener{onDone(false)}
     }
     fun listenActivity(groupId:String,onChange:(List<StatEvent>)->Unit):ListenerRegistration=db.collection("groups").document(groupId).collection("activity").limit(500).addSnapshotListener{s,_->onChange(s?.documents?.map{d->StatEvent(d.id,d.getString("kind")?:"",d.getString("itemName")?:"",d.getString("actorId")?:"",d.getLong("timestamp")?:System.currentTimeMillis())}?:emptyList())}
@@ -327,12 +332,26 @@ private suspend fun fetchLatestRelease():ReleaseInfo?=withContext(Dispatchers.IO
     }.getOrNull()
 }
 
+private suspend fun fetchReleaseStats(): List<GithubReleaseStat> = withContext(Dispatchers.IO){
+    runCatching{
+        val c=(URL("https://api.github.com/repos/finalworld/Bubbsun/releases?per_page=50").openConnection() as HttpURLConnection).apply{connectTimeout=8000;readTimeout=8000;setRequestProperty("Accept","application/vnd.github+json");setRequestProperty("User-Agent","Bubbsun-Android")}
+        val array=JSONArray(c.inputStream.bufferedReader().use{it.readText()})
+        (0 until array.length()).map{i->val o=array.getJSONObject(i);val assets=o.optJSONArray("assets")?:JSONArray();var downloads=0;for(a in 0 until assets.length())downloads+=assets.getJSONObject(a).optInt("download_count",0);GithubReleaseStat(o.optString("name",o.optString("tag_name")),o.optString("tag_name"),o.optString("html_url"),o.optString("published_at").take(10),downloads,i==0)}
+    }.getOrDefault(emptyList())
+}
+
 private fun isNewerVersion(remote:String,local:String):Boolean{
     val a=remote.split(".").map{it.toIntOrNull()?:0};val b=local.split(".").map{it.toIntOrNull()?:0}
     return (0 until maxOf(a.size,b.size)).firstNotNullOfOrNull{i->((a.getOrElse(i){0}).compareTo(b.getOrElse(i){0})).takeIf{it!=0}}?.let{it>0}?:false
 }
 
-class MainActivity:ComponentActivity(){ override fun onCreate(savedInstanceState:Bundle?){super.onCreate(savedInstanceState);setContent{BubbsunApp(this)}} }
+class MainActivity:ComponentActivity(){
+    override fun onCreate(savedInstanceState:Bundle?){
+        super.onCreate(savedInstanceState)
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.POST_NOTIFICATIONS),601)
+        setContent{BubbsunApp(this)}
+    }
+}
 
 private class BubbsunStore(context:Context){
     private val prefs=context.getSharedPreferences("bubbsun_store",Context.MODE_PRIVATE)
@@ -547,6 +566,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     DisposableEffect(Unit){val listener=FirebaseAuth.AuthStateListener{firebaseUser=it.currentUser};together.auth.addAuthStateListener(listener);onDispose{together.auth.removeAuthStateListener(listener)}}
     LaunchedEffect(Unit){if(firebaseUser==null)runCatching{googleClient.silentSignIn().addOnSuccessListener{a->together.auth.signInWithCredential(GoogleAuthProvider.getCredential(a.idToken,null))}}}
     val store=remember{BubbsunStore(context)}
+    LaunchedEffect(Unit){FollowNotificationScheduler.schedule(context)}
     val authDensity=LocalDensity.current
     if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides Density(authDensity.density,1f)){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
     val localDeveloperAccount=BuildConfig.DEBUG&&firebaseUser!!.uid=="vIIrmKj3Q6YIjoR01TR8ZFYdgZz1"
@@ -648,6 +668,10 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var manualUpdateCheck by remember{mutableIntStateOf(0)}
     var updateStatus by remember{mutableStateOf("")}
     var showExitDialog by remember{mutableStateOf(false)}
+    LaunchedEffect(activeUserId,supporterPreview,v600Account?.supporter){
+        if(v600Account?.supporter==true&&!supporterPreview){supporterPreview=true;store.saveSupporterPreview(true)}
+        else if(supporterPreview&&v600Account?.supporter==false)v600.syncSupporter(activeUserId,true){}
+    }
     LaunchedEffect(manualUpdateCheck){
         if(!supporterPreview&&themeId in setOf("cosmic","heart","gothic")){themeId="retro_dark";store.saveThemeId(themeId)}
         if(store.loadSupporterStyle()!=supporterStyle)store.saveSupporterStyle(supporterStyle)
@@ -715,7 +739,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                         "globalPin"->globalPin?.let{pin->GlobalPinScreen(pin,globalPinItems,activeUserId,p,v600,onBack={navigateBack()})}?:Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){Text(tr("Meddelandet finns inte längre.","The message is no longer available."),color=p.pageText)}
                         "admin"->if(localDeveloperAccount||v600Account?.megaSuperBoss==true||v600Account?.founder==true||adminSettings.founderUid==activeUserId)AdminScreen(p,v600,globalPin,adminSettings,onBack={navigateBack()}) else Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){Text(tr("Ingen adminbehörighet.","No admin permission."),color=p.pageText)}
                         "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,privateLists,pinnedPrivateLists.toSet(),privateSpace,p,theme.id,activeUserId,cloudMembers,globalPin?.takeIf{it.revision>(v600Account?.hiddenGlobalPinRevision?:0L)},onOpen={selectedListPrivate=false;selectedListId=it;navigate("list")},onOpenPrivate={selectedListPrivate=true;selectedListId=it;navigate("list")},onTogglePrivatePin={id->if(id in pinnedPrivateLists)pinnedPrivateLists.remove(id)else pinnedPrivateLists.add(id);savePrivate()},onOpenPin={navigate("globalPin")},onHidePin={pin->v600.hideGlobalPin(activeUserId,pin.revision){}},onRestorePin={v600.restoreGlobalPin(activeUserId){}},onAdd={navigate("addList")},onAddPrivate={navigate("addPrivateList")},onSave={saveTogether()},onSavePrivate={savePrivate()})
-                        else->{val l=if(selectedListPrivate)privateLists.firstOrNull{it.id==selectedListId}else lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,syncedUsers,activeUserId,p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onHelp={navigate("help")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={if(selectedListPrivate)savePrivate()else saveTogether()},onEvent={event->if(selectedListPrivate){privateEvents.add(event);store.savePrivateEvents(activeUserId,privateEvents)}else{events.add(event);store.saveEvents(events);cloudProfile?.takeIf{it.groupId.isNotBlank()}?.let{together.recordActivity(it.groupId,event)}}})}
+                        else->{val l=if(selectedListPrivate)privateLists.firstOrNull{it.id==selectedListId}else lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,syncedUsers,activeUserId,if(selectedListPrivate)"" else (visibleAccount?.activeGroupId?:cloudProfile?.groupId.orEmpty()),p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onHelp={navigate("help")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={if(selectedListPrivate)savePrivate()else saveTogether()},onEvent={event->if(selectedListPrivate){privateEvents.add(event);store.savePrivateEvents(activeUserId,privateEvents)}else{events.add(event);store.saveEvents(events);cloudProfile?.takeIf{it.groupId.isNotBlank()}?.let{together.recordActivity(it.groupId,event)}}})}
                     }
                 }
                 if(menuOpen)SideMenu(cloudProfile,visibleAccount?.let{if(localDeveloperAccount||adminSettings.founderUid==it.uid)it.copy(founder=true)else it},visibleMemberships,visibleGroups,groupName,privateSpace,p,supporterPreview,onSwitchGroup={groupId->privateSpace=false;store.savePrivateSpace(activeUserId,false);v600Account?.let{account->v600.switchActiveGroup(account.uid,groupId){}};navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false;menuOpen=false},onSelectPrivate={privateSpace=true;store.savePrivateSpace(activeUserId,true);navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false;menuOpen=false},onSupporterInfo={menuOpen=false;navigate("support")},onClose={menuOpen=false},onNavigate={menuOpen=false;navigate(it)})
@@ -849,8 +873,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                                 val roleMark=when(membership?.parsedRole){GroupRole.SUPER_BOSS->"  👑";GroupRole.BOSS->"  ★";else->""}
                                 Text((account?.displayName?:active.name)+roleMark,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp,maxLines=1,overflow=TextOverflow.Ellipsis)
                                 val title=account?.globalTitle.orEmpty().ifBlank{when(membership?.parsedRole){GroupRole.SUPER_BOSS->tr("Superboss","Super boss");GroupRole.BOSS->"Boss";else->tr("Medlem","Member")}}
-                                Text(title,color=activeAccent,fontSize=11.sp,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis)
-                                Spacer(Modifier.height(5.dp));Row(verticalAlignment=Alignment.CenterVertically){if(privateSpace)Image(painterResource(R.drawable.list_checklist),null,Modifier.size(19.dp))else Text(activeGroup?.iconId?:"⌂",fontSize=15.sp);Spacer(Modifier.width(5.dp));Text(if(privateSpace)tr("Mina listor","My lists") else activeGroup?.name?:groupName.ifBlank{tr("Ingen grupp ännu","No group yet")},color=readableOn(p.panel).copy(alpha=.82f),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis)}
+                                Spacer(Modifier.height(1.dp));Text(title,color=activeAccent,fontSize=11.sp,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis)
+                                Spacer(Modifier.height(4.dp));Row(verticalAlignment=Alignment.CenterVertically){if(privateSpace)Image(painterResource(R.drawable.list_checklist),null,Modifier.size(32.dp))else Text(activeGroup?.iconId?:"⌂",fontSize=30.sp,lineHeight=31.sp);Spacer(Modifier.width(7.dp));Text(if(privateSpace)tr("Mina listor","My lists") else activeGroup?.name?:groupName.ifBlank{tr("Ingen grupp ännu","No group yet")},color=readableOn(p.panel).copy(alpha=.82f),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=12.sp,lineHeight=14.sp,maxLines=2,overflow=TextOverflow.Ellipsis)}
                             }
                         }
                         Box(Modifier.width(1.dp).fillMaxHeight().background(activeAccent.copy(alpha=.82f)))
@@ -881,6 +905,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             MenuCard(R.drawable.menu_stats,tr("STATISTIK","STATISTICS"),if(privateSpace)tr("Mina listor • Privat statistik","My lists • Private statistics") else "${groups[account?.activeGroupId?:profile?.groupId]?.name?:groupName.ifBlank{tr("Gruppen","The group")}} • ${tr("Gruppstatistik","Group statistics")}",p){onNavigate("stats")}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.theme_steel,tr("INSTÄLLNINGAR","SETTINGS"),tr("Språk, bekräftelser & statistik","Language, confirmations & statistics"),p){onNavigate("settings")}
+            Spacer(Modifier.height(10.dp))
+            MenuCard(R.drawable.theme_heart,tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),tr("Supporter, Facebook och Bubbsun","Supporter, Facebook and Bubbsun"),p){onSupporterInfo()}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.about_info,tr("OM BUBBSUN","ABOUT BUBBSUN"),tr("Version, skapare & kontakt","Version, creators & contact"),p){onNavigate("about")}
             Spacer(Modifier.height(10.dp))
@@ -1005,7 +1031,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     Row(Modifier.fillMaxWidth().padding(horizontal=12.dp).height(54.dp).graphicsLayer{translationX=drag}.clip(RoundedCornerShape(11.dp)).background(Brush.horizontalGradient(listOf(p.paper2,p.paper))).border(2.dp,p.gold,RoundedCornerShape(11.dp)).pointerInput(pin.revision){
         detectHorizontalDragGestures(onDragEnd={if(abs(drag)>85f)onHide();drag=0f},onHorizontalDrag={change,amount->change.consume();drag=(drag+amount).coerceIn(-180f,180f)})
     }.clickable{onOpen()}.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){
-        Text("📣",fontSize=25.sp);Spacer(Modifier.width(9.dp));Column(Modifier.weight(1f)){Text(pin.title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp,color=p.text,maxLines=1,overflow=TextOverflow.Ellipsis);Text(tr("Från Bubbsun","From Bubbsun"),fontSize=9.sp,fontWeight=FontWeight.Bold,color=p.muted)};Text("☜",fontSize=16.sp,color=p.muted);Spacer(Modifier.width(5.dp));Text("›",fontSize=27.sp,fontWeight=FontWeight.Black,color=p.text)
+        Text("📣",fontSize=25.sp);Spacer(Modifier.width(9.dp));Column(Modifier.weight(1f)){Text(pin.title,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=17.sp,color=p.text,maxLines=1,overflow=TextOverflow.Ellipsis);Text(tr("Från Bubbsun","From Bubbsun"),fontSize=9.sp,fontWeight=FontWeight.Bold,color=p.muted)};Column(horizontalAlignment=Alignment.End){Row(verticalAlignment=Alignment.CenterVertically){Text("↔",fontSize=17.sp,color=p.gold,fontWeight=FontWeight.Black);Spacer(Modifier.width(3.dp));Text("☝",fontSize=17.sp,color=p.muted)};Text(tr("SVEPA FÖR ATT DÖLJA","SWIPE TO HIDE"),fontSize=7.sp,color=p.muted,fontWeight=FontWeight.Black)};Spacer(Modifier.width(5.dp));Text("›",fontSize=27.sp,fontWeight=FontWeight.Black,color=p.text)
     }
 }
 
@@ -1110,6 +1136,7 @@ private fun ShoppingListScreen(
     list: ShoppingListData,
     users: List<UserProfile>,
     activeUserId: String,
+    groupId: String,
     p: Palette,
     supporterEnabled: Boolean,
     inputExpanded: Boolean,
@@ -1139,7 +1166,9 @@ private fun ShoppingListScreen(
     var draggingId by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    var following by remember(list.id) { mutableStateOf(followPrefs.getBoolean(list.id, false)) }
+    val followKey="follow|$groupId|${list.id}"
+    var following by remember(list.id,groupId) { mutableStateOf(followPrefs.getBoolean(followKey,followPrefs.getBoolean(list.id,false))) }
+    LaunchedEffect(list.id,groupId){if(groupId.isNotBlank()&&following&&!followPrefs.contains(followKey))FollowNotificationScheduler.setFollowing(context,groupId,list.id,list.name,activeUserId,true)}
     LaunchedEffect(toolsAreaHeight){if(toolsAreaHeight>0){val limit=(toolsAreaHeight-toolsTabHeightPx).coerceAtLeast(0f)/2f;toolsTabY=toolsTabY.coerceIn(-limit,limit)}}
 
     fun sorted(source:List<ShoppingItem>)=when(list.sortMode){
@@ -1179,7 +1208,7 @@ private fun ShoppingListScreen(
             product=input,onProductChange={input=it},quantity=quantityInput,onQuantityChange={quantityInput=it},
             onAdd={addItem(input)},expanded=inputExpanded,onExpandedChange=onInputExpanded,p=p,
             following=following,
-            onFollowChange={following=!following;followPrefs.edit().putBoolean(list.id,following).apply()},
+            onFollowChange={following=!following;FollowNotificationScheduler.setFollowing(context,groupId,list.id,list.name,activeUserId,following)},
             onEditList={renameList=true},
             onDelete={if(deleteMode){if(selected.isEmpty())deleteMode=false else confirmDelete=true}else deleteMode=true}
         )
@@ -1881,6 +1910,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 
 @Composable private fun SupportScreen(p:Palette,supporterEnabled:Boolean,onBack:()->Unit,onActivate:()->Unit,onExplore:()->Unit){
     var success by remember{mutableStateOf(false)}
+    val context=LocalContext.current
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(14.dp),horizontalAlignment=Alignment.CenterHorizontally){
         PageHeader(tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),p,onBack)
         Spacer(Modifier.height(16.dp))
@@ -1908,12 +1938,18 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
             Spacer(Modifier.height(10.dp))
             RetroButton(tr("UTFORSKA SUPPORTERINNEHÅLL","EXPLORE SUPPORTER CONTENT"),onExplore,p,modifier=Modifier.fillMaxWidth())
         }
+        Spacer(Modifier.height(12.dp))
+        Button(onClick={runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("https://www.facebook.com/profile.php?id=61592148376494")).apply{addCategory(Intent.CATEGORY_BROWSABLE)})}},modifier=Modifier.fillMaxWidth().heightIn(min=58.dp),shape=RoundedCornerShape(12.dp),colors=ButtonDefaults.buttonColors(containerColor=Color(0xFF4267B2),contentColor=Color.White)){
+            Text("f",fontSize=24.sp,fontWeight=FontWeight.Black);Spacer(Modifier.width(10.dp));Text(tr("FÖLJ BUBBSUN PÅ FACEBOOK","FOLLOW BUBBSUN ON FACEBOOK"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=15.sp)
+        }
         Spacer(Modifier.height(10.dp))
         Button(onClick={},enabled=false,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(9.dp)){Text(tr("ÅTERSTÄLL KÖP  •  KOMMER SENARE","RESTORE PURCHASES  •  COMING LATER"))}
     }
 }
 
 private val patchNotes=listOf(
+    "0.601" to listOf("Clearer swipe hint on global pinned lists","Larger Follow button text and five-minute background notifications","Full MegaSuperBoss member profiles with groups, roles, blocking and removal","Dedicated Bugs & Suggestions admin page","Synced supporter status and corrected admin statistics","GitHub release download statistics","Restored Support Bubbsun page and Facebook link","Refined active group card in the menu"),
+    "0.600" to listOf("Family Expansion with multiple groups and private lists","MegaSuperBoss administration and global pinned lists","Group roles, approvals and unique colors","Gothic supporter theme and expanded languages","Improved update installation flow"),
     "0.501" to listOf("Privacy consent before the first cloud sync","Mobile-safe Google sign-in screen","Stable drag-and-drop with one sync after release","Synced thumbs-up reactions on entries","Sign-out confirmation","Clickable logo shortcut to My Lists","Clearer menu, languages, dropdowns and statistics wording"),
     "0.500" to listOf("Together Edition Beta with Google sign-in","Real-time family groups with offline Firestore sync","Join codes, approval requests and unique member colors","Owner, admin and member roles protected by server rules","Safe migration of existing local lists","Creator color markers on lists and items","Expanded language selector and refreshed Help & Guides","Together privacy and account controls"),
     "0.480" to listOf("Search & Sort side panel with saved per-list choices","Grouped live search and persistent custom order","Per-user NEW badges and list status","Offline Help & Guides","Private in-app problem and suggestion forms","Responsive narrow-screen titles and fields","Daniel and Sanja portrait Easter egg","Improved update checking and manual check button"),
@@ -1934,7 +1970,7 @@ private val patchNotes=listOf(
 )
 
 @Composable private fun VersionsScreen(p:Palette,onBack:()->Unit){
-    var expanded by remember{mutableStateOf("0.500")}
+    var expanded by remember{mutableStateOf("0.601")}
     Column(Modifier.fillMaxSize().padding(14.dp)){
         PageHeader(tr("VERSIONER & NYHETER","VERSIONS & NEWS"),p,onBack)
         Spacer(Modifier.height(12.dp))
@@ -2020,6 +2056,8 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     var members by remember{mutableStateOf<List<AdminMemberRecord>>(emptyList())}
     var dashboard by remember{mutableStateOf<AdminDashboard?>(null)}
     var showMembers by remember{mutableStateOf(false)}
+    var showReports by remember{mutableStateOf(false)}
+    var showReleases by remember{mutableStateOf(false)}
     var pinTitle by remember(currentPin?.id){mutableStateOf(currentPin?.title.orEmpty())}
     var pinInfo by remember(currentPin?.id){mutableStateOf(currentPin?.infoText.orEmpty())}
     var pinItems by remember{mutableStateOf("")}
@@ -2029,15 +2067,23 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     DisposableEffect(Unit){val reportsReg=repo.listenAdminReports{reports=it};val membersReg=repo.listenAdminMembers{members=it};onDispose{reportsReg.remove();membersReg.remove()}}
     LaunchedEffect(Unit){repo.loadAdminDashboard{dashboard=it}}
     if(showMembers){AdminMembersScreen(p,repo,members,{showMembers=false});return}
+    if(showReports){AdminReportsScreen(p,repo,reports,{showReports=false});return}
+    if(showReleases){AdminReleasesScreen(p,{showReleases=false});return}
     Column(Modifier.fillMaxSize().padding(14.dp)){
         PageHeader("MEGASUPERBOSS",p,onBack)
         Spacer(Modifier.height(9.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(10.dp)){
-            item{AdminDashboardCard(p,dashboard,reports.count{it.status=="new"}){repo.loadAdminDashboard{dashboard=it}}}
+            item{AdminDashboardCard(p,dashboard,reports.count{it.status=="new"},{repo.loadAdminDashboard{dashboard=it}},{showReleases=true})}
             item{
                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(11.dp)).clickable{showMembers=true}.padding(13.dp),verticalAlignment=Alignment.CenterVertically){
                     Box(Modifier.size(43.dp).clip(CircleShape).background(p.green),contentAlignment=Alignment.Center){Text("${members.size}",color=readableOn(p.green),fontWeight=FontWeight.Black)}
                     Spacer(Modifier.width(11.dp));Column(Modifier.weight(1f)){Text(tr("MEDLEMMAR","MEMBERS"),color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp);Text(tr("Sök, sortera och hantera unika titlar","Search, sort and manage unique titles"),color=p.muted,fontSize=11.sp)};Text("›",color=p.text,fontSize=32.sp,fontWeight=FontWeight.Black)
+                }
+            }
+            item{
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(2.dp,p.outline,RoundedCornerShape(11.dp)).clickable{showReports=true}.padding(13.dp),verticalAlignment=Alignment.CenterVertically){
+                    Box(Modifier.size(43.dp).clip(CircleShape).background(p.red),contentAlignment=Alignment.Center){Text("${reports.count{it.status=="new"}}",color=readableOn(p.red),fontWeight=FontWeight.Black)}
+                    Spacer(Modifier.width(11.dp));Column(Modifier.weight(1f)){Text(tr("BUGGAR & FÖRSLAG","BUGS & SUGGESTIONS"),color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp);Text(tr("Läs, markera och ta bort inskickat","Read, mark and delete submissions"),color=p.muted,fontSize=11.sp)};Text("›",color=p.text,fontSize=32.sp,fontWeight=FontWeight.Black)
                 }
             }
             item{
@@ -2054,20 +2100,24 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
             item{
                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(11.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(11.dp)).padding(12.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(tr("GRATIS SUPPORTERPERIOD","FREE SUPPORTER PERIOD"),color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black);Text(tr("Central inställning för alla konton","Central setting for all accounts"),color=p.muted,fontSize=11.sp)};Switch(settings.freeSupporterPeriod,{repo.setFreeSupporterPeriod(it){}},colors=SwitchDefaults.colors(checkedThumbColor=p.gold,checkedTrackColor=p.green))}
             }
-            item{Text("ISSUES (${reports.size})",color=p.pageText,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp)}
-            items(reports,key={it.id}){report->
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,if(report.status=="new")p.red else p.outline,RoundedCornerShape(10.dp)).padding(11.dp)){
-                    Row{Text(report.title,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,modifier=Modifier.weight(1f),maxLines=1,overflow=TextOverflow.Ellipsis);Text(report.status.uppercase(),color=if(report.status=="new")p.red else p.green,fontSize=9.sp,fontWeight=FontWeight.Black)}
-                    Text("${report.category} • v${report.appVersion}",color=p.muted,fontSize=10.sp);Spacer(Modifier.height(4.dp));Text(report.description,color=p.text,fontSize=12.sp,maxLines=4,overflow=TextOverflow.Ellipsis)
-                    if(report.status=="new"){Spacer(Modifier.height(5.dp));Text(tr("MARKERA SOM LÄST","MARK AS READ"),color=p.green,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.clickable{repo.updateReportStatus(report.id,"read"){} }.padding(5.dp))}
-                }
-            }
         }
     }
     if(preview)AlertDialog(onDismissRequest={preview=false},containerColor=popupColor(p.paper),title={Text(pinTitle.ifBlank{tr("Förhandsvisning","Preview")},color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black)},text={Column{if(pinInfo.isNotBlank())Text(pinInfo,color=p.text);pinItems.lines().filter{it.isNotBlank()}.take(8).forEach{Text("• $it",color=p.text,modifier=Modifier.padding(top=5.dp))}}},confirmButton={RetroButton("OK",{preview=false},p)})
 }
 
-@Composable private fun AdminDashboardCard(p:Palette,data:AdminDashboard?,liveReports:Int,onRefresh:()->Unit){
+@Composable private fun AdminReportsScreen(p:Palette,repo:V600Repository,reports:List<BubbsunReport>,onBack:()->Unit){
+    var deleteTarget by remember{mutableStateOf<BubbsunReport?>(null)}
+    Column(Modifier.fillMaxSize().padding(14.dp)){PageHeader(tr("BUGGAR & FÖRSLAG","BUGS & SUGGESTIONS"),p,onBack);Spacer(Modifier.height(9.dp));Text("${reports.size} ${tr("inskickade ärenden","submissions")}",color=p.pageMuted,fontSize=11.sp);Spacer(Modifier.height(7.dp));LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){items(reports,key={it.id}){report->Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(1.dp,if(report.status=="new")p.red else p.outline,RoundedCornerShape(10.dp)).padding(11.dp)){Row{Text(if(report.category.contains("förslag",true))"💡" else "🐞",fontSize=18.sp);Spacer(Modifier.width(7.dp));Text(report.title,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,modifier=Modifier.weight(1f));Text(report.status.uppercase(),color=if(report.status=="new")p.red else p.green,fontSize=9.sp,fontWeight=FontWeight.Black)};Text("${report.category} • v${report.appVersion}",color=p.muted,fontSize=10.sp);Spacer(Modifier.height(5.dp));Text(report.description,color=p.text,fontSize=12.sp);if(report.deviceModel.isNotBlank())Text("${report.deviceModel} • Android ${report.androidVersion}",color=p.muted,fontSize=9.sp,modifier=Modifier.padding(top=5.dp));Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){if(report.status=="new")Text(tr("MARKERA LÄST","MARK READ"),color=p.green,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.clickable{repo.updateReportStatus(report.id,"read"){} }.padding(9.dp));Text(tr("TA BORT","DELETE"),color=p.red,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.clickable{deleteTarget=report}.padding(9.dp))}}}}}
+    deleteTarget?.let{r->ConfirmDialog(tr("Ta bort ärendet?","Delete submission?"),r.title,p,{deleteTarget=null},{repo.deleteReport(r.id){};deleteTarget=null})}
+}
+
+@Composable private fun AdminReleasesScreen(p:Palette,onBack:()->Unit){
+    val context=LocalContext.current;var releases by remember{mutableStateOf<List<GithubReleaseStat>?>(null)}
+    LaunchedEffect(Unit){releases=fetchReleaseStats()}
+    Column(Modifier.fillMaxSize().padding(14.dp)){PageHeader(tr("RELEASER & NEDLADDNINGAR","RELEASES & DOWNLOADS"),p,onBack);Spacer(Modifier.height(10.dp));val data=releases;if(data==null){CircularProgressIndicator(color=p.gold,modifier=Modifier.align(Alignment.CenterHorizontally));return@Column};if(data.isEmpty()){Text(tr("Kunde inte hämta GitHub-statistik.","Could not load GitHub statistics."),color=p.pageText);return@Column};Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(p.panel).border(2.dp,p.gold,RoundedCornerShape(12.dp)).padding(14.dp),horizontalAlignment=Alignment.CenterHorizontally){Text(data.sumOf{it.downloads}.toString(),color=p.gold,fontSize=38.sp,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black);Text(tr("TOTALA APK-NEDLADDNINGAR","TOTAL APK DOWNLOADS"),color=readableOn(p.panel),fontWeight=FontWeight.Black,fontSize=11.sp)};Spacer(Modifier.height(9.dp));LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(7.dp)){items(data,key={it.tag}){r->Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.paper).border(if(r.latest)2.dp else 1.dp,if(r.latest)p.gold else p.outline,RoundedCornerShape(10.dp)).clickable{runCatching{context.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(r.url)))}}.padding(12.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(r.name,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,maxLines=2);Text("${r.date}${if(r.latest)" • ${tr("SENASTE","LATEST")}" else ""}",color=p.muted,fontSize=10.sp)};Column(horizontalAlignment=Alignment.CenterHorizontally){Text(r.downloads.toString(),color=p.green,fontSize=23.sp,fontWeight=FontWeight.Black);Text(tr("NEDLADDNINGAR","DOWNLOADS"),color=p.muted,fontSize=7.sp)}}}}}
+}
+
+@Composable private fun AdminDashboardCard(p:Palette,data:AdminDashboard?,liveReports:Int,onRefresh:()->Unit,onReleases:()->Unit){
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(p.panel).border(2.dp,p.outline,RoundedCornerShape(12.dp)).padding(12.dp)){
         Row(verticalAlignment=Alignment.CenterVertically){Text(tr("BUBBSUN-STATISTIK","BUBBSUN STATISTICS"),color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp,modifier=Modifier.weight(1f));Text("↻",color=p.gold,fontSize=25.sp,fontWeight=FontWeight.Black,modifier=Modifier.clickable{onRefresh()}.padding(5.dp))}
         if(data==null){Spacer(Modifier.height(12.dp));CircularProgressIndicator(color=p.gold,modifier=Modifier.size(28.dp).align(Alignment.CenterHorizontally));return@Column}
@@ -2076,7 +2126,7 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
         Spacer(Modifier.height(4.dp));Text("${tr("Aktiva","Active")}: 24h ${data.active24h}  •  7d ${data.active7d}  •  30d ${data.active30d}",color=readableOn(p.panel),fontSize=11.sp,fontWeight=FontWeight.Bold)
         if(data.largestGroup.isNotBlank())Text("★ ${tr("Största grupp","Largest group")}: ${data.largestGroup}",color=readableOn(p.panel).copy(alpha=.8f),fontSize=10.sp,modifier=Modifier.padding(top=5.dp))
         if(data.busiestList.isNotBlank())Text("★ ${tr("Mest fyllda lista","Fullest list")}: ${data.busiestList}",color=readableOn(p.panel).copy(alpha=.8f),fontSize=10.sp)
-        Text(tr("Privata lokala listor räknas inte här.","Private local lists are not counted here."),color=readableOn(p.panel).copy(alpha=.55f),fontSize=9.sp,modifier=Modifier.padding(top=6.dp))
+        Row(Modifier.fillMaxWidth().padding(top=7.dp),verticalAlignment=Alignment.CenterVertically){Text(tr("Privata lokala listor räknas inte här.","Private local lists are not counted here."),color=readableOn(p.panel).copy(alpha=.55f),fontSize=9.sp,modifier=Modifier.weight(1f));Button(onClick=onReleases,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.gold,contentColor=readableOn(p.gold)),contentPadding=PaddingValues(horizontal=13.dp,vertical=7.dp)){Text("⇩  ${tr("RELEASER","RELEASES")}",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=12.sp)}}
     }
 }
 
@@ -2086,6 +2136,11 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     var sortMenu by remember { mutableStateOf(false) }
     var page by remember { mutableIntStateOf(0) }
     var editing by remember { mutableStateOf<AdminMemberRecord?>(null) }
+    var memberGroups by remember { mutableStateOf<List<AdminMembershipRecord>>(emptyList()) }
+    var megaConfirm by remember { mutableStateOf<AdminMemberRecord?>(null) }
+    var megaFinalConfirm by remember { mutableStateOf<AdminMemberRecord?>(null) }
+    var kickTarget by remember { mutableStateOf<Pair<AdminMemberRecord,AdminMembershipRecord>?>(null) }
+    LaunchedEffect(editing?.uid){editing?.let{repo.loadAdminMemberships(it.uid){groups->memberGroups=groups}}?:run{memberGroups=emptyList()}}
     val filtered=remember(members,query,sort){
         val found=members.filter{it.displayName.contains(query,true)||it.globalTitle.contains(query,true)}
         when(sort){
@@ -2137,16 +2192,26 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
         AlertDialog(
             onDismissRequest={editing=null},containerColor=popupColor(p.paper),
             title={Text(member.displayName,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black)},
-            text={Column{
+            text={Column(Modifier.heightIn(max=520.dp).verticalScroll(rememberScrollState())){
+                Text(member.uid,color=p.muted,fontSize=8.sp,fontFamily=FontFamily.Monospace)
+                Spacer(Modifier.height(8.dp))
                 Text(tr("UNIK TITEL","UNIQUE TITLE"),color=p.text,fontWeight=FontWeight.Black,fontSize=11.sp);Spacer(Modifier.height(5.dp))
                 RetroField(title,{title=it.take(40)},tr("Ingen titel","No title"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(10.dp))
                 Text(tr("TITELFÄRG","TITLE COLOR"),color=p.text,fontWeight=FontWeight.Black,fontSize=11.sp)
                 userColors.chunked(8).forEach{colorRow->Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){colorRow.forEach{c->Box(Modifier.size(29.dp).clip(CircleShape).background(Color(c)).border(if(color==c)4.dp else 1.dp,if(color==c)p.text else p.outline,CircleShape).clickable{color=c})}}}
+                Spacer(Modifier.height(12.dp));Text(tr("GRUPPER","GROUPS"),color=p.text,fontWeight=FontWeight.Black,fontSize=11.sp)
+                if(memberGroups.isEmpty())Text(tr("Inga grupper","No groups"),color=p.muted,fontSize=11.sp)
+                memberGroups.forEach{g->Row(Modifier.fillMaxWidth().padding(top=5.dp).clip(RoundedCornerShape(8.dp)).background(p.paper2).padding(8.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(25.dp).clip(CircleShape).background(Color(g.color)));Spacer(Modifier.width(7.dp));Column(Modifier.weight(1f)){Text(g.groupName,color=p.text,fontWeight=FontWeight.Bold,fontSize=12.sp);Text(g.role.uppercase(),color=p.muted,fontSize=8.sp)};if(g.role!="superboss"){Text(if(g.role=="boss")"−★" else "+★",color=p.gold,fontSize=16.sp,fontWeight=FontWeight.Black,modifier=Modifier.clickable{repo.setAdminGroupRole(member.uid,g,if(g.role=="boss")"member" else "boss"){if(it)repo.loadAdminMemberships(member.uid){memberGroups=it}}}.padding(5.dp));Text("✕",color=p.red,fontSize=16.sp,fontWeight=FontWeight.Black,modifier=Modifier.clickable{kickTarget=member to g}.padding(5.dp))}}}
+                Spacer(Modifier.height(10.dp));Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(tr("BLOCKERAD","BLOCKED"),color=p.text,fontWeight=FontWeight.Black);Text(tr("Stoppar kontots åtkomst","Stops account access"),color=p.muted,fontSize=9.sp)};Switch(member.suspended,{if(!member.founder)repo.setMemberSuspended(member.uid,it){}},enabled=!member.founder)}
+                Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("MEGASUPERBOSS",color=p.text,fontWeight=FontWeight.Black);Text(if(member.founder)tr("Grundaren kan inte ändras","The founder cannot be changed") else tr("Global administratör","Global administrator"),color=p.muted,fontSize=9.sp)};Switch(member.megaSuperBoss,{if(!member.founder)megaConfirm=member},enabled=!member.founder)}
             }},
             confirmButton={RetroButton(tr("SPARA","SAVE"),{repo.setAdminMemberTitle(member.uid,title,color){if(it)editing=null}},p)},
             dismissButton={RetroButton(tr("AVBRYT","CANCEL"),{editing=null},p,danger=true)}
         )
     }
+    megaConfirm?.let{m->ConfirmDialog(tr("Är du säker?","Are you sure?"),if(m.megaSuperBoss)tr("Ta bort MegaSuperBoss från ${m.displayName}?","Remove MegaSuperBoss from ${m.displayName}?") else tr("Ge ${m.displayName} full global adminbehörighet?","Give ${m.displayName} full global admin access?"),p,{megaConfirm=null},{megaConfirm=null;megaFinalConfirm=m},confirmLabel=tr("FORTSÄTT","CONTINUE"))}
+    megaFinalConfirm?.let{m->ConfirmDialog(tr("Är du VERKLIGEN säker?","Are you REALLY sure?"),tr("Detta ger mycket stor behörighet i hela Bubbsun.","This grants extensive access throughout Bubbsun."),p,{megaFinalConfirm=null},{repo.setMemberMegaSuperBoss(m.uid,!m.megaSuperBoss){};megaFinalConfirm=null;editing=null},confirmLabel=tr("JA, JAG ÄR SÄKER","YES, I AM SURE"))}
+    kickTarget?.let{(m,g)->ConfirmDialog(tr("Kicka från gruppen?","Remove from group?"),"${m.displayName} • ${g.groupName}",p,{kickTarget=null},{repo.adminRemoveFromGroup(m.uid,g){};kickTarget=null;repo.loadAdminMemberships(m.uid){memberGroups=it}},confirmLabel=tr("KICKA","REMOVE"))}
 }
 
 @Composable
@@ -2385,7 +2450,7 @@ private fun InputPanel(
         Row(verticalAlignment=Alignment.CenterVertically){
             Text(tr("LÄGG TILL PRODUKT","ADD PRODUCT"),color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=13.sp,modifier=Modifier.weight(1f))
             Box(Modifier.height(32.dp).width(48.dp).clip(RoundedCornerShape(7.dp)).background(if(following)p.gold.copy(alpha=.28f) else p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable(onClick=onFollowChange),contentAlignment=Alignment.Center){
-                Text(if(following)tr("SLUTA","UNFOLLOW") else tr("FÖLJ","FOLLOW"),color=readableOn(p.panel),fontSize=7.sp,fontWeight=FontWeight.Black,maxLines=1)
+                Text(if(following)tr("SLUTA","UNFOLLOW") else tr("FÖLJ","FOLLOW"),color=readableOn(p.panel),fontSize=9.sp,fontWeight=FontWeight.Black,maxLines=1)
             }
             Spacer(Modifier.width(5.dp))
             Box(Modifier.size(32.dp).clip(RoundedCornerShape(7.dp)).background(p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable(onClick=onEditList),contentAlignment=Alignment.Center){

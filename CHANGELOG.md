@@ -186,3 +186,12 @@
 - Reparerade och utökade appens språkhantering.
 - Förbättrade uppdateringsflödet med webbläsarnedladdning och installationsguide.
 - Publicerade bakåtkompatibla Firebase-regler så v0.501 kan fortsätta användas.
+## 0.601 – Family Expansion
+- Gjorde det globala kortets svepgest tydligare.
+- Förstorade texten på Följ-knappen och lade till beständiga femminutersnotiser.
+- Byggde ut Admin-medlemsprofilen med grupper, roller, blockering, kick och MegaSuperBoss.
+- Flyttade buggar och förslag till en egen adminsida med radering.
+- Synkade supporterstatus till Firebase och rättade supporterstatistiken.
+- Lade till GitHub-statistik för releaser och APK-nedladdningar.
+- Återställde Stöd Bubbsun med en tydlig menyknapp och Facebook-länk.
+- Finjusterade profil, titel och gruppikon i sidomenyn.

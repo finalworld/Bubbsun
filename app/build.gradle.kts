@@ -30,8 +30,8 @@ android {
         applicationId = "se.bubbsun.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 600
-        versionName = "0.600"
+        versionCode = 601
+        versionName = "0.601"
     }
 
     buildTypes {
@@ -76,6 +76,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")

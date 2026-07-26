@@ -177,3 +177,12 @@
 - Balanserade sidomenyn med en ny MENY-rubrik.
 - Gjorde statistikens texter generella för alla slags listor.
 - Förtydligade färgmarkeringarna i Hjälp & guider.
+## 0.600 – Family Expansion
+- Lade till stöd för flera grupper per konto och privata Mina listor.
+- Byggde ut grupphanteringen med roller, ansökningar, färgval och gruppväxling.
+- Lade till MegaSuperBoss-administration, medlemssökning, statistik och globala pinnade listor.
+- Införde tummar, följfunktioner, förbättrad sortering och flytt av poster mellan listor.
+- Lade till Gotiskt supporter-tema, en separat supportersida och nya ikoner.
+- Reparerade och utökade appens språkhantering.
+- Förbättrade uppdateringsflödet med webbläsarnedladdning och installationsguide.
+- Publicerade bakåtkompatibla Firebase-regler så v0.501 kan fortsätta användas.

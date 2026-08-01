@@ -61,6 +61,9 @@ class V600Repository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
                 titleColor = snapshot.getLong("titleColor") ?: 0L,
                 supporter = snapshot.getBoolean("supporter") ?: false,
                 supporterSince = snapshot.getTimestamp("supporterSince"),
+                supporterNoticeType = snapshot.getString("supporterNoticeType") ?: "",
+                supporterNoticeRevision = snapshot.getLong("supporterNoticeRevision") ?: 0L,
+                supporterNoticeSeen = snapshot.getLong("supporterNoticeSeen") ?: 0L,
                 megaSuperBoss = snapshot.getBoolean("megaSuperBoss") ?: false,
                 founder = snapshot.getBoolean("founder") ?: false,
                 suspended = snapshot.getBoolean("suspended") ?: false,
@@ -84,6 +87,9 @@ class V600Repository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
                 titleColor = d.getLong("titleColor") ?: 0L,
                 supporter = d.getBoolean("supporter") ?: false,
                 supporterSince = d.getTimestamp("supporterSince"),
+                supporterNoticeType = d.getString("supporterNoticeType") ?: "",
+                supporterNoticeRevision = d.getLong("supporterNoticeRevision") ?: 0L,
+                supporterNoticeSeen = d.getLong("supporterNoticeSeen") ?: 0L,
                 megaSuperBoss = d.getBoolean("megaSuperBoss") ?: false,
                 founder = d.getBoolean("founder") ?: false,
                 suspended = d.getBoolean("suspended") ?: false,
@@ -627,17 +633,55 @@ class V600Repository(private val db: FirebaseFirestore = FirebaseFirestore.getIn
     }
 
     fun loadAdminMemberships(uid: String, onDone: (List<AdminMembershipRecord>) -> Unit) {
-        users.document(uid).collection("memberships").get().addOnSuccessListener { membershipSnapshot ->
-            val docs = membershipSnapshot.documents
-            if (docs.isEmpty()) { onDone(emptyList()); return@addOnSuccessListener }
-            val results = mutableListOf<AdminMembershipRecord>(); var remaining = docs.size
-            docs.forEach { d ->
-                groups.document(d.id).get().addOnCompleteListener { task ->
-                    results += AdminMembershipRecord(d.id, task.result?.getString("name") ?: d.id, d.getString("role") ?: GroupRole.MEMBER.wire, d.getLong("color") ?: 0L)
-                    remaining--; if (remaining == 0) onDone(results.sortedBy { it.groupName.lowercase() })
+        val userRef=users.document(uid)
+        userRef.get().addOnCompleteListener { userTask ->
+            val userDoc=if(userTask.isSuccessful)userTask.result else null
+            val legacyGroup=userDoc?.getString("groupId").orEmpty()
+            userRef.collection("memberships").get().addOnCompleteListener { membershipTask ->
+                val userMemberships=if(membershipTask.isSuccessful)membershipTask.result.documents.associateBy{it.id} else emptyMap()
+                groups.get().addOnCompleteListener { groupsTask ->
+                    val groupDocs=if(groupsTask.isSuccessful)groupsTask.result.documents else emptyList()
+                    if(groupDocs.isEmpty()){
+                        onDone(userMemberships.values.map{d->AdminMembershipRecord(d.id,d.id,d.getString("role")?:GroupRole.MEMBER.wire,d.getLong("color")?:0L)})
+                        return@addOnCompleteListener
+                    }
+                    val results=mutableMapOf<String,AdminMembershipRecord>()
+                    var remaining=groupDocs.size
+                    groupDocs.forEach{groupDoc->
+                        val groupId=groupDoc.id
+                        groups.document(groupId).collection("members").document(uid).get().addOnCompleteListener{memberTask->
+                            val groupMember=if(memberTask.isSuccessful)memberTask.result.takeIf{it.exists()} else null
+                            val userMembership=userMemberships[groupId]
+                            if(groupMember!=null||userMembership!=null||groupId==legacyGroup){
+                                val role=userMembership?.getString("role")?:groupMember?.getString("role")?:userDoc?.getString("role")?:GroupRole.MEMBER.wire
+                                val color=userMembership?.getLong("color")?:groupMember?.getLong("color")?:userDoc?.getLong("color")?:0L
+                                results[groupId]=AdminMembershipRecord(groupId,groupDoc.getString("name")?:groupId,role,color)
+                                if(userMembership==null){
+                                    userRef.collection("memberships").document(groupId).set(mapOf("groupId" to groupId,"uid" to uid,"displayName" to (userDoc?.getString("displayName")?:userDoc?.getString("name")?:"Bubbsun"),"role" to role,"color" to color,"migratedAt" to FieldValue.serverTimestamp()),SetOptions.merge())
+                                }
+                            }
+                            remaining--
+                            if(remaining==0)onDone(results.values.sortedBy{it.groupName.lowercase()})
+                        }
+                    }
                 }
             }
-        }.addOnFailureListener { onDone(emptyList()) }
+        }
+    }
+
+    fun setAdminSupporter(uid:String,enabled:Boolean,onDone:(Boolean)->Unit){
+        val values=mutableMapOf<String,Any>(
+            "supporter" to enabled,
+            "supporterNoticeType" to if(enabled)"granted" else "removed",
+            "supporterNoticeRevision" to FieldValue.increment(1),
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+        values["supporterSince"]=if(enabled)FieldValue.serverTimestamp() else FieldValue.delete()
+        users.document(uid).set(values,SetOptions.merge()).addOnCompleteListener{onDone(it.isSuccessful)}
+    }
+
+    fun acknowledgeSupporterNotice(uid:String,revision:Long,onDone:(Boolean)->Unit={}){
+        users.document(uid).set(mapOf("supporterNoticeSeen" to revision,"updatedAt" to FieldValue.serverTimestamp()),SetOptions.merge()).addOnCompleteListener{onDone(it.isSuccessful)}
     }
 
     fun setAdminGroupRole(uid: String, membership: AdminMembershipRecord, role: String, onDone: (Boolean) -> Unit) {

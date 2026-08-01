@@ -10,6 +10,8 @@ import android.os.Bundle
 import android.os.Build
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.util.DisplayMetrics
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.activity.ComponentActivity
@@ -19,6 +21,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -346,9 +351,16 @@ private fun isNewerVersion(remote:String,local:String):Boolean{
 }
 
 class MainActivity:ComponentActivity(){
+    override fun attachBaseContext(newBase:Context){
+        val config=Configuration(newBase.resources.configuration).apply{
+            fontScale=1f
+            densityDpi=DisplayMetrics.DENSITY_DEVICE_STABLE
+        }
+        super.attachBaseContext(newBase.createConfigurationContext(config))
+    }
     override fun onCreate(savedInstanceState:Bundle?){
         super.onCreate(savedInstanceState)
-        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.POST_NOTIFICATIONS),601)
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.POST_NOTIFICATIONS),602)
         setContent{BubbsunApp(this)}
     }
 }
@@ -482,6 +494,8 @@ private fun themeDrawable(id:String)=when(id){
 }
 private fun readableOn(color:Color)=if(color.luminance()>.45f)Color(0xFF241B14) else Color(0xFFF4E4BA)
 private fun popupColor(color:Color)=color.copy(alpha=1f)
+private val LocalHomeAction=staticCompositionLocalOf<()->Unit>{{}}
+private val LocalBackIsHome=staticCompositionLocalOf{false}
 @Composable private fun SelectionBadge(color:Color,modifier:Modifier=Modifier){
     Canvas(modifier.size(20.dp).clip(CircleShape).background(color).border(1.dp,readableOn(color),CircleShape)){
         val ink=readableOn(color)
@@ -567,8 +581,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     LaunchedEffect(Unit){if(firebaseUser==null)runCatching{googleClient.silentSignIn().addOnSuccessListener{a->together.auth.signInWithCredential(GoogleAuthProvider.getCredential(a.idToken,null))}}}
     val store=remember{BubbsunStore(context)}
     LaunchedEffect(Unit){FollowNotificationScheduler.schedule(context)}
-    val authDensity=LocalDensity.current
-    if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides Density(authDensity.density,1f)){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
+    val lockedDensity=remember{DisplayMetrics.DENSITY_DEVICE_STABLE/160f}
+    if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides Density(lockedDensity,1f)){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
     val localDeveloperAccount=BuildConfig.DEBUG&&firebaseUser!!.uid=="vIIrmKj3Q6YIjoR01TR8ZFYdgZz1"
     var bootstrapAccount by remember(firebaseUser!!.uid){mutableStateOf<V600Account?>(null)}
     var bootstrapCloudWarning by remember(firebaseUser!!.uid){mutableStateOf(false)}
@@ -586,7 +600,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
     LaunchedEffect(bootstrapAccount?.privacyVersion,privacyAccepted){if(privacyAccepted&&bootstrapAccount!=null&&bootstrapAccount!!.privacyVersion<1)v600.acceptPrivacy(firebaseUser!!.uid,1){}}
     if(bootstrapAccount==null){Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){CircularProgressIndicator()};return}
-    if(!privacyAccepted){CompositionLocalProvider(LocalDensity provides Density(authDensity.density,1f)){PrivacyConsentScreen(onAccept={store.setPrefsBoolean("privacy_0501_${firebaseUser!!.uid}");privacyAccepted=true;v600.acceptPrivacy(firebaseUser!!.uid,1){}},onCancel={together.auth.signOut();googleClient.signOut()})};return}
+    if(!privacyAccepted){CompositionLocalProvider(LocalDensity provides Density(lockedDensity,1f)){PrivacyConsentScreen(onAccept={store.setPrefsBoolean("privacy_0501_${firebaseUser!!.uid}");privacyAccepted=true;v600.acceptPrivacy(firebaseUser!!.uid,1){}},onCancel={together.auth.signOut();googleClient.signOut()})};return}
     val users=remember{mutableStateListOf<UserProfile>().apply{addAll(store.loadUsers())}}
     val lists=remember{mutableStateListOf<ShoppingListData>().apply{addAll(store.loadLists(users))}}
     val privateLists=remember(firebaseUser!!.uid){mutableStateListOf<ShoppingListData>().apply{addAll(store.loadPrivateLists(firebaseUser!!.uid))}}
@@ -668,9 +682,10 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var manualUpdateCheck by remember{mutableIntStateOf(0)}
     var updateStatus by remember{mutableStateOf("")}
     var showExitDialog by remember{mutableStateOf(false)}
-    LaunchedEffect(activeUserId,supporterPreview,v600Account?.supporter){
+    LaunchedEffect(activeUserId,supporterPreview,v600Account?.supporter,v600Account?.supporterNoticeType){
         if(v600Account?.supporter==true&&!supporterPreview){supporterPreview=true;store.saveSupporterPreview(true)}
-        else if(supporterPreview&&v600Account?.supporter==false)v600.syncSupporter(activeUserId,true){}
+        else if(v600Account?.supporter==false&&v600Account?.supporterNoticeType=="removed"&&supporterPreview){supporterPreview=false;store.saveSupporterPreview(false)}
+        else if(supporterPreview&&v600Account?.supporter==false&&v600Account?.supporterNoticeType!="removed")v600.syncSupporter(activeUserId,true){}
     }
     LaunchedEffect(manualUpdateCheck){
         if(!supporterPreview&&themeId in setOf("cosmic","heart","gothic")){themeId="retro_dark";store.saveThemeId(themeId)}
@@ -712,8 +727,11 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             else -> (context as? Activity)?.finish()
         }
     }
-    val systemDensity = LocalDensity.current
-    CompositionLocalProvider(LocalDensity provides Density(systemDensity.density,1f)) {
+    CompositionLocalProvider(
+        LocalDensity provides Density(lockedDensity,1f),
+        LocalHomeAction provides {navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false},
+        LocalBackIsHome provides (navigationHistory.lastOrNull()=="lists")
+    ) {
         MaterialTheme(colorScheme=if(p.bg.luminance()<.45f)darkColorScheme() else lightColorScheme()){
             Box(Modifier.fillMaxSize().background(p.bg).safeDrawingPadding()){
                 if(theme.id=="cosmic") CosmicBackground()
@@ -722,7 +740,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 Column(Modifier.fillMaxSize()){
                     AppHeader(theme,p,supporterPreview,supporterStyle,supporterGlow,onMenu={menuOpen=true},onHome={if(screen!="lists"){navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false}},onThemeSelected={themeId=it;store.saveThemeId(it)},onSupporterInfo={navigate("support")})
                     when(screen){
-                        "lists"->ListsScreen(lists,privateLists,pinnedPrivateLists.toSet(),privateSpace,p,theme.id,activeUserId,cloudMembers,globalPin?.takeIf{it.revision>(v600Account?.hiddenGlobalPinRevision?:0L)},onOpen={selectedListPrivate=false;selectedListId=it;navigate("list")},onOpenPrivate={selectedListPrivate=true;selectedListId=it;navigate("list")},onTogglePrivatePin={id->if(id in pinnedPrivateLists)pinnedPrivateLists.remove(id)else pinnedPrivateLists.add(id);savePrivate()},onOpenPin={navigate("globalPin")},onHidePin={pin->v600.hideGlobalPin(activeUserId,pin.revision){}},onRestorePin={v600.restoreGlobalPin(activeUserId){}},onAdd={navigate("addList")},onAddPrivate={navigate("addPrivateList")},onSave={saveTogether()},onSavePrivate={savePrivate()})
+                        "lists"->ListsScreen(lists,privateLists,pinnedPrivateLists.toSet(),privateSpace,p,theme.id,activeUserId,cloudMembers,globalPin?.takeIf{it.revision>(v600Account?.hiddenGlobalPinRevision?:0L)},supporterPreview,onSupporterInfo={navigate("support")},onSelectPrivate={privateSpace=true;store.savePrivateSpace(activeUserId,true)},onSelectGroups={privateSpace=false;store.savePrivateSpace(activeUserId,false)},onOpen={selectedListPrivate=false;selectedListId=it;navigate("list")},onOpenPrivate={selectedListPrivate=true;selectedListId=it;navigate("list")},onTogglePrivatePin={id->if(id in pinnedPrivateLists)pinnedPrivateLists.remove(id)else pinnedPrivateLists.add(id);savePrivate()},onOpenPin={navigate("globalPin")},onHidePin={pin->v600.hideGlobalPin(activeUserId,pin.revision){}},onRestorePin={v600.restoreGlobalPin(activeUserId){}},onAdd={navigate("addList")},onAddPrivate={navigate("addPrivateList")},onSave={saveTogether()},onSavePrivate={savePrivate()})
                         "addList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->lists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color,creatorId=activeUserId));saveTogether();navigateBack()})
                         "addPrivateList"->AddListScreen(p,supporterPreview,onSupporterInfo={navigate("support")},onBack={navigateBack()},onCreate={name,icon,color->privateLists.add(0,ShoppingListData(name=capitalized(name),icon=icon,iconColorHex=color,creatorId=activeUserId));savePrivate();navigateBack()})
                         "stats"->StatsScreen(if(privateSpace)privateLists else lists,if(privateSpace)privateEvents else events,syncedUsers,activeSpaceName,p,onBack={navigateBack()})
@@ -738,11 +756,15 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                         "versions"->VersionsScreen(p,onBack={navigateBack()})
                         "globalPin"->globalPin?.let{pin->GlobalPinScreen(pin,globalPinItems,activeUserId,p,v600,onBack={navigateBack()})}?:Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){Text(tr("Meddelandet finns inte längre.","The message is no longer available."),color=p.pageText)}
                         "admin"->if(localDeveloperAccount||v600Account?.megaSuperBoss==true||v600Account?.founder==true||adminSettings.founderUid==activeUserId)AdminScreen(p,v600,globalPin,adminSettings,onBack={navigateBack()}) else Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){Text(tr("Ingen adminbehörighet.","No admin permission."),color=p.pageText)}
-                        "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,privateLists,pinnedPrivateLists.toSet(),privateSpace,p,theme.id,activeUserId,cloudMembers,globalPin?.takeIf{it.revision>(v600Account?.hiddenGlobalPinRevision?:0L)},onOpen={selectedListPrivate=false;selectedListId=it;navigate("list")},onOpenPrivate={selectedListPrivate=true;selectedListId=it;navigate("list")},onTogglePrivatePin={id->if(id in pinnedPrivateLists)pinnedPrivateLists.remove(id)else pinnedPrivateLists.add(id);savePrivate()},onOpenPin={navigate("globalPin")},onHidePin={pin->v600.hideGlobalPin(activeUserId,pin.revision){}},onRestorePin={v600.restoreGlobalPin(activeUserId){}},onAdd={navigate("addList")},onAddPrivate={navigate("addPrivateList")},onSave={saveTogether()},onSavePrivate={savePrivate()})
+                        "update"->availableRelease?.let{UpdateAvailableScreen(it,p,onBack={navigateBack()})}?:ListsScreen(lists,privateLists,pinnedPrivateLists.toSet(),privateSpace,p,theme.id,activeUserId,cloudMembers,globalPin?.takeIf{it.revision>(v600Account?.hiddenGlobalPinRevision?:0L)},supporterPreview,onSupporterInfo={navigate("support")},onSelectPrivate={privateSpace=true;store.savePrivateSpace(activeUserId,true)},onSelectGroups={privateSpace=false;store.savePrivateSpace(activeUserId,false)},onOpen={selectedListPrivate=false;selectedListId=it;navigate("list")},onOpenPrivate={selectedListPrivate=true;selectedListId=it;navigate("list")},onTogglePrivatePin={id->if(id in pinnedPrivateLists)pinnedPrivateLists.remove(id)else pinnedPrivateLists.add(id);savePrivate()},onOpenPin={navigate("globalPin")},onHidePin={pin->v600.hideGlobalPin(activeUserId,pin.revision){}},onRestorePin={v600.restoreGlobalPin(activeUserId){}},onAdd={navigate("addList")},onAddPrivate={navigate("addPrivateList")},onSave={saveTogether()},onSavePrivate={savePrivate()})
                         else->{val l=if(selectedListPrivate)privateLists.firstOrNull{it.id==selectedListId}else lists.firstOrNull{it.id==selectedListId};if(l==null)screen="lists" else ShoppingListScreen(l,syncedUsers,activeUserId,if(selectedListPrivate)"" else (visibleAccount?.activeGroupId?:cloudProfile?.groupId.orEmpty()),p,supporterPreview,inputExpanded,onSupporterInfo={navigate("support")},onHelp={navigate("help")},onInputExpanded={inputExpanded=it;store.saveInputExpanded(it)},onBack={navigateBack()},onSave={if(selectedListPrivate)savePrivate()else saveTogether()},onEvent={event->if(selectedListPrivate){privateEvents.add(event);store.savePrivateEvents(activeUserId,privateEvents)}else{events.add(event);store.saveEvents(events);cloudProfile?.takeIf{it.groupId.isNotBlank()}?.let{together.recordActivity(it.groupId,event)}}})}
                     }
                 }
                 if(menuOpen)SideMenu(cloudProfile,visibleAccount?.let{if(localDeveloperAccount||adminSettings.founderUid==it.uid)it.copy(founder=true)else it},visibleMemberships,visibleGroups,groupName,privateSpace,p,supporterPreview,onSwitchGroup={groupId->privateSpace=false;store.savePrivateSpace(activeUserId,false);v600Account?.let{account->v600.switchActiveGroup(account.uid,groupId){}};navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false;menuOpen=false},onSelectPrivate={privateSpace=true;store.savePrivateSpace(activeUserId,true);navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false;menuOpen=false},onSupporterInfo={menuOpen=false;navigate("support")},onClose={menuOpen=false},onNavigate={menuOpen=false;navigate(it)})
+                v600Account?.takeIf{it.supporterNoticeRevision>it.supporterNoticeSeen&&it.supporterNoticeType.isNotBlank()}?.let{notice->
+                    val granted=notice.supporterNoticeType=="granted"
+                    AlertDialog(onDismissRequest={},containerColor=popupColor(p.paper),title={Text(if(granted)"♥ ${tr("DU HAR FÅTT SUPPORTERSTATUS!","YOU RECEIVED SUPPORTER STATUS!")}" else tr("SUPPORTERSTATUS ÄNDRAD","SUPPORTER STATUS CHANGED"),color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black)},text={Text(if(granted)tr("Du har blivit tilldelad Supporter-rank av Bubbsun.","You have been granted Supporter rank by Bubbsun.") else tr("Din Supporter-rank har tagits bort av Bubbsun.","Your Supporter rank has been removed by Bubbsun."),color=p.text)},confirmButton={RetroButton(if(granted)"♥ ${tr("TACK!","THANK YOU!")}" else "OK",{v600.acknowledgeSupporterNotice(notice.uid,notice.supporterNoticeRevision){}},p)})
+                }
                 if(showExitDialog) ConfirmDialog(tr("Avsluta Bubbsun?","Exit Bubbsun?"),tr("Vill du stänga appen?","Do you want to close the app?"),p,{showExitDialog=false},{showExitDialog=false;(context as? Activity)?.finish()},confirmLabel=tr("AVSLUTA","EXIT"))
                 if(bootstrapCloudWarning)Box(Modifier.align(Alignment.BottomCenter).padding(12.dp).clip(RoundedCornerShape(9.dp)).background(p.panel).border(1.dp,p.gold,RoundedCornerShape(9.dp)).clickable{bootstrapCloudWarning=false}.padding(horizontal=12.dp,vertical=8.dp)){Text(tr("Molnanslutningen svarade inte – appen öppnades lokalt. Tryck för att stänga.","Cloud setup did not respond – the app opened locally. Tap to dismiss."),color=readableOn(p.panel),fontSize=11.sp)}
                 if(showMigration)MigrationDialog(p,onUpload={cloudProfile?.let{profile->lists.forEach{l->l.creatorId=profile.uid;l.items.forEach{i->i.ownerId=profile.uid}};store.setPrefsBoolean("migration_0500_${profile.groupId}");together.syncLists(profile.groupId,lists,profile.uid)};showMigration=false},onLocal={cloudProfile?.let{store.setPrefsBoolean("migration_0500_${it.groupId}")};localOnly=true;showMigration=false},onEmpty={lists.clear();store.saveLists(lists);cloudProfile?.let{store.setPrefsBoolean("migration_0500_${it.groupId}")};showMigration=false})
@@ -853,10 +875,10 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     var groupsExpanded by remember{mutableStateOf(false)}
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha=.62f)).clickable{onClose()}){
         Column(
-            Modifier.fillMaxHeight().fillMaxWidth(.84f).background(p.top).padding(18.dp).clickable(enabled=false){},
+            Modifier.fillMaxHeight().fillMaxWidth(.84f).background(p.top).padding(horizontal=13.dp,vertical=10.dp).clickable(enabled=false){},
             verticalArrangement=Arrangement.Top
         ){
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text("☰",color=readableOn(p.top),fontSize=28.sp,fontWeight=FontWeight.Black);Spacer(Modifier.width(10.dp));Text(tr("MENY","MENU"),color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=25.sp,modifier=Modifier.weight(1f));SquareIcon("×",onClose,p,large=false)}
+            Row(Modifier.fillMaxWidth().height(42.dp),verticalAlignment=Alignment.CenterVertically){Text("☰",color=readableOn(p.top),fontSize=27.sp,fontWeight=FontWeight.Black);Spacer(Modifier.width(9.dp));Text(tr("MENY","MENU"),color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=24.sp,modifier=Modifier.weight(1f));Button(onClick=onClose,shape=RoundedCornerShape(8.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(40.dp).border(1.dp,p.outline,RoundedCornerShape(8.dp))){Text("×",fontSize=21.sp,fontWeight=FontWeight.Black)}}
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())){
             Spacer(Modifier.height(8.dp))
             profile?.let{active->
@@ -866,15 +888,15 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 val activeAccent=if(privateSpace)p.gold else Color(activeGroup?.color?:0xFF7D936C)
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Brush.horizontalGradient(listOf(activeAccent.copy(alpha=.32f),p.panel,p.panel))).border(2.dp,activeAccent,RoundedCornerShape(14.dp))){
                     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),verticalAlignment=Alignment.CenterVertically){
-                        Row(Modifier.weight(1f).heightIn(min=88.dp).clickable{onNavigate("users")}.padding(horizontal=12.dp,vertical=10.dp),verticalAlignment=Alignment.CenterVertically){
+                        Row(Modifier.weight(1f).heightIn(min=80.dp).clickable{onNavigate("users")}.padding(horizontal=11.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically){
                             val memberColor=membership?.color?:active.color
                             Box(Modifier.size(55.dp).clip(CircleShape).background(Color(memberColor)).border(3.dp,activeAccent,CircleShape),contentAlignment=Alignment.Center){Text((account?.displayName?:active.name).take(1).uppercase(),color=readableOn(Color(memberColor)),fontWeight=FontWeight.Black,fontSize=23.sp)}
                             Spacer(Modifier.width(10.dp));Column(Modifier.weight(1f)){
                                 val roleMark=when(membership?.parsedRole){GroupRole.SUPER_BOSS->"  👑";GroupRole.BOSS->"  ★";else->""}
                                 Text((account?.displayName?:active.name)+roleMark,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp,maxLines=1,overflow=TextOverflow.Ellipsis)
                                 val title=account?.globalTitle.orEmpty().ifBlank{when(membership?.parsedRole){GroupRole.SUPER_BOSS->tr("Superboss","Super boss");GroupRole.BOSS->"Boss";else->tr("Medlem","Member")}}
-                                Spacer(Modifier.height(1.dp));Text(title,color=activeAccent,fontSize=11.sp,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis)
-                                Spacer(Modifier.height(4.dp));Row(verticalAlignment=Alignment.CenterVertically){if(privateSpace)Image(painterResource(R.drawable.list_checklist),null,Modifier.size(32.dp))else Text(activeGroup?.iconId?:"⌂",fontSize=30.sp,lineHeight=31.sp);Spacer(Modifier.width(7.dp));Text(if(privateSpace)tr("Mina listor","My lists") else activeGroup?.name?:groupName.ifBlank{tr("Ingen grupp ännu","No group yet")},color=readableOn(p.panel).copy(alpha=.82f),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=12.sp,lineHeight=14.sp,maxLines=2,overflow=TextOverflow.Ellipsis)}
+                                Text(title,color=activeAccent,fontSize=11.sp,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis)
+                                Spacer(Modifier.height(2.dp));Row(verticalAlignment=Alignment.CenterVertically){if(privateSpace)Image(painterResource(R.drawable.list_checklist),null,Modifier.size(40.dp))else Text(activeGroup?.iconId?:"⌂",fontSize=38.sp,lineHeight=40.sp);Spacer(Modifier.width(7.dp));Text(if(privateSpace)tr("Mina listor","My lists") else activeGroup?.name?:groupName.ifBlank{tr("Ingen grupp ännu","No group yet")},color=readableOn(p.panel).copy(alpha=.88f),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Bold,fontSize=12.sp,lineHeight=14.sp,maxLines=2,overflow=TextOverflow.Ellipsis)}
                             }
                         }
                         Box(Modifier.width(1.dp).fillMaxHeight().background(activeAccent.copy(alpha=.82f)))
@@ -901,47 +923,73 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                     }
                 }
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(12.dp))
             MenuCard(R.drawable.menu_stats,tr("STATISTIK","STATISTICS"),if(privateSpace)tr("Mina listor • Privat statistik","My lists • Private statistics") else "${groups[account?.activeGroupId?:profile?.groupId]?.name?:groupName.ifBlank{tr("Gruppen","The group")}} • ${tr("Gruppstatistik","Group statistics")}",p){onNavigate("stats")}
             Spacer(Modifier.height(10.dp))
             MenuCard(R.drawable.theme_steel,tr("INSTÄLLNINGAR","SETTINGS"),tr("Språk, bekräftelser & statistik","Language, confirmations & statistics"),p){onNavigate("settings")}
-            Spacer(Modifier.height(10.dp))
-            MenuCard(R.drawable.theme_heart,tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),tr("Supporter, Facebook och Bubbsun","Supporter, Facebook and Bubbsun"),p){onSupporterInfo()}
-            Spacer(Modifier.height(10.dp))
-            MenuCard(R.drawable.about_info,tr("OM BUBBSUN","ABOUT BUBBSUN"),tr("Version, skapare & kontakt","Version, creators & contact"),p){onNavigate("about")}
-            Spacer(Modifier.height(10.dp))
-            MenuCard(R.drawable.list_checklist,tr("HJÄLP & GUIDER","HELP & GUIDES"),tr("Så fungerar Bubbsun","How Bubbsun works"),p){onNavigate("help")}
+            Spacer(Modifier.height(8.dp))
+            SupportMenuCard(p){onSupporterInfo()}
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                HalfMenuCard(R.drawable.about_info,tr("OM","ABOUT"),p,Modifier.weight(1f)){onNavigate("about")}
+                HalfMenuCard(R.drawable.list_checklist,tr("HJÄLP","HELP"),p,Modifier.weight(1f)){onNavigate("help")}
+            }
             if(account?.megaSuperBoss==true||account?.founder==true){
                 Spacer(Modifier.height(10.dp))
                 MenuCard(R.drawable.list_supporter_emblem,"MEGASUPERBOSS",tr("Global admin för Bubbsun","Global Bubbsun admin"),p){onNavigate("admin")}
             }
-            Spacer(Modifier.height(18.dp))
-            Text(if(supporterEnabled)"♥  FOUNDING SUPPORTER" else "♥  ${tr("STÖD BUBBSUN","SUPPORT BUBBSUN")}",color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,modifier=Modifier.align(Alignment.CenterHorizontally).clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.outline,RoundedCornerShape(50)).clickable{onSupporterInfo()}.padding(horizontal=10.dp,vertical=5.dp));Spacer(Modifier.height(6.dp))
-            Text("v${BuildConfig.VERSION_NAME}  •  $editionName",color=p.gold.copy(alpha=.85f),fontFamily=FontFamily.Serif,fontSize=13.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=6.dp))
+            }
+            Box(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent,p.top))).padding(top=8.dp,bottom=2.dp)){
+                Column(Modifier.align(Alignment.Center),horizontalAlignment=Alignment.CenterHorizontally){Text(if(supporterEnabled)"♥  FOUNDING SUPPORTER" else "♥  ${tr("STÖD BUBBSUN","SUPPORT BUBBSUN")}",color=readableOn(p.top),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=9.sp,modifier=Modifier.clip(RoundedCornerShape(50)).background(p.gold.copy(alpha=.14f)).border(1.dp,p.outline,RoundedCornerShape(50)).clickable{onSupporterInfo()}.padding(horizontal=9.dp,vertical=4.dp));Spacer(Modifier.height(3.dp));Text("v${BuildConfig.VERSION_NAME}  •  $editionName",color=p.gold.copy(alpha=.85f),fontFamily=FontFamily.Serif,fontSize=11.sp,maxLines=1,overflow=TextOverflow.Ellipsis)}
             }
         }
     }
 }
 
 @Composable private fun MenuCard(icon:Int,title:String,subtitle:String,p:Palette,onClick:()->Unit){
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(15.dp)).background(p.panel).border(1.dp,p.outline,RoundedCornerShape(15.dp)).clickable{onClick()}.padding(horizontal=15.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically){
-        Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(12.dp)),contentAlignment=Alignment.Center){Image(painterResource(icon),null,Modifier.fillMaxSize().padding(7.dp).graphicsLayer{translationX=if(icon==R.drawable.menu_stats)2.dp.toPx() else 0f})}
-        Spacer(Modifier.width(13.dp));Column(Modifier.weight(1f)){Text(title,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=if(title.length>13)16.sp else 18.sp,maxLines=1,overflow=TextOverflow.Ellipsis);Text(subtitle,color=readableOn(p.panel).copy(alpha=.70f),fontSize=11.sp,maxLines=1,overflow=TextOverflow.Ellipsis)};Text("›",color=readableOn(p.panel),fontSize=30.sp)
+    Row(Modifier.fillMaxWidth().height(65.dp).clip(RoundedCornerShape(14.dp)).background(p.panel).border(1.dp,p.outline,RoundedCornerShape(14.dp)).clickable{onClick()}.padding(horizontal=13.dp),verticalAlignment=Alignment.CenterVertically){
+        Box(Modifier.size(41.dp).clip(RoundedCornerShape(10.dp)).background(p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(10.dp)),contentAlignment=Alignment.Center){Image(painterResource(icon),null,Modifier.fillMaxSize().padding(6.dp).graphicsLayer{translationX=if(icon==R.drawable.menu_stats)2.dp.toPx() else 0f})}
+        Spacer(Modifier.width(11.dp));Text(title,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=if(title.length>13)15.sp else 18.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f));Text("›",color=readableOn(p.panel),fontSize=28.sp)
     }
 }
 
-@Composable private fun ListsScreen(lists:SnapshotStateList<ShoppingListData>,privateLists:SnapshotStateList<ShoppingListData>,privatePinned:Set<String>,privateSpace:Boolean,p:Palette,themeId:String,activeUserId:String,members:List<CloudProfile>,pin:GlobalPinDocument?,onOpen:(String)->Unit,onOpenPrivate:(String)->Unit,onTogglePrivatePin:(String)->Unit,onOpenPin:()->Unit,onHidePin:(GlobalPinDocument)->Unit,onRestorePin:()->Unit,onAdd:()->Unit,onAddPrivate:()->Unit,onSave:()->Unit,onSavePrivate:()->Unit){
+@Composable private fun SupportMenuCard(p:Palette,onClick:()->Unit){
+    val bg=Brush.horizontalGradient(listOf(Color(0xFF6D3F58),Color(0xFF8E5870),Color(0xFF654158)))
+    Row(Modifier.fillMaxWidth().height(68.dp).clip(RoundedCornerShape(16.dp)).background(bg).border(2.dp,Color(0xFFE7B5C8),RoundedCornerShape(16.dp)).clickable(onClick=onClick).padding(horizontal=14.dp),verticalAlignment=Alignment.CenterVertically){
+        Text("✦",color=Color(0xFFF4D7A0),fontSize=12.sp);Spacer(Modifier.width(5.dp));Image(painterResource(R.drawable.theme_heart),null,Modifier.size(43.dp));Spacer(Modifier.width(10.dp));Text(tr("STÖD BUBBSUN","SUPPORT BUBBSUN"),color=Color(0xFFFFE8CF),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=18.sp,modifier=Modifier.weight(1f));Text("✦  ›",color=Color(0xFFF4D7A0),fontSize=22.sp,fontWeight=FontWeight.Black)
+    }
+}
+
+@Composable private fun HalfMenuCard(icon:Int,title:String,p:Palette,modifier:Modifier=Modifier,onClick:()->Unit){
+    Row(modifier.height(58.dp).clip(RoundedCornerShape(13.dp)).background(p.panel).border(1.dp,p.outline,RoundedCornerShape(13.dp)).clickable(onClick=onClick).padding(horizontal=9.dp),verticalAlignment=Alignment.CenterVertically){Image(painterResource(icon),null,Modifier.size(31.dp));Spacer(Modifier.width(7.dp));Text(title,color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=13.sp,maxLines=1,overflow=TextOverflow.Ellipsis,modifier=Modifier.weight(1f));Text("›",color=readableOn(p.panel),fontSize=21.sp)}
+}
+
+@Composable private fun SpaceTab(label:String,selected:Boolean,p:Palette,modifier:Modifier=Modifier,onClick:()->Unit){
+    val bg=if(selected)p.gold else p.panel
+    Box(modifier.height(42.dp).clip(RoundedCornerShape(10.dp)).background(bg).border(if(selected)2.dp else 1.dp,if(selected)p.glow else p.outline,RoundedCornerShape(10.dp)).clickable(onClick=onClick),contentAlignment=Alignment.Center){
+        Text(label,color=readableOn(bg),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=12.sp,maxLines=1,overflow=TextOverflow.Ellipsis)
+    }
+}
+
+@Composable private fun ListsScreen(lists:SnapshotStateList<ShoppingListData>,privateLists:SnapshotStateList<ShoppingListData>,privatePinned:Set<String>,privateSpace:Boolean,p:Palette,themeId:String,activeUserId:String,members:List<CloudProfile>,pin:GlobalPinDocument?,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onSelectPrivate:()->Unit,onSelectGroups:()->Unit,onOpen:(String)->Unit,onOpenPrivate:(String)->Unit,onTogglePrivatePin:(String)->Unit,onOpenPin:()->Unit,onHidePin:(GlobalPinDocument)->Unit,onRestorePin:()->Unit,onAdd:()->Unit,onAddPrivate:()->Unit,onSave:()->Unit,onSavePrivate:()->Unit){
     var deleteTarget by remember{mutableStateOf<Pair<ShoppingListData,Boolean>?>(null)}
+    var editTarget by remember{mutableStateOf<Pair<ShoppingListData,Boolean>?>(null)}
     var draggingId by remember{mutableStateOf<String?>(null)}
-    var deleteZoneTop by remember{mutableStateOf(Float.MAX_VALUE)}
-    var overDeleteZone by remember{mutableStateOf(false)}
+    var editZoneBounds by remember{mutableStateOf(androidx.compose.ui.geometry.Rect.Zero)}
+    var deleteZoneBounds by remember{mutableStateOf(androidx.compose.ui.geometry.Rect.Zero)}
+    var overDropZone by remember{mutableStateOf("")}
     var undoPin by remember{mutableStateOf<GlobalPinDocument?>(null)}
     LaunchedEffect(undoPin?.revision){if(undoPin!=null){delay(5000);undoPin=null}}
     val orderedPrivate=privateLists.sortedByDescending{it.id in privatePinned}
 
     Column(Modifier.fillMaxSize()){
         RetroTitle(if(privateSpace)tr("MINA LISTOR","MY LISTS") else tr("GRUPPENS LISTOR","GROUP LISTS"),p,themeId)
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(7.dp))
+        Row(Modifier.fillMaxWidth().padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+            SpaceTab("⌂  ${tr("MINA LISTOR","MY LISTS")}",privateSpace,p,Modifier.weight(1f),onSelectPrivate)
+            SpaceTab("♣  ${tr("GRUPPER","GROUPS")}",!privateSpace,p,Modifier.weight(1f),onSelectGroups)
+        }
+        Spacer(Modifier.height(7.dp))
         LazyColumn(Modifier.weight(1f).padding(horizontal=12.dp),verticalArrangement=Arrangement.spacedBy(7.dp)){
             if(privateSpace){
             item{
@@ -956,8 +1004,8 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 ListRow(
                     list=l,p=p,creatorColor=members.firstOrNull{it.uid==activeUserId}?.color?:0xFF888888L,newCount=0,
                     dragging=draggingId==l.id,onOpen={onOpenPrivate(l.id)},privatePinned=l.id in privatePinned,onTogglePin={onTogglePrivatePin(l.id)},
-                    onDragStart={draggingId=l.id;overDeleteZone=false},onDragPosition={centerY->overDeleteZone=centerY>=deleteZoneTop},
-                    onDragEnd={centerY->val dropped=centerY>=deleteZoneTop;draggingId=null;overDeleteZone=false;if(dropped)deleteTarget=l to true else onSavePrivate()},
+                    onDragStart={draggingId=l.id;overDropZone=""},onDragPosition={point->overDropZone=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}},
+                    onDragEnd={point->val action=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""};draggingId=null;overDropZone="";if(action=="delete")deleteTarget=l to true else if(action=="edit")editTarget=l to true else onSavePrivate()},
                     onMove={dir->val shown=privateLists.sortedByDescending{it.id in privatePinned};val from=shown.indexOf(l);val to=(from+dir).coerceIn(0,shown.lastIndex);if(from!=to&&(shown[to].id in privatePinned)==(l.id in privatePinned)){val other=shown[to];val a=privateLists.indexOf(l);val b=privateLists.indexOf(other);privateLists[a]=other;privateLists[b]=l;true}else false}
                 )
             }
@@ -982,13 +1030,13 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                     newCount=l.items.count{it.ownerId!=activeUserId&&it.createdAt>(l.seenAtByUser[activeUserId]?:0L)},
                     dragging=draggingId==l.id,
                     onOpen={onOpen(l.id)},
-                    onDragStart={draggingId=l.id;overDeleteZone=false},
-                    onDragPosition={centerY->overDeleteZone=centerY>=deleteZoneTop},
-                    onDragEnd={centerY->
-                        val dropped=centerY>=deleteZoneTop
+                    onDragStart={draggingId=l.id;overDropZone=""},
+                    onDragPosition={point->overDropZone=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}},
+                    onDragEnd={point->
+                        val action=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}
                         draggingId=null
-                        overDeleteZone=false
-                        if(dropped) deleteTarget=l to false else onSave()
+                        overDropZone=""
+                        if(action=="delete")deleteTarget=l to false else if(action=="edit")editTarget=l to false else onSave()
                     },
                     onMove={dir->
                         val from=lists.indexOf(l)
@@ -1009,21 +1057,24 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             Spacer(Modifier.height(7.dp))
         }
         if(draggingId==null){
-            RetroButton(if(privateSpace)tr("🔒  LÄGG TILL PRIVAT LISTA","🔒  ADD PRIVATE LIST") else tr("＋  LÄGG TILL GRUPPLISTA","＋  ADD GROUP LIST"),if(privateSpace)onAddPrivate else onAdd,p,modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp))
+            RetroButton(if(privateSpace)tr("＋  LÄGG TILL NY LISTA","＋  ADD NEW LIST") else tr("＋  LÄGG TILL GRUPPLISTA","＋  ADD GROUP LIST"),if(privateSpace)onAddPrivate else onAdd,p,modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp))
         }else{
-            Box(
-                Modifier.fillMaxWidth().height(62.dp)
-                    .onGloballyPositioned{deleteZoneTop=it.positionInRoot().y}
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if(overDeleteZone) Color(0xFFD74632) else p.red)
-                    .border(if(overDeleteZone)4.dp else 2.dp,Color(0xFFF6E8C3),RoundedCornerShape(10.dp)),
-                contentAlignment=Alignment.Center
-            ){
-                Text(tr("🗑  TA BORT","🗑  DELETE"),color=Color(0xFFF6E8C3),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=19.sp)
+            Row(Modifier.fillMaxWidth().height(68.dp).padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+                DropTarget(tr("SLÄPP HÄR FÖR ATT REDIGERA","DROP HERE TO EDIT"),R.drawable.control_edit,p,overDropZone=="edit",Modifier.weight(1f).onGloballyPositioned{editZoneBounds=it.boundsInRoot()})
+                DropTarget(tr("SLÄPP HÄR FÖR ATT TA BORT","DROP HERE TO DELETE"),R.drawable.control_delete,p,overDropZone=="delete",Modifier.weight(1f).onGloballyPositioned{deleteZoneBounds=it.boundsInRoot()},danger=true)
             }
         }
     }
     deleteTarget?.let{(l,isPrivate)->ConfirmDialog(tr("Ta bort listan \"${l.name}\"?","Delete list \"${l.name}\"?"),tr("Alla saker i listan försvinner.","All items in the list will be deleted."),p,{deleteTarget=null},{if(isPrivate){privateLists.remove(l);onSavePrivate()}else{lists.remove(l);onSave()};deleteTarget=null})}
+    editTarget?.let{(l,isPrivate)->EditListDialog(l,p,supporterEnabled,onSupporterInfo,{editTarget=null}){name,icon,color->l.name=capitalized(name).take(40);l.icon=icon;l.iconColorHex=color;if(isPrivate)onSavePrivate()else onSave();editTarget=null}}
+}
+
+@Composable private fun DropTarget(label:String,icon:Int,p:Palette,active:Boolean,modifier:Modifier=Modifier,danger:Boolean=false){
+    val base=if(danger)p.red else p.panel
+    val bg=if(active)lerp(base,p.gold,.32f) else base
+    Row(modifier.fillMaxHeight().clip(RoundedCornerShape(10.dp)).background(bg).border(if(active)4.dp else 2.dp,if(active)p.gold else p.outline,RoundedCornerShape(10.dp)).padding(horizontal=8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.Center){
+        Image(painterResource(icon),null,Modifier.size(26.dp));Spacer(Modifier.width(6.dp));Text(label,color=readableOn(bg),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=10.sp,lineHeight=11.sp,textAlign=TextAlign.Center,maxLines=3)
+    }
 }
 
 @Composable private fun GlobalPinHomeCard(pin:GlobalPinDocument,p:Palette,onOpen:()->Unit,onHide:()->Unit){
@@ -1040,7 +1091,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     Column(Modifier.fillMaxSize().padding(12.dp)){
         PageHeader(pin.title,p,onBack)
         Spacer(Modifier.height(8.dp))
-        if(pin.infoText.isNotBlank())Text(pin.infoText,color=p.pageText,fontSize=14.sp,modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.panel).padding(12.dp))
+        if(pin.infoText.isNotBlank())Text(pin.infoText,color=readableOn(p.panel),fontSize=14.sp,modifier=Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.panel).padding(12.dp))
         pin.publishedAt?.let{Spacer(Modifier.height(6.dp));Text("${tr("Skapad","Created")}: ${SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(it.toDate())}",fontSize=10.sp,color=p.pageMuted)}
         Spacer(Modifier.height(9.dp))
         LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(7.dp)){
@@ -1055,17 +1106,18 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
 }
 
-@Composable private fun ListRow(list:ShoppingListData,p:Palette,creatorColor:Long?,newCount:Int,dragging:Boolean,onOpen:()->Unit,privatePinned:Boolean=false,onTogglePin:(()->Unit)?=null,onDragStart:()->Unit,onDragPosition:(Float)->Unit,onDragEnd:(Float)->Unit,onMove:(Int)->Boolean){
+@Composable private fun ListRow(list:ShoppingListData,p:Palette,creatorColor:Long?,newCount:Int,dragging:Boolean,onOpen:()->Unit,privatePinned:Boolean=false,onTogglePin:(()->Unit)?=null,onDragStart:()->Unit,onDragPosition:(Offset)->Unit,onDragEnd:(Offset)->Unit,onMove:(Int)->Boolean){
     val haptic=LocalHapticFeedback.current
     var dragY by remember{mutableStateOf(0f)}
-    var rowCenterY by remember{mutableStateOf(0f)}
+    var dragX by remember{mutableStateOf(0f)}
+    var rowCenter by remember{mutableStateOf(Offset.Zero)}
     var reorderDrag by remember{mutableStateOf(0f)}
     val rowStepPx=with(LocalDensity.current){85.dp.toPx()}
     val bg by animateColorAsState(if(dragging)p.glow else p.paper,label="drag")
     Row(
         Modifier.fillMaxWidth()
-            .onGloballyPositioned{rowCenterY=it.positionInRoot().y+it.size.height/2f}
-            .graphicsLayer{translationY=if(dragging)dragY else 0f;shadowElevation=if(dragging)18f else 0f}
+            .onGloballyPositioned{val pos=it.positionInRoot();rowCenter=Offset(pos.x+it.size.width/2f,pos.y+it.size.height/2f)}
+            .graphicsLayer{translationX=if(dragging)dragX else 0f;translationY=if(dragging)dragY else 0f;shadowElevation=if(dragging)18f else 0f}
             .shadow(if(dragging)9.dp else if(p.paper.alpha<1f)0.dp else 2.dp,RoundedCornerShape(10.dp))
             .clip(RoundedCornerShape(10.dp)).background(bg)
             .border(if(dragging)3.dp else 2.dp,if(dragging)p.gold else p.outline,RoundedCornerShape(10.dp))
@@ -1073,12 +1125,12 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 detectDragGesturesAfterLongPress(
                     onDragStart={
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        dragY=0f;reorderDrag=0f;onDragStart();onDragPosition(rowCenterY)
+                        dragX=0f;dragY=0f;reorderDrag=0f;onDragStart();onDragPosition(rowCenter)
                     },
-                    onDragEnd={val center=rowCenterY+dragY;onDragEnd(center);dragY=0f;reorderDrag=0f},
-                    onDragCancel={onDragEnd(Float.NEGATIVE_INFINITY);dragY=0f;reorderDrag=0f},
+                    onDragEnd={onDragEnd(rowCenter+Offset(dragX,dragY));dragX=0f;dragY=0f;reorderDrag=0f},
+                    onDragCancel={onDragEnd(Offset(Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY));dragX=0f;dragY=0f;reorderDrag=0f},
                     onDrag={change,amount->
-                        change.consume();dragY+=amount.y;reorderDrag+=amount.y
+                        change.consume();dragX+=amount.x;dragY+=amount.y;reorderDrag+=amount.y
                         if(abs(reorderDrag)>rowStepPx*.62f){
                             val dir=if(reorderDrag>0)1 else -1
                             if(onMove(dir)){
@@ -1087,7 +1139,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                             }
                             reorderDrag=0f
                         }
-                        onDragPosition(rowCenterY+dragY)
+                        onDragPosition(rowCenter+Offset(dragX,dragY))
                     }
                 )
             }
@@ -1153,13 +1205,13 @@ private fun ShoppingListScreen(
     var quantityInput by remember { mutableStateOf("") }
     var search by remember(list.id) { mutableStateOf("") }
     var toolsOpen by remember { mutableStateOf(false) }
+    var listActionsExpanded by remember { mutableStateOf(false) }
     var toolsTabDragX by remember { mutableStateOf(0f) }
-    var toolsTabY by remember(activeUserId) { mutableStateOf(followPrefs.getFloat("sort_tab_y_$activeUserId",0f)) }
+    var toolsTabY by remember { mutableStateOf(followPrefs.getFloat("sort_tab_y_global",0f)) }
     var toolsAreaHeight by remember { mutableIntStateOf(0) }
     val toolsTabHeightPx=with(LocalDensity.current){74.dp.toPx()}
     val visitBaseline=remember(list.id,activeUserId){list.seenAtByUser[activeUserId]?:0L}
     var editing by remember { mutableStateOf<ShoppingItem?>(null) }
-    var renameList by remember { mutableStateOf(false) }
     var deleteMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateListOf<String>() }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -1169,7 +1221,7 @@ private fun ShoppingListScreen(
     val followKey="follow|$groupId|${list.id}"
     var following by remember(list.id,groupId) { mutableStateOf(followPrefs.getBoolean(followKey,followPrefs.getBoolean(list.id,false))) }
     LaunchedEffect(list.id,groupId){if(groupId.isNotBlank()&&following&&!followPrefs.contains(followKey))FollowNotificationScheduler.setFollowing(context,groupId,list.id,list.name,activeUserId,true)}
-    LaunchedEffect(toolsAreaHeight){if(toolsAreaHeight>0){val limit=(toolsAreaHeight-toolsTabHeightPx).coerceAtLeast(0f)/2f;toolsTabY=toolsTabY.coerceIn(-limit,limit)}}
+    LaunchedEffect(toolsAreaHeight){if(toolsAreaHeight>0){val limit=(toolsAreaHeight-toolsTabHeightPx).coerceAtLeast(0f)/2f;toolsTabY=toolsTabY.coerceIn(-limit,limit);followPrefs.edit().putFloat("sort_tab_y_global",toolsTabY).apply()}}
 
     fun sorted(source:List<ShoppingItem>)=when(list.sortMode){
         "az"->source.sortedBy{it.name.lowercase(Locale.getDefault())}
@@ -1201,16 +1253,22 @@ private fun ShoppingListScreen(
     }
 
     Box(Modifier.fillMaxSize().onGloballyPositioned{toolsAreaHeight=it.size.height}) {
-    Column(Modifier.fillMaxSize().imePadding().padding(12.dp)) {
-        PageHeader(title = list.name, p = p, onBack = onBack)
+    Column(Modifier.fillMaxSize().imePadding().padding(start=12.dp,end=12.dp,top=7.dp,bottom=12.dp)) {
+        AnimatedVisibility(visible=listActionsExpanded,enter=expandVertically(),exit=shrinkVertically()){
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.panel).border(1.dp,p.outline,RoundedCornerShape(10.dp)).padding(7.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically){
+                RetroButton(if(following)tr("SLUTA FÖLJA LISTA","UNFOLLOW LIST") else tr("FÖLJ LISTA","FOLLOW LIST"),{following=!following;FollowNotificationScheduler.setFollowing(context,groupId,list.id,list.name,activeUserId,following)},p,modifier=Modifier.weight(1f),compact=true)
+                Box(Modifier.size(43.dp).clip(RoundedCornerShape(8.dp)).background(p.red).border(1.dp,p.outline,RoundedCornerShape(8.dp)).clickable{if(deleteMode){if(selected.isEmpty())deleteMode=false else confirmDelete=true}else deleteMode=true},contentAlignment=Alignment.Center){Image(painterResource(R.drawable.control_delete),null,Modifier.size(31.dp))}
+            }
+        }
+        if(listActionsExpanded)Spacer(Modifier.height(7.dp))
+        Box(Modifier.fillMaxWidth()){
+            PageHeader(title = list.name, p = p, onBack = onBack, trailing = {Spacer(Modifier.width(86.dp))}, homeOnly = true)
+            Box(Modifier.align(Alignment.TopEnd).offset(x=(-16).dp,y=(-7).dp).width(72.dp).height(31.dp).clip(RoundedCornerShape(bottomStart=11.dp,bottomEnd=11.dp)).background(p.gold).border(1.dp,p.outline,RoundedCornerShape(bottomStart=11.dp,bottomEnd=11.dp)).clickable{listActionsExpanded=!listActionsExpanded},contentAlignment=Alignment.Center){Text(if(listActionsExpanded)"⌃" else "⌄",color=readableOn(p.gold),fontSize=22.sp,fontWeight=FontWeight.Black)}
+        }
         Spacer(Modifier.height(10.dp))
         InputPanel(
             product=input,onProductChange={input=it},quantity=quantityInput,onQuantityChange={quantityInput=it},
             onAdd={addItem(input)},expanded=inputExpanded,onExpandedChange=onInputExpanded,p=p,
-            following=following,
-            onFollowChange={following=!following;FollowNotificationScheduler.setFollowing(context,groupId,list.id,list.name,activeUserId,following)},
-            onEditList={renameList=true},
-            onDelete={if(deleteMode){if(selected.isEmpty())deleteMode=false else confirmDelete=true}else deleteMode=true}
         )
         if (suggestions.isNotEmpty()) {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.paper).border(1.dp,p.outline,RoundedCornerShape(8.dp))) {
@@ -1226,7 +1284,10 @@ private fun ShoppingListScreen(
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.panel).padding(horizontal=10.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically) {
                 Checkbox(checked=allSelected,onCheckedChange={selected.clear();if(!allSelected)selected.addAll(allIds)},colors=CheckboxDefaults.colors(checkedColor=p.red,uncheckedColor=p.green,checkmarkColor=Color.White))
                 Text(tr("MARKERA ALLA","SELECT ALL"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=Color(0xFFF6E8C3),modifier=Modifier.clickable{selected.clear();if(!allSelected)selected.addAll(allIds)})
-                Spacer(Modifier.weight(1f));Text(tr("AVBRYT","CANCEL"),fontWeight=FontWeight.Black,color=Color(0xFFF6E8C3),modifier=Modifier.clickable{selected.clear();deleteMode=false}.padding(8.dp))
+                Spacer(Modifier.weight(1f))
+                Text(tr("AVBRYT","CANCEL"),fontWeight=FontWeight.Black,color=Color(0xFFF6E8C3),modifier=Modifier.clickable{selected.clear();deleteMode=false}.padding(8.dp))
+                Spacer(Modifier.width(5.dp))
+                Button(onClick={confirmDelete=true},enabled=selected.isNotEmpty(),shape=RoundedCornerShape(7.dp),colors=ButtonDefaults.buttonColors(containerColor=p.red,contentColor=Color(0xFFF6E8C3),disabledContainerColor=Color.Gray.copy(alpha=.35f),disabledContentColor=Color(0xFFF6E8C3).copy(alpha=.45f)),contentPadding=PaddingValues(horizontal=9.dp,vertical=7.dp)){Text("${tr("TA BORT","DELETE")} (${selected.size})",fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=11.sp)}
             };Spacer(Modifier.height(8.dp))
         }
         if(search.isNotBlank())Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(p.panel).padding(8.dp),verticalAlignment=Alignment.CenterVertically){
@@ -1266,8 +1327,8 @@ private fun ShoppingListScreen(
         .clip(RoundedCornerShape(topStart=14.dp,bottomStart=14.dp)).background(p.gold)
         .pointerInput(activeUserId,toolsAreaHeight){
             detectDragGestures(
-                onDragEnd={if(toolsTabDragX<=-22f)toolsOpen=true;toolsTabDragX=0f;followPrefs.edit().putFloat("sort_tab_y_$activeUserId",toolsTabY).apply()},
-                onDragCancel={toolsTabDragX=0f;followPrefs.edit().putFloat("sort_tab_y_$activeUserId",toolsTabY).apply()}
+                onDragEnd={if(toolsTabDragX<=-22f)toolsOpen=true;toolsTabDragX=0f;followPrefs.edit().putFloat("sort_tab_y_global",toolsTabY).apply()},
+                onDragCancel={toolsTabDragX=0f;followPrefs.edit().putFloat("sort_tab_y_global",toolsTabY).apply()}
             ){change,amount->
                 change.consume()
                 toolsTabDragX=(toolsTabDragX+amount.x).coerceIn(-90f,0f)
@@ -1286,7 +1347,6 @@ private fun ShoppingListScreen(
         })
     }
     }
-    if(renameList) EditListDialog(list,p,supporterEnabled,onSupporterInfo,{renameList=false}) { name,icon,color -> list.name=capitalized(name).take(40);list.icon=icon;list.iconColorHex=color;renameList=false;save() }
     editing?.let { item -> EditDialog(item,p,{editing=null}) { n,q -> item.name=capitalized(n);item.quantity=q.trim();editing=null;save() } }
     if(confirmDelete) ConfirmDialog(tr("Ta bort ${selected.size} markerade saker?","Delete ${selected.size} selected items?"),tr("Det går inte att ångra.","This cannot be undone."),p,{confirmDelete=false},{val doomed=list.items.filter{it.id in selected};doomed.forEach{onEvent(StatEvent(kind="delete",itemName=it.name,userId=it.ownerId))};list.items.removeAll(doomed);selected.clear();deleteMode=false;confirmDelete=false;save()})
 }
@@ -1612,6 +1672,8 @@ private val v600GroupIcons=listOf("⌂","♥","★","☀","☾","✿","⚓","♜
 @Composable private fun AddUserDialog(users:List<UserProfile>,p:Palette,supporterEnabled:Boolean,onSupporterInfo:()->Unit,onDismiss:()->Unit,onAdd:(String,Long)->Unit){var name by remember{mutableStateOf("")};var color by remember{mutableStateOf(userColors.first())};var error by remember{mutableStateOf("")};AlertDialog(onDismissRequest=onDismiss,containerColor=popupColor(p.paper),title={Text(tr("LÄGG TILL ANVÄNDARE","ADD USER"),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,color=p.text)},text={Column{RetroField(name,{name=it},tr("Namn","Name"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(12.dp));UserColorGrid(color,p,supporterEnabled,onSupporterInfo){color=it};if(error.isNotBlank())Text(error,color=p.red)}},confirmButton={RetroButton(tr("SPARA","SAVE"),{val n=capitalized(name);error=when{n.isBlank()->tr("Skriv ett namn","Enter a name");users.any{it.name.equals(n,true)}->tr("Namnet finns redan","That name already exists");else->""};if(error.isBlank())onAdd(n,color)},p)},dismissButton={RetroButton(tr("AVBRYT","CANCEL"),onDismiss,p,danger=true)})}
 
 @Composable private fun SettingsScreen(p:Palette,language:String,updateChecks:Boolean,exitConfirmation:Boolean,supporterPreview:Boolean,supporterStyle:String,supporterGlow:Boolean,startAtSupporter:Boolean,updateStatus:String,onSupporterInfo:()->Unit,onBack:()->Unit,onCheckNow:()->Unit,onUpdateChecks:(Boolean)->Unit,onLanguage:(String)->Unit,onExitConfirmation:(Boolean)->Unit,onSupporterPreview:(Boolean)->Unit,onSupporterStyle:(String)->Unit,onSupporterGlow:(Boolean)->Unit,onResetStats:()->Unit){
+    val context=LocalContext.current
+    var notificationRefresh by remember{mutableIntStateOf(0)}
     var reset by remember{mutableStateOf(false)}
     var languagesExpanded by remember{mutableStateOf(false)}
     val scroll=rememberScrollState()
@@ -1632,6 +1694,13 @@ private val v600GroupIcons=listOf("⌂","♥","★","☀","☾","✿","⚓","♜
                     Text(tr("Kontrolleras i bakgrunden vid uppstart.","Checked in the background at startup."),color=p.muted,fontSize=12.sp)
                 }
             }
+        }
+        Spacer(Modifier.height(12.dp))
+        SettingsCard(R.drawable.list_checklist,tr("FÖLJNOTISER","FOLLOW NOTIFICATIONS"),p){
+            val lastCheck=remember(notificationRefresh){FollowNotificationScheduler.lastCheck(context)}
+            Text(if(lastCheck>0)"${tr("Senast kontrollerad","Last checked")}: ${SimpleDateFormat("yyyy-MM-dd HH:mm",Locale.getDefault()).format(java.util.Date(lastCheck))}" else tr("Ingen bakgrundskontroll har körts ännu.","No background check has run yet."),color=p.muted,fontSize=11.sp)
+            Spacer(Modifier.height(7.dp));RetroButton(tr("SKICKA TESTNOTIS","SEND TEST NOTIFICATION"),{FollowNotificationScheduler.showTestNotification(context);notificationRefresh++},p,modifier=Modifier.fillMaxWidth())
+            Spacer(Modifier.height(5.dp));Text(tr("Android kan fördröja femminuterskontrollen för att spara batteri.","Android may delay the five-minute check to save battery."),color=p.muted,fontSize=9.sp)
         }
         Spacer(Modifier.height(12.dp))
         SettingsCard(R.drawable.stats_checked,tr("BEKRÄFTELSER","CONFIRMATIONS"),p){
@@ -1948,6 +2017,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.602" to listOf("Locked both Android font and display scaling for consistent layouts","Added explicit Home navigation and My Lists / Groups tabs","Added split drag targets for editing or deleting lists","Moved Follow and delete actions into a collapsible list toolbar","Saved one global sort-tab position across all lists","Improved delete selection controls and light-theme contrast","Expanded MegaSuperBoss membership lookup and supporter controls","Added supporter status messages and notification diagnostics","Refined the compact fixed-footer menu design"),
     "0.601" to listOf("Clearer swipe hint on global pinned lists","Larger Follow button text and five-minute background notifications","Full MegaSuperBoss member profiles with groups, roles, blocking and removal","Dedicated Bugs & Suggestions admin page","Synced supporter status and corrected admin statistics","GitHub release download statistics","Restored Support Bubbsun page and Facebook link","Refined active group card in the menu"),
     "0.600" to listOf("Family Expansion with multiple groups and private lists","MegaSuperBoss administration and global pinned lists","Group roles, approvals and unique colors","Gothic supporter theme and expanded languages","Improved update installation flow"),
     "0.501" to listOf("Privacy consent before the first cloud sync","Mobile-safe Google sign-in screen","Stable drag-and-drop with one sync after release","Synced thumbs-up reactions on entries","Sign-out confirmation","Clickable logo shortcut to My Lists","Clearer menu, languages, dropdowns and statistics wording"),
@@ -1970,7 +2040,7 @@ private val patchNotes=listOf(
 )
 
 @Composable private fun VersionsScreen(p:Palette,onBack:()->Unit){
-    var expanded by remember{mutableStateOf("0.601")}
+    var expanded by remember{mutableStateOf("0.602")}
     Column(Modifier.fillMaxSize().padding(14.dp)){
         PageHeader(tr("VERSIONER & NYHETER","VERSIONS & NEWS"),p,onBack)
         Spacer(Modifier.height(12.dp))
@@ -2140,6 +2210,7 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     var megaConfirm by remember { mutableStateOf<AdminMemberRecord?>(null) }
     var megaFinalConfirm by remember { mutableStateOf<AdminMemberRecord?>(null) }
     var kickTarget by remember { mutableStateOf<Pair<AdminMemberRecord,AdminMembershipRecord>?>(null) }
+    var saveError by remember { mutableStateOf("") }
     LaunchedEffect(editing?.uid){editing?.let{repo.loadAdminMemberships(it.uid){groups->memberGroups=groups}}?:run{memberGroups=emptyList()}}
     val filtered=remember(members,query,sort){
         val found=members.filter{it.displayName.contains(query,true)||it.globalTitle.contains(query,true)}
@@ -2174,7 +2245,7 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
                     Box(Modifier.size(40.dp).clip(CircleShape).background(if(m.titleColor!=0L)Color(m.titleColor) else p.green),contentAlignment=Alignment.Center){Text(m.displayName.take(1).uppercase(),color=Color.White,fontWeight=FontWeight.Black)}
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)){
-                        Row(verticalAlignment=Alignment.CenterVertically){Text(m.displayName,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis);if(m.megaSuperBoss)Text("  👑",fontSize=13.sp)}
+                        Row(verticalAlignment=Alignment.CenterVertically){if(m.supporter){Text("♥",color=p.red,fontSize=13.sp,fontWeight=FontWeight.Black);Spacer(Modifier.width(4.dp))};Text(m.displayName,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,maxLines=1,overflow=TextOverflow.Ellipsis);if(m.megaSuperBoss)Text("  👑",fontSize=13.sp)}
                         if(m.globalTitle.isNotBlank())Text(m.globalTitle,color=if(m.titleColor!=0L)Color(m.titleColor) else p.muted,fontSize=11.sp,fontWeight=FontWeight.Bold)
                         Text(listOfNotNull(if(m.supporter)"♥ SUPPORTER" else null,m.createdAt?.let{SimpleDateFormat("yyyy-MM-dd",Locale.getDefault()).format(it.toDate())}).joinToString(" • "),color=p.muted,fontSize=9.sp)
                     }
@@ -2189,6 +2260,7 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
     editing?.let{member->
         var title by remember(member.uid){mutableStateOf(member.globalTitle)}
         var color by remember(member.uid){mutableLongStateOf(if(member.titleColor!=0L)member.titleColor else userColors.first())}
+        var supportEnabled by remember(member.uid){mutableStateOf(member.supporter)}
         AlertDialog(
             onDismissRequest={editing=null},containerColor=popupColor(p.paper),
             title={Text(member.displayName,color=p.text,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black)},
@@ -2199,13 +2271,15 @@ private suspend fun sendFeedback(problem:Boolean,category:String,title:String,me
                 RetroField(title,{title=it.take(40)},tr("Ingen titel","No title"),Modifier.fillMaxWidth(),p);Spacer(Modifier.height(10.dp))
                 Text(tr("TITELFÄRG","TITLE COLOR"),color=p.text,fontWeight=FontWeight.Black,fontSize=11.sp)
                 userColors.chunked(8).forEach{colorRow->Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){colorRow.forEach{c->Box(Modifier.size(29.dp).clip(CircleShape).background(Color(c)).border(if(color==c)4.dp else 1.dp,if(color==c)p.text else p.outline,CircleShape).clickable{color=c})}}}
+                if(saveError.isNotBlank()){Spacer(Modifier.height(7.dp));Text(saveError,color=p.red,fontWeight=FontWeight.Bold,fontSize=11.sp)}
                 Spacer(Modifier.height(12.dp));Text(tr("GRUPPER","GROUPS"),color=p.text,fontWeight=FontWeight.Black,fontSize=11.sp)
                 if(memberGroups.isEmpty())Text(tr("Inga grupper","No groups"),color=p.muted,fontSize=11.sp)
                 memberGroups.forEach{g->Row(Modifier.fillMaxWidth().padding(top=5.dp).clip(RoundedCornerShape(8.dp)).background(p.paper2).padding(8.dp),verticalAlignment=Alignment.CenterVertically){Box(Modifier.size(25.dp).clip(CircleShape).background(Color(g.color)));Spacer(Modifier.width(7.dp));Column(Modifier.weight(1f)){Text(g.groupName,color=p.text,fontWeight=FontWeight.Bold,fontSize=12.sp);Text(g.role.uppercase(),color=p.muted,fontSize=8.sp)};if(g.role!="superboss"){Text(if(g.role=="boss")"−★" else "+★",color=p.gold,fontSize=16.sp,fontWeight=FontWeight.Black,modifier=Modifier.clickable{repo.setAdminGroupRole(member.uid,g,if(g.role=="boss")"member" else "boss"){if(it)repo.loadAdminMemberships(member.uid){memberGroups=it}}}.padding(5.dp));Text("✕",color=p.red,fontSize=16.sp,fontWeight=FontWeight.Black,modifier=Modifier.clickable{kickTarget=member to g}.padding(5.dp))}}}
                 Spacer(Modifier.height(10.dp));Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(tr("BLOCKERAD","BLOCKED"),color=p.text,fontWeight=FontWeight.Black);Text(tr("Stoppar kontots åtkomst","Stops account access"),color=p.muted,fontSize=9.sp)};Switch(member.suspended,{if(!member.founder)repo.setMemberSuspended(member.uid,it){}},enabled=!member.founder)}
+                Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("♥ SUPPORTER",color=p.text,fontWeight=FontWeight.Black);Text(tr("Tilldela eller ta bort supporterstatus","Grant or remove supporter status"),color=p.muted,fontSize=9.sp)};Switch(supportEnabled,{next->repo.setAdminSupporter(member.uid,next){ok->if(ok)supportEnabled=next else saveError=tr("Kunde inte ändra supporterstatus.","Could not change supporter status.")}})}
                 Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("MEGASUPERBOSS",color=p.text,fontWeight=FontWeight.Black);Text(if(member.founder)tr("Grundaren kan inte ändras","The founder cannot be changed") else tr("Global administratör","Global administrator"),color=p.muted,fontSize=9.sp)};Switch(member.megaSuperBoss,{if(!member.founder)megaConfirm=member},enabled=!member.founder)}
             }},
-            confirmButton={RetroButton(tr("SPARA","SAVE"),{repo.setAdminMemberTitle(member.uid,title,color){if(it)editing=null}},p)},
+            confirmButton={RetroButton(tr("SPARA","SAVE"),{saveError="";repo.setAdminMemberTitle(member.uid,title,color){if(it)editing=null else saveError=tr("Titeln kunde inte sparas. Kontrollera anslutning och behörighet.","The title could not be saved. Check connection and permissions.")}},p)},
             dismissButton={RetroButton(tr("AVBRYT","CANCEL"),{editing=null},p,danger=true)}
         )
     }
@@ -2421,7 +2495,25 @@ private fun AboutActionButton(icon: Int, title: String, subtitle: String, backgr
     }
 }
 
-@Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null){Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){PageBack(onBack,p);Spacer(Modifier.width(8.dp));BoxWithConstraints(Modifier.weight(1f)){val size=when{maxWidth<145.dp->14.sp;maxWidth<205.dp->17.sp;title.length>20->18.sp;else->24.sp};Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=size,lineHeight=size*1.08f,maxLines=1,overflow=TextOverflow.Ellipsis,color=p.pageText)};trailing?.invoke()}}
+@Composable private fun PageHeader(title:String,p:Palette,onBack:()->Unit,trailing: (@Composable () -> Unit)? = null,homeOnly:Boolean=false){
+    val onHome=LocalHomeAction.current
+    val showHomeInsteadOfBack=homeOnly||LocalBackIsHome.current
+    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+        if(showHomeInsteadOfBack) PageHome(onHome,p) else PageBack(onBack,p)
+        Spacer(Modifier.width(7.dp))
+        BoxWithConstraints(Modifier.weight(1f)){val size=when{maxWidth<145.dp->13.sp;maxWidth<205.dp->16.sp;title.length>20->18.sp;else->24.sp};Text(title.uppercase(),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=size,lineHeight=size*1.08f,maxLines=1,overflow=TextOverflow.Ellipsis,color=p.pageText)}
+        trailing?.invoke()
+        if(!showHomeInsteadOfBack){
+            Spacer(Modifier.width(6.dp))
+            Button(onClick=onHome,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel,contentColor=readableOn(p.panel)),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(43.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){Image(painterResource(R.drawable.list_home),null,contentScale=ContentScale.Fit,modifier=Modifier.size(31.dp))}
+        }
+    }
+}
+@Composable private fun PageHome(onHome:()->Unit,p:Palette){
+    Button(onClick=onHome,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(58.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){
+        Image(painterResource(R.drawable.list_home),null,contentScale=ContentScale.Fit,modifier=Modifier.size(45.dp))
+    }
+}
 @Composable private fun PageBack(onBack:()->Unit,p:Palette){
     Button(onClick=onBack,shape=RoundedCornerShape(9.dp),colors=ButtonDefaults.buttonColors(containerColor=p.panel),contentPadding=PaddingValues(0.dp),modifier=Modifier.size(58.dp).border(2.dp,p.outline,RoundedCornerShape(9.dp))){
         Image(painterResource(R.drawable.control_back),null,contentScale=ContentScale.Fit,modifier=Modifier.size(43.dp))
@@ -2437,11 +2529,7 @@ private fun InputPanel(
     onAdd: () -> Unit,
     expanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
-    p: Palette,
-    following: Boolean,
-    onFollowChange: () -> Unit,
-    onEditList: () -> Unit,
-    onDelete: () -> Unit
+    p: Palette
 ) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(p.panel)
@@ -2449,18 +2537,6 @@ private fun InputPanel(
     ) {
         Row(verticalAlignment=Alignment.CenterVertically){
             Text(tr("LÄGG TILL PRODUKT","ADD PRODUCT"),color=readableOn(p.panel),fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=13.sp,modifier=Modifier.weight(1f))
-            Box(Modifier.height(32.dp).width(48.dp).clip(RoundedCornerShape(7.dp)).background(if(following)p.gold.copy(alpha=.28f) else p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable(onClick=onFollowChange),contentAlignment=Alignment.Center){
-                Text(if(following)tr("SLUTA","UNFOLLOW") else tr("FÖLJ","FOLLOW"),color=readableOn(p.panel),fontSize=9.sp,fontWeight=FontWeight.Black,maxLines=1)
-            }
-            Spacer(Modifier.width(5.dp))
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(7.dp)).background(p.gold.copy(alpha=.12f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable(onClick=onEditList),contentAlignment=Alignment.Center){
-                Image(painterResource(R.drawable.control_edit),null,contentScale=ContentScale.Fit,modifier=Modifier.size(24.dp))
-            }
-            Spacer(Modifier.width(5.dp))
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(7.dp)).background(p.red.copy(alpha=.16f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable(onClick=onDelete),contentAlignment=Alignment.Center){
-                Image(painterResource(R.drawable.control_delete),null,contentScale=ContentScale.Fit,modifier=Modifier.size(24.dp))
-            }
-            Spacer(Modifier.width(5.dp))
             Box(Modifier.size(32.dp).clip(RoundedCornerShape(7.dp)).background(p.gold.copy(alpha=.15f)).border(1.dp,p.outline,RoundedCornerShape(7.dp)).clickable{onExpandedChange(!expanded)},contentAlignment=Alignment.Center){Text(if(expanded)"−" else "+",color=readableOn(p.panel),fontSize=22.sp,fontWeight=FontWeight.Black)}
         }
         if(expanded){

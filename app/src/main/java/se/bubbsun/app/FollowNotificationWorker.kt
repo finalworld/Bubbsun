@@ -47,11 +47,16 @@ object FollowNotificationScheduler {
             .build()
         WorkManager.getInstance(context).enqueueUniqueWork(WORK, ExistingWorkPolicy.REPLACE, request)
     }
+
+    fun lastCheck(context:Context):Long=context.getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong("last_background_check",0L)
+
+    fun showTestNotification(context:Context){showFollowNotification(context,"Testlista","bubbsun-test","Testnotisen fungerar! Följda listor kan meddela dig här.")}
 }
 
 class FollowNotificationWorker(context: Context, parameters: WorkerParameters) : Worker(context, parameters) {
     override fun doWork(): Result {
         val prefs = applicationContext.getSharedPreferences("bubbsun_followed_lists", Context.MODE_PRIVATE)
+        prefs.edit().putLong("last_background_check",System.currentTimeMillis()).apply()
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: prefs.getString("uid", "").orEmpty()
         if (uid.isBlank()) return Result.success()
         val followed = prefs.all.filter { it.key.startsWith("follow|") && it.value == true }.keys
@@ -67,7 +72,7 @@ class FollowNotificationWorker(context: Context, parameters: WorkerParameters) :
                 val changedBy = document.getString("updatedBy").orEmpty()
                 if (changedAt > previous && changedBy != uid) {
                     val name = document.getString("name") ?: prefs.getString("name|$groupId|$listId", "Bubbsun") ?: "Bubbsun"
-                    showNotification(name, listId)
+                    showFollowNotification(applicationContext,name,listId,"Någon har ändrat i en lista du följer.")
                 }
                 prefs.edit().putLong("last|$groupId|$listId", maxOf(previous, changedAt)).apply()
             }
@@ -76,17 +81,14 @@ class FollowNotificationWorker(context: Context, parameters: WorkerParameters) :
         return Result.success()
     }
 
-    private fun showNotification(listName: String, listId: String) {
-        if (Build.VERSION.SDK_INT >= 33 && applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
-        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel("followed_lists", "Följda listor", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "Ändringar i listor du följer" })
-        val intent = Intent(applicationContext, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP }
-        val pending = PendingIntent.getActivity(applicationContext, listId.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val notification = NotificationCompat.Builder(applicationContext, "followed_lists")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Bubbsun • $listName")
-            .setContentText("Någon har ändrat i en lista du följer.")
-            .setAutoCancel(true).setContentIntent(pending).setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
-        NotificationManagerCompat.from(applicationContext).notify(listId.hashCode(), notification)
-    }
+}
+
+private fun showFollowNotification(context:Context,listName:String,listId:String,message:String){
+    if(Build.VERSION.SDK_INT>=33&&context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return
+    val manager=context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    if(Build.VERSION.SDK_INT>=26)manager.createNotificationChannel(NotificationChannel("followed_lists","Följda listor",NotificationManager.IMPORTANCE_DEFAULT).apply{description="Ändringar i listor du följer"})
+    val intent=Intent(context,MainActivity::class.java).apply{flags=Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP}
+    val pending=PendingIntent.getActivity(context,listId.hashCode(),intent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    val notification=NotificationCompat.Builder(context,"followed_lists").setSmallIcon(R.mipmap.ic_launcher).setContentTitle("Bubbsun • $listName").setContentText(message).setAutoCancel(true).setContentIntent(pending).setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+    NotificationManagerCompat.from(context).notify(listId.hashCode(),notification)
 }

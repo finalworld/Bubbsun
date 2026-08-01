@@ -12,7 +12,8 @@ service cloud.firestore {
     }
     function isMega() {
       return signedIn() && (userDoc(request.auth.uid).data.megaSuperBoss == true
-        || userDoc(request.auth.uid).data.founder == true);
+        || userDoc(request.auth.uid).data.founder == true
+        || get(/databases/$(database)/documents/appConfig/public).data.founderUid == request.auth.uid);
     }
     function member(groupId) {
       return signedIn() && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
@@ -58,7 +59,7 @@ service cloud.firestore {
       allow read: if signedIn() && (request.auth.uid == uid || isMega());
       allow update: if signedIn() && (
         (request.auth.uid == uid
-          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['megaSuperBoss','founder','suspended'])
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['megaSuperBoss','founder','suspended','supporterSince','supporterNoticeType','supporterNoticeRevision'])
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['supporter'])
             || request.resource.data.supporter == false
             || (request.resource.data.supporter == true
@@ -79,11 +80,11 @@ service cloud.firestore {
 
       match /memberships/{groupId} {
         allow read: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
-        allow create: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
+        allow create: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
         allow update: if signedIn() && (
           (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['displayName','color','order','notificationsPaused']))
-          || groupBoss(groupId));
+          || groupBoss(groupId) || isMega());
         allow delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
       }
 

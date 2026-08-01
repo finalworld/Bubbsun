@@ -195,3 +195,14 @@
 - Lade till GitHub-statistik för releaser och APK-nedladdningar.
 - Återställde Stöd Bubbsun med en tydlig menyknapp och Facebook-länk.
 - Finjusterade profil, titel och gruppikon i sidomenyn.
+## 0.602 – Family Expansion
+- Låser både Androids textstorlek och visningszoom för stabil layout på riktiga telefoner.
+- Lägger till tydlig Hem-knapp samt val mellan Mina listor och Grupper.
+- Delar listornas släppyta i Redigera och Ta bort med tydliga instruktioner.
+- Flyttar Följ lista och papperskorgen till en utfällbar meny inne i listan.
+- Sparar en gemensam position för sorteringsfliken på alla listor.
+- Förtydligar markeringsläget för borttagning och rättar kontrasten i Ljust tema.
+- Utökar adminvyn med äldre gruppmedlemskap, supporterhjärta och supporterhantering.
+- Lägger till engångsmeddelanden för tilldelad eller borttagen supporterstatus.
+- Lägger till status och testknapp för följnotiser samt komprimerar sidomenyn.
+- Rättar adminprofilens Firebase-felhantering så medlemstryck aldrig kraschar appen.

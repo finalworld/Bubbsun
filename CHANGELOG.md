@@ -210,3 +210,6 @@
 - Rättar förstorad text och layout på telefoner med tillverkarspecifik skärmdensitet.
 - Gör Sluta följa pålitlig genom att rensa äldre följdata och stoppa väntande notiser.
 - Stabiliserar dragning av listor över Redigera- och Ta bort-fälten utan att touchytan återställs.
+## 0.604 – Family Expansion
+- Rättade grundorsaken till att dragning av listor kunde avbrytas över det dolda Lägg till lista-området.
+- Listordningen ändras nu först när användaren släpper kortet, så draggesten behålls stabil hela vägen.

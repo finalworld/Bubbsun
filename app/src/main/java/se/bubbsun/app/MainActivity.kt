@@ -104,6 +104,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import java.util.UUID
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.random.Random
 import kotlinx.coroutines.launch
@@ -1004,8 +1005,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                     list=l,p=p,creatorColor=members.firstOrNull{it.uid==activeUserId}?.color?:0xFF888888L,newCount=0,
                     dragging=draggingId==l.id,onOpen={onOpenPrivate(l.id)},privatePinned=l.id in privatePinned,onTogglePin={onTogglePrivatePin(l.id)},
                     onDragStart={draggingId=l.id;overDropZone=""},onDragPosition={point->overDropZone=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}},
-                    onDragEnd={point->val action=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""};draggingId=null;overDropZone="";if(action=="delete")deleteTarget=l to true else if(action=="edit")editTarget=l to true else onSavePrivate()},
-                    onMove={dir->val shown=privateLists.sortedByDescending{it.id in privatePinned};val from=shown.indexOf(l);val to=(from+dir).coerceIn(0,shown.lastIndex);if(from!=to&&(shown[to].id in privatePinned)==(l.id in privatePinned)){val other=shown[to];val a=privateLists.indexOf(l);val b=privateLists.indexOf(other);privateLists[a]=other;privateLists[b]=l;true}else false}
+                    onDragEnd={point,steps->val action=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""};draggingId=null;overDropZone="";if(action=="delete")deleteTarget=l to true else if(action=="edit")editTarget=l to true else{val shown=privateLists.sortedByDescending{it.id in privatePinned};val from=shown.indexOf(l);val to=(from+steps).coerceIn(0,shown.lastIndex);if(from>=0&&from!=to&&(shown[to].id in privatePinned)==(l.id in privatePinned)){val other=shown[to];val a=privateLists.indexOf(l);val b=privateLists.indexOf(other);privateLists[a]=other;privateLists[b]=l};onSavePrivate()}}
                 )
             }
             }
@@ -1014,7 +1014,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             if(pinnedShortcuts.isNotEmpty()){
                 item{Text(tr("MINA PINNADE LISTOR","MY PINNED LISTS"),color=p.pageText,fontFamily=FontFamily.Serif,fontWeight=FontWeight.Black,fontSize=14.sp,modifier=Modifier.padding(horizontal=3.dp,vertical=2.dp))}
                 items(pinnedShortcuts,key={"shortcut_${it.id}"}){l->
-                    ListRow(list=l,p=p,creatorColor=members.firstOrNull{it.uid==activeUserId}?.color?:0xFF888888L,newCount=0,dragging=false,onOpen={onOpenPrivate(l.id)},privatePinned=true,onTogglePin={onTogglePrivatePin(l.id)},onDragStart={},onDragPosition={},onDragEnd={},onMove={false})
+                    ListRow(list=l,p=p,creatorColor=members.firstOrNull{it.uid==activeUserId}?.color?:0xFF888888L,newCount=0,dragging=false,onOpen={onOpenPrivate(l.id)},privatePinned=true,onTogglePin={onTogglePrivatePin(l.id)},onDragStart={},onDragPosition={},onDragEnd={_,_->})
                 }
                 item{Spacer(Modifier.height(4.dp))}
             }
@@ -1031,16 +1031,16 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                     onOpen={onOpen(l.id)},
                     onDragStart={draggingId=l.id;overDropZone=""},
                     onDragPosition={point->overDropZone=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}},
-                    onDragEnd={point->
+                    onDragEnd={point,steps->
                         val action=when{editZoneBounds.contains(point)->"edit";deleteZoneBounds.contains(point)->"delete";else->""}
                         draggingId=null
                         overDropZone=""
-                        if(action=="delete")deleteTarget=l to false else if(action=="edit")editTarget=l to false else onSave()
-                    },
-                    onMove={dir->
-                        val from=lists.indexOf(l)
-                        val to=(from+dir).coerceIn(0,lists.lastIndex)
-                        if(from!=to){lists.removeAt(from);lists.add(to,l);true}else false
+                        if(action=="delete")deleteTarget=l to false else if(action=="edit")editTarget=l to false else{
+                            val from=lists.indexOf(l)
+                            val to=(from+steps).coerceIn(0,lists.lastIndex)
+                            if(from>=0&&from!=to){lists.removeAt(from);lists.add(to,l)}
+                            onSave()
+                        }
                     }
                 )
             }
@@ -1107,12 +1107,11 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
 }
 
-@Composable private fun ListRow(list:ShoppingListData,p:Palette,creatorColor:Long?,newCount:Int,dragging:Boolean,onOpen:()->Unit,privatePinned:Boolean=false,onTogglePin:(()->Unit)?=null,onDragStart:()->Unit,onDragPosition:(Offset)->Unit,onDragEnd:(Offset)->Unit,onMove:(Int)->Boolean){
+@Composable private fun ListRow(list:ShoppingListData,p:Palette,creatorColor:Long?,newCount:Int,dragging:Boolean,onOpen:()->Unit,privatePinned:Boolean=false,onTogglePin:(()->Unit)?=null,onDragStart:()->Unit,onDragPosition:(Offset)->Unit,onDragEnd:(Offset,Int)->Unit){
     val haptic=LocalHapticFeedback.current
     var dragY by remember{mutableStateOf(0f)}
     var dragX by remember{mutableStateOf(0f)}
     var rowCenter by remember{mutableStateOf(Offset.Zero)}
-    var reorderDrag by remember{mutableStateOf(0f)}
     val rowStepPx=with(LocalDensity.current){85.dp.toPx()}
     val bg by animateColorAsState(if(dragging)p.glow else p.paper,label="drag")
     Row(
@@ -1126,20 +1125,12 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
                 detectDragGesturesAfterLongPress(
                     onDragStart={
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        dragX=0f;dragY=0f;reorderDrag=0f;onDragStart();onDragPosition(rowCenter)
+                        dragX=0f;dragY=0f;onDragStart();onDragPosition(rowCenter)
                     },
-                    onDragEnd={onDragEnd(rowCenter+Offset(dragX,dragY));dragX=0f;dragY=0f;reorderDrag=0f},
-                    onDragCancel={onDragEnd(Offset(Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY));dragX=0f;dragY=0f;reorderDrag=0f},
+                    onDragEnd={onDragEnd(rowCenter+Offset(dragX,dragY),(dragY/rowStepPx).roundToInt());dragX=0f;dragY=0f},
+                    onDragCancel={onDragEnd(Offset(Float.NEGATIVE_INFINITY,Float.NEGATIVE_INFINITY),0);dragX=0f;dragY=0f},
                     onDrag={change,amount->
-                        change.consume();dragX+=amount.x;dragY+=amount.y;reorderDrag+=amount.y
-                        if(abs(reorderDrag)>rowStepPx*.62f){
-                            val dir=if(reorderDrag>0)1 else -1
-                            if(onMove(dir)){
-                                // Layouten flyttar raden ett steg. Motkompensera så kortet stannar under fingret.
-                                dragY-=dir*rowStepPx
-                            }
-                            reorderDrag=0f
-                        }
+                        change.consume();dragX+=amount.x;dragY+=amount.y
                         onDragPosition(rowCenter+Offset(dragX,dragY))
                     }
                 )
@@ -2018,6 +2009,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.604" to listOf("Fixed list drag-and-drop cancelling when crossing the hidden Add list area","List order now changes only when the dragged card is released"),
     "0.603" to listOf("Fixed oversized text and layout on phones with manufacturer-specific display density","Unfollow now clears legacy follow data and cancels pending notifications","Stabilized list drag-and-drop over the Edit and Delete targets"),
     "0.602" to listOf("Locked both Android font and display scaling for consistent layouts","Added explicit Home navigation and My Lists / Groups tabs","Added split drag targets for editing or deleting lists","Moved Follow and delete actions into a collapsible list toolbar","Saved one global sort-tab position across all lists","Improved delete selection controls and light-theme contrast","Expanded MegaSuperBoss membership lookup and supporter controls","Added supporter status messages and notification diagnostics","Refined the compact fixed-footer menu design"),
     "0.601" to listOf("Clearer swipe hint on global pinned lists","Larger Follow button text and five-minute background notifications","Full MegaSuperBoss member profiles with groups, roles, blocking and removal","Dedicated Bugs & Suggestions admin page","Synced supporter status and corrected admin statistics","GitHub release download statistics","Restored Support Bubbsun page and Facebook link","Refined active group card in the menu"),

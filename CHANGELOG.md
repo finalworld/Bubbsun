@@ -206,3 +206,7 @@
 - Lägger till engångsmeddelanden för tilldelad eller borttagen supporterstatus.
 - Lägger till status och testknapp för följnotiser samt komprimerar sidomenyn.
 - Rättar adminprofilens Firebase-felhantering så medlemstryck aldrig kraschar appen.
+## 0.603 – Family Expansion
+- Rättar förstorad text och layout på telefoner med tillverkarspecifik skärmdensitet.
+- Gör Sluta följa pålitlig genom att rensa äldre följdata och stoppa väntande notiser.
+- Stabiliserar dragning av listor över Redigera- och Ta bort-fälten utan att touchytan återställs.

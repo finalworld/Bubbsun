@@ -11,7 +11,6 @@ import android.os.Build
 import android.Manifest
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.util.DisplayMetrics
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.activity.ComponentActivity
@@ -354,13 +353,12 @@ class MainActivity:ComponentActivity(){
     override fun attachBaseContext(newBase:Context){
         val config=Configuration(newBase.resources.configuration).apply{
             fontScale=1f
-            densityDpi=DisplayMetrics.DENSITY_DEVICE_STABLE
         }
         super.attachBaseContext(newBase.createConfigurationContext(config))
     }
     override fun onCreate(savedInstanceState:Bundle?){
         super.onCreate(savedInstanceState)
-        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.POST_NOTIFICATIONS),602)
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)ActivityCompat.requestPermissions(this,arrayOf(Manifest.permission.POST_NOTIFICATIONS),603)
         setContent{BubbsunApp(this)}
     }
 }
@@ -581,8 +579,9 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     LaunchedEffect(Unit){if(firebaseUser==null)runCatching{googleClient.silentSignIn().addOnSuccessListener{a->together.auth.signInWithCredential(GoogleAuthProvider.getCredential(a.idToken,null))}}}
     val store=remember{BubbsunStore(context)}
     LaunchedEffect(Unit){FollowNotificationScheduler.schedule(context)}
-    val lockedDensity=remember{DisplayMetrics.DENSITY_DEVICE_STABLE/160f}
-    if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides Density(lockedDensity,1f)){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
+    val deviceDensity=LocalDensity.current.density
+    val lockedDensity=remember(deviceDensity){Density(deviceDensity,1f)}
+    if(firebaseUser==null){CompositionLocalProvider(LocalDensity provides lockedDensity){SignInScreen(signInError){signInError="";signInLauncher.launch(googleClient.signInIntent)}};return}
     val localDeveloperAccount=BuildConfig.DEBUG&&firebaseUser!!.uid=="vIIrmKj3Q6YIjoR01TR8ZFYdgZz1"
     var bootstrapAccount by remember(firebaseUser!!.uid){mutableStateOf<V600Account?>(null)}
     var bootstrapCloudWarning by remember(firebaseUser!!.uid){mutableStateOf(false)}
@@ -600,7 +599,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
     }
     LaunchedEffect(bootstrapAccount?.privacyVersion,privacyAccepted){if(privacyAccepted&&bootstrapAccount!=null&&bootstrapAccount!!.privacyVersion<1)v600.acceptPrivacy(firebaseUser!!.uid,1){}}
     if(bootstrapAccount==null){Box(Modifier.fillMaxSize(),contentAlignment=Alignment.Center){CircularProgressIndicator()};return}
-    if(!privacyAccepted){CompositionLocalProvider(LocalDensity provides Density(lockedDensity,1f)){PrivacyConsentScreen(onAccept={store.setPrefsBoolean("privacy_0501_${firebaseUser!!.uid}");privacyAccepted=true;v600.acceptPrivacy(firebaseUser!!.uid,1){}},onCancel={together.auth.signOut();googleClient.signOut()})};return}
+    if(!privacyAccepted){CompositionLocalProvider(LocalDensity provides lockedDensity){PrivacyConsentScreen(onAccept={store.setPrefsBoolean("privacy_0501_${firebaseUser!!.uid}");privacyAccepted=true;v600.acceptPrivacy(firebaseUser!!.uid,1){}},onCancel={together.auth.signOut();googleClient.signOut()})};return}
     val users=remember{mutableStateListOf<UserProfile>().apply{addAll(store.loadUsers())}}
     val lists=remember{mutableStateListOf<ShoppingListData>().apply{addAll(store.loadLists(users))}}
     val privateLists=remember(firebaseUser!!.uid){mutableStateListOf<ShoppingListData>().apply{addAll(store.loadPrivateLists(firebaseUser!!.uid))}}
@@ -728,7 +727,7 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
         }
     }
     CompositionLocalProvider(
-        LocalDensity provides Density(lockedDensity,1f),
+        LocalDensity provides lockedDensity,
         LocalHomeAction provides {navigationHistory.clear();screen="lists";selectedListId=null;selectedListPrivate=false},
         LocalBackIsHome provides (navigationHistory.lastOrNull()=="lists")
     ) {
@@ -1056,12 +1055,14 @@ private val supporterUserColors=listOf(0xFFC6A75E,0xFF9B72CF,0xFF72B7A5,0xFF6F91
             }
             Spacer(Modifier.height(7.dp))
         }
-        if(draggingId==null){
-            RetroButton(if(privateSpace)tr("＋  LÄGG TILL NY LISTA","＋  ADD NEW LIST") else tr("＋  LÄGG TILL GRUPPLISTA","＋  ADD GROUP LIST"),if(privateSpace)onAddPrivate else onAdd,p,modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp))
-        }else{
-            Row(Modifier.fillMaxWidth().height(68.dp).padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
-                DropTarget(tr("SLÄPP HÄR FÖR ATT REDIGERA","DROP HERE TO EDIT"),R.drawable.control_edit,p,overDropZone=="edit",Modifier.weight(1f).onGloballyPositioned{editZoneBounds=it.boundsInRoot()})
-                DropTarget(tr("SLÄPP HÄR FÖR ATT TA BORT","DROP HERE TO DELETE"),R.drawable.control_delete,p,overDropZone=="delete",Modifier.weight(1f).onGloballyPositioned{deleteZoneBounds=it.boundsInRoot()},danger=true)
+        Box(Modifier.fillMaxWidth().height(68.dp)){
+            if(draggingId==null){
+                RetroButton(if(privateSpace)tr("＋  LÄGG TILL NY LISTA","＋  ADD NEW LIST") else tr("＋  LÄGG TILL GRUPPLISTA","＋  ADD GROUP LIST"),if(privateSpace)onAddPrivate else onAdd,p,modifier=Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=7.dp))
+            }else{
+                Row(Modifier.fillMaxSize().padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(7.dp)){
+                    DropTarget(tr("SLÄPP HÄR FÖR ATT REDIGERA","DROP HERE TO EDIT"),R.drawable.control_edit,p,overDropZone=="edit",Modifier.weight(1f).onGloballyPositioned{editZoneBounds=it.boundsInRoot()})
+                    DropTarget(tr("SLÄPP HÄR FÖR ATT TA BORT","DROP HERE TO DELETE"),R.drawable.control_delete,p,overDropZone=="delete",Modifier.weight(1f).onGloballyPositioned{deleteZoneBounds=it.boundsInRoot()},danger=true)
+                }
             }
         }
     }
@@ -2017,6 +2018,7 @@ private fun statsPeriodLabel(period:StatsPeriod)=when(period){StatsPeriod.WEEK->
 }
 
 private val patchNotes=listOf(
+    "0.603" to listOf("Fixed oversized text and layout on phones with manufacturer-specific display density","Unfollow now clears legacy follow data and cancels pending notifications","Stabilized list drag-and-drop over the Edit and Delete targets"),
     "0.602" to listOf("Locked both Android font and display scaling for consistent layouts","Added explicit Home navigation and My Lists / Groups tabs","Added split drag targets for editing or deleting lists","Moved Follow and delete actions into a collapsible list toolbar","Saved one global sort-tab position across all lists","Improved delete selection controls and light-theme contrast","Expanded MegaSuperBoss membership lookup and supporter controls","Added supporter status messages and notification diagnostics","Refined the compact fixed-footer menu design"),
     "0.601" to listOf("Clearer swipe hint on global pinned lists","Larger Follow button text and five-minute background notifications","Full MegaSuperBoss member profiles with groups, roles, blocking and removal","Dedicated Bugs & Suggestions admin page","Synced supporter status and corrected admin statistics","GitHub release download statistics","Restored Support Bubbsun page and Facebook link","Refined active group card in the menu"),
     "0.600" to listOf("Family Expansion with multiple groups and private lists","MegaSuperBoss administration and global pinned lists","Group roles, approvals and unique colors","Gothic supporter theme and expanded languages","Improved update installation flow"),

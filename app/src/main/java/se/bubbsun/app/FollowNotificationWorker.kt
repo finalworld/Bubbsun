@@ -27,15 +27,28 @@ object FollowNotificationScheduler {
     private const val WORK = "bubbsun-follow-check"
 
     fun setFollowing(context: Context, groupId: String, listId: String, listName: String, uid: String, following: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        if (!following) {
+            val editor = prefs.edit().remove(listId)
+            prefs.all.keys.filter { key ->
+                (key.startsWith("follow|") || key.startsWith("name|") || key.startsWith("last|")) && key.endsWith("|$listId")
+            }.forEach(editor::remove)
+            editor.commit()
+            NotificationManagerCompat.from(context).cancel(listId.hashCode())
+            if (prefs.all.none { it.key.startsWith("follow|") && it.value == true }) {
+                WorkManager.getInstance(context).cancelUniqueWork(WORK)
+            }
+            return
+        }
         if (groupId.isBlank()) return
         val key = "follow|$groupId|$listId"
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(key, following)
+        prefs.edit()
+            .putBoolean(key, true)
             .putString("name|$groupId|$listId", listName)
             .putString("uid", uid)
             .putLong("last|$groupId|$listId", System.currentTimeMillis())
-            .apply()
-        if (following) schedule(context)
+            .commit()
+        schedule(context)
     }
 
     fun schedule(context: Context) {
@@ -70,11 +83,11 @@ class FollowNotificationWorker(context: Context, parameters: WorkerParameters) :
                 val changedAt = document.getTimestamp("updatedAt")?.toDate()?.time ?: 0L
                 val previous = prefs.getLong("last|$groupId|$listId", changedAt)
                 val changedBy = document.getString("updatedBy").orEmpty()
-                if (changedAt > previous && changedBy != uid) {
+                if (changedAt > previous && changedBy != uid && prefs.getBoolean(key, false)) {
                     val name = document.getString("name") ?: prefs.getString("name|$groupId|$listId", "Bubbsun") ?: "Bubbsun"
                     showFollowNotification(applicationContext,name,listId,"Någon har ändrat i en lista du följer.")
                 }
-                prefs.edit().putLong("last|$groupId|$listId", maxOf(previous, changedAt)).apply()
+                if (prefs.getBoolean(key, false)) prefs.edit().putLong("last|$groupId|$listId", maxOf(previous, changedAt)).apply()
             }
         }
         FollowNotificationScheduler.schedule(applicationContext)

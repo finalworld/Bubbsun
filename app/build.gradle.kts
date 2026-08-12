@@ -3,8 +3,6 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.gms.google-services")
 }
 
 android {
@@ -30,8 +28,8 @@ android {
         applicationId = "se.bubbsun.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 604
-        versionName = "0.604"
+        versionCode = 700
+        versionName = "0.700"
     }
 
     buildTypes {
@@ -43,10 +41,7 @@ android {
         }
     }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -62,26 +57,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    sourceSets.getByName("main").java.setSrcDirs(listOf("src/twa/java"))
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
-    implementation(composeBom)
-    androidTestImplementation(composeBom)
-
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-    implementation("androidx.work:work-runtime-ktx:2.10.0")
-    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-messaging")
-    implementation("com.google.firebase:firebase-storage")
-    implementation("com.google.android.gms:play-services-auth:21.3.0")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("com.google.androidbrowserhelper:androidbrowserhelper:2.5.0")
 }

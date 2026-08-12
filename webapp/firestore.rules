@@ -1,0 +1,258 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null
+        && (!exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          || !('suspended' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.suspended != true);
+    }
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+    function isFounderIdentity() {
+      return request.auth != null
+        && request.auth.token.email == 'finalworld@gmail.com';
+    }
+    function isMega() {
+      return isFounderIdentity() || (signedIn() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && (('megaSuperBoss' in userDoc(request.auth.uid).data && userDoc(request.auth.uid).data.megaSuperBoss == true)
+            || ('founder' in userDoc(request.auth.uid).data && userDoc(request.auth.uid).data.founder == true)))
+        || (exists(/databases/$(database)/documents/appConfig/public)
+          && 'founderUid' in get(/databases/$(database)/documents/appConfig/public).data
+          && get(/databases/$(database)/documents/appConfig/public).data.founderUid == request.auth.uid)
+      ));
+    }
+    function member(groupId) {
+      return signedIn() && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+    function role(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role;
+    }
+    function groupBoss(groupId) {
+      return member(groupId) && role(groupId) in ['superboss', 'boss', 'owner', 'admin'];
+    }
+    function superBoss(groupId) {
+      return member(groupId) && role(groupId) in ['superboss', 'owner'];
+    }
+    function groupOpen(groupId) {
+      return !('frozen' in get(/databases/$(database)/documents/groups/$(groupId)).data)
+        || get(/databases/$(database)/documents/groups/$(groupId)).data.frozen != true;
+    }
+    function approvedApplicant(groupId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)/joinRequests/$(groupId)).data.status == 'color_pending';
+    }
+    function freeSupporterOpen() {
+      return get(/databases/$(database)/documents/appConfig/public).data.freeSupporterPeriod == true;
+    }
+
+    match /appConfig/public {
+      allow read: if signedIn();
+      allow write: if isMega();
+    }
+
+    match /users/{uid} {
+      // v0.501 created the smaller legacy profile. Keep it accepted during
+      // the 0.600 transition, while preventing self-assigned admin flags.
+      allow create: if signedIn() && request.auth.uid == uid && (
+        (request.resource.data.uid == uid
+          && (!('megaSuperBoss' in request.resource.data) || request.resource.data.megaSuperBoss != true)
+          && (!('founder' in request.resource.data) || request.resource.data.founder != true)
+          && (!('suspended' in request.resource.data) || request.resource.data.suspended != true))
+        || (request.resource.data.keys().hasOnly(['name','color','groupId','role','createdAt'])
+          && request.resource.data.groupId == ''
+          && request.resource.data.role == 'member')
+      );
+      allow read: if signedIn() && (request.auth.uid == uid || isMega());
+      allow update: if isFounderIdentity() || (signedIn() && (
+        (request.auth.uid == uid
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['megaSuperBoss','founder','suspended','supporterSince','supporterNoticeType','supporterNoticeRevision'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['supporter'])
+            || request.resource.data.supporter == false
+            || (request.resource.data.supporter == true
+              && (!('supporter' in resource.data) || resource.data.supporter != true)
+              && freeSupporterOpen())))
+        // Compatibility for v0.501 group approval, removal and role transfer.
+        || (request.resource.data.groupId is string
+          && (request.auth.uid == uid || groupBoss(request.resource.data.groupId))
+          && existsAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(uid))
+          && request.resource.data.role == getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(uid)).data.role)
+        || (resource.data.groupId is string && groupBoss(resource.data.groupId)
+          && request.resource.data.groupId == '' && request.resource.data.role == 'member'
+          && !existsAfter(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(uid)))
+        || isMega()
+      ));
+      allow delete: if signedIn() && request.auth.uid == uid
+        && (!('founder' in resource.data) || resource.data.founder != true);
+
+      match /memberships/{groupId} {
+        allow read: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
+        allow create: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
+        allow update: if signedIn() && (
+          (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName','color','order','notificationsPaused']))
+          || groupBoss(groupId) || isMega());
+        allow delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
+      }
+
+      match /joinRequests/{groupId} {
+        allow read, create, delete: if signedIn() && request.auth.uid == uid;
+        allow update: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
+      }
+
+      match /notificationPreferences/{document=**} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    match /groupCodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || isMega());
+      allow update: if false;
+    }
+
+    // Temporary v0.501 invite-code path. v0.600 uses /groupCodes instead.
+    match /joinCodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.groupId is string
+        && getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)).data.ownerId == request.auth.uid;
+      allow delete: if superBoss(resource.data.groupId);
+      allow update: if false;
+    }
+
+    match /groups/{groupId} {
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow read: if member(groupId) || approvedApplicant(groupId) || isMega();
+      allow update: if signedIn() && ((groupBoss(groupId) && groupOpen(groupId)) || isMega()
+        || (approvedApplicant(groupId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount','updatedAt'])
+          && request.resource.data.memberCount == resource.data.memberCount + 1));
+      allow delete: if signedIn() && (superBoss(groupId) || isMega());
+
+      match /members/{uid} {
+        allow read: if member(groupId) || approvedApplicant(groupId) || isMega();
+        allow create: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
+        allow update: if signedIn() && (
+          (request.auth.uid == uid && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['displayName','name','color','order','notificationsPaused']))
+          || (groupBoss(groupId) && resource.data.role != 'superboss') || superBoss(groupId) || isMega());
+        allow delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId) || isMega());
+      }
+
+      // Temporary v0.501 join requests. These contain no privileged fields.
+      match /requests/{uid} {
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['name','color','createdAt']);
+        allow read, delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
+        allow update: if false;
+      }
+
+      match /joinRequests/{uid} {
+        allow create: if signedIn() && request.auth.uid == uid;
+        allow read, delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
+        allow update: if groupBoss(groupId);
+      }
+
+      match /colorReservations/{color} {
+        allow create: if signedIn() && (request.auth.uid == request.resource.data.uid || groupBoss(groupId));
+        allow read, delete: if signedIn() && (request.auth.uid == resource.data.uid || groupBoss(groupId));
+        allow update: if false;
+      }
+
+      match /colorClaims/{color} {
+        allow read: if member(groupId) || approvedApplicant(groupId);
+        allow create: if signedIn() && (request.auth.uid == request.resource.data.uid || groupBoss(groupId));
+        allow delete: if signedIn() && (request.auth.uid == resource.data.uid || groupBoss(groupId));
+        allow update: if false;
+      }
+
+      match /lists/{listId} {
+        allow read: if member(groupId) || isMega();
+        allow create, update: if member(groupId) && groupOpen(groupId);
+        allow delete: if member(groupId) && groupOpen(groupId)
+          && (resource.data.creatorId == request.auth.uid || groupBoss(groupId));
+
+        match /items/{itemId} {
+          allow read: if member(groupId);
+          allow create: if member(groupId) && groupOpen(groupId)
+            && request.resource.data.creatorId == request.auth.uid;
+          allow update, delete: if member(groupId) && groupOpen(groupId)
+            && (resource.data.creatorId == request.auth.uid || groupBoss(groupId));
+          match /reactions/{uid} {
+            allow read: if member(groupId);
+            allow create, delete: if signedIn() && request.auth.uid == uid && member(groupId);
+            allow update: if false;
+          }
+        }
+      }
+
+      match /activity/{eventId} {
+        allow read: if member(groupId);
+        // v0.501 writes client-side activity events with these exact fields.
+        allow create: if member(groupId)
+          && request.resource.data.actorId == request.auth.uid
+          && request.resource.data.keys().hasOnly(['kind','itemName','actorId','timestamp']);
+        allow update, delete: if false;
+      }
+
+      match /stats/{document=**} {
+        allow read: if member(groupId);
+        allow write: if false;
+      }
+    }
+
+    match /globalPins/{pinId} {
+      allow read: if signedIn() && (resource.data.status == 'published' || isMega());
+      allow write: if isMega();
+      match /items/{itemId} {
+        allow read: if signedIn();
+        allow create, delete: if isMega();
+        allow update: if isMega() || (signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactionCount'])
+          && request.resource.data.reactionCount >= 0
+          && request.resource.data.reactionCount >= resource.data.reactionCount - 1
+          && request.resource.data.reactionCount <= resource.data.reactionCount + 1);
+        match /reactions/{uid} {
+          allow read: if signedIn();
+          allow create, delete: if signedIn() && request.auth.uid == uid;
+          allow update: if false;
+        }
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.authorUid == request.auth.uid;
+      allow read: if signedIn() && (resource.data.authorUid == request.auth.uid || isMega());
+      allow update: if signedIn() && (resource.data.authorUid == request.auth.uid || isMega());
+      allow delete: if isMega();
+      match /messages/{messageId} {
+        allow read: if signedIn() && (get(/databases/$(database)/documents/reports/$(reportId)).data.authorUid == request.auth.uid || isMega());
+        allow create: if signedIn() && (request.resource.data.authorUid == request.auth.uid || isMega());
+        allow update, delete: if false;
+      }
+      match /internalNotes/{noteId} {
+        allow read, write: if isMega();
+      }
+    }
+
+    // Web Edition theme palettes: visible to signed-in clients, editable only
+    // by the global Bubbsun administrator. Legacy Android paths stay intact.
+    match /themePalettes/{themeId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isMega();
+    }
+
+    match /admin/{document=**} {
+      allow read, write: if isMega();
+    }
+
+    match /publicStats/{document=**} {
+      allow read: if isMega();
+      allow write: if false;
+    }
+  }
+}

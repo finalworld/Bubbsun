@@ -1,0 +1,673 @@
+/* Final responsive polish for the Web Edition. Keep context-specific sizes here. */
+
+:root { --bubbsun-header-h: 94px; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 120 !important;
+  min-height: var(--bubbsun-header-h) !important;
+  height: var(--bubbsun-header-h) !important;
+  padding-block: 6px !important;
+  overflow: visible;
+  background: var(--theme-bg) !important;
+}
+
+/* Final reference header and its hanging list label. */
+:root { --bubbsun-header-h: 104px; }
+.topbar { position:sticky!important;top:0!important;z-index:80!important;height:var(--bubbsun-header-h)!important;min-height:var(--bubbsun-header-h)!important;max-width:920px!important;padding:8px 18px 14px!important;grid-template-columns:54px minmax(0,1fr) 54px!important;gap:12px!important;border:0!important;border-bottom:3px double var(--theme-outline)!important;border-radius:0 0 22px 22px!important;background:var(--theme-bg)!important;box-shadow:0 5px 14px color-mix(in srgb,var(--theme-text) 13%,transparent)!important}
+.topbar::after{display:none!important}
+.topbar .brand{position:relative!important;display:flex!important;height:82px!important;overflow:visible!important}
+.topbar .brand::before,.topbar .brand::after{content:'❦';flex:1;color:var(--theme-outline);font-size:20px;line-height:1;border-bottom:1px solid var(--theme-outline);opacity:.72}
+.topbar .brand::after{transform:scaleX(-1)}
+.topbar .brand img{content:url('/assets/bubbsun-logo.png')!important;width:min(330px,76%)!important;height:66px!important;max-height:66px!important;object-fit:contain!important;background:transparent!important;box-shadow:none!important}
+.topbar .brand small{position:absolute!important;left:50%;bottom:0;transform:translateX(-50%);margin:0!important;height:12px!important;font-size:9px!important;line-height:12px!important}
+.topbar>button:not(.brand),.topbar>.header-spacer{width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important}
+.detail-page{padding-top:44px!important}
+.hanging-list-tab{cursor:pointer;position:relative;z-index:31;width:min(78%,600px)!important;min-height:58px;margin:-44px auto 12px!important;padding:7px 18px!important;display:grid!important;grid-template-columns:46px minmax(0,1fr)!important;gap:10px!important;border:2px solid var(--theme-outline);border-top:0;border-radius:0 0 18px 18px;background:var(--theme-panel);box-shadow:0 4px 10px color-mix(in srgb,var(--theme-text) 13%,transparent)}
+.hanging-list-tab .detail-list-icon{width:42px;height:42px;border:0;background:transparent!important}.hanging-list-tab .detail-list-icon img{width:100%;height:100%;object-fit:contain}.hanging-list-tab h1{font-size:18px!important;text-align:center}
+@media(max-width:700px){:root{--bubbsun-header-h:84px}.topbar{padding:5px 10px 10px!important;grid-template-columns:46px minmax(0,1fr) 46px!important;gap:7px!important;border-radius:0 0 16px 16px!important}.topbar .brand{height:68px!important}.topbar .brand img{height:51px!important;max-height:51px!important}.topbar .brand::before,.topbar .brand::after{font-size:13px}.topbar>button:not(.brand),.topbar>.header-spacer{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}.detail-page{padding-top:38px!important}.hanging-list-tab{width:min(82%,360px)!important;min-height:52px;margin:-38px auto 10px!important;grid-template-columns:38px minmax(0,1fr)!important;padding:6px 12px!important}.hanging-list-tab .detail-list-icon{width:36px;height:36px}.hanging-list-tab h1{font-size:15px!important}}
+.topbar::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 20px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--page-bg) 94%, transparent), transparent);
+  transition: opacity .16s ease;
+}
+body:not(.at-page-top) .topbar::after { opacity: 1; }
+.topbar .brand { height: 82px !important; }
+.topbar .brand img { width: min(330px, 39vw); height: 68px; object-fit: contain; }
+.topbar .brand img {
+  content: url('/assets/bubbsun-logo-compact-v2.png') !important;
+  width: min(330px, 39vw) !important;
+  height: 68px !important;
+  max-height: 68px !important;
+}
+.topbar .brand small { position: relative !important; z-index: 2; margin-top: -2px !important; height: 12px !important; font-size: 9px !important; line-height: 11px !important; overflow: visible !important; }
+.topbar > button:not(.brand) { width: 54px; height: 54px; }
+
+/* Dialogs must always sit above the sticky header and remain usable on small screens. */
+.modal-backdrop { position: fixed; z-index: 800; padding: 14px; overflow-y: auto; align-items: flex-start; }
+.modal-card { margin-block: max(10px, env(safe-area-inset-top)) 18px; max-height: calc(100dvh - 42px); overflow-y: auto; }
+
+/* List heading: compact, actual list icon, at most two lines. */
+.detail-title { min-height: 48px; margin-block: 8px; gap: 9px; align-items: center; }
+.detail-title > button { width: 42px; height: 42px; flex: 0 0 42px; }
+.detail-title .detail-list-icon { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 10px; overflow: hidden; }
+.detail-title .detail-list-icon img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: normal; }
+.detail-title h1 { font-size: 18px; line-height: 1.08; max-width: min(54ch, calc(100% - 98px)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Artwork has intentionally soft paper edges; blend them into the chosen colour. */
+.list-icon img, .icon-choice img, .group-icon img, .group-icon-choice img, .drawer-group-icon img {
+  object-fit: contain;
+  mix-blend-mode: normal;
+}
+.list-card .list-icon img { width: 100%; height: 100%; padding: 0; }
+.list-editor .icon-picker img { width: 100% !important; height: 100% !important; }
+.icon-choice img { width: 86%; height: 86%; }
+
+/* Group artwork has three different jobs and therefore three deliberate sizes. */
+.group-icon-choice img { width: 76%; height: 76%; }
+.group-card .group-icon, .group-list .group-icon { width: 58px; height: 58px; flex: 0 0 58px; }
+.group-card .group-icon img, .group-list .group-icon img { width: 100%; height: 100%; padding: 2px; }
+.drawer-group-icon { width: 28px; height: 28px; flex: 0 0 28px; background: transparent !important; }
+.drawer-group-icon img { width: 100%; height: 100%; }
+
+/* Desktop density; phones keep one card per row. */
+.people-list, .group-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.people-list > *, .group-list > * { min-width: 0; }
+.list-tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.about-link-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.about-link-grid > * { margin: 0 !important; }
+
+/* Sortable sections must not visually leak into each other while dragging. */
+.items-list, .done-list { position: relative; isolation: isolate; }
+.items-list .item-card { contain: layout paint; }
+.item-card[style*="translate"] { z-index: 20; }
+
+/* Frasse's face, not his chest. */
+.creator-avatar.frasse img, .about-person.frasse img, img.frasse-avatar { object-position: 50% 15%; transform: scale(1.32); transform-origin: 50% 19%; }
+
+/* The drawer always wins the stacking contest. Header and footer stay fixed. */
+.drawer-backdrop { z-index: 900; }
+.drawer { z-index: 901 !important; top: max(10px, env(safe-area-inset-top)); bottom: max(10px, env(safe-area-inset-bottom)); max-height: calc(100dvh - 20px); border-radius: 22px; overflow: hidden; }
+.drawer-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.drawer-footer { flex: 0 0 auto; background: color-mix(in srgb, #f6dfad 82%, transparent); backdrop-filter: blur(7px); }
+
+/* A checkbox that visibly follows its actual state. */
+.admin-check input, .glow-control input { accent-color: var(--primary); width: 22px; height: 22px; }
+
+@media (max-width: 700px) {
+  :root { --bubbsun-header-h: 86px; }
+  .topbar { padding-inline: 12px; }
+  .topbar .brand { height: 76px !important; }
+  .topbar .brand img { width: min(245px, 58vw) !important; height: 59px !important; max-height: 59px !important; }
+  .topbar .supporter-title { font-size: 9px; bottom: 2px; }
+  .topbar > button:not(.brand) { width: 48px; height: 48px; }
+  .modal-backdrop { padding: 8px; }
+  .modal-card { width: min(100%, 560px); max-height: calc(100dvh - 20px); margin-block: 2px 10px; }
+  .detail-title { margin-block: 6px; }
+  .detail-title h1 { font-size: 16px; }
+  .people-list, .group-list, .list-tools-grid, .about-link-grid { grid-template-columns: 1fr; }
+  .group-card .group-icon, .group-list .group-icon { width: 48px; height: 48px; flex-basis: 48px; }
+  .drawer { top: max(8px, env(safe-area-inset-top)); bottom: max(8px, env(safe-area-inset-bottom)); max-height: calc(100dvh - 16px); }
+  .support-hero .floating-heart, .support-hero .support-flourish { display: none; }
+  .support-hero { padding-inline: 18px; }
+  .support-hero h2 { font-size: clamp(28px, 10vw, 42px); line-height: 1.02; }
+  .support-hero p { font-size: 17px; line-height: 1.35; }
+}
+
+/* Final v0.700 nine-point UI pass. */
+.app-shell .topbar.text-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 500 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  background: var(--theme-header, var(--theme-panel)) !important;
+  border-radius: 0 !important;
+}
+
+.topbar.text-topbar .icon-button,
+.topbar.text-topbar .theme-button {
+  background: var(--theme-header-button, var(--theme-accent)) !important;
+  color: #fff8e8 !important;
+}
+
+.topbar.text-topbar .text-brand > small {
+  position: relative !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin-top: 0 !important;
+}
+
+.detail-title.hanging-list-tab {
+  position: relative !important;
+  z-index: 31 !important;
+  width: min(78%, 600px) !important;
+  min-height: 58px !important;
+  margin: 0 auto 12px !important;
+  padding: 7px 18px !important;
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-top: 0 !important;
+  border-radius: 0 0 18px 18px !important;
+  background: var(--theme-header, var(--theme-panel)) !important;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--theme-text) 13%, transparent) !important;
+}
+
+.detail-title.hanging-list-tab h1 {
+  max-width: 100% !important;
+  text-align: left !important;
+}
+
+.group-picture {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.drawer {
+  background: #dfbd7c url('/assets/menu-paper-v700.jpg') center / 100% 100% no-repeat !important;
+}
+
+.login-page {
+  max-width: none !important;
+  width: 100% !important;
+  background: radial-gradient(circle at 50% 20%, #775034 0, #322218 48%, #17100c 100%) !important;
+}
+
+.login-page .login-logo { width: min(76vw, 430px); }
+.login-page .login-card {
+  width: min(calc(100% - 32px), 470px) !important;
+  background: #f2dfb8 url('/assets/menu-paper-background.png') center / cover !important;
+  border: 3px double #80552f !important;
+  box-shadow: 0 14px 38px #0009, inset 0 0 30px #8b5c271b !important;
+}
+.login-page .login-card > button { background: #2f6664 !important; }
+
+@media (max-width: 700px) {
+  .detail-title.hanging-list-tab {
+    width: min(86%, 380px) !important;
+    min-height: 52px !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    padding: 6px 12px !important;
+  }
+}
+
+/* v0.700 banner header: the supplied artwork is the whole top surface. */
+.banner-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 90 !important;
+  display: block !important;
+  width: min(100%, 1380px) !important;
+  max-width: 1380px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.banner-topbar .banner-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: clamp(104px, 15vw, 184px);
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.banner-topbar > .icon-button,
+.banner-topbar > .theme-button {
+  position: absolute !important;
+  z-index: 5 !important;
+  top: calc(clamp(104px, 15vw, 184px) / 2) !important;
+  width: clamp(46px, 5.4vw, 70px) !important;
+  height: clamp(46px, 5.4vw, 70px) !important;
+  min-width: 0 !important;
+  transform: translateY(-50%) !important;
+}
+
+.banner-topbar > .icon-button { left: clamp(14px, 3.2vw, 54px) !important; }
+.banner-topbar > .theme-button { right: clamp(14px, 3.2vw, 54px) !important; }
+
+.banner-topbar .banner-brand {
+  position: absolute !important;
+  z-index: 3 !important;
+  inset: 0 22% auto !important;
+  height: clamp(104px, 15vw, 184px) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.banner-topbar .banner-brand img { display: none !important; }
+.banner-topbar .banner-brand small {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(3px, .7vw, 10px);
+  width: max-content;
+  max-width: 100%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  color: var(--theme-accent) !important;
+  font-size: clamp(9px, 1.15vw, 14px) !important;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 var(--theme-background);
+}
+
+.banner-topbar .header-list-tab {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: min(68%, 760px);
+  min-height: clamp(48px, 6vw, 68px);
+  margin: -3px auto 0;
+  padding: 8px 22px 10px;
+  border: 2px solid var(--theme-outline);
+  border-top: 0;
+  border-radius: 0 0 22px 22px;
+  background: color-mix(in srgb, var(--theme-panel) 94%, white 6%);
+  box-shadow: 0 6px 14px rgb(62 36 19 / 14%);
+  color: var(--theme-text);
+  font-family: Georgia, serif;
+  font-size: clamp(18px, 2.35vw, 30px);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.banner-topbar::after {
+  bottom: -24px !important;
+  z-index: -1 !important;
+}
+
+/* Preserve the pink support card on hover instead of the generic white hover. */
+.drawer nav .support-nav:hover,
+.drawer nav .support-nav:focus-visible {
+  color: #fff8e9 !important;
+  background: linear-gradient(135deg, #c55c7f, #a83f67) !important;
+  box-shadow: 0 8px 18px rgb(105 38 70 / 30%) !important;
+}
+
+@media (max-width: 700px) {
+  .banner-topbar .banner-art { height: 100px; }
+  .banner-topbar > .icon-button,
+  .banner-topbar > .theme-button {
+    top: 50px !important;
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .banner-topbar .banner-brand { height: 100px !important; inset-inline: 24% !important; }
+  .banner-topbar .banner-brand small { bottom: 3px; font-size: 9px !important; }
+  .banner-topbar .header-list-tab {
+    width: min(76%, 520px);
+    min-height: 46px;
+    padding: 7px 14px 9px;
+    border-radius: 0 0 17px 17px;
+    font-size: 18px;
+  }
+}
+
+/* Final authoritative header layout.
+   Older stylesheets contain several historical topbar sizes, so keep every
+   structural value here to prevent them from stretching the header again. */
+:root {
+  --bubbsun-header-h: 88px;
+}
+
+.topbar {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr) 56px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: 920px !important;
+  min-height: var(--bubbsun-header-h) !important;
+  height: var(--bubbsun-header-h) !important;
+  margin-inline: auto !important;
+  padding: 6px 14px !important;
+  overflow: visible !important;
+  background: var(--theme-bg) !important;
+}
+
+.topbar .brand {
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: stretch !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 76px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.topbar .brand img {
+  content: url('/assets/bubbsun-logo.png') !important;
+  display: block !important;
+  width: min(360px, 100%) !important;
+  height: 60px !important;
+  max-width: 100% !important;
+  max-height: 60px !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.topbar .brand small {
+  display: block !important;
+  height: 12px !important;
+  min-height: 12px !important;
+  margin: -2px 0 0 !important;
+  font-size: 10px !important;
+  line-height: 12px !important;
+  white-space: nowrap !important;
+}
+
+.topbar > button:not(.brand),
+.topbar > .header-spacer {
+  box-sizing: border-box !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+}
+
+.topbar > :first-child {
+  justify-self: start !important;
+}
+
+.topbar > :last-child {
+  justify-self: end !important;
+}
+
+@media (max-width: 700px) {
+  :root {
+    --bubbsun-header-h: 78px;
+  }
+
+  .topbar {
+    grid-template-columns: 48px minmax(0, 1fr) 48px !important;
+    gap: 8px !important;
+    padding: 5px 10px !important;
+  }
+
+  .topbar .brand {
+    height: 68px !important;
+  }
+
+  .topbar .brand img {
+    width: min(270px, 100%) !important;
+    height: 52px !important;
+    max-height: 52px !important;
+  }
+
+  .topbar .brand small {
+    height: 11px !important;
+    min-height: 11px !important;
+    font-size: 9px !important;
+    line-height: 11px !important;
+  }
+
+  .topbar > button:not(.brand),
+  .topbar > .header-spacer {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+}
+
+/* Final compact header based on the approved mockup. Keep this last. */
+:root { --bubbsun-header-h: 104px; }
+
+.topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 80 !important;
+  height: var(--bubbsun-header-h) !important;
+  min-height: var(--bubbsun-header-h) !important;
+  max-width: 920px !important;
+  padding: 8px 18px 14px !important;
+  grid-template-columns: 54px minmax(0, 1fr) 54px !important;
+  gap: 12px !important;
+  border: 0 !important;
+  border-bottom: 3px double var(--theme-outline) !important;
+  border-radius: 0 0 22px 22px !important;
+  background: var(--theme-bg) !important;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--theme-text) 13%, transparent) !important;
+}
+
+.topbar::after { display: none !important; }
+
+.topbar .brand {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 82px !important;
+  overflow: visible !important;
+}
+
+.topbar .brand::before,
+.topbar .brand::after {
+  content: '❦';
+  flex: 1;
+  color: var(--theme-outline);
+  font-size: 20px;
+  line-height: 1;
+  border-bottom: 1px solid var(--theme-outline);
+  opacity: .72;
+}
+
+.topbar .brand::after { transform: scaleX(-1); }
+
+.topbar .brand img {
+  content: url('/assets/bubbsun-logo.png') !important;
+  width: min(330px, 76%) !important;
+  height: 66px !important;
+  max-height: 66px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.topbar .brand small {
+  position: absolute !important;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  margin: 0 !important;
+  height: 12px !important;
+  font-size: 9px !important;
+  line-height: 12px !important;
+  white-space: nowrap;
+}
+
+.topbar > button:not(.brand),
+.topbar > .header-spacer {
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+  min-height: 50px !important;
+}
+
+.detail-page { padding-top: 44px !important; }
+
+.hanging-list-tab {
+  cursor: pointer;
+  position: relative;
+  z-index: 31;
+  width: min(78%, 600px) !important;
+  min-height: 58px;
+  margin: -44px auto 12px !important;
+  padding: 7px 18px !important;
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 2px solid var(--theme-outline);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: var(--theme-panel);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--theme-text) 13%, transparent);
+}
+
+.hanging-list-tab .detail-list-icon {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent !important;
+}
+
+.hanging-list-tab .detail-list-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hanging-list-tab h1 {
+  margin: 0 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  :root { --bubbsun-header-h: 84px; }
+  .topbar {
+    padding: 5px 10px 10px !important;
+    grid-template-columns: 46px minmax(0, 1fr) 46px !important;
+    gap: 7px !important;
+    border-radius: 0 0 16px 16px !important;
+  }
+  .topbar .brand { height: 68px !important; gap: 4px !important; }
+  .topbar .brand img { height: 51px !important; max-height: 51px !important; }
+  .topbar .brand::before,
+  .topbar .brand::after { font-size: 13px; }
+  .topbar > button:not(.brand),
+  .topbar > .header-spacer {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  .detail-page { padding-top: 38px !important; }
+  .hanging-list-tab {
+    width: min(82%, 360px) !important;
+    min-height: 52px;
+    margin: -38px auto 10px !important;
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    padding: 6px 12px !important;
+  }
+  .hanging-list-tab .detail-list-icon { width: 36px; height: 36px; }
+  .hanging-list-tab h1 { font-size: 15px !important; }
+}
+
+/* Canonical list-icon sizing.
+   Keep this block last: older v700 rules used conflicting 78–100% sizes. */
+.list-card .list-icon {
+  min-width: 0;
+  min-height: 0;
+  padding: 3px !important;
+  overflow: hidden;
+}
+
+.list-card .list-icon img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: auto !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+.list-editor .icon-picker button {
+  display: grid !important;
+  place-items: center !important;
+  padding: 5px !important;
+  overflow: hidden !important;
+}
+
+.list-editor .icon-picker img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: auto !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+.hanging-list-tab {
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+}
+
+.hanging-list-tab .detail-list-icon {
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  padding: 3px !important;
+  overflow: hidden !important;
+}
+
+.hanging-list-tab .detail-list-icon img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
+  .list-card .list-icon { padding: 3px !important; }
+  .list-card .list-icon img { width: 100% !important; height: 100% !important; }
+  .list-editor .icon-picker button { padding: 4px !important; }
+  .list-editor .icon-picker img { width: 100% !important; height: 100% !important; }
+  .hanging-list-tab { grid-template-columns: 48px minmax(0, 1fr) !important; }
+  .hanging-list-tab .detail-list-icon {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+  }
+}

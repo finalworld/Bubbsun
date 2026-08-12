@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prepare-sites-dist.mjs",
     "start": "vite preview",
     "test": "tsc --noEmit && vite build",
     "lint": "eslint app/page.tsx src/main.tsx src/lib/firebase.ts"

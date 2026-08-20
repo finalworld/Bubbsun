@@ -14,6 +14,11 @@ jobs:
       - name: Hämta koden
         uses: actions/checkout@v4
 
+      - name: Installera pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - name: Installera Node.js
         uses: actions/setup-node@v4
         with:

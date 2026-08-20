@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Låt riktiga filer och mappar (JavaScript, bilder m.m.) laddas direkt.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Betaversionen är en egen Vite-app under /beta/.
+RewriteRule ^beta(?:/.*)?$ /beta/index.html [L]
+
+# Resten hanteras av Bubbsuns vanliga ensidesapp.
+RewriteRule ^ /index.html [L]

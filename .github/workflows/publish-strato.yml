@@ -1,0 +1,50 @@
+name: Publicera Bubbsun till Strato
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Bygg och publicera
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta koden
+        uses: actions/checkout@v4
+
+      - name: Installera Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installera beroenden
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Bygg vanliga sidan och beta
+        run: pnpm run build:all
+
+      - name: Installera SFTP-verktyget
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lftp
+
+      - name: Ladda upp till Strato
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 30
+          set net:max-retries 2
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          mirror --reverse --verbose dist/ /
+          bye
+          EOF

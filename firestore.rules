@@ -48,9 +48,33 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/appConfig/public).data.freeSupporterPeriod == true;
     }
 
+    // Collection-group reads used by the global admin statistics. Firestore
+    // needs an explicit recursive-wildcard rule for queries spanning every
+    // group's lists and every user's private lists.
+    match /{documentPath=**}/lists/{listId} {
+      allow read: if isMega();
+    }
+
+    match /{documentPath=**}/privateLists/{listId} {
+      allow read: if isMega();
+    }
+
+    match /{documentPath=**}/notificationPreferences/{preferenceId} {
+      allow read: if isMega();
+    }
+
     match /appConfig/public {
       allow read: if signedIn();
       allow write: if isMega();
+    }
+
+    match /presence/{uid} {
+      allow read: if isMega();
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.uid == uid;
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'lastSeenAt']);
+      allow delete: if isMega();
     }
 
     match /users/{uid} {
@@ -72,8 +96,7 @@ service cloud.firestore {
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['supporter'])
             || request.resource.data.supporter == false
             || (request.resource.data.supporter == true
-              && (!('supporter' in resource.data) || resource.data.supporter != true)
-              && freeSupporterOpen())))
+              && (!('supporter' in resource.data) || resource.data.supporter != true))))
         // Compatibility for v0.501 group approval, removal and role transfer.
         || (request.resource.data.groupId is string
           && (request.auth.uid == uid || groupBoss(request.resource.data.groupId))
@@ -98,12 +121,28 @@ service cloud.firestore {
       }
 
       match /joinRequests/{groupId} {
-        allow read, create, delete: if signedIn() && request.auth.uid == uid;
+        allow read, create: if signedIn() && request.auth.uid == uid;
+        allow delete: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
         allow update: if signedIn() && (request.auth.uid == uid || groupBoss(groupId));
       }
 
       match /notificationPreferences/{document=**} {
+        allow read: if signedIn() && (request.auth.uid == uid || isMega());
+        allow write: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /listReadStates/{document=**} {
         allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /privateLists/{listId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isMega());
+        allow create, update, delete: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /privateNotes/{noteId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isMega());
+        allow create, update, delete: if signedIn() && request.auth.uid == uid;
       }
     }
 
@@ -190,6 +229,11 @@ service cloud.firestore {
         }
       }
 
+      match /notes/{noteId} {
+        allow read: if member(groupId) || isMega();
+        allow create, update, delete: if member(groupId) && groupOpen(groupId);
+      }
+
       match /activity/{eventId} {
         allow read: if member(groupId);
         // v0.501 writes client-side activity events with these exact fields.
@@ -237,6 +281,12 @@ service cloud.firestore {
       match /internalNotes/{noteId} {
         allow read, write: if isMega();
       }
+    }
+
+    match /publicListShares/{shareId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.creatorId == request.auth.uid;
     }
 
     // Web Edition theme palettes: visible to signed-in clients, editable only

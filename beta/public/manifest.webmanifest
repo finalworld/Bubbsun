@@ -1,0 +1,15 @@
+{
+  "name": "Bubbsun – listor med karaktär",
+  "short_name": "Bubbsun",
+  "description": "Listor för dig, familjen och vännerna.",
+  "id": "/beta/",
+  "start_url": "/beta/",
+  "scope": "/beta/",
+  "display": "standalone",
+  "background_color": "#f4ecd9",
+  "theme_color": "#587556",
+  "icons": [
+    { "src": "/assets/bubbsun-icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/bubbsun-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

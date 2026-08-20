@@ -12,6 +12,7 @@ export type Account = {
   founder: boolean;
   suspended?: boolean;
   hiddenGlobalPinRevision?: number;
+  hiddenGlobalPinId?: string;
   privacyVersion: number;
 };
 
@@ -23,6 +24,8 @@ export type Membership = {
   role: string;
   order: number;
 };
+
+export type JoinRequest = { groupId: string; uid: string; displayName: string; status: string; requestedColor: number };
 
 export type Group = {
   id: string;
@@ -42,6 +45,7 @@ export type ListItem = {
   createdAt: number;
   completedAt: number | null;
   likedBy: string[];
+  note?: string;
 };
 
 export type BubbsunList = {
@@ -54,10 +58,15 @@ export type BubbsunList = {
   doneFirst: boolean;
   doneExpanded: boolean;
   order: number;
+  pinned?: boolean;
+  updatedBy?: string;
+  updatedAt?: number;
+  revision?: number;
   items: ListItem[];
 };
 
-export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
+export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
+export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
 export type Page = "lists" | "list" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };

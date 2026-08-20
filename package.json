@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prepare-sites-dist.mjs",
+    "build:beta": "pnpm --dir beta run build",
+    "build:all": "pnpm run build && pnpm run build:beta",
     "start": "vite preview",
     "test": "tsc --noEmit && vite build",
     "lint": "eslint app/page.tsx src/main.tsx src/lib/firebase.ts"

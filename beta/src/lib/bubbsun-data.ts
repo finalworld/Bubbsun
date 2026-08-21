@@ -175,10 +175,11 @@ export async function switchGroup(uid: string, groupId: string) {
 
 export async function saveList(groupId: string, list: BubbsunList, actorId: string) {
   const ref=doc(db,"groups",groupId,"lists",list.id);
-  await runTransaction(db,async transaction=>{
+  return runTransaction(db,async transaction=>{
     const current=await transaction.get(ref),data=current.data(),remoteRevision=numberValue(data?.revision);
-    if(current.exists()&&remoteRevision>(list.revision||0)&&textValue(data?.updatedBy)!==actorId) throw new Error("LIST_CONFLICT");
-    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:remoteRevision+1,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+    const nextRevision=remoteRevision+1;
+    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:nextRevision,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+    return nextRevision;
   });
 }
 

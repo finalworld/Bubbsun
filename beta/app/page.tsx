@@ -5115,7 +5115,10 @@ function AuthenticatedApp() {
       if (selectedPrivate && user) {
         await savePrivateList(user.uid, next);
       } else if (account && user) {
-        await saveList(account.activeGroupId, next, user.uid);
+        const revision = await saveList(account.activeGroupId, next, user.uid);
+        const saved = { ...next, revision };
+        setSelected(saved);
+        setLists((old) => old.map((x) => (x.id === saved.id ? saved : x)));
       }
     } catch (error) {
       if (previous) {

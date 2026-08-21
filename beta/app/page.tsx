@@ -114,6 +114,7 @@ import {
   watchListReadStates,
   watchMemberships,
   watchOnlineCount,
+  watchOnlineUserIds,
   watchNotes,
   watchPrivateNotes,
   watchPrivateLists,
@@ -735,6 +736,7 @@ function Header({
   glow,
   tabTitle,
   onlineCount,
+  onOpenAdmin,
   language,
 }: {
   onMenu: () => void;
@@ -746,6 +748,7 @@ function Header({
   glow?: boolean;
   tabTitle?: string;
   onlineCount?: number;
+  onOpenAdmin?: () => void;
   language: string;
 }) {
   const [scrolled, setScrolled] = useState(false);
@@ -769,9 +772,15 @@ function Header({
             </button>
           </div>
           {typeof onlineCount === "number" && (
-            <small className="admin-online-count">
+            <button
+              type="button"
+              className="admin-online-count"
+              onClick={onOpenAdmin}
+              aria-label="Öppna medlemslistan i administrationen"
+              title="Öppna medlemslistan"
+            >
               Online: {onlineCount} {onlineCount === 1 ? "person" : "personer"}
-            </small>
+            </button>
           )}
         </div>
         <button
@@ -3882,6 +3891,7 @@ function AdminPage({
   reports,
   palettes,
   followedCount,
+  onlineUserIds,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -3889,12 +3899,17 @@ function AdminPage({
   reports: Report[];
   palettes: Record<string, ThemePalette>;
   followedCount: number;
+  onlineUserIds: Set<string>;
 }) {
   const [tab, setTab] = useState<"members" | "reports" | "pin" | "themes">(
       "members",
     ),
     [selected, setSelected] = useState<Account | null>(null);
   const items = lists.flatMap((list) => list.items);
+  const orderedAccounts = [...accounts].sort((a, b) => {
+    const onlineDifference = Number(onlineUserIds.has(b.uid)) - Number(onlineUserIds.has(a.uid));
+    return onlineDifference || a.displayName.localeCompare(b.displayName, "sv");
+  });
   return (
     <section className="content subpage admin-page">
       <div className="content-heading">
@@ -3961,7 +3976,7 @@ function AdminPage({
       </div>
       {tab === "members" && (
         <div className="admin-member-list">
-          {accounts.map((person) => (
+          {orderedAccounts.map((person) => (
             <button key={person.uid} onClick={() => setSelected(person)}>
               <i
                 style={{
@@ -3971,7 +3986,10 @@ function AdminPage({
                 {person.displayName.slice(0, 1)}
               </i>
               <span>
-                <strong>{person.displayName}</strong>
+                <strong>
+                  {onlineUserIds.has(person.uid) && <b className="admin-online-dot" aria-label="Online" />}
+                  {person.displayName}
+                </strong>
                 <small
                   style={{
                     color: rgbaHex(person.titleColor || colorOptions[0]),
@@ -4500,6 +4518,7 @@ function AuthenticatedApp() {
   >([]);
   const [allAdminFollowedCount, setAllAdminFollowedCount] = useState(0);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
 
@@ -4644,6 +4663,13 @@ function AuthenticatedApp() {
       return;
     }
     return watchOnlineCount(setOnlineCount);
+  }, [account?.megaSuperBoss, account?.founder]);
+  useEffect(() => {
+    if (!account?.megaSuperBoss && !account?.founder) {
+      setOnlineUserIds(new Set());
+      return;
+    }
+    return watchOnlineUserIds(setOnlineUserIds);
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(
     () =>
@@ -5186,6 +5212,11 @@ function AuthenticatedApp() {
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" ? "add" : page === "list" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
+        onOpenAdmin={
+          account.megaSuperBoss || account.founder
+            ? () => navigate("admin")
+            : undefined
+        }
         language={language}
       />
       {page === "lists" && (
@@ -5318,6 +5349,7 @@ function AuthenticatedApp() {
           reports={reports}
           palettes={themePalettes}
           followedCount={allAdminFollowedCount}
+          onlineUserIds={onlineUserIds}
         />
       )}
       <Drawer

@@ -46,6 +46,29 @@ export function watchOnlineCount(callback: (count: number) => void): Unsubscribe
   return () => { window.clearInterval(timer); unsubscribe(); };
 }
 
+/** Active during the last five minutes. Kept separate from the count so the
+ * admin can see exactly who is currently around without exposing it to users. */
+export function watchOnlineUserIds(callback: (ids: Set<string>) => void): Unsubscribe {
+  let seen: Array<{ uid: string; lastSeenAt: number }> = [];
+  const emit = () =>
+    callback(
+      new Set(
+        seen
+          .filter((entry) => entry.lastSeenAt >= Date.now() - 5 * 60 * 1000)
+          .map((entry) => entry.uid),
+      ),
+    );
+  const unsubscribe = onSnapshot(collection(db, "presence"), (snapshot) => {
+    seen = snapshot.docs.map((item) => {
+      const value = item.data().lastSeenAt as { toMillis?: () => number } | undefined;
+      return { uid: item.id, lastSeenAt: value?.toMillis?.() ?? 0 };
+    });
+    emit();
+  });
+  const timer = window.setInterval(emit, 30000);
+  return () => { window.clearInterval(timer); unsubscribe(); };
+}
+
 export function watchAccount(uid: string, callback: (account: Account | null) => void): Unsubscribe {
   return onSnapshot(doc(db, "users", uid), snap => {
     if (!snap.exists()) return callback(null);

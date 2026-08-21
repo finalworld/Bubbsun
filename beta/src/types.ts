@@ -47,6 +47,8 @@ export type ListItem = {
   likedBy: string[];
   note?: string;
   assignedTo?: string;
+  assigneeId?: string;
+  assigneeName?: string;
   status?: string;
   priority?: string;
   room?: string;

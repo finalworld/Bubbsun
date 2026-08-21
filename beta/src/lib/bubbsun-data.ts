@@ -107,7 +107,7 @@ export function watchGroupMembers(groupId: string, callback: (members: Membershi
 
 const parseItem = (raw: unknown): ListItem => {
   const d = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), assignedTo:textValue(d.assignedTo),status:textValue(d.status),priority:textValue(d.priority),room:textValue(d.room),recurrence:textValue(d.recurrence),dueDate:textValue(d.dueDate),taskType:textValue(d.taskType), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, 0), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
+  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), assignedTo:textValue(d.assignedTo),assigneeId:textValue(d.assigneeId),assigneeName:textValue(d.assigneeName),status:textValue(d.status),priority:textValue(d.priority),room:textValue(d.room),recurrence:textValue(d.recurrence),dueDate:textValue(d.dueDate),taskType:textValue(d.taskType), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, 0), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
 };
 
 export function watchLists(groupId: string, callback: (lists: BubbsunList[]) => void): Unsubscribe {
@@ -146,6 +146,8 @@ const listItemsForStorage = (items: BubbsunList["items"]) => items.map(item => (
   likedBy: item.likedBy,
   ...(item.note ? { note: item.note } : {}),
   ...(item.assignedTo ? { assignedTo: item.assignedTo } : {}),
+  ...(item.assigneeId ? { assigneeId: item.assigneeId } : {}),
+  ...(item.assigneeName ? { assigneeName: item.assigneeName } : {}),
   ...(item.status ? { status: item.status } : {}),
   ...(item.priority ? { priority: item.priority } : {}),
   ...(item.room ? { room: item.room } : {}),

@@ -1,0 +1,315 @@
+/* Beta final corrections — loaded last on purpose. */
+
+/* Full-width header background, with content aligned to the page below. */
+.app-shell .topbar.text-topbar {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.app-shell .topbar.text-topbar .topbar-inner {
+  box-sizing: border-box !important;
+  width: min(calc(100% - 36px), 1280px) !important;
+  max-width: 1280px !important;
+  min-height: 118px !important;
+  margin: 0 auto !important;
+  padding: 10px 22px 9px !important;
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr) 76px !important;
+  align-items: center !important;
+  gap: 18px !important;
+}
+
+.app-shell .header-left {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr) !important;
+  align-items: center !important;
+  grid-column: 1 / 3 !important;
+  gap: 18px !important;
+}
+
+.app-shell .header-menu-slot {
+  position: relative !important;
+  width: 112px !important;
+  height: 96px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-bottom: 20px !important;
+  border-right: 1px solid color-mix(in srgb, var(--border) 48%, transparent) !important;
+}
+
+.app-shell .header-menu-slot > .icon-button {
+  width: 58px !important;
+  height: 58px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell .header-menu-slot > .icon-button svg {
+  width: 46px !important;
+  height: 46px !important;
+  stroke-width: 1.65 !important;
+}
+
+.app-shell .admin-online-count {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  width: max-content !important;
+  max-width: 108px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.app-shell .header-brand-v3 {
+  min-width: 0 !important;
+  align-self: center !important;
+  justify-self: start !important;
+  padding: 3px 0 2px !important;
+  transform: none !important;
+}
+
+.app-shell .header-brand-v3 .brand-title {
+  font-size: clamp(46px, 4.15vw, 67px) !important;
+  line-height: .83 !important;
+  margin: 0 0 9px !important;
+}
+
+.app-shell .header-brand-v3 .brand-tagline {
+  display: block !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 5px 18px 0 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 62%, transparent) !important;
+  font-size: clamp(15px, 1.35vw, 22px) !important;
+  line-height: 1.05 !important;
+}
+
+.app-shell .header-brand-v3 .supporter-badge,
+.app-shell .header-brand-v3 .brand-supporter {
+  display: block !important;
+  width: max-content !important;
+  margin: 5px 0 0 !important;
+  line-height: 1 !important;
+}
+
+.app-shell .topbar-add {
+  grid-column: 3 !important;
+  justify-self: end !important;
+  width: 62px !important;
+  height: 62px !important;
+}
+
+/* Group icon: use the actual group art, but keep it small and calm. */
+.space-tabs-refined > button > img,
+.space-tabs-refined > button > .group-icon,
+.space-tabs-refined > button > span:first-child:not(:last-child) img {
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  object-fit: contain !important;
+  flex: 0 0 34px !important;
+}
+
+/* Notes should visually and mechanically match list cards. */
+.note-stack {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+.note-card {
+  position: relative !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 18px rgba(78, 54, 31, .12) !important;
+}
+
+.note-card .note-creator-stripe {
+  position: absolute !important;
+  left: 148px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 12px !important;
+  z-index: 2 !important;
+}
+
+.note-card .note-card-icon {
+  width: 148px !important;
+  flex: 0 0 148px !important;
+}
+
+.note-card .note-card-body {
+  min-width: 0 !important;
+  padding-left: 28px !important;
+}
+
+.note-card .note-card-body h3,
+.note-card .note-card-body p {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-card [data-dnd-handle],
+.note-card .drag-handle,
+.note-card button[aria-label*="Flytta"],
+.note-card button[title*="Flytta"] {
+  cursor: grab !important;
+  touch-action: none !important;
+}
+
+.note-card [data-dnd-handle]:active,
+.note-card .drag-handle:active {
+  cursor: grabbing !important;
+}
+
+/* Note icon pickers: two equal rows of four, aligned with the colour grid. */
+.note-icon-picker {
+  display: grid !important;
+  grid-template-columns: repeat(4, 72px) !important;
+  gap: 10px 14px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 18px auto 20px !important;
+}
+
+.note-icon-picker button {
+  box-sizing: border-box !important;
+  width: 72px !important;
+  height: 72px !important;
+  padding: 7px !important;
+  border-radius: 16px !important;
+  background: var(--surface) !important;
+  border: 2px solid transparent !important;
+  overflow: hidden !important;
+}
+
+.note-icon-picker button img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+.note-icon-picker button.selected {
+  background: var(--accent) !important;
+  border-color: color-mix(in srgb, var(--accent) 68%, #253a28) !important;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, #fff 38%, transparent) !important;
+}
+
+.note-appearance-modal .modal-close svg,
+.note-log-modal .modal-close svg {
+  display: block !important;
+  margin: auto !important;
+  transform: none !important;
+}
+
+/* Consistent actions. */
+.note-editor-actions > button:last-child,
+.new-note-modal button[type="submit"],
+.note-appearance-modal .modal-actions button {
+  background: var(--accent) !important;
+  color: var(--accent-text, #fff) !important;
+}
+
+.note-editor-actions .cancel,
+.new-note-modal .cancel,
+.confirm-delete-modal .cancel {
+  background: #ad625f !important;
+  color: #fff8eb !important;
+}
+
+/* Keep list-card menus usable at the bottom of a phone screen. */
+.list-card-menu {
+  position: fixed !important;
+  z-index: 1000 !important;
+  right: max(12px, env(safe-area-inset-right)) !important;
+  top: auto !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  max-height: calc(100dvh - 28px) !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 700px) {
+  .app-shell .topbar.text-topbar .topbar-inner {
+    width: 100% !important;
+    min-height: 112px !important;
+    padding: 8px 14px 7px !important;
+    grid-template-columns: 86px minmax(0, 1fr) 66px !important;
+    gap: 8px !important;
+  }
+
+  .app-shell .header-left {
+    grid-template-columns: 86px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .app-shell .header-menu-slot {
+    width: 86px !important;
+    height: 94px !important;
+  }
+
+  .app-shell .header-brand-v3 .brand-title {
+    font-size: clamp(42px, 13vw, 58px) !important;
+  }
+
+  .app-shell .header-brand-v3 .brand-tagline {
+    font-size: clamp(12px, 4vw, 17px) !important;
+    padding-right: 4px !important;
+  }
+
+  .app-shell .header-brand-v3 .supporter-badge,
+  .app-shell .header-brand-v3 .brand-supporter {
+    font-size: 11px !important;
+  }
+
+  .app-shell .topbar-add {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .note-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  .note-card .note-card-icon {
+    width: 116px !important;
+    flex-basis: 116px !important;
+  }
+
+  .note-card .note-creator-stripe {
+    left: 116px !important;
+    width: 9px !important;
+  }
+
+  .note-card .note-card-body {
+    padding-left: 20px !important;
+  }
+
+  .note-icon-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .note-icon-picker button {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 !important;
+  }
+}

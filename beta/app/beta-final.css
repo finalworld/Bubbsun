@@ -309,6 +309,27 @@
   opacity: .55 !important;
 }
 
+.app-shell .note-editor-page .note-editor-actions > button.cancel {
+  position: relative !important;
+  overflow: hidden !important;
+  background: #a95e5e !important;
+  color: #fff8e8 !important;
+  border: 1px solid #703535 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 3px 0 #552727, 0 4px 5px rgba(70, 34, 34, .28), inset 0 1px 0 rgba(255, 255, 255, .22) !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button.cancel::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  border: 1px dashed rgba(255, 248, 232, .68) !important;
+  border-radius: 5px !important;
+  pointer-events: none !important;
+}
+
 /* Anteckningskort använder listkortens exakta mått och struktur. */
 .notes-page .note-list-card {
   position: relative !important;

@@ -737,7 +737,7 @@ function ActionButtonBridge(){
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
       if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
       else if(starts(["AVBRYT","STÄNG","NEJ","CANCEL","CLOSE","NO"]))button.classList.add("bubbsun-action-cancel");
-      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","SAVE","CREATE","DONE","ADD"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
+      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","GÅ MED","SAVE","CREATE","DONE","ADD","JOIN"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
     });
     classify();
     const observer=new MutationObserver(classify);observer.observe(document.body,{childList:true,subtree:true,characterData:true});

@@ -273,10 +273,35 @@
 
 /* Anteckningskort använder listkortens exakta mått och struktur. */
 .notes-page .note-list-card {
+  position: relative !important;
   height: 104px !important;
   min-height: 104px !important;
   max-height: 104px !important;
   grid-template-columns: 100px 9px minmax(0, 1fr) 42px !important;
+}
+
+.notes-page .note-card-open {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.notes-page .note-list-card .card-actions {
+  position: relative !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+}
+
+.notes-page .note-list-card .card-actions .drag-handle {
+  pointer-events: auto !important;
 }
 
 .notes-page .note-list-card .list-icon img {

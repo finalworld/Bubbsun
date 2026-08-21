@@ -69,7 +69,7 @@
 /* Note icon pickers: two equal rows of four, aligned with the colour grid. */
 .app-shell .note-appearance-modal .note-icon-picker {
   display: grid !important;
-  grid-template-columns: repeat(4, 68px) !important;
+  grid-template-columns: repeat(4, 71px) !important;
   gap: 10px !important;
   width: max-content !important;
   max-width: 100% !important;
@@ -79,9 +79,9 @@
 .app-shell .note-appearance-modal .note-icon-picker button,
 .app-shell .note-appearance-modal .note-icon-picker button:first-child {
   box-sizing: border-box !important;
-  width: 68px !important;
-  height: 68px !important;
-  min-height: 68px !important;
+  width: 71px !important;
+  height: 71px !important;
+  min-height: 71px !important;
   padding: 5px !important;
   border-radius: 16px !important;
   background: var(--theme-paper) !important;
@@ -91,11 +91,12 @@
 
 .app-shell .note-appearance-modal .note-icon-picker button img {
   display: block !important;
-  width: 100% !important;
-  height: 100% !important;
+  width: 86% !important;
+  height: 86% !important;
+  margin: auto !important;
   object-fit: contain !important;
   object-position: center !important;
-  transform: translateY(-3px) !important;
+  transform: translateY(-2px) !important;
 }
 
 .app-shell .note-appearance-modal .note-icon-picker button.selected,
@@ -137,6 +138,27 @@
   transform: translateY(-50%) !important;
   max-height: min(240px, calc(100dvh - 28px)) !important;
   overflow-y: auto !important;
+}
+
+.app-shell .note-appearance-modal {
+  width: min(520px, calc(100vw - 32px)) !important;
+}
+
+.app-shell .note-appearance-modal .modal-close {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+.app-shell .note-appearance-modal .modal-close svg {
+  width: 25px !important;
+  height: 25px !important;
+  margin: 0 !important;
+  transform: none !important;
 }
 
 @media (max-width: 700px) {

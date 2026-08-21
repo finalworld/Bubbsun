@@ -25,6 +25,14 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Återanvänd RK Kassa-paket
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-rk-npm-${{ hashFiles('rk-kassa/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-rk-npm-
+
       - name: Installera beroenden
         run: |
           corepack enable
@@ -35,7 +43,7 @@ jobs:
 
       - name: Bygg RK Kassa
         run: |
-          npm ci --prefix rk-kassa
+          npm ci --prefix rk-kassa --prefer-offline --no-audit
           npm run build --prefix rk-kassa
 
       - name: Installera SFTP-verktyget
@@ -64,6 +72,6 @@ jobs:
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
           mkdir -p public/RK
-          mirror --reverse --verbose rk-kassa/dist/ public/RK/
+          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
           bye
           EOF

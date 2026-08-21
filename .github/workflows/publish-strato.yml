@@ -71,7 +71,7 @@ jobs:
           mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
-          mkdir -p public/RK
-          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
+          mkdir -p RK
+          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ RK/
           bye
           EOF

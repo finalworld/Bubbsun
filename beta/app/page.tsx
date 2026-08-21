@@ -734,6 +734,7 @@ function ActionButtonBridge(){
     const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
       const text=(button.textContent||button.getAttribute("aria-label")||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
       button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger","bubbsun-action-neutral");
+      if(button.matches(".drag-handle, .item-drag-handle, [data-dnd-handle]"))return;
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
       if(starts(["MARKERA ALLA","AVMARKERA ALLT","SELECT ALL","DESELECT ALL"]))button.classList.add("bubbsun-action-neutral");
       else if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");

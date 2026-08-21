@@ -4481,6 +4481,8 @@ function AuthenticatedApp() {
   const privateListsLoadedFor = useRef("");
   const listsHistoryRef = useRef<BubbsunList[]>([]);
   const privateListsHistoryRef = useRef<BubbsunList[]>([]);
+  const notesHistoryRef = useRef<BubbsunNote[]>([]);
+  const privateNotesHistoryRef = useRef<BubbsunNote[]>([]);
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -4493,7 +4495,7 @@ function AuthenticatedApp() {
   const [notes,setNotes]=useState<BubbsunNote[]>([]);
   const [privateNotes,setPrivateNotes]=useState<BubbsunNote[]>([]);
   const [privateMode, setPrivateMode] = useState(false);
-  const [page, setPage] = useState<Page>("lists");
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -4539,13 +4541,24 @@ function AuthenticatedApp() {
     privateListsHistoryRef.current = privateLists;
   }, [privateLists]);
 
+  useEffect(()=>{notesHistoryRef.current=notes},[notes]);
+  useEffect(()=>{privateNotesHistoryRef.current=privateNotes},[privateNotes]);
+
+  useEffect(()=>{
+    const stablePage=page==="note"?"notes":page==="list"?"lists":page;
+    localStorage.setItem("bubbsun-last-page",stablePage);
+  },[page]);
+
   useEffect(() => {
     const currentState = window.history.state ?? {};
     if (!currentState.bubbsunPage) {
       window.history.replaceState(
-        { ...currentState, bubbsunPage: "lists", privateMode: false },
+        { ...currentState, bubbsunPage: page, privateMode },
         "",
       );
+    } else {
+      if(typeof currentState.privateMode==="boolean")setPrivateMode(currentState.privateMode);
+      setPage(currentState.bubbsunPage==="list"?"lists":currentState.bubbsunPage==="note"?"notes":currentState.bubbsunPage);
     }
 
     const restoreFromHistory = (event: PopStateEvent) => {
@@ -4554,6 +4567,8 @@ function AuthenticatedApp() {
             bubbsunPage?: Page;
             listId?: string;
             privateList?: boolean;
+            noteId?: string;
+            privateNote?: boolean;
             privateMode?: boolean;
           }
         | null;
@@ -4579,13 +4594,24 @@ function AuthenticatedApp() {
         }
       }
 
+      if(state.bubbsunPage==="note"&&state.noteId){
+        const isPrivate=state.privateNote===true,restored=(isPrivate?privateNotesHistoryRef.current:notesHistoryRef.current).find(candidate=>candidate.id===state.noteId);
+        if(restored){setSelectedNote(restored);setSelectedNotePrivate(isPrivate);setPage("note");return;}
+      }
+
       setSelected(null);
-      setPage(state.bubbsunPage === "list" ? "lists" : state.bubbsunPage);
+      setPage(state.bubbsunPage === "list" ? "lists" : state.bubbsunPage==="note"?"notes":state.bubbsunPage);
     };
 
     window.addEventListener("popstate", restoreFromHistory);
     return () => window.removeEventListener("popstate", restoreFromHistory);
   }, []);
+
+  useEffect(()=>{
+    const state=window.history.state as {bubbsunPage?:Page;listId?:string;privateList?:boolean;noteId?:string;privateNote?:boolean}|null;
+    if(state?.bubbsunPage==="list"&&state.listId&&!selected){const isPrivate=state.privateList===true,restored=(isPrivate?privateLists:lists).find(item=>item.id===state.listId);if(restored){setSelected(restored);setSelectedPrivate(isPrivate);setPage("list");}}
+    if(state?.bubbsunPage==="note"&&state.noteId&&!selectedNote){const isPrivate=state.privateNote===true,restored=(isPrivate?privateNotes:notes).find(item=>item.id===state.noteId);if(restored){setSelectedNote(restored);setSelectedNotePrivate(isPrivate);setPage("note");}}
+  },[lists,privateLists,notes,privateNotes,selected,selectedNote]);
 
   useEffect(
     () =>
@@ -5140,7 +5166,7 @@ function AuthenticatedApp() {
     }
   };
   const activeNotes=privateMode?privateNotes:notes;
-  const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",privateMode:isPrivate},"");setPage("note");setMenuOpen(false);setListToolsOpen(false);};
+  const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");setMenuOpen(false);setListToolsOpen(false);};
   const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
   const createNote=async(note:BubbsunNote)=>{if(!user||!account)return;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor,history:[entry],order:activeNotes.length};try{if(privateMode){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>[...current,complete]);}else if(account.activeGroupId){await saveNote(account.activeGroupId,complete);setNotes(current=>[...current,complete]);}else return;setAddingNote(false);openNote(complete,privateMode);}catch(error){console.error("Could not create note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");}};
   const reorderNotes=async(from:number,to:number)=>{if(!user)return;const changed=arrayMove(activeNotes,from,to).map((note,index)=>({...note,order:index}));if(privateMode){setPrivateNotes(changed);await Promise.all(changed.map(note=>savePrivateNote(user.uid,note)));}else if(account?.activeGroupId){setNotes(changed);await Promise.all(changed.map(note=>saveNote(account.activeGroupId,note)));}};
@@ -5228,7 +5254,7 @@ function AuthenticatedApp() {
         glow={account.supporter && account.supporterGlow !== false}
         tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : undefined}
         onMenu={() => setMenuOpen(true)}
-        onHome={() => navigate("lists")}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":"lists")}
         onAdd={() => page === "notes" ? setAddingNote(true) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" ? "add" : page === "list" ? "manage" : "none"}

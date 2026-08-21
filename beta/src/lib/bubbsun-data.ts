@@ -306,6 +306,15 @@ export async function setListFollowing(uid:string,groupId:string,listId:string,f
   if(following)await setDoc(ref,{groupId,listId,following:true,updatedAt:serverTimestamp()},{merge:true});else await deleteDoc(ref);
 }
 
+export function watchFollowedNotes(uid:string,callback:(ids:Set<string>)=>void):Unsubscribe {
+  return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback(new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))));
+}
+
+export async function setNoteFollowing(uid:string,groupId:string,noteId:string,following:boolean) {
+  const ref=doc(db,"users",uid,"notificationPreferences",`note_${groupId}_${noteId}`);
+  if(following)await setDoc(ref,{kind:"note",groupId,noteId,following:true,updatedAt:serverTimestamp()},{merge:true});else await deleteDoc(ref);
+}
+
 export function watchGlobalPin(callback: (pin: GlobalPin | null) => void): Unsubscribe {
   let itemUnsub: Unsubscribe | undefined;
   const pinUnsub = onSnapshot(query(collection(db, "globalPins"), where("status", "==", "published"), limit(1)), snap => {

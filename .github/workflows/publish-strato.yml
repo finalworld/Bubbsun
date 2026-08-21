@@ -33,6 +33,11 @@ jobs:
       - name: Bygg vanliga sidan och beta
         run: pnpm run build:all
 
+      - name: Bygg RK Kassa
+        run: |
+          npm ci --prefix rk-kassa
+          npm run build --prefix rk-kassa
+
       - name: Installera SFTP-verktyget
         run: |
           sudo apt-get update
@@ -51,6 +56,14 @@ jobs:
           set net:max-retries 2
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
           mkdir -p public
-          mirror --reverse --verbose dist/ public/
+          # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
+          # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
+          # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan
+          # ändras trots samma filstorlek.
+          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
+          put -O public dist/index.html
+          put -O public/beta dist/beta/index.html
+          mkdir -p public/RK
+          mirror --reverse --verbose rk-kassa/dist/ public/RK/
           bye
           EOF

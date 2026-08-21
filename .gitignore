@@ -35,6 +35,8 @@ yarn-error.log*
 .vercel
 
 /dist/
+/rk-kassa/dist/
+/rk-kassa/node_modules/
 /.wrangler/
 /outputs/
 /work/

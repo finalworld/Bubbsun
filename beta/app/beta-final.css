@@ -13,7 +13,7 @@
 }
 
 /* Notes should visually and mechanically match list cards. */
-.app-shell .note-card:hover {
+.app-shell .notes-page .note-list-card:hover {
   transform: none !important;
 }
 

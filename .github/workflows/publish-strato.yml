@@ -62,18 +62,17 @@ jobs:
           set sftp:auto-confirm yes
           set net:timeout 30
           set net:max-retries 2
+          set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          mkdir -p public
           # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
           # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
           # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan
-          # ändras trots samma filstorlek.
-          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
-          put -O public dist/index.html
-          put -O public/beta dist/beta/index.html
-          mkdir -p RK
+          # ändras trots samma filstorlek. SFTP-kontot är redan låst till
+          # Stratos valda webbrot (public), så vi får inte lägga på /public en
+          # gång till här.
+          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ ./
+          put -O . dist/index.html
+          put -O beta dist/beta/index.html
           mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ RK/
-          chmod 755 RK
-          chmod 644 RK/index.html
           bye
           EOF

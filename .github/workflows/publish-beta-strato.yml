@@ -1,0 +1,57 @@
+name: Publicera endast Bubbsun Beta till Strato
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-beta:
+    name: Bygg och publicera endast beta
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta koden
+        uses: actions/checkout@v4
+
+      - name: Installera pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Installera Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installera beroenden
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Bygg beta
+        run: pnpm run build:beta
+
+      - name: Installera SFTP-verktyget
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lftp
+
+      - name: Ladda endast upp beta till Strato
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 30
+          set net:max-retries 2
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          mirror --reverse --delete --ignore-time --no-perms --parallel=4 dist/beta/ public/beta/
+          cls -l public/beta/index.html
+          bye
+          EOF

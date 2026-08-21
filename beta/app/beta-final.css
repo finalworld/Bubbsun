@@ -304,6 +304,26 @@
   border-color: #703535 !important;
 }
 
+/* Listredigerarens valfält ska se ut som de övriga formulärfälten. */
+.app-shell .item-inline-editor select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 43px !important;
+  padding: 10px 36px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+  cursor: pointer;
+}
+
+.app-shell .item-inline-editor select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--theme-accent) 38%, transparent) !important;
+  outline-offset: 1px !important;
+  border-color: var(--theme-accent) !important;
+}
+
 .app-shell button.bubbsun-action-danger {
   background: #b7554e !important;
   border: 1px solid #823a36 !important;

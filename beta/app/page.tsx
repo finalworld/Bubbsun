@@ -729,6 +729,23 @@ function LoginPage({
   );
 }
 
+function ActionButtonBridge(){
+  useEffect(()=>{
+    const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
+      const text=(button.textContent||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
+      button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger");
+      const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
+      if(starts(["TA BORT","LÄMNA","LOGGA UT","DELETE","REMOVE","LEAVE","LOG OUT"]))button.classList.add("bubbsun-action-danger");
+      else if(starts(["AVBRYT","STÄNG","NEJ","CANCEL","CLOSE","NO"]))button.classList.add("bubbsun-action-cancel");
+      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","SAVE","CREATE","DONE","ADD"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
+    });
+    classify();
+    const observer=new MutationObserver(classify);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    return()=>observer.disconnect();
+  },[]);
+  return null;
+}
+
 function Header({
   onMenu,
   onHome,
@@ -5249,6 +5266,7 @@ function AuthenticatedApp() {
   return (
     <main className={`app-shell theme-${activeTheme.id}`} style={themeStyle}>
       <LanguageBridge language={language} />
+      <ActionButtonBridge />
       <Header
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}

@@ -271,6 +271,65 @@
   .note-card .note-card-body strong { font-size: 21px !important; }
 }
 
+/* Gemensamt formspråk för bekräftande, avbrytande och farliga åtgärder. */
+.app-shell button.bubbsun-action-confirm,
+.app-shell button.bubbsun-action-cancel,
+.app-shell button.bubbsun-action-danger {
+  position: relative !important;
+  overflow: hidden !important;
+  color: #fff8e8 !important;
+  border-radius: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
+  transform: none !important;
+}
+
+.app-shell button.bubbsun-action-confirm {
+  background: #748b58 !important;
+  border: 1px solid #50663f !important;
+  box-shadow: 0 2px 3px rgba(51, 54, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+}
+
+.app-shell button.bubbsun-action-cancel {
+  background: #a95e5e !important;
+  border: 1px solid #703535 !important;
+  box-shadow: 0 2px 3px rgba(70, 34, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+}
+
+.app-shell button.bubbsun-action-danger {
+  background: #b7554e !important;
+  border: 1px solid #823a36 !important;
+  box-shadow: 0 2px 3px rgba(75, 31, 28, .4), inset 0 1px 0 rgba(255, 255, 255, .24) !important;
+}
+
+.app-shell button.bubbsun-action-confirm::after,
+.app-shell button.bubbsun-action-cancel::after,
+.app-shell button.bubbsun-action-danger::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  border: 1px dashed rgba(255, 248, 224, .68) !important;
+  border-radius: 5px !important;
+  pointer-events: none !important;
+}
+
+.app-shell button.bubbsun-action-confirm:hover,
+.app-shell button.bubbsun-action-confirm:focus-visible,
+.app-shell button.bubbsun-action-cancel:hover,
+.app-shell button.bubbsun-action-cancel:focus-visible,
+.app-shell button.bubbsun-action-danger:hover,
+.app-shell button.bubbsun-action-danger:focus-visible {
+  transform: none !important;
+  filter: brightness(1.08) !important;
+}
+
+.app-shell button.bubbsun-action-confirm:disabled,
+.app-shell button.bubbsun-action-cancel:disabled,
+.app-shell button.bubbsun-action-danger:disabled {
+  opacity: .55 !important;
+  filter: none !important;
+}
+
 /* Supportertitlarnas egna färger och glow för den nuvarande textloggan. */
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="lifetime"] { color: #b63c72 !important; }
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="royal"] { color: #8b62d2 !important; }

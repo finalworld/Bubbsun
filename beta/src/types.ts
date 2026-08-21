@@ -70,7 +70,7 @@ export type BubbsunList = {
   items: ListItem[];
 };
 export type NoteLogEntry={uid:string;name:string;at:number};
-export type BubbsunNote = { id:string; title:string; text:string; icon:string; color:number; order:number; creatorId:string; creatorName?:string; createdAt?:number; updatedAt?:number; history?:NoteLogEntry[] };
+export type BubbsunNote = { id:string; title:string; text:string; icon:string; color:number; order:number; creatorId:string; creatorName?:string; creatorColor?:number; createdAt?:number; updatedAt?:number; history?:NoteLogEntry[] };
 
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };

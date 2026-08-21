@@ -244,6 +244,12 @@ const listTypes = [
 ] as const;
 const cleaningRooms = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Ute"];
 const cleaningRecurrences = ["En gång", "Varje dag", "Varje vecka", "Varannan vecka", "Varje månad"];
+const homeFixPlaces = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Garage", "Förråd", "Ute"];
+const homeFixPriorities = ["Låg", "Normal", "Hög", "Akut"];
+const homeFixTypes = ["Reparera", "Montera", "Underhåll", "Förbättring", "Annat"];
+const shortDate = (value?: string) => value
+  ? new Date(`${value}T12:00:00`).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
+  : "";
 const noteIcons=["idea","star","search","alarm","palette","archive","tag","lock"] as const;
 const noteIconSource=(icon:string)=>`${import.meta.env.BASE_URL}assets/note-icons/${noteIcons.includes(icon as typeof noteIcons[number])?icon:"idea"}.png`;
 const listTypeInfo = (id?: string) =>
@@ -1891,11 +1897,13 @@ function SortableItemRow({
   const [draftPriority,setDraftPriority]=useState(item.priority||"Normal");
   const [draftRoom,setDraftRoom]=useState(item.room||"");
   const [draftRecurrence,setDraftRecurrence]=useState(item.recurrence||"");
+  const [draftDueDate,setDraftDueDate]=useState(item.dueDate||"");
+  const [draftTaskType,setDraftTaskType]=useState(item.taskType||"");
   const swipeStart=useRef<{x:number;y:number;pointerId:number}|null>(null);
   const suppressSwipeClick=useRef(false);
   const [swipeOffset,setSwipeOffset]=useState(0);
   const [swiping,setSwiping]=useState(false);
-  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");},[item.name,item.quantity,item.note,item.assignedTo,item.status,item.priority,item.room,item.recurrence]);
+  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");},[item.name,item.quantity,item.note,item.assignedTo,item.status,item.priority,item.room,item.recurrence,item.dueDate,item.taskType]);
   const startSwipe=(event:ReactPointerEvent<HTMLDivElement>)=>{
     if(event.pointerType!=="touch"||selecting||expanded)return;
     const target=event.target as HTMLElement;
@@ -1951,7 +1959,7 @@ function SortableItemRow({
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
-        {(item.quantity||item.assignedTo||item.status||item.room||item.recurrence||(listType==="wishlist"&&item.priority)) && <small>{[item.quantity,item.room&&`Rum: ${item.room}`,item.assignedTo&&(listType==="cleaning"?`Ansvarig: ${item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,listType==="wishlist"&&item.priority&&`Prioritet: ${item.priority}`].filter(Boolean).join(" · ")}</small>}
+        {(item.quantity||item.assignedTo||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,item.assignedTo&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
@@ -1995,7 +2003,8 @@ function SortableItemRow({
       {listType==="orders"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Välj status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select></label>}
       {listType==="wishlist"&&<label>Önskas mest?<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select></label>}
       {listType==="cleaning"&&<><label>Rum<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select></label><label>Ansvarig<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.displayName}>{member.displayName}</option>)}</select></label><label>Upprepas<select value={draftRecurrence} onChange={event=>{setDraftRecurrence(event.target.value);onDirtyChange(true)}}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></label></>}
-      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"||listType==="cleaning"?draftAssignedTo:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"?draftPriority:undefined,room:listType==="cleaning"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
+      {listType==="home"&&<><label>Plats<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select></label><label>Ansvarig<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.displayName}>{member.displayName}</option>)}</select></label><label>Prioritet<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></label><label>Typ av jobb<select value={draftTaskType} onChange={event=>{setDraftTaskType(event.target.value);onDirtyChange(true)}}><option value="">Välj typ</option>{homeFixTypes.map(value=><option key={value}>{value}</option>)}</select></label><label>Deadline (valfritt)<input type="date" value={draftDueDate} onChange={event=>{setDraftDueDate(event.target.value);onDirtyChange(true)}} /></label></>}
+      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:["packing","cleaning","home"].includes(listType||"")?draftAssignedTo:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"||listType==="home"?draftPriority:undefined,room:listType==="cleaning"||listType==="home"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined,dueDate:listType==="home"?draftDueDate:undefined,taskType:listType==="home"?draftTaskType:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
     </div>}
     </div>
   );
@@ -2046,6 +2055,8 @@ function ListPage({
   const [cleaningRoom,setCleaningRoom]=useState("");
   const [cleaningAssignee,setCleaningAssignee]=useState("");
   const [cleaningRecurrence,setCleaningRecurrence]=useState("");
+  const [homeFixPlace,setHomeFixPlace]=useState("");
+  const [homeFixPriority,setHomeFixPriority]=useState("Normal");
   const [search, setSearch] = useState("");
   const [showDone, setShowDone] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -2147,11 +2158,13 @@ function ListPage({
       ...(list.listType==="cleaning"&&cleaningRoom?{room:cleaningRoom}:{}),
       ...(list.listType==="cleaning"&&cleaningAssignee?{assignedTo:cleaningAssignee}:{}),
       ...(list.listType==="cleaning"&&cleaningRecurrence?{recurrence:cleaningRecurrence}:{}),
+      ...(list.listType==="home"&&homeFixPlace?{room:homeFixPlace}:{}),
+      ...(list.listType==="home"?{priority:homeFixPriority}:{}),
     };
     onChange({ ...list, items: [item, ...list.items] });
     setName("");
     setQuantity("");
-    setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");
+    setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");setHomeFixPlace("");setHomeFixPriority("Normal");
   };
   const patchItem = (id: string, updater: (x: ListItem) => ListItem) =>
     onChange({
@@ -2384,7 +2397,7 @@ function ListPage({
           popup.document.write(`<!doctype html><html lang="sv"><head><title>${escape(list.name)}</title><style>body{max-width:760px;margin:35px auto;padding:0 24px;color:#24170f;font-family:Arial,sans-serif}h1{font:800 38px Georgia,serif;border-bottom:3px solid #587556;padding-bottom:12px}ul{list-style:none;padding:0;display:grid;gap:10px}li{display:grid;grid-template-columns:25px 1fr auto;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid #cbb89f}.box{width:18px;height:18px;border:2px solid #587556;border-radius:4px}.done .box:after{content:'✓';display:block;text-align:center;line-height:16px}.done strong{text-decoration:line-through;color:#777}small{color:#69584d}.note{grid-column:2/-1;margin:5px 0 0;padding:8px;background:#f3eadc;border-radius:6px;white-space:pre-wrap}@media print{body{margin:0}}</style></head><body><h1>${escape(list.name)}</h1><ul>${chosen.map(item=>`<li class="${item.completed?"done":""}"><span class="box"></span><strong>${escape(item.name)}</strong><small>${escape(item.quantity)}</small>${printNotes&&item.note?`<p class="note">${escape(item.note)}</p>`:""}</li>`).join("")}</ul><script>window.onload=()=>window.print()<\/script></body></html>`);popup.document.close();setPrintOpen(false);
         }}>ÖPPNA UTSKRIFT</button>
       </div></div>}
-      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""}`}>
+      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""}`}>
         <h2>LÄGG TILL</h2>
         <div>
           <span className="autocomplete-wrap">
@@ -2430,7 +2443,7 @@ function ListPage({
             placeholder="Mängd (valfritt)"
           />
           {list.listType==="packing"&&<select value={assignedTo} onChange={event=>setAssignedTo(event.target.value)}><option value="">För alla</option>{(list.packPeople||[]).map(person=><option key={person}>{person}</option>)}</select>}
-          {list.listType==="home"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select>}
+          {list.listType==="home"&&<div className="homefix-quick-fields"><select aria-label="Plats" value={homeFixPlace} onChange={event=>setHomeFixPlace(event.target.value)}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select><select aria-label="Prioritet" value={homeFixPriority} onChange={event=>setHomeFixPriority(event.target.value)}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></div>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
           {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
           {list.listType==="cleaning"&&<div className="cleaning-quick-fields"><select aria-label="Rum" value={cleaningRoom} onChange={event=>setCleaningRoom(event.target.value)}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select><select aria-label="Ansvarig" value={cleaningAssignee} onChange={event=>setCleaningAssignee(event.target.value)}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.displayName}>{member.displayName}</option>)}</select><select aria-label="Upprepas" value={cleaningRecurrence} onChange={event=>setCleaningRecurrence(event.target.value)}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></div>}

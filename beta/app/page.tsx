@@ -732,7 +732,7 @@ function LoginPage({
 function ActionButtonBridge(){
   useEffect(()=>{
     const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
-      const text=(button.textContent||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
+      const text=(button.textContent||button.getAttribute("aria-label")||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
       button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger");
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
       if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
@@ -2314,7 +2314,7 @@ function ListPage({
           {list.listType==="home"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
           {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
-          <button onClick={() => add()}>
+          <button aria-label="Lägg till" onClick={() => add()}>
             <Check />
           </button>
         </div>

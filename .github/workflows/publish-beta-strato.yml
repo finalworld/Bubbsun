@@ -51,7 +51,8 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          mirror --reverse --delete --ignore-time --no-perms --parallel=4 dist/beta/ public/beta/
+          mirror --reverse --delete --no-perms --parallel=4 --verbose dist/beta/ public/beta/
+          put -O public/beta/ dist/beta/index.html
           cls -l public/beta/index.html
           bye
           EOF

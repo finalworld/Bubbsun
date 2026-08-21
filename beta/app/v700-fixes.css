@@ -2418,3 +2418,215 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .note-editor-title > span img { width: 54px !important; height: 54px !important; }
   .app-shell .note-icon-picker { grid-template-columns: repeat(4,minmax(0,1fr)) !important; }
 }
+
+/* 2026-08-21 beta cleanup — one final source of truth for the header and notes.
+   The background reaches edge to edge; only the header's contents share the page rail. */
+.app-shell {
+  --bubbsun-header-h: 102px !important;
+}
+
+.app-shell .topbar.text-header-v2 {
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: var(--bubbsun-header-h) !important;
+  min-height: var(--bubbsun-header-h) !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid var(--theme-outline) !important;
+  border-radius: 0 !important;
+  background: var(--theme-header, var(--theme-panel)) !important;
+  box-shadow: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .topbar-inner {
+  width: min(calc(100% - 36px), 1280px) !important;
+  max-width: 1280px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 8px 0 7px !important;
+  display: grid !important;
+  grid-template-columns: 78px minmax(0, 1fr) 58px !important;
+  gap: 18px !important;
+  align-items: center !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-left {
+  position: relative !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  height: 82px !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot {
+  display: flex !important;
+  width: 100% !important;
+  height: 58px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-right: 1px solid color-mix(in srgb, var(--theme-text) 18%, transparent) !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button {
+  width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg {
+  width: 35px !important;
+  height: 35px !important;
+  stroke-width: 2.2 !important;
+}
+.app-shell .topbar.text-header-v2 .admin-online-count {
+  position: absolute !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 1px !important;
+  transform: translateX(-50%) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--theme-text) !important;
+  font: 700 11px/1 Arial, sans-serif !important;
+  white-space: nowrap !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-v3 {
+  justify-self: start !important;
+  align-items: flex-start !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title {
+  font-size: clamp(31px, 2.65vw, 43px) !important;
+  line-height: .94 !important;
+  letter-spacing: -.052em !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-tagline {
+  width: min(100%, 410px) !important;
+  margin-top: 5px !important;
+  padding-top: 3px !important;
+  border-top: 1px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  letter-spacing: .005em !important;
+}
+.app-shell .topbar.text-header-v2 .supporter-title {
+  display: block !important;
+  margin-top: 5px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+.app-shell .topbar.text-header-v2 .header-add {
+  width: 52px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  border-radius: 15px !important;
+}
+.app-shell .content.list-page { padding-top: 14px !important; }
+
+/* Notes use the same calm cards, buttons and click behaviour as lists. */
+.app-shell .note-card {
+  display: grid !important;
+  grid-template-columns: 130px minmax(0, 1fr) 36px 28px !important;
+  align-items: center !important;
+  min-height: 118px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+}
+.app-shell .note-card .note-color {
+  width: 130px !important;
+  min-width: 130px !important;
+  height: 100% !important;
+  align-self: stretch !important;
+  display: grid !important;
+  place-items: center !important;
+}
+.app-shell .note-card .note-color img {
+  width: 94px !important;
+  height: 94px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+.app-shell .note-card .note-copy {
+  min-width: 0 !important;
+  padding: 15px 10px 14px 20px !important;
+}
+.app-shell .note-card .note-copy strong,
+.app-shell .note-card .note-copy small,
+.app-shell .note-card .note-copy em { display: block !important; }
+.app-shell .note-card > button,
+.app-shell .note-card > svg { cursor: pointer !important; }
+
+.app-shell .note-icon-picker {
+  display: grid !important;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  margin: 18px 0 !important;
+}
+.app-shell .note-icon-picker button {
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  padding: 9px !important;
+  overflow: hidden !important;
+}
+.app-shell .note-icon-picker img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: none !important;
+}
+
+.app-shell .note-editor-actions button,
+.app-shell .modal-actions button,
+.app-shell .note-editor-actions .danger,
+.app-shell .confirm-delete-modal .danger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  text-align: center !important;
+}
+
+@media (max-width: 640px) {
+  .app-shell { --bubbsun-header-h: 82px !important; }
+  .app-shell .topbar.text-header-v2 .topbar-inner {
+    width: calc(100% - 20px) !important;
+    grid-template-columns: 52px minmax(0, 1fr) 46px !important;
+    gap: 11px !important;
+    padding: 5px 0 6px !important;
+  }
+  .app-shell .topbar.text-header-v2 .header-left { height: 67px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot { height: 47px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button { width: 42px !important; height: 42px !important; min-height: 42px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg { width: 30px !important; height: 30px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-title { font-size: 29px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-tagline { margin-top: 3px !important; font-size: 10px !important; }
+  .app-shell .topbar.text-header-v2 .supporter-title { margin-top: 3px !important; font-size: 8px !important; }
+  .app-shell .topbar.text-header-v2 .header-add { width: 43px !important; height: 43px !important; min-height: 43px !important; border-radius: 12px !important; }
+  .app-shell .note-card { grid-template-columns: 100px minmax(0, 1fr) 32px 24px !important; min-height: 96px !important; }
+  .app-shell .note-card .note-color { width: 100px !important; min-width: 100px !important; }
+  .app-shell .note-card .note-color img { width: 74px !important; height: 74px !important; }
+  .app-shell .note-card .note-copy { padding: 11px 6px 10px 15px !important; }
+  .app-shell .note-icon-picker { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}

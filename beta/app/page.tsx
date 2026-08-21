@@ -779,7 +779,7 @@ function Header({
               aria-label="Öppna medlemslistan i administrationen"
               title="Öppna medlemslistan"
             >
-              Online: {onlineCount} {onlineCount === 1 ? "person" : "personer"}
+              Online: {onlineCount}
             </button>
           )}
         </div>

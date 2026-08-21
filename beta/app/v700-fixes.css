@@ -2303,3 +2303,23 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .topbar.text-header-v2 .admin-online-count { bottom: -6px !important; font-size: 9px !important; }
   .app-shell .content.list-page { padding-top: 8px !important; }
 }
+
+/* Header rail: the paper/header surface belongs to the whole viewport, while
+   the controls sit on the exact same 1280px rail as the list content below. */
+@media (min-width: 641px) {
+  .app-shell .topbar.text-header-v2 {
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    background: var(--theme-header, var(--theme-panel)) !important;
+  }
+
+  .app-shell .topbar.text-header-v2 .topbar-inner {
+    width: min(calc(100% - 36px), 1280px) !important;
+    max-width: 1280px !important;
+    margin: 0 auto !important;
+  }
+}

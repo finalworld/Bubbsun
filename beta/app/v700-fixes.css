@@ -2117,3 +2117,189 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .share-site-modal .share-site-actions{position:relative;z-index:1;display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
 .share-site-actions a,.share-site-actions button{box-sizing:border-box;width:100%;min-height:52px;margin:0;padding:12px 16px;border:0;border-radius:11px;background:var(--theme-accent);color:#fff;text-decoration:none;font:900 14px Arial,sans-serif;display:flex;align-items:center;justify-content:center;gap:9px}
 .share-site-actions a:nth-child(2){background:color-mix(in srgb,var(--theme-accent) 72%,var(--theme-text))}.share-site-actions button{background:color-mix(in srgb,var(--theme-text) 68%,var(--theme-paper))!important}.share-site-actions svg{width:20px}.share-facebook-action{background:#4267b2!important}.share-facebook-action b{font:bold 25px Arial,sans-serif;line-height:18px}
+/* Final beta finish: one canonical header and one shared visual language. */
+.app-shell {
+  --bubbsun-header-h: 96px;
+  padding-top: var(--bubbsun-header-h) !important;
+}
+
+.app-shell .topbar.text-header-v2 {
+  position: fixed !important;
+  z-index: 500 !important;
+  top: 0 !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: min(calc(100vw - 36px), 1280px) !important;
+  max-width: 1280px !important;
+  height: var(--bubbsun-header-h) !important;
+  min-height: var(--bubbsun-header-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: var(--theme-header, var(--theme-panel)) !important;
+  border: 0 !important;
+  border-bottom: 2px solid var(--theme-outline) !important;
+  border-radius: 0 0 18px 18px !important;
+  box-shadow: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .topbar-inner {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: 76px minmax(0, 1fr) 62px !important;
+  align-items: center !important;
+  gap: 18px !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 9px 24px 8px !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-left {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 62px !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-menu-slot {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  height: 60px !important;
+  border-right: 1px solid color-mix(in srgb, var(--theme-text) 18%, transparent) !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button {
+  width: 52px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  padding: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button:hover {
+  color: var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-paper) 45%, transparent) !important;
+  border-radius: 12px !important;
+  transform: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg {
+  width: 38px !important;
+  height: 38px !important;
+  stroke-width: 2.1 !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-brand-v3 {
+  justify-self: start !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-brand-v3:hover { transform: none !important; }
+.app-shell .topbar.text-header-v2 .header-brand-title {
+  display: block !important;
+  font-size: clamp(32px, 3vw, 43px) !important;
+  line-height: .88 !important;
+  letter-spacing: -.055em !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-tagline {
+  display: block !important;
+  width: min(100%, 420px) !important;
+  margin-top: 6px !important;
+  padding-top: 3px !important;
+  border-top: 1px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+  color: var(--theme-text) !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+}
+.app-shell .topbar.text-header-v2 .header-supporter-title {
+  display: block !important;
+  margin-top: 5px !important;
+  color: var(--theme-accent) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  letter-spacing: .04em !important;
+}
+.app-shell .topbar.text-header-v2 .header-theme-slot { justify-self: end !important; }
+.app-shell .topbar.text-header-v2 .header-theme-slot .icon-button {
+  width: 56px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  color: var(--theme-paper) !important;
+  background: var(--theme-accent) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-text) 35%, transparent) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--theme-text) 20%, transparent) !important;
+}
+.app-shell .topbar.text-header-v2 .header-theme-slot .icon-button svg { width: 34px !important; height: 34px !important; }
+.app-shell .topbar.text-header-v2 .admin-online-count {
+  position: absolute !important;
+  left: 0 !important;
+  bottom: -7px !important;
+  white-space: nowrap !important;
+  color: var(--theme-text) !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.app-shell .content.list-page { padding-top: 12px !important; }
+.app-shell .list-editor .list-type-picker button:not(.selected) {
+  color: var(--theme-text) !important;
+  background: var(--theme-paper) !important;
+  border-color: var(--theme-outline) !important;
+  box-shadow: none !important;
+}
+.app-shell .list-editor .list-type-picker button.selected {
+  color: var(--theme-paper) !important;
+  background: var(--theme-accent) !important;
+  border-color: var(--theme-accent-dark) !important;
+}
+.app-shell .note-copy em,
+.app-shell .note-created { color: var(--theme-text) !important; }
+.app-shell .note-color img,
+.app-shell .note-icon-picker img,
+.app-shell .note-editor-title img { display: block !important; max-width: 100% !important; object-fit: contain !important; }
+.app-shell .note-icon-picker button { display: grid !important; place-items: center !important; overflow: hidden !important; }
+.app-shell .note-log-head { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 16px !important; }
+.app-shell .note-log-head h2 { margin: 0 !important; }
+.app-shell .note-log-head .modal-close { position: static !important; flex: 0 0 auto !important; }
+.app-shell button.cancel,
+.app-shell .modal button.cancel,
+.app-shell .note-editor-actions .cancel { color: #fff8ef !important; background: #a65d5b !important; border-color: #8e4e4d !important; }
+
+@media (max-width: 640px) {
+  .app-shell { --bubbsun-header-h: 82px; }
+  .app-shell .topbar.text-header-v2 { width: 100vw !important; border-radius: 0 !important; }
+  .app-shell .topbar.text-header-v2 .topbar-inner { grid-template-columns: 52px minmax(0, 1fr) 48px !important; gap: 11px !important; padding: 7px 13px !important; }
+  .app-shell .topbar.text-header-v2 .header-left,
+  .app-shell .topbar.text-header-v2 .header-menu-slot { height: 48px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button { width: 43px !important; height: 43px !important; min-height: 43px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg { width: 31px !important; height: 31px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-title { font-size: 31px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-tagline { margin-top: 4px !important; font-size: 11px !important; }
+  .app-shell .topbar.text-header-v2 .header-supporter-title { margin-top: 4px !important; font-size: 9px !important; }
+  .app-shell .topbar.text-header-v2 .header-theme-slot .icon-button { width: 45px !important; height: 45px !important; min-height: 45px !important; border-radius: 12px !important; }
+  .app-shell .topbar.text-header-v2 .header-theme-slot .icon-button svg { width: 28px !important; height: 28px !important; }
+  .app-shell .topbar.text-header-v2 .admin-online-count { bottom: -6px !important; font-size: 9px !important; }
+  .app-shell .content.list-page { padding-top: 8px !important; }
+}

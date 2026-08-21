@@ -287,9 +287,9 @@
 }
 
 .app-shell button.bubbsun-action-confirm {
-  background: #748b58 !important;
-  border: 1px solid #50663f !important;
-  box-shadow: 0 2px 3px rgba(51, 54, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+  background: var(--theme-accent, #748b58) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #748b58) 68%, #21170f) !important;
+  box-shadow: 0 2px 3px color-mix(in srgb, var(--theme-accent, #748b58) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
 }
 
 .app-shell button.bubbsun-action-cancel {
@@ -363,11 +363,11 @@
 .app-shell .note-editor-page .note-editor-actions > button:last-child {
   position: relative !important;
   overflow: hidden !important;
-  background: #748b58 !important;
+  background: var(--theme-accent, #748b58) !important;
   color: #fff8e8 !important;
-  border: 1px solid #50663f !important;
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #748b58) 68%, #21170f) !important;
   border-radius: 9px !important;
-  box-shadow: 0 2px 3px rgba(51, 54, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+  box-shadow: 0 2px 3px color-mix(in srgb, var(--theme-accent, #748b58) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
   font-weight: 800 !important;
   letter-spacing: .2px !important;
 }

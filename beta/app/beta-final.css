@@ -936,3 +936,122 @@
     filter: none !important;
   }
 }
+/* Desktop list category picker inside the selected LISTOR tab. */
+.app-shell .desktop-list-tab {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 5px 7px 5px 12px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 17px !important;
+  background: var(--theme-accent) !important;
+  color: #fff8e8 !important;
+}
+.app-shell .desktop-list-tab .content-tab-main {
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-weight: 900 !important;
+}
+.app-shell .desktop-category-trigger {
+  display: grid !important;
+  grid-template-columns: auto auto auto 16px !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 40px !important;
+  padding: 5px 9px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 13px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  font: 700 12px Arial, sans-serif !important;
+}
+.app-shell .desktop-category-trigger small {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 15%, var(--theme-paper)) !important;
+}
+.app-shell .desktop-category-trigger svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+.app-shell .desktop-category-menu {
+  position: absolute !important;
+  z-index: 60 !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  width: min(330px, calc(100vw - 40px)) !important;
+  padding: 8px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 16px !important;
+  background: var(--theme-panel) !important;
+  box-shadow: 0 14px 30px rgba(36, 23, 15, 0.25) !important;
+  display: grid !important;
+  gap: 5px !important;
+}
+.app-shell .desktop-category-menu > button {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto 20px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 44px !important;
+  padding: 7px 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.app-shell .desktop-category-menu > button.selected {
+  border-color: var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-paper)) !important;
+}
+.app-shell .desktop-category-menu b {
+  font: 700 14px Arial, sans-serif !important;
+}
+.app-shell .desktop-category-menu small {
+  font: 700 12px Arial, sans-serif !important;
+}
+.app-shell .desktop-category-menu svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--theme-accent) !important;
+}
+@media (min-width: 701px) {
+  .app-shell .list-page .list-type-filters {
+    display: none !important;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell .desktop-list-tab {
+    display: block !important;
+    flex: 1 !important;
+    min-height: 35px !important;
+    padding: 0 !important;
+    border-radius: 13px !important;
+  }
+  .app-shell .desktop-list-tab .content-tab-main {
+    width: 100% !important;
+    min-height: 35px !important;
+  }
+  .app-shell .desktop-category-trigger,
+  .app-shell .desktop-category-menu {
+    display: none !important;
+  }
+}

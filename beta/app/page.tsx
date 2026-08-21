@@ -1583,6 +1583,7 @@ function ListsPage({
       )
     : lists;
   const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const shown =
     typeFilter === "all"
       ? baseShown
@@ -1600,6 +1601,26 @@ function ListsPage({
       activationConstraint: { delay: 180, tolerance: 8 },
     }),
   );
+  useEffect(() => {
+    if (!categoryMenuOpen) return;
+    const closeMenu = (event: PointerEvent) => {
+      if (!(event.target as HTMLElement).closest(".desktop-list-tab")) {
+        setCategoryMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeMenu);
+    return () => document.removeEventListener("pointerdown", closeMenu);
+  }, [categoryMenuOpen]);
+  const activeType =
+    typeFilter === "all"
+      ? null
+      : listTypes.find((type) => type.id === typeFilter);
+  const activeTypeCount =
+    typeFilter === "all"
+      ? baseShown.length
+      : baseShown.filter(
+          (list) => (list.listType || "other") === typeFilter,
+        ).length;
   const dragEnd = (event: DragEndEvent) => {
     if (!event.over || event.active.id === event.over.id) return;
     const from = shown.findIndex((x) => x.id === event.active.id),
@@ -1622,7 +1643,61 @@ function ListsPage({
           {groupIconId ? <GroupIcon id={groupIconId} /> : <Users />} <span>GRUPP<small>{groupName}</small></span>
         </button>
       </div>
-      <div className="content-tabs content-tabs-refined"><button className="selected"><ListChecks/> LISTOR</button><button onClick={onNotes}><NotebookPen/> ANTECKNINGAR</button></div>
+      <div className="content-tabs content-tabs-refined">
+        <div className="desktop-list-tab selected">
+          <button type="button" className="content-tab-main">
+            <ListChecks /> LISTOR
+          </button>
+          <button
+            type="button"
+            className="desktop-category-trigger"
+            aria-label="Välj listkategori"
+            aria-expanded={categoryMenuOpen}
+            onClick={() => setCategoryMenuOpen((open) => !open)}
+          >
+            <span>{activeType?.icon || "ALLA"}</span>
+            <b>{activeType?.label || "Alla"}</b>
+            <small>{activeTypeCount}</small>
+            <ChevronDown className={categoryMenuOpen ? "turn" : ""} />
+          </button>
+          {categoryMenuOpen && (
+            <div className="desktop-category-menu" role="menu">
+              <button
+                type="button"
+                className={typeFilter === "all" ? "selected" : ""}
+                onClick={() => {
+                  setTypeFilter("all");
+                  setCategoryMenuOpen(false);
+                }}
+              >
+                <span>ALLA</span><b>Alla listor</b>
+                <small>{baseShown.length}</small>
+                {typeFilter === "all" && <Check />}
+              </button>
+              {listTypes.map((type) => {
+                const count = baseShown.filter(
+                  (list) => (list.listType || "other") === type.id,
+                ).length;
+                return (
+                  <button
+                    type="button"
+                    key={type.id}
+                    className={typeFilter === type.id ? "selected" : ""}
+                    onClick={() => {
+                      setTypeFilter(type.id);
+                      setCategoryMenuOpen(false);
+                    }}
+                  >
+                    <span>{type.icon}</span><b>{type.label}</b><small>{count}</small>
+                    {typeFilter === type.id && <Check />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <button onClick={onNotes}><NotebookPen /> ANTECKNINGAR</button>
+      </div>
       <div className="list-type-filters" aria-label="Filtrera listor efter typ">
         <button
           className={typeFilter === "all" ? "selected" : ""}

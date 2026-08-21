@@ -179,7 +179,7 @@
 
 .note-card::before { content: none !important; }
 
-.note-card .note-card-icon {
+.app-shell .note-card .note-card-icon {
   grid-column: 1 !important;
   grid-row: 1 !important;
   position: static !important;
@@ -191,13 +191,13 @@
   border-radius: 0 !important;
 }
 
-.note-card .note-card-icon img {
+.app-shell .note-card .note-card-icon img {
   width: 76px !important;
   height: 76px !important;
   object-fit: contain !important;
 }
 
-.note-card .note-creator-stripe {
+.app-shell .note-card .note-creator-stripe {
   grid-column: 2 !important;
   grid-row: 1 !important;
   position: static !important;
@@ -247,12 +247,12 @@
     min-height: 91px !important;
   }
 
-  .note-card .note-card-icon {
+  .app-shell .note-card .note-card-icon {
     width: auto !important;
     flex-basis: auto !important;
   }
 
-  .note-card .note-card-icon img {
+  .app-shell .note-card .note-card-icon img {
     width: 63px !important;
     height: 63px !important;
   }

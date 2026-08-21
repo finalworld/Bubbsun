@@ -4574,7 +4574,7 @@ function AuthenticatedApp() {
         | null;
       if (!state?.bubbsunPage) return;
 
-      setMenuOpen(false);
+      if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);
       setListToolsOpen(false);
       if (typeof state.privateMode === "boolean")
         setPrivateMode(state.privateMode);
@@ -4927,7 +4927,7 @@ function AuthenticatedApp() {
       );
     setPage(next);
     setSelected(null);
-    setMenuOpen(false);
+    if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);
     setListToolsOpen(false);
   };
   const openList = (list: BubbsunList, isPrivate: boolean) => {
@@ -5166,7 +5166,7 @@ function AuthenticatedApp() {
     }
   };
   const activeNotes=privateMode?privateNotes:notes;
-  const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");setMenuOpen(false);setListToolsOpen(false);};
+  const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};
   const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
   const createNote=async(note:BubbsunNote)=>{if(!user||!account)return;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor,history:[entry],order:activeNotes.length};try{if(privateMode){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>[...current,complete]);}else if(account.activeGroupId){await saveNote(account.activeGroupId,complete);setNotes(current=>[...current,complete]);}else return;setAddingNote(false);openNote(complete,privateMode);}catch(error){console.error("Could not create note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");}};
   const reorderNotes=async(from:number,to:number)=>{if(!user)return;const changed=arrayMove(activeNotes,from,to).map((note,index)=>({...note,order:index}));if(privateMode){setPrivateNotes(changed);await Promise.all(changed.map(note=>savePrivateNote(user.uid,note)));}else if(account?.activeGroupId){setNotes(changed);await Promise.all(changed.map(note=>saveNote(account.activeGroupId,note)));}};
@@ -5253,7 +5253,7 @@ function AuthenticatedApp() {
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
         tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : undefined}
-        onMenu={() => setMenuOpen(true)}
+        onMenu={() => setMenuOpen(open=>!open)}
         onHome={() => navigate(page==="notes"||page==="note"?"notes":"lists")}
         onAdd={() => page === "notes" ? setAddingNote(true) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}

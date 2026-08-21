@@ -330,6 +330,23 @@
   pointer-events: none !important;
 }
 
+/* På PC är menyn en beständig, icke-blockerande sidopanel. */
+@media (min-width: 900px) {
+  .app-shell .drawer-backdrop.visible {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .app-shell .drawer {
+    top: var(--bubbsun-header-h, 112px) !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: calc(100dvh - var(--bubbsun-header-h, 112px)) !important;
+    max-height: none !important;
+    border-radius: 0 22px 0 0 !important;
+  }
+}
+
 /* Anteckningskort använder listkortens exakta mått och struktur. */
 .notes-page .note-list-card {
   position: relative !important;

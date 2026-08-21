@@ -538,23 +538,23 @@
 }
 
 /* Önskelistans snabbfält: namn/mängd överst, prioritet och klar-knapp underst. */
-.app-shell :is(.add-panel-wishlist, .add-panel-packing) > div {
+.app-shell .add-panel-stacked-select > div {
   grid-template-columns: minmax(240px, 1.55fr) minmax(180px, 1fr) 54px !important;
   grid-template-rows: auto auto !important;
   align-items: stretch !important;
 }
 
-.app-shell :is(.add-panel-wishlist, .add-panel-packing) .autocomplete-wrap {
+.app-shell .add-panel-stacked-select .autocomplete-wrap {
   grid-column: 1 !important;
   grid-row: 1 !important;
 }
 
-.app-shell :is(.add-panel-wishlist, .add-panel-packing) > div > input {
+.app-shell .add-panel-stacked-select > div > input {
   grid-column: 2 / 4 !important;
   grid-row: 1 !important;
 }
 
-.app-shell :is(.add-panel-wishlist, .add-panel-packing) select {
+.app-shell .add-panel-stacked-select select {
   grid-column: 1 !important;
   grid-row: 2 !important;
   box-sizing: border-box !important;
@@ -570,7 +570,7 @@
   cursor: pointer;
 }
 
-.app-shell :is(.add-panel-wishlist, .add-panel-packing) > div > button:last-child {
+.app-shell .add-panel-stacked-select > div > button:last-child {
   grid-column: 3 !important;
   grid-row: 2 !important;
   width: 54px !important;
@@ -581,27 +581,27 @@
 }
 
 @media (max-width: 700px) {
-  .app-shell :is(.add-panel-wishlist, .add-panel-packing) > div {
+  .app-shell .add-panel-stacked-select > div {
     grid-template-columns: minmax(0, 1fr) 52px !important;
     grid-template-rows: auto auto auto !important;
   }
 
-  .app-shell :is(.add-panel-wishlist, .add-panel-packing) .autocomplete-wrap {
+  .app-shell .add-panel-stacked-select .autocomplete-wrap {
     grid-column: 1 / -1 !important;
     grid-row: 1 !important;
   }
 
-  .app-shell :is(.add-panel-wishlist, .add-panel-packing) > div > input {
+  .app-shell .add-panel-stacked-select > div > input {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
   }
 
-  .app-shell :is(.add-panel-wishlist, .add-panel-packing) select {
+  .app-shell .add-panel-stacked-select select {
     grid-column: 1 !important;
     grid-row: 3 !important;
   }
 
-  .app-shell :is(.add-panel-wishlist, .add-panel-packing) > div > button:last-child {
+  .app-shell .add-panel-stacked-select > div > button:last-child {
     grid-column: 2 !important;
     grid-row: 3 !important;
     width: 52px !important;

@@ -2367,7 +2367,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .notes-heading h2 { margin: 0 !important; }
 .app-shell .note-stack { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 16px !important; }
 .app-shell .note-card { min-height: 118px !important; border-radius: 22px !important; overflow: hidden !important; background: var(--theme-paper) !important; border: 3px solid var(--theme-outline) !important; box-shadow: 0 7px 15px color-mix(in srgb,var(--theme-shadow) 14%,transparent) !important; cursor: pointer !important; }
-.app-shell .note-card:hover { transform: translateY(-2px) !important; box-shadow: 0 10px 20px color-mix(in srgb,var(--theme-accent) 21%,transparent) !important; }
+.app-shell .note-card:not(.dragging):hover { transform: translateY(-2px) !important; box-shadow: 0 10px 20px color-mix(in srgb,var(--theme-accent) 21%,transparent) !important; }
 .app-shell .note-card .note-color { width: 130px !important; min-width: 130px !important; align-self: stretch !important; display: grid !important; place-items: center !important; }
 .app-shell .note-card .note-color img { width: 96px !important; height: 96px !important; object-fit: contain !important; }
 .app-shell .note-card .note-copy { padding: 17px 8px 15px 18px !important; min-width: 0 !important; }
@@ -2571,6 +2571,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .note-card .note-copy em { display: block !important; }
 .app-shell .note-card > button,
 .app-shell .note-card > svg { cursor: pointer !important; }
+.app-shell .note-card.dragging { will-change: transform !important; }
 
 .app-shell .note-icon-picker {
   display: grid !important;

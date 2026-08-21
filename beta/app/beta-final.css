@@ -272,6 +272,20 @@
 }
 
 /* Anteckningskort använder listkortens exakta mått och struktur. */
+.notes-page .note-list-card {
+  height: 104px !important;
+  min-height: 104px !important;
+  max-height: 104px !important;
+  grid-template-columns: 100px 9px minmax(0, 1fr) 42px !important;
+}
+
+.notes-page .note-list-card .list-icon img {
+  width: 76px !important;
+  height: 76px !important;
+  max-width: 76px !important;
+  max-height: 76px !important;
+}
+
 .note-list-card .list-copy strong {
   display: block !important;
   overflow: hidden !important;
@@ -306,4 +320,20 @@
 .note-follow-panel > button strong,
 .note-follow-panel > button small {
   display: block !important;
+}
+
+@media (max-width: 430px) {
+  .notes-page .note-list-card {
+    height: 91px !important;
+    min-height: 91px !important;
+    max-height: 91px !important;
+    grid-template-columns: 82px 8px minmax(0, 1fr) 36px !important;
+  }
+
+  .notes-page .note-list-card .list-icon img {
+    width: 63px !important;
+    height: 63px !important;
+    max-width: 63px !important;
+    max-height: 63px !important;
+  }
 }

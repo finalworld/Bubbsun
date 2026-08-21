@@ -76,5 +76,8 @@ jobs:
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
           mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
+          # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
+          cls -l public/index.html public/beta/index.html public/.htaccess
+          cat public/.htaccess
           bye
           EOF

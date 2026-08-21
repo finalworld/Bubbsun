@@ -135,8 +135,27 @@ export function watchAllPrivateLists(callback:(lists:BubbsunList[])=>void, onErr
   return onSnapshot(collectionGroup(db,"privateLists"),snap=>callback(snap.docs.map((item,index)=>parseListDocument(item,index))),error=>onError?.(error));
 }
 
+const listItemsForStorage = (items: BubbsunList["items"]) => items.map(item => ({
+  id: item.id,
+  name: item.name,
+  quantity: item.quantity,
+  ownerId: item.ownerId,
+  completed: item.completed,
+  createdAt: item.createdAt,
+  completedAt: item.completedAt,
+  likedBy: item.likedBy,
+  ...(item.note ? { note: item.note } : {}),
+  ...(item.assignedTo ? { assignedTo: item.assignedTo } : {}),
+  ...(item.status ? { status: item.status } : {}),
+  ...(item.priority ? { priority: item.priority } : {}),
+  ...(item.room ? { room: item.room } : {}),
+  ...(item.recurrence ? { recurrence: item.recurrence } : {}),
+  ...(item.dueDate ? { dueDate: item.dueDate } : {}),
+  ...(item.taskType ? { taskType: item.taskType } : {}),
+}));
+
 export async function savePrivateList(uid:string,list:BubbsunList) {
-  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:list.items,updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:listItemsForStorage(list.items),updatedAt:serverTimestamp()},{merge:true});
 }
 
 export async function removePrivateList(uid:string,listId:string) { await deleteDoc(doc(db,"users",uid,"privateLists",listId)); }
@@ -157,7 +176,7 @@ export async function saveList(groupId: string, list: BubbsunList, actorId: stri
   await runTransaction(db,async transaction=>{
     const current=await transaction.get(ref),data=current.data(),remoteRevision=numberValue(data?.revision);
     if(current.exists()&&remoteRevision>(list.revision||0)&&textValue(data?.updatedBy)!==actorId) throw new Error("LIST_CONFLICT");
-    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:list.items,revision:remoteRevision+1,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:remoteRevision+1,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
   });
 }
 

@@ -198,12 +198,14 @@
 }
 
 .app-shell .note-card .note-creator-stripe {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  position: static !important;
-  width: auto !important;
+  position: absolute !important;
+  left: 130px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 9px !important;
   height: auto !important;
-  z-index: auto !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
 }
 
 .note-card .note-card-body {
@@ -255,6 +257,11 @@
   .app-shell .note-card .note-card-icon img {
     width: 63px !important;
     height: 63px !important;
+  }
+
+  .app-shell .note-card .note-creator-stripe {
+    left: 100px !important;
+    width: 8px !important;
   }
 
   .note-card .note-card-body {

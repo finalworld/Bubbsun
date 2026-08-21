@@ -168,6 +168,14 @@
   }
 }
 
+/* Redigera/flytta i listverktygen är neutrala verktygskort, inte åtgärdsknappar. */
+.app-shell .list-tools-card > button.item-action-edit,
+.app-shell .list-tools-card > button.item-action-move {
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
 /* Slutlig kortlayout: anteckningar följer listkortens struktur. */
 .note-card {
   display: grid !important;

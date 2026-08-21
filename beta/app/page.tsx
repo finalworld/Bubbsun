@@ -1481,7 +1481,7 @@ function NoteFollowButton({note,uid,groupId}:{note:BubbsunNote;uid:string;groupI
   const [following,setFollowing]=useState(false);
   useEffect(()=>watchFollowedNotes(uid,ids=>setFollowing(ids.has(note.id))),[uid,groupId,note.id]);
   const toggle=async()=>{const next=!following;if(next&&"Notification" in window&&Notification.permission==="default")await Notification.requestPermission();setFollowing(next);await setNoteFollowing(uid,groupId,note.id,next)};
-  return <div className="content note-follow-panel"><button type="button" onClick={()=>void toggle()}><Bell/><span><strong>{following?"SLUTA FÖLJA ANTECKNING":"FÖLJ ANTECKNING"}</strong><small>Få en notis när någon annan ändrar anteckningen</small></span><ChevronRight/></button></div>;
+  return <button type="button" className="note-follow-tool" onClick={()=>void toggle()}><Bell/><span><strong>{following?"SLUTA FÖLJA":"FÖLJ ANTECKNING"}</strong><small>Få en notis vid ändringar</small></span><ChevronRight/></button>;
 }
 
 function NotesPage({notes,privateMode,groupName,groupIconId,resolveCreatorColor,followedNoteIds,onMode,onLists,onHelp,onOpen,onReorder}:{notes:BubbsunNote[];privateMode:boolean;groupName:string;groupIconId?:string;resolveCreatorColor:(note:BubbsunNote)=>number;followedNoteIds:Set<string>;onMode:(value:boolean)=>void;onLists:()=>void;onHelp:()=>void;onOpen:(note:BubbsunNote)=>void;onReorder:(from:number,to:number)=>void}){
@@ -1492,27 +1492,26 @@ function NotesPage({notes,privateMode,groupName,groupIconId,resolveCreatorColor,
 const noteDateText=(note:BubbsunNote)=>{const changed=(note.history?.length||0)>1,timestamp=changed?(note.updatedAt||note.history?.[0]?.at):(note.createdAt||note.history?.[note.history.length-1]?.at),label=changed?"Ändrad":"Skapad";if(!timestamp)return `${label}: nyss`;const value=new Date(timestamp),today=new Date(),sameDay=value.getFullYear()===today.getFullYear()&&value.getMonth()===today.getMonth()&&value.getDate()===today.getDate();return `${label}: ${sameDay?`Idag ${new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit"}).format(value)}`:new Intl.DateTimeFormat("sv-SE",{dateStyle:"short",timeStyle:"short"}).format(value)}`};
 function SortableNoteCard({note,creatorColor,followed,onOpen}:{note:BubbsunNote;creatorColor:number;followed:boolean;onOpen:()=>void}){const sortable=useSortable({id:note.id});return <div ref={sortable.setNodeRef} style={{transform:CSS.Transform.toString(sortable.transform),transition:sortable.transition} as CSSProperties} className={`list-card-shell ${sortable.isDragging?"dragging":""}`}><div className="list-card note-list-card"><span className="list-icon" style={{background:rgbaHex(note.color)}}><img src={noteIconSource(note.icon)} alt=""/></span><span className="creator-strip" style={{background:rgbaHex(creatorColor)}}/><span className="list-copy"><strong>{note.title}</strong><small className="list-counts note-date-line">{followed&&<Bell className="followed-list-mark" aria-label="Du följer anteckningen"/>}<span>{noteDateText(note)}</span></small></span><button type="button" className="note-card-open" aria-label={`Öppna ${note.title}`} onClick={onOpen}/><span className="card-actions"><button className="drag-handle no-hover" data-dnd-handle aria-label="Flytta anteckning" onClick={event=>event.stopPropagation()} {...sortable.attributes} {...sortable.listeners}><GripVertical/></button></span></div></div>}
 function NoteAppearancePicker({icon,color,onIcon,onColor}:{icon:string;color:number;onIcon:(icon:string)=>void;onColor:(color:number)=>void}){return <><div className="note-icon-picker">{noteIcons.map(value=><button type="button" key={value} className={icon===value?"selected":""} onClick={()=>onIcon(value)}><img src={noteIconSource(value)} alt=""/></button>)}</div><div className="color-picker">{listColorOptions.map(value=><button type="button" key={value} className={color===value?"selected":""} onClick={()=>onColor(value)} style={{"--choice-color":rgbaHex(value)} as CSSProperties}/>)}</div></>}
-function NoteEditorPage({note,onSave,onBack,onDelete}:{note:BubbsunNote;onSave:(note:BubbsunNote)=>Promise<boolean>;onBack:()=>void;onDelete:()=>void}){
+function NoteEditorPage({note,onSave,onBack,onDelete,follow}:{note:BubbsunNote;onSave:(note:BubbsunNote)=>Promise<boolean>;onBack:()=>void;onDelete:()=>void;follow?:{uid:string;groupId:string}}){
   const [title,setTitle]=useState(note.title),[text,setText]=useState(note.text),[icon,setIcon]=useState(note.icon),[color,setColor]=useState(note.color),[logOpen,setLogOpen]=useState(false),[appearanceOpen,setAppearanceOpen]=useState(false),[confirmDelete,setConfirmDelete]=useState(false),[saving,setSaving]=useState(false);
   useEffect(()=>{setTitle(note.title);setText(note.text);setIcon(note.icon);setColor(note.color)},[note.id,note.title,note.text,note.icon,note.color]);
   const save=async()=>{if(!title.trim()||saving)return;setSaving(true);try{if(await onSave({...note,title:title.trim(),text,icon,color}))onBack()}finally{setSaving(false)}};
   return <section className="content note-editor-page">
-    <button className="back-button" onClick={onBack}>‹ ANTECKNINGAR</button>
     <article>
       <header className="note-editor-heading">
         <span className="note-editor-icon" style={{background:rgbaHex(color)}}><img src={noteIconSource(icon)} alt=""/></span>
         <div className="note-editor-heading-copy">
-          <label htmlFor="note-title">RUBRIK</label>
           <input id="note-title" value={title} onChange={event=>setTitle(event.target.value)} maxLength={80} placeholder="Rubrik"/>
           <p className="note-created" style={note.creatorColor?{"--creator-color":rgbaHex(note.creatorColor)} as CSSProperties:undefined}>Skapad av <strong>{note.creatorName||"Bubbsun"}</strong></p>
         </div>
       </header>
-      <div className="note-editor-tools">
-        <button className="note-appearance-button" onClick={()=>setAppearanceOpen(true)}><Palette/><span><strong>ÄNDRA UTSEENDE</strong><small>Välj ikon och färg</small></span><ChevronRight/></button>
-        <button className="note-log-button" onClick={()=>setLogOpen(true)}><History/><span><strong>ÄNDRINGSLOGG</strong><small>Se vem som har ändrat</small></span><ChevronRight/></button>
-      </div>
       <label className="note-body-label" htmlFor="note-body">ANTECKNING</label>
       <textarea id="note-body" value={text} onChange={event=>setText(event.target.value)} placeholder="Skriv din anteckning här…"/>
+      <div className={`note-editor-tools ${follow?"has-follow":""}`}>
+        <button className="note-appearance-button" onClick={()=>setAppearanceOpen(true)}><Palette/><span><strong>ÄNDRA UTSEENDE</strong><small>Välj ikon och färg</small></span><ChevronRight/></button>
+        <button className="note-log-button" onClick={()=>setLogOpen(true)}><History/><span><strong>ÄNDRINGSLOGG</strong><small>Se vem som har ändrat</small></span><ChevronRight/></button>
+        {follow&&<NoteFollowButton note={note} uid={follow.uid} groupId={follow.groupId}/>}
+      </div>
       <div className="note-editor-actions"><button className="danger" onClick={()=>setConfirmDelete(true)}><Trash2/> TA BORT</button><span/><button className="cancel" onClick={onBack}>AVBRYT</button><button disabled={saving||!title.trim()} onClick={()=>void save()}>{saving?"SPARAR…":"SPARA"}</button></div>
     </article>
     {appearanceOpen&&<div className="modal-backdrop"><div className="modal note-appearance-modal"><div className="note-log-head"><h2>ÄNDRA UTSEENDE</h2><button className="modal-close" onClick={()=>setAppearanceOpen(false)} aria-label="Stäng"><X/></button></div><NoteAppearancePicker icon={icon} color={color} onIcon={setIcon} onColor={setColor}/><div className="modal-actions"><button className="cancel" onClick={()=>setAppearanceOpen(false)}>KLAR</button></div></div></div>}
@@ -5392,8 +5391,7 @@ function AuthenticatedApp() {
         />
       )}
       {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
-      {page === "note" && selectedNote && !selectedNotePrivate && account.activeGroupId && <NoteFollowButton note={selectedNote} uid={user.uid} groupId={account.activeGroupId}/>}
-      {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
+      {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
       {page === "people" && (
         <PeoplePage
           account={account}

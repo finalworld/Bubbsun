@@ -381,6 +381,14 @@
   margin: 20px 0 !important;
 }
 
+.app-shell .note-editor-tools.has-follow {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.app-shell .note-body-label {
+  margin-top: 22px !important;
+}
+
 .app-shell .note-editor-tools > button {
   display: grid !important;
   grid-template-columns: 34px minmax(0, 1fr) 22px !important;
@@ -453,8 +461,22 @@
   .app-shell .note-editor-page .note-created { margin-top: 7px !important; font-size: 11px !important; }
   .app-shell .note-editor-page .note-created::before { width: 6px !important; height: 19px !important; }
   .app-shell .note-editor-tools { grid-template-columns: 1fr !important; gap: 8px !important; margin: 14px 0 !important; }
+  .app-shell .note-editor-tools.has-follow { grid-template-columns: 1fr !important; }
   .app-shell .note-editor-tools > button { min-height: 58px !important; padding: 8px 12px !important; }
   .app-shell .note-editor-page textarea { min-height: 40vh !important; padding: 14px !important; }
+}
+
+/* Mobilens diskreta radera-länk ska inte få den globala sydda knappdekoren. */
+@media (max-width: 430px) {
+  .app-shell .note-editor-page .note-editor-actions > button.danger::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    overflow: visible !important;
+    filter: none !important;
+  }
 }
 
 /* Gemensamt formspråk för bekräftande, avbrytande och farliga åtgärder. */
@@ -874,5 +896,15 @@
     padding: 2px !important;
     background: transparent !important;
     color: #bd5752 !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    overflow: visible !important;
+    filter: none !important;
   }
 }

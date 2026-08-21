@@ -280,6 +280,183 @@
   .note-card .note-card-body strong { font-size: 21px !important; }
 }
 
+/* Anteckningsredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
+.app-shell .note-editor-page {
+  width: min(var(--bubbsun-rail, 980px), 100%) !important;
+  max-width: 980px !important;
+}
+
+.app-shell .note-editor-page .back-button {
+  min-height: 42px !important;
+  margin: 4px 0 12px !important;
+  padding: 0 16px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 13px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  font: 800 13px Arial, sans-serif !important;
+}
+
+.app-shell .note-editor-page article {
+  padding: clamp(16px, 3vw, 28px) !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--theme-panel) 92%, var(--theme-paper)) !important;
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--theme-text) 10%, transparent) !important;
+}
+
+.app-shell .note-editor-heading {
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr) !important;
+  gap: 20px !important;
+  align-items: stretch !important;
+}
+
+.app-shell .note-editor-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 112px !important;
+  min-height: 112px !important;
+  border-radius: 19px !important;
+  border: 2px solid color-mix(in srgb, var(--theme-outline) 70%, transparent) !important;
+}
+
+.app-shell .note-editor-icon img {
+  width: 92px !important;
+  height: 92px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 3px 2px #24170f33) !important;
+}
+
+.app-shell .note-editor-heading-copy {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.app-shell .note-editor-heading-copy > label,
+.app-shell .note-body-label {
+  display: block !important;
+  margin: 0 0 7px !important;
+  font: 800 12px Arial, sans-serif !important;
+  letter-spacing: .7px !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .note-editor-heading-copy input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 58px !important;
+  padding: 8px 14px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 15px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 700 clamp(25px, 4vw, 36px)/1.1 Georgia, serif !important;
+}
+
+.app-shell .note-editor-page .note-created {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin: 9px 2px 0 !important;
+  color: var(--theme-text) !important;
+  font: 600 13px Arial, sans-serif !important;
+}
+
+.app-shell .note-editor-page .note-created::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  background: var(--creator-color, var(--theme-accent)) !important;
+}
+
+.app-shell .note-editor-tools {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin: 20px 0 !important;
+}
+
+.app-shell .note-editor-tools > button {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 22px !important;
+  align-items: center !important;
+  gap: 11px !important;
+  width: 100% !important;
+  min-height: 72px !important;
+  padding: 10px 15px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 16px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+.app-shell .note-editor-tools > button:hover,
+.app-shell .note-editor-tools > button:focus-visible {
+  background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-paper)) !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.app-shell .note-editor-tools > button > svg:first-child {
+  width: 29px !important;
+  height: 29px !important;
+  color: var(--theme-accent) !important;
+}
+
+.app-shell .note-editor-tools > button > svg:last-child {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.app-shell .note-editor-tools span,
+.app-shell .note-editor-tools strong,
+.app-shell .note-editor-tools small {
+  display: block !important;
+  min-width: 0 !important;
+}
+
+.app-shell .note-editor-tools strong {
+  font: 800 15px Georgia, serif !important;
+}
+
+.app-shell .note-editor-tools small {
+  margin-top: 3px !important;
+  font: 12px Arial, sans-serif !important;
+  opacity: .75 !important;
+}
+
+.app-shell .note-editor-page textarea {
+  min-height: 42vh !important;
+  margin: 0 !important;
+  padding: 18px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 19px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .app-shell .note-editor-page { padding-inline: 12px !important; }
+  .app-shell .note-editor-page article { padding: 14px !important; border-radius: 20px !important; }
+  .app-shell .note-editor-heading { grid-template-columns: 76px minmax(0, 1fr) !important; gap: 11px !important; }
+  .app-shell .note-editor-icon { width: 76px !important; min-height: 94px !important; border-radius: 15px !important; }
+  .app-shell .note-editor-icon img { width: 66px !important; height: 66px !important; }
+  .app-shell .note-editor-heading-copy input { min-height: 51px !important; padding: 7px 10px !important; font-size: 24px !important; }
+  .app-shell .note-editor-page .note-created { margin-top: 7px !important; font-size: 11px !important; }
+  .app-shell .note-editor-page .note-created::before { width: 6px !important; height: 19px !important; }
+  .app-shell .note-editor-tools { grid-template-columns: 1fr !important; gap: 8px !important; margin: 14px 0 !important; }
+  .app-shell .note-editor-tools > button { min-height: 58px !important; padding: 8px 12px !important; }
+  .app-shell .note-editor-page textarea { min-height: 40vh !important; padding: 14px !important; }
+}
+
 /* Gemensamt formspråk för bekräftande, avbrytande och farliga åtgärder. */
 .app-shell button.bubbsun-action-confirm,
 .app-shell button.bubbsun-action-cancel,

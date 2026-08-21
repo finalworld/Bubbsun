@@ -340,6 +340,206 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   }
 }
 
+/* Final beta layout pass: one shared rail for header and pages. */
+.app-shell {
+  --bubbsun-rail: min(calc(100% - 36px), 1280px);
+  --bubbsun-header-h: 96px;
+}
+.app-shell .topbar.text-header-v2 {
+  position: fixed !important;
+  inset: 0 0 auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: var(--bubbsun-header-h) !important;
+  min-height: var(--bubbsun-header-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 2px solid var(--theme-outline) !important;
+  border-radius: 0 !important;
+  background: var(--theme-header, var(--theme-panel)) !important;
+}
+.app-shell .topbar.text-header-v2 .topbar-inner {
+  width: var(--bubbsun-rail) !important;
+  max-width: 1280px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 7px 0 8px !important;
+  display: grid !important;
+  grid-template-columns: 76px minmax(0, 1fr) 58px !important;
+  gap: 18px !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+.app-shell .topbar.text-header-v2 .header-left {
+  width: 76px !important;
+  height: 78px !important;
+  display: grid !important;
+  grid-template-rows: 1fr auto !important;
+  justify-items: center !important;
+  align-items: center !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot,
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button {
+  width: 50px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 !important;
+  color: var(--theme-ink) !important;
+}
+.app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg {
+  width: 36px !important;
+  height: 36px !important;
+  stroke-width: 2.2 !important;
+}
+.app-shell .topbar.text-header-v2 .online-indicator {
+  margin: 0 !important;
+  align-self: end !important;
+  justify-self: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-v3 {
+  justify-self: start !important;
+  align-self: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title {
+  font-size: clamp(38px, 4vw, 52px) !important;
+  line-height: .86 !important;
+  letter-spacing: -.055em !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-tagline {
+  width: min(100%, 430px) !important;
+  margin: 7px 0 0 !important;
+  padding: 0 0 5px !important;
+  border-top: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+  font-size: 14px !important;
+  line-height: 1.04 !important;
+}
+.app-shell .topbar.text-header-v2 .supporter-title {
+  display: block !important;
+  margin: 6px 0 0 !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+.app-shell .topbar.text-header-v2 .header-add {
+  width: 52px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  border-radius: 15px !important;
+}
+.app-shell .content.list-page,
+.app-shell .content.notes-page {
+  width: var(--bubbsun-rail) !important;
+  max-width: 1280px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-top: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* Notes deliberately use the same card rhythm as lists. */
+.app-shell .notes-page .space-tabs-refined button:not(.selected),
+.app-shell .notes-page .content-tabs-refined button:not(.selected) {
+  background: var(--theme-panel) !important;
+}
+.app-shell .notes-page .note-stack { gap: 16px !important; }
+.app-shell .notes-page .note-card {
+  display: grid !important;
+  grid-template-columns: 130px minmax(0, 1fr) 36px 28px !important;
+  grid-template-rows: minmax(118px, auto) !important;
+  align-items: stretch !important;
+  min-height: 118px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: var(--theme-paper) !important;
+  cursor: pointer !important;
+}
+.app-shell .notes-page .note-card::before { display: none !important; }
+.app-shell .notes-page .note-card .note-color {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  align-self: stretch !important;
+}
+.app-shell .notes-page .note-copy {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  padding: 15px 16px 14px 20px !important;
+  background: var(--theme-paper) !important;
+}
+.app-shell .notes-page .note-copy strong,
+.app-shell .notes-page .note-copy small { display: block !important; }
+.app-shell .notes-page .note-creator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 7px !important;
+  color: var(--theme-ink) !important;
+  font-style: normal !important;
+}
+.app-shell .notes-page .note-creator i {
+  display: inline-block !important;
+  flex: 0 0 9px !important;
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-paper) 55%, transparent) !important;
+}
+.app-shell .notes-page .note-card > button { grid-column: 3 !important; grid-row: 1 !important; }
+.app-shell .notes-page .note-card > svg { grid-column: 4 !important; grid-row: 1 !important; }
+.app-shell .notes-page .note-card > button,
+.app-shell .notes-page .note-card > svg { align-self: center !important; cursor: pointer !important; }
+
+.app-shell .note-icon-picker { align-items: center !important; }
+.app-shell .note-icon-picker button { overflow: visible !important; }
+.app-shell .note-icon-picker button:nth-child(-n + 4) img { transform: translateY(-4px) !important; }
+.app-shell .note-editor-actions .cancel,
+.app-shell .note-new-editor .modal-actions .cancel,
+.app-shell .confirm-delete-modal .cancel { background: #a85e5d !important; color: #fff8ec !important; }
+.app-shell .note-editor-actions .danger,
+.app-shell .confirm-delete-modal .danger { background: #b9504c !important; color: #fff8ec !important; }
+.app-shell .note-appearance-modal .modal-actions .cancel { background: var(--theme-accent) !important; }
+
+@media (max-width: 640px) {
+  .app-shell { --bubbsun-rail: calc(100% - 20px); --bubbsun-header-h: 82px; }
+  .app-shell .topbar.text-header-v2 .topbar-inner {
+    grid-template-columns: 52px minmax(0, 1fr) 46px !important;
+    gap: 11px !important;
+    padding: 5px 0 6px !important;
+  }
+  .app-shell .topbar.text-header-v2 .header-left { width: 52px !important; height: 67px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button { width: 42px !important; height: 42px !important; min-height: 42px !important; }
+  .app-shell .topbar.text-header-v2 .header-menu-slot .icon-button svg { width: 30px !important; height: 30px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-title { font-size: 29px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-tagline { margin-top: 4px !important; padding-bottom: 4px !important; font-size: 10px !important; }
+  .app-shell .topbar.text-header-v2 .supporter-title { margin-top: 4px !important; font-size: 8px !important; }
+  .app-shell .topbar.text-header-v2 .header-add { width: 43px !important; height: 43px !important; min-height: 43px !important; border-radius: 12px !important; }
+  .app-shell .notes-page .note-card { grid-template-columns: 100px minmax(0, 1fr) 32px 24px !important; grid-template-rows: minmax(96px, auto) !important; min-height: 96px !important; }
+  .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
+}
+
 /* Final v0.700 nine-point UI pass. */
 .app-shell .topbar.text-topbar {
   position: sticky !important;

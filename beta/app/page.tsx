@@ -1488,6 +1488,7 @@ function ListsPage({
   listReadAt,
   groupId,
   groupName,
+  groupIconId,
   canReorder,
 }: {
   lists: BubbsunList[];
@@ -1515,6 +1516,7 @@ function ListsPage({
   listReadAt: Map<string,number>;
   groupId: string;
   groupName: string;
+  groupIconId?: string;
   canReorder: boolean;
 }) {
   const baseShown = privateMode
@@ -1561,7 +1563,7 @@ function ListsPage({
           className={!privateMode ? "selected" : ""}
           onClick={() => onMode(false)}
         >
-          <Users /> <span>GRUPP<small>{groupName}</small></span>
+          {groupIconId ? <GroupIcon id={groupIconId} /> : <Users />} <span>GRUPP<small>{groupName}</small></span>
         </button>
       </div>
       <div className="content-tabs content-tabs-refined"><button className="selected"><ListChecks/> LISTOR</button><button onClick={onNotes}><NotebookPen/> ANTECKNINGAR</button></div>
@@ -5251,6 +5253,7 @@ function AuthenticatedApp() {
           listReadAt={listReadAt}
           groupId={account.activeGroupId}
           groupName={groupName}
+          groupIconId={activeGroup?.iconId}
           canReorder={privateMode || canManageGroup}
         />
       )}

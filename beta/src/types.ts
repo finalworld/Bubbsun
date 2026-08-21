@@ -49,6 +49,8 @@ export type ListItem = {
   assignedTo?: string;
   status?: string;
   priority?: string;
+  room?: string;
+  recurrence?: string;
 };
 
 export type BubbsunList = {

@@ -242,6 +242,8 @@ const listTypes = [
   { id: "wishlist", label: "Önskelista", icon: "🎁" },
   { id: "other", label: "Annat", icon: "📝" },
 ] as const;
+const cleaningRooms = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Ute"];
+const cleaningRecurrences = ["En gång", "Varje dag", "Varje vecka", "Varannan vecka", "Varje månad"];
 const noteIcons=["idea","star","search","alarm","palette","archive","tag","lock"] as const;
 const noteIconSource=(icon:string)=>`${import.meta.env.BASE_URL}assets/note-icons/${noteIcons.includes(icon as typeof noteIcons[number])?icon:"idea"}.png`;
 const listTypeInfo = (id?: string) =>
@@ -1857,6 +1859,7 @@ function SortableItemRow({
   isNew,
   listType,
   packPeople,
+  members,
 }: {
   item: ListItem;
   owner?: Membership;
@@ -1876,6 +1879,7 @@ function SortableItemRow({
   isNew: boolean;
   listType?: string;
   packPeople?: string[];
+  members: Membership[];
 }) {
   const sortable = useSortable({ id: item.id, disabled: !canDrag });
   const liked = item.likedBy.includes(uid);
@@ -1885,11 +1889,13 @@ function SortableItemRow({
   const [draftAssignedTo,setDraftAssignedTo]=useState(item.assignedTo||"");
   const [draftStatus,setDraftStatus]=useState(item.status||"");
   const [draftPriority,setDraftPriority]=useState(item.priority||"Normal");
+  const [draftRoom,setDraftRoom]=useState(item.room||"");
+  const [draftRecurrence,setDraftRecurrence]=useState(item.recurrence||"");
   const swipeStart=useRef<{x:number;y:number;pointerId:number}|null>(null);
   const suppressSwipeClick=useRef(false);
   const [swipeOffset,setSwipeOffset]=useState(0);
   const [swiping,setSwiping]=useState(false);
-  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");},[item.name,item.quantity,item.note,item.assignedTo,item.status,item.priority]);
+  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");},[item.name,item.quantity,item.note,item.assignedTo,item.status,item.priority,item.room,item.recurrence]);
   const startSwipe=(event:ReactPointerEvent<HTMLDivElement>)=>{
     if(event.pointerType!=="touch"||selecting||expanded)return;
     const target=event.target as HTMLElement;
@@ -1945,7 +1951,7 @@ function SortableItemRow({
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
-        {(item.quantity||item.assignedTo||item.status||(listType==="wishlist"&&item.priority)) && <small>{[item.quantity,item.assignedTo&&`Till: ${item.assignedTo}`,item.status,listType==="wishlist"&&item.priority&&`Prioritet: ${item.priority}`].filter(Boolean).join(" · ")}</small>}
+        {(item.quantity||item.assignedTo||item.status||item.room||item.recurrence||(listType==="wishlist"&&item.priority)) && <small>{[item.quantity,item.room&&`Rum: ${item.room}`,item.assignedTo&&(listType==="cleaning"?`Ansvarig: ${item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,listType==="wishlist"&&item.priority&&`Prioritet: ${item.priority}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
@@ -1988,7 +1994,8 @@ function SortableItemRow({
       {listType==="home"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Att göra</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select></label>}
       {listType==="orders"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Välj status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select></label>}
       {listType==="wishlist"&&<label>Önskas mest?<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select></label>}
-      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"?draftAssignedTo:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"?draftPriority:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
+      {listType==="cleaning"&&<><label>Rum<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select></label><label>Ansvarig<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.displayName}>{member.displayName}</option>)}</select></label><label>Upprepas<select value={draftRecurrence} onChange={event=>{setDraftRecurrence(event.target.value);onDirtyChange(true)}}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></label></>}
+      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"||listType==="cleaning"?draftAssignedTo:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"?draftPriority:undefined,room:listType==="cleaning"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
     </div>}
     </div>
   );
@@ -2036,6 +2043,9 @@ function ListPage({
   const [assignedTo,setAssignedTo]=useState("");
   const [itemStatus,setItemStatus]=useState("");
   const [priority,setPriority]=useState("Normal");
+  const [cleaningRoom,setCleaningRoom]=useState("");
+  const [cleaningAssignee,setCleaningAssignee]=useState("");
+  const [cleaningRecurrence,setCleaningRecurrence]=useState("");
   const [search, setSearch] = useState("");
   const [showDone, setShowDone] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -2134,11 +2144,14 @@ function ListPage({
       ...(list.listType==="packing"&&assignedTo?{assignedTo}:{}),
       ...((list.listType==="home"||list.listType==="orders")&&itemStatus?{status:itemStatus}:{}),
       ...(list.listType==="wishlist"?{priority}:{}),
+      ...(list.listType==="cleaning"&&cleaningRoom?{room:cleaningRoom}:{}),
+      ...(list.listType==="cleaning"&&cleaningAssignee?{assignedTo:cleaningAssignee}:{}),
+      ...(list.listType==="cleaning"&&cleaningRecurrence?{recurrence:cleaningRecurrence}:{}),
     };
     onChange({ ...list, items: [item, ...list.items] });
     setName("");
     setQuantity("");
-    setAssignedTo("");setItemStatus("");setPriority("Normal");
+    setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");
   };
   const patchItem = (id: string, updater: (x: ListItem) => ListItem) =>
     onChange({
@@ -2200,6 +2213,7 @@ function ListPage({
       isNew={!isPrivate&&item.ownerId!==uid&&item.createdAt>unreadAfter}
       listType={list.listType}
       packPeople={list.packPeople}
+      members={members}
     />
   );
   const dragEnd = (event: DragEndEvent) => {
@@ -2370,7 +2384,7 @@ function ListPage({
           popup.document.write(`<!doctype html><html lang="sv"><head><title>${escape(list.name)}</title><style>body{max-width:760px;margin:35px auto;padding:0 24px;color:#24170f;font-family:Arial,sans-serif}h1{font:800 38px Georgia,serif;border-bottom:3px solid #587556;padding-bottom:12px}ul{list-style:none;padding:0;display:grid;gap:10px}li{display:grid;grid-template-columns:25px 1fr auto;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid #cbb89f}.box{width:18px;height:18px;border:2px solid #587556;border-radius:4px}.done .box:after{content:'✓';display:block;text-align:center;line-height:16px}.done strong{text-decoration:line-through;color:#777}small{color:#69584d}.note{grid-column:2/-1;margin:5px 0 0;padding:8px;background:#f3eadc;border-radius:6px;white-space:pre-wrap}@media print{body{margin:0}}</style></head><body><h1>${escape(list.name)}</h1><ul>${chosen.map(item=>`<li class="${item.completed?"done":""}"><span class="box"></span><strong>${escape(item.name)}</strong><small>${escape(item.quantity)}</small>${printNotes&&item.note?`<p class="note">${escape(item.note)}</p>`:""}</li>`).join("")}</ul><script>window.onload=()=>window.print()<\/script></body></html>`);popup.document.close();setPrintOpen(false);
         }}>ÖPPNA UTSKRIFT</button>
       </div></div>}
-      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""}`}>
+      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""}`}>
         <h2>LÄGG TILL</h2>
         <div>
           <span className="autocomplete-wrap">
@@ -2419,6 +2433,7 @@ function ListPage({
           {list.listType==="home"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
           {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
+          {list.listType==="cleaning"&&<div className="cleaning-quick-fields"><select aria-label="Rum" value={cleaningRoom} onChange={event=>setCleaningRoom(event.target.value)}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select><select aria-label="Ansvarig" value={cleaningAssignee} onChange={event=>setCleaningAssignee(event.target.value)}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.displayName}>{member.displayName}</option>)}</select><select aria-label="Upprepas" value={cleaningRecurrence} onChange={event=>setCleaningRecurrence(event.target.value)}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></div>}
           <button aria-label="Lägg till" onClick={() => add()}>
             <Check />
           </button>

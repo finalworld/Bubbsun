@@ -733,11 +733,12 @@ function ActionButtonBridge(){
   useEffect(()=>{
     const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
       const text=(button.textContent||button.getAttribute("aria-label")||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
-      button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger");
+      button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger","bubbsun-action-neutral");
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
-      if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
+      if(starts(["MARKERA ALLA","AVMARKERA ALLT","SELECT ALL","DESELECT ALL"]))button.classList.add("bubbsun-action-neutral");
+      else if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
       else if(starts(["AVBRYT","STÄNG","NEJ","CANCEL","CLOSE","NO"]))button.classList.add("bubbsun-action-cancel");
-      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","GÅ MED","SAVE","CREATE","DONE","ADD","JOIN"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
+      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","GÅ MED","FLYTTA","SAVE","CREATE","DONE","ADD","JOIN","MOVE"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
     });
     classify();
     const observer=new MutationObserver(classify);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
@@ -1939,6 +1940,7 @@ function ListPage({
   const [selectMode, setSelectMode] = useState<"" | "delete" | "move">("");
   const selecting = Boolean(selectMode);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const allItemsSelected = list.items.length > 0 && selectedIds.size === list.items.length;
   const [itemMenu, setItemMenu] = useState<ListItem | null>(null);
   const [moveItem, setMoveItem] = useState<ListItem | null>(null);
   const [moveMany, setMoveMany] = useState(false);
@@ -2324,11 +2326,13 @@ function ListPage({
           className={`bulk-delete-bar ${selectMode === "move" ? "bulk-move-bar" : ""}`}
         >
           <button
-            onClick={() =>
-              setSelectedIds(new Set(list.items.map((item) => item.id)))
-            }
+            onClick={() => setSelectedIds(
+              allItemsSelected
+                ? new Set()
+                : new Set(list.items.map((item) => item.id)),
+            )}
           >
-            MARKERA ALLA
+            {allItemsSelected ? "AVMARKERA ALLT" : "MARKERA ALLA"}
           </button>
           <strong>{selectedIds.size} VALDA</strong>
           {selectMode === "move" ? (

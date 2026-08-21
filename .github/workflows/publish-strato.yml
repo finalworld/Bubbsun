@@ -70,6 +70,9 @@ jobs:
           # ändras trots samma filstorlek. bubbsun.se är i Strato kopplad till
           # undermappen public, medan SFTP-kontot öppnas en nivå ovanför den.
           mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
+          # lftp kan hoppa över dolda filer vid spegling. Den här styr
+          # webbappens routning och måste därför alltid ersätta den gamla.
+          put -O public dist/.htaccess
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
           mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/

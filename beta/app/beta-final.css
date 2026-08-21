@@ -380,6 +380,22 @@
   box-shadow: 0 2px 3px rgba(75, 31, 28, .4), inset 0 1px 0 rgba(255, 255, 255, .24) !important;
 }
 
+/* List editor: keep the full-list delete action readable above the sticky footer. */
+.app-shell .list-editor button.edit-delete-list {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  height: auto !important;
+  flex: 0 0 auto !important;
+  margin: 0 0 16px !important;
+  padding: 14px 18px !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+}
+
 .app-shell button.bubbsun-action-neutral {
   background: #fffdf8 !important;
   color: #211b17 !important;

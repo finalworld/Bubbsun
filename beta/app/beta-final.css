@@ -333,7 +333,7 @@
 .app-shell .note-editor-page .note-editor-actions > button.cancel:hover,
 .app-shell .note-editor-page .note-editor-actions > button.cancel:focus-visible {
   transform: none !important;
-  filter: none !important;
+  filter: brightness(1.08) !important;
 }
 
 /* På PC är menyn en beständig, icke-blockerande sidopanel. */

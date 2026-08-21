@@ -107,7 +107,7 @@ export function watchGroupMembers(groupId: string, callback: (members: Membershi
 
 const parseItem = (raw: unknown): ListItem => {
   const d = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), assignedTo:textValue(d.assignedTo),status:textValue(d.status),priority:textValue(d.priority), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, Date.now()), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
+  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), assignedTo:textValue(d.assignedTo),status:textValue(d.status),priority:textValue(d.priority), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, 0), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
 };
 
 export function watchLists(groupId: string, callback: (lists: BubbsunList[]) => void): Unsubscribe {

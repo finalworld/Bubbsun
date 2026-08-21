@@ -124,14 +124,15 @@
   color: #fff8eb !important;
 }
 
-/* Keep list-card menus usable at the bottom of a phone screen. */
+/* Anchor each list-card menu beside the ellipsis that opened it. */
 .list-card-menu {
-  position: fixed !important;
+  position: absolute !important;
   z-index: 1000 !important;
-  right: max(12px, env(safe-area-inset-right)) !important;
-  top: auto !important;
-  bottom: max(14px, env(safe-area-inset-bottom)) !important;
-  max-height: calc(100dvh - 28px) !important;
+  right: 52px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  max-height: min(240px, calc(100dvh - 28px)) !important;
   overflow-y: auto !important;
 }
 

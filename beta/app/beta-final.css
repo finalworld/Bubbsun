@@ -450,4 +450,54 @@
     max-width: 63px !important;
     max-height: 63px !important;
   }
+
+  .app-shell .note-editor-page textarea {
+    min-height: 38vh !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 10px !important;
+    align-items: center !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > span {
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.cancel {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button:last-child {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    min-height: 34px !important;
+    width: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--theme-text) !important;
+    box-shadow: none !important;
+    font: 800 13px Arial, sans-serif !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger svg {
+    width: 30px !important;
+    height: 30px !important;
+    padding: 4px !important;
+    background: #bd5752 !important;
+    color: #fff8e8 !important;
+  }
 }

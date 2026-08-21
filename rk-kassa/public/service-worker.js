@@ -1,5 +1,5 @@
-const CACHE_NAME = "rk-kassa-v5";
-const APP_SHELL = ["/RK/", "/RK/manifest.webmanifest", "/RK/home-icon.png", "/RK/rk-upplands-bro-logo.png", "/RK/calculator-icon.png", "/RK/swish.png", "/RK/sale-whoosh.mp3"];
+const CACHE_NAME = "rk-kassa-v6";
+const APP_SHELL = ["/rk/", "/rk/manifest.webmanifest", "/rk/home-icon.png", "/rk/rk-upplands-bro-logo.png", "/rk/calculator-icon.png", "/rk/swish.png", "/rk/sale-whoosh.mp3"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -19,5 +19,5 @@ self.addEventListener("fetch", (event) => {
       caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
     }
     return response;
-  }).catch(() => caches.match(event.request).then((cached) => cached || caches.match("/RK/"))));
+  }).catch(() => caches.match(event.request).then((cached) => cached || caches.match("/rk/"))));
 });

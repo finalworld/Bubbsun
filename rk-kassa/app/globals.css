@@ -332,7 +332,7 @@ body{background:radial-gradient(circle at 20% 10%,#fffdf6 0 20%,transparent 48%)
 }
 .user-log-list{display:grid;gap:12px;max-width:880px}.user-log-list article{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;border:4px solid var(--olive-dark);border-radius:16px;background:#fffdf6;padding:15px 18px;box-shadow:0 4px 0 #c1ad81}.user-log-list article>span{font-size:1.45rem}.user-log-list strong{font-size:1.2rem;color:var(--olive-dark)}.user-log-list small{font-size:1rem;font-weight:800;color:#693629;text-align:right}@media(max-width:650px){.user-log-list article{grid-template-columns:34px 1fr}.user-log-list small{grid-column:2;text-align:left}}
 
-/* RK Kassa is hosted beneath /RK/ on Bubbsun. */
-.category-art{background-image:url('/RK/category-icons.png')!important}
-.home-view{background-image:url('/RK/home-background.png')!important}
-@media(max-width:700px){.home-view{background-image:url('/RK/home-background-portrait.png')!important}}
+/* RK Kassa is hosted beneath /rk/ on Bubbsun. */
+.category-art{background-image:url('/rk/category-icons.png')!important}
+.home-view{background-image:url('/rk/home-background.png')!important}
+@media(max-width:700px){.home-view{background-image:url('/rk/home-background-portrait.png')!important}}

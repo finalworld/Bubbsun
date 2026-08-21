@@ -64,18 +64,14 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          # Visas i GitHub-loggen vid felsökning av Stratos publiceringsmapp.
-          pwd
-          cls -la
           # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
           # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
           # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan
-          # ändras trots samma filstorlek. SFTP-kontot är redan låst till
-          # Stratos valda webbrot (public), så vi får inte lägga på /public en
-          # gång till här.
-          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ ./
-          put -O . dist/index.html
-          put -O beta dist/beta/index.html
-          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ RK/
+          # ändras trots samma filstorlek. bubbsun.se är i Strato kopplad till
+          # undermappen public, medan SFTP-kontot öppnas en nivå ovanför den.
+          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
+          put -O public dist/index.html
+          put -O public/beta dist/beta/index.html
+          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
           bye
           EOF

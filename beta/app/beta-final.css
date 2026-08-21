@@ -326,8 +326,14 @@
 
 .note-follow-panel {
   max-width: 980px !important;
+  min-height: 0 !important;
   padding-top: 10px !important;
-  padding-bottom: 0 !important;
+  padding-bottom: 10px !important;
+}
+
+.note-follow-panel + .note-editor-page {
+  min-height: 0 !important;
+  padding-top: 0 !important;
 }
 
 .note-follow-panel > button {

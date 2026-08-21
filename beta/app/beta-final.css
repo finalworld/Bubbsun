@@ -13,6 +13,10 @@
 }
 
 /* Notes should visually and mechanically match list cards. */
+.app-shell .note-card:hover {
+  transform: none !important;
+}
+
 .note-stack {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;

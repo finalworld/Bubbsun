@@ -64,6 +64,9 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          # Visas i GitHub-loggen vid felsökning av Stratos publiceringsmapp.
+          pwd
+          cls -la
           # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
           # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
           # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan

@@ -1870,7 +1870,7 @@ function SortableItemRow({
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
-        {(item.quantity||item.assignedTo||item.status||item.priority) && <small>{[item.quantity,item.assignedTo&&`Till: ${item.assignedTo}`,item.status,item.priority&&`Prioritet: ${item.priority}`].filter(Boolean).join(" · ")}</small>}
+        {(item.quantity||item.assignedTo||item.status||(listType==="wishlist"&&item.priority)) && <small>{[item.quantity,item.assignedTo&&`Till: ${item.assignedTo}`,item.status,listType==="wishlist"&&item.priority&&`Prioritet: ${item.priority}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
@@ -1913,7 +1913,7 @@ function SortableItemRow({
       {listType==="home"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Att göra</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select></label>}
       {listType==="orders"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Välj status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select></label>}
       {listType==="wishlist"&&<label>Önskas mest?<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select></label>}
-      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:draftAssignedTo,status:draftStatus,priority:draftPriority}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
+      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"?draftAssignedTo:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"?draftPriority:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
     </div>}
     </div>
   );

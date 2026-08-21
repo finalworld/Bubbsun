@@ -5123,7 +5123,6 @@ function AuthenticatedApp() {
         else setLists((old) => old.map((x) => (x.id === previous.id ? previous : x)));
       }
       if (error instanceof Error && error.message === "LIST_CONFLICT") setSaveConflict(true);
-      else window.alert("Ändringen kunde inte sparas. Försök igen.");
       console.error("Could not save list change", error);
     }
   };

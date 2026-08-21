@@ -735,7 +735,7 @@ function ActionButtonBridge(){
       const text=(button.textContent||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
       button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger");
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
-      if(starts(["TA BORT","LÄMNA","LOGGA UT","DELETE","REMOVE","LEAVE","LOG OUT"]))button.classList.add("bubbsun-action-danger");
+      if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
       else if(starts(["AVBRYT","STÄNG","NEJ","CANCEL","CLOSE","NO"]))button.classList.add("bubbsun-action-cancel");
       else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","SAVE","CREATE","DONE","ADD"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
     });

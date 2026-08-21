@@ -1,6 +1,6 @@
 import {
   collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, orderBy, query, serverTimestamp,
-  setDoc, updateDoc, where, limit, writeBatch, runTransaction, type Unsubscribe,
+  setDoc, updateDoc, where, limit, writeBatch, type Unsubscribe,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
@@ -175,12 +175,8 @@ export async function switchGroup(uid: string, groupId: string) {
 
 export async function saveList(groupId: string, list: BubbsunList, actorId: string) {
   const ref=doc(db,"groups",groupId,"lists",list.id);
-  return runTransaction(db,async transaction=>{
-    const current=await transaction.get(ref),data=current.data(),remoteRevision=numberValue(data?.revision);
-    const nextRevision=remoteRevision+1;
-    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:nextRevision,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
-    return nextRevision;
-  });
+  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+  return (list.revision||0)+1;
 }
 
 export async function createList(groupId: string, name: string, actorId: string, order: number, listType = "other") {

@@ -1655,8 +1655,8 @@ function ListsPage({
             aria-expanded={categoryMenuOpen}
             onClick={() => setCategoryMenuOpen((open) => !open)}
           >
-            <span>{activeType?.icon || "ALLA"}</span>
-            <b>{activeType?.label || "Alla"}</b>
+            <span>{activeType?.icon || ""}</span>
+            <b>{activeType?.label || "Alla listor"}</b>
             <small>{activeTypeCount}</small>
             <ChevronDown className={categoryMenuOpen ? "turn" : ""} />
           </button>
@@ -1670,7 +1670,7 @@ function ListsPage({
                   setCategoryMenuOpen(false);
                 }}
               >
-                <span>ALLA</span><b>Alla listor</b>
+                <span aria-hidden="true" /><b>Alla listor</b>
                 <small>{baseShown.length}</small>
                 {typeFilter === "all" && <Check />}
               </button>

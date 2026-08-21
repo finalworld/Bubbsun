@@ -73,5 +73,7 @@ jobs:
           put -O public/beta dist/beta/index.html
           mkdir -p RK
           mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ RK/
+          chmod 755 RK
+          chmod 644 RK/index.html
           bye
           EOF

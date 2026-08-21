@@ -2295,7 +2295,7 @@ function ListPage({
           popup.document.write(`<!doctype html><html lang="sv"><head><title>${escape(list.name)}</title><style>body{max-width:760px;margin:35px auto;padding:0 24px;color:#24170f;font-family:Arial,sans-serif}h1{font:800 38px Georgia,serif;border-bottom:3px solid #587556;padding-bottom:12px}ul{list-style:none;padding:0;display:grid;gap:10px}li{display:grid;grid-template-columns:25px 1fr auto;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid #cbb89f}.box{width:18px;height:18px;border:2px solid #587556;border-radius:4px}.done .box:after{content:'✓';display:block;text-align:center;line-height:16px}.done strong{text-decoration:line-through;color:#777}small{color:#69584d}.note{grid-column:2/-1;margin:5px 0 0;padding:8px;background:#f3eadc;border-radius:6px;white-space:pre-wrap}@media print{body{margin:0}}</style></head><body><h1>${escape(list.name)}</h1><ul>${chosen.map(item=>`<li class="${item.completed?"done":""}"><span class="box"></span><strong>${escape(item.name)}</strong><small>${escape(item.quantity)}</small>${printNotes&&item.note?`<p class="note">${escape(item.note)}</p>`:""}</li>`).join("")}</ul><script>window.onload=()=>window.print()<\/script></body></html>`);popup.document.close();setPrintOpen(false);
         }}>ÖPPNA UTSKRIFT</button>
       </div></div>}
-      <div className={`add-panel ${list.listType === "wishlist" ? "add-panel-wishlist" : ""}`}>
+      <div className={`add-panel ${list.listType === "wishlist" ? "add-panel-wishlist" : list.listType === "packing" ? "add-panel-packing" : ""}`}>
         <h2>LÄGG TILL</h2>
         <div>
           <span className="autocomplete-wrap">

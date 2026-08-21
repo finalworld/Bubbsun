@@ -324,6 +324,48 @@
   border-color: var(--theme-accent) !important;
 }
 
+/* Önskelistans snabbfält: prioritet precis före den kompakta lägg-till-knappen. */
+.app-shell .add-panel-wishlist > div {
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) minmax(140px, .55fr) 54px !important;
+}
+
+.app-shell .add-panel-wishlist select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 53px !important;
+  padding: 10px 34px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+  cursor: pointer;
+}
+
+.app-shell .add-panel-wishlist > div > button:last-child {
+  width: 54px !important;
+  min-width: 54px !important;
+  min-height: 53px !important;
+  padding: 0 !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 700px) {
+  .app-shell .add-panel-wishlist > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 52px !important;
+  }
+
+  .app-shell .add-panel-wishlist .autocomplete-wrap {
+    grid-column: 1 / -1 !important;
+  }
+
+  .app-shell .add-panel-wishlist > div > button:last-child {
+    width: 52px !important;
+    min-width: 52px !important;
+  }
+}
+
 .app-shell button.bubbsun-action-danger {
   background: #b7554e !important;
   border: 1px solid #823a36 !important;

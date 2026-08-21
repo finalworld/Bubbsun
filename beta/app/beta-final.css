@@ -496,8 +496,8 @@
   .app-shell .note-editor-page .note-editor-actions > button.danger svg {
     width: 30px !important;
     height: 30px !important;
-    padding: 4px !important;
-    background: #bd5752 !important;
-    color: #fff8e8 !important;
+    padding: 2px !important;
+    background: transparent !important;
+    color: #bd5752 !important;
   }
 }

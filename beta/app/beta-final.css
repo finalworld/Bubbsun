@@ -298,6 +298,12 @@
   box-shadow: 0 2px 3px rgba(70, 34, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
 }
 
+/* Modalernas äldre förstaknappsregel får inte skriva över STÄNG/AVBRYT. */
+.app-shell .modal button.bubbsun-action-cancel {
+  background: #a95e5e !important;
+  border-color: #703535 !important;
+}
+
 .app-shell button.bubbsun-action-danger {
   background: #b7554e !important;
   border: 1px solid #823a36 !important;

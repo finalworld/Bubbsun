@@ -1091,7 +1091,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.803 · Web Edition Beta
+            Bubbsun v0.804 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5139,9 +5139,7 @@ function AuthenticatedApp() {
   const activeSelected = selected
     ? visibleLists.find((x) => x.id === selected.id) || selected
     : null;
-  const groupName = privateMode
-    ? "Mina privata listor"
-    : activeGroup?.name || "Ingen grupp vald";
+  const groupName = activeGroup?.name || "Ingen grupp vald";
   const activeMembership = memberships.find(
     (item) => item.groupId === account?.activeGroupId,
   );

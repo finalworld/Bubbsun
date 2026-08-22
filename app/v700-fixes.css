@@ -2110,3 +2110,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .header-brand-tagline::after {
   color: var(--theme-brand-decoration) !important;
 }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .header-brand-tagline {
+  border-top-color: var(--theme-brand-decoration) !important;
+  border-bottom-color: var(--theme-brand-decoration) !important;
+}

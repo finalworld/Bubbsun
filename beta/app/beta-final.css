@@ -1378,3 +1378,25 @@
   .app-shell .add-panel-cleaning .new-item-note,
   .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 4 !important; }
 }
+
+/* Desktop: name + compact quantity stay together; an opened note owns its own row. */
+@media (min-width: 701px) {
+  .app-shell .add-panel > div,
+  .app-shell .add-panel-stacked-select > div,
+  .app-shell .add-panel-cleaning > div,
+  .app-shell .add-panel-homefix > div {
+    grid-template-columns: minmax(260px, 1.8fr) minmax(145px, .8fr) 116px !important;
+    grid-auto-flow: row !important;
+  }
+  .app-shell .add-panel .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
+  .app-shell .add-panel > div > input { grid-column: 2 !important; grid-row: 1 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .app-shell .add-panel-stacked-select select { grid-column: 1 / 3 !important; grid-row: 2 !important; }
+  .app-shell .add-panel-stacked-select .add-panel-actions,
+  .app-shell .add-panel-cleaning .add-panel-actions,
+  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 3 !important; grid-row: 2 !important; position:static !important; align-self:stretch !important; }
+  .app-shell .add-panel-stacked-select .new-item-note,
+  .app-shell .add-panel-cleaning .new-item-note,
+  .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
+}

@@ -2070,6 +2070,8 @@ function ListPage({
 }) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [newItemNote,setNewItemNote]=useState("");
+  const [showNewItemNote,setShowNewItemNote]=useState(false);
   const [assignedTo,setAssignedTo]=useState("");
   const [itemStatus,setItemStatus]=useState("");
   const [priority,setPriority]=useState("Normal");
@@ -2151,6 +2153,7 @@ function ListPage({
           completed: false,
           completedAt: null,
           quantity: quantity.trim() || existing.quantity,
+          note: newItemNote.trim() || existing.note,
         };
         onChange({
           ...list,
@@ -2162,6 +2165,8 @@ function ListPage({
       }
       setName("");
       setQuantity("");
+      setNewItemNote("");
+      setShowNewItemNote(false);
       return;
     }
     const item: ListItem = {
@@ -2173,6 +2178,7 @@ function ListPage({
       createdAt: Date.now(),
       completedAt: null,
       likedBy: [],
+      ...(newItemNote.trim()?{note:newItemNote.trim()}:{}),
       ...(list.listType==="packing"&&assignedTo?{assignedTo}:{}),
       ...((list.listType==="home"||list.listType==="orders")&&itemStatus?{status:itemStatus}:{}),
       ...(list.listType==="wishlist"?{priority}:{}),
@@ -2185,6 +2191,8 @@ function ListPage({
     onChange({ ...list, items: [item, ...list.items] });
     setName("");
     setQuantity("");
+    setNewItemNote("");
+    setShowNewItemNote(false);
     setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");setHomeFixPlace("");setHomeFixPriority("Normal");
   };
   const patchItem = (id: string, updater: (x: ListItem) => ListItem) =>
@@ -2420,7 +2428,7 @@ function ListPage({
       </div></div>}
       <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""}`}>
         <h2>LÄGG TILL</h2>
-        <div>
+        <div className={showNewItemNote?"has-add-note":""}>
           <span className="autocomplete-wrap">
             <input
               value={name}
@@ -2468,9 +2476,11 @@ function ListPage({
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
           {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
           {list.listType==="cleaning"&&<div className="cleaning-quick-fields"><select aria-label="Rum" value={cleaningRoom} onChange={event=>setCleaningRoom(event.target.value)}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select><select aria-label="Ansvarig" value={cleaningAssignee} onChange={event=>setCleaningAssignee(event.target.value)}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select><select aria-label="Upprepas" value={cleaningRecurrence} onChange={event=>setCleaningRecurrence(event.target.value)}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></div>}
-          <button aria-label="Lägg till" onClick={() => add()}>
-            <Check />
-          </button>
+          {showNewItemNote&&<textarea className="new-item-note" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en anteckning (valfritt)…" autoFocus/>}
+          <span className="add-panel-actions">
+            <button type="button" className={showNewItemNote?"active":""} aria-label={showNewItemNote?"Dölj anteckning":"Lägg till anteckning"} aria-pressed={showNewItemNote} onClick={()=>setShowNewItemNote(value=>!value)}><NotebookPen/></button>
+            <button type="button" aria-label="Lägg till" onClick={() => add()}><Check /></button>
+          </span>
         </div>
       </div>
       {selecting && (

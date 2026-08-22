@@ -17,6 +17,29 @@
   transform: none !important;
 }
 
+/* Give mobile list titles every safe pixel up to the controls, then ellipsize. */
+@media (max-width: 430px) {
+  .app-shell .list-card:not(.note-list-card) {
+    grid-template-columns: 82px 8px minmax(0, 1fr) 46px !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .list-copy {
+    padding-right: 5px !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .list-copy strong {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .card-actions {
+    grid-template-columns: 22px 24px !important;
+  }
+}
+
 .note-stack {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;

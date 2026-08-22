@@ -804,17 +804,6 @@ function Header({
               <Menu />
             </button>
           </div>
-          {typeof onlineCount === "number" && (
-            <button
-              type="button"
-              className="admin-online-count"
-              onClick={onOpenAdmin}
-              aria-label="Öppna medlemslistan i administrationen"
-              title="Öppna medlemslistan"
-            >
-              Online: {onlineCount}
-            </button>
-          )}
         </div>
         <button
           className={`brand text-brand header-brand-v3 ${glow ? "brand-glow" : ""}`}
@@ -822,7 +811,21 @@ function Header({
           aria-label="Gå till Mina listor"
           onClick={onHome}
         >
-          <span className="header-brand-title">Bubbsun<span className="header-brand-suffix">.se</span></span>
+          <span className="header-brand-title">
+            Bubbsun<span className="header-brand-suffix">.se</span>
+            {typeof onlineCount === "number" && (
+              <span
+                className="admin-online-count"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenAdmin?.();
+                }}
+                title="Online just nu"
+              >
+                {onlineCount}
+              </span>
+            )}
+          </span>
           <span className="header-brand-tagline">{language === "en" ? "LISTS WITH CHARACTER" : "LISTOR MED KARAKTÄR"}</span>
           {supporterTitle && supporterTitle !== "none" && (
             <small className="supporter-title" data-title={supporterTitle}>

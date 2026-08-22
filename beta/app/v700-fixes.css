@@ -2722,6 +2722,58 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   font-size: .52em !important;
   letter-spacing: -.035em !important;
 }
+.app-shell .topbar.text-header-v2 .header-brand-title {
+  position: relative !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count {
+  position: absolute !important;
+  left: calc(100% + 10px) !important;
+  right: auto !important;
+  top: -5px !important;
+  bottom: auto !important;
+  box-sizing: border-box !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 72%, #1e1711) !important;
+  border-radius: 50% !important;
+  background: var(--theme-accent) !important;
+  color: var(--theme-paper) !important;
+  box-shadow: 0 3px 6px color-mix(in srgb, var(--theme-text) 22%, transparent) !important;
+  font: 800 16px/1 Georgia, "Times New Roman", serif !important;
+  letter-spacing: 0 !important;
+  text-decoration: none !important;
+  transform: rotate(-8deg) !important;
+  cursor: pointer !important;
+  isolation: isolate !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  z-index: 1 !important;
+  border: 1px dashed color-mix(in srgb, var(--theme-paper) 82%, transparent) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count:hover {
+  color: var(--theme-paper) !important;
+  text-decoration: none !important;
+  filter: brightness(1.1) !important;
+}
+@media (max-width: 640px) {
+  .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count {
+    left: calc(100% + 7px) !important;
+    top: -3px !important;
+    width: 31px !important;
+    height: 31px !important;
+    font-size: 13px !important;
+  }
+  .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count::after { inset: 3px !important; }
+}
 .app-shell .topbar.text-header-v2 .header-brand-tagline {
   width: min(100%, 410px) !important;
   margin-top: 5px !important;

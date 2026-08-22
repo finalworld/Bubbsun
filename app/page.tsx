@@ -1091,7 +1091,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.801 · Web Edition
+            Bubbsun v0.802 · Web Edition
           </small>
         </div>
       </aside>
@@ -1536,6 +1536,7 @@ function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships
   const [counts,setCounts]=useState<Record<string,{lists:number;notes:number}>>({});
   const root=useRef<HTMLDivElement>(null);
   useEffect(()=>{if(!open)return;const close=(event:PointerEvent)=>{if(!root.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[open]);
+  useEffect(()=>{if(!selected)setOpen(false)},[selected]);
   useEffect(()=>{
     const unsubs=memberships.flatMap(membership=>[
       watchLists(membership.groupId,items=>setCounts(current=>({...current,[membership.groupId]:{lists:items.length,notes:current[membership.groupId]?.notes??0}}))),
@@ -1543,10 +1544,10 @@ function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships
     ]);
     return()=>unsubs.forEach(unsubscribe=>unsubscribe());
   },[memberships]);
-  return <div ref={root} className={`group-space-tab ${selected?"selected":""}`}>
-    <button type="button" className="group-space-main" aria-label="Byt grupp" aria-expanded={open} onClick={()=>{onSelect();if(memberships.length)setOpen(value=>!value)}}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
-    {!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
-    {open&&<div className="group-space-menu" role="menu">{memberships.map(membership=>{const group=groups[membership.groupId],count=counts[membership.groupId]??{lists:0,notes:0};return <button type="button" role="menuitem" key={membership.groupId} className={membership.groupId===activeGroupId?"selected":""} onClick={()=>{setOpen(false);if(membership.groupId!==activeGroupId)onSwitch(membership.groupId)}}><span className="group-space-menu-icon">{group?.iconId?<GroupIcon id={group.iconId}/>:<Users/>}</span><strong>{group?.name||"Grupp"}</strong><span className="group-space-menu-counts"><span title={`${count.lists} listor`}><ListChecks/><b>{count.lists}</b></span><span title={`${count.notes} anteckningar`}><NotebookPen/><b>{count.notes}</b></span></span>{membership.groupId===activeGroupId&&<Check/>}</button>})}</div>}
+  return <div ref={root} className={`group-space-tab ${selected?"selected has-menu":"group-space-tab-static"} ${open?"menu-open":""}`}>
+    <button type="button" className="group-space-main" aria-label={selected?"Byt grupp":"Öppna grupper"} aria-expanded={selected&&open} onClick={()=>{if(!selected){onSelect();return}if(memberships.length)setOpen(value=>!value)}}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
+    {selected&&!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
+    {selected&&open&&<div className="group-space-menu" role="menu">{memberships.map(membership=>{const group=groups[membership.groupId],count=counts[membership.groupId]??{lists:0,notes:0};return <button type="button" role="menuitem" key={membership.groupId} className={membership.groupId===activeGroupId?"selected":""} onClick={()=>{setOpen(false);if(membership.groupId!==activeGroupId)onSwitch(membership.groupId)}}><span className="group-space-menu-icon">{group?.iconId?<GroupIcon id={group.iconId}/>:<Users/>}</span><strong>{group?.name||"Grupp"}</strong><span className="group-space-menu-counts"><span title={`${count.lists} listor`}><ListChecks/><b>{count.lists}</b></span><span title={`${count.notes} anteckningar`}><NotebookPen/><b>{count.notes}</b></span></span>{membership.groupId===activeGroupId&&<Check/>}</button>})}</div>}
   </div>
 }
 

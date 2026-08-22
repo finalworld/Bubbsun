@@ -1675,6 +1675,34 @@
   flex: 0 0 36px !important;
 }
 
+/* Group chooser stays one clean card and its menu overlays pins/content. */
+.app-shell .space-tabs-refined {
+  position: relative !important;
+  overflow: visible !important;
+}
+.app-shell .space-tabs-refined:has(.group-space-tab.menu-open) {
+  z-index: 50 !important;
+}
+.app-shell .space-tabs-refined .group-space-tab.menu-open {
+  z-index: 51 !important;
+  overflow: visible !important;
+}
+.app-shell .space-tabs-refined .group-space-tab.group-space-tab-static {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.app-shell .space-tabs-refined .group-space-tab > .group-space-main,
+.app-shell .space-tabs-refined .group-space-tab > .group-space-trigger {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: 0 !important;
+}
+.app-shell .space-tabs-refined .group-space-menu {
+  z-index: 999 !important;
+}
+
 /* Mobile final: fields on top, actions anchored at bottom right. */
 @media (max-width: 700px) {
   .app-shell .add-panel > div,

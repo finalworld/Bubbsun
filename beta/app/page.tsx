@@ -765,6 +765,7 @@ function Header({
   mode,
   supporterTitle,
   glow,
+  glowColor,
   tabTitle,
   onlineCount,
   onOpenAdmin,
@@ -777,6 +778,7 @@ function Header({
   mode: "add" | "manage" | "none";
   supporterTitle?: string;
   glow?: boolean;
+  glowColor?: string;
   tabTitle?: string;
   onlineCount?: number;
   onOpenAdmin?: () => void;
@@ -816,6 +818,7 @@ function Header({
         </div>
         <button
           className={`brand text-brand header-brand-v3 ${glow ? "brand-glow" : ""}`}
+          style={{ "--supporter-glow": glowColor || "#ffb532" } as CSSProperties}
           aria-label="Gå till Mina listor"
           onClick={onHome}
         >
@@ -3544,6 +3547,16 @@ function SupportPage({
               <small>Mjukt sken runt Bubbsun-loggan.</small>
             </span>
             <input
+              className="glow-color-picker"
+              type="color"
+              aria-label="Välj färg på Fancy Glow"
+              value={account.supporterGlowColor || "#ffb532"}
+              onChange={(event) =>
+                onSave({ supporterGlowColor: event.target.value })
+              }
+            />
+            <input
+              className="glow-toggle"
               type="checkbox"
               checked={account.supporterGlow !== false}
               onChange={(event) =>
@@ -5419,6 +5432,7 @@ function AuthenticatedApp() {
       <Header
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
+        glowColor={account.supporterGlowColor}
         tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
         onHome={() => navigate(page==="notes"||page==="note"?"notes":"lists")}

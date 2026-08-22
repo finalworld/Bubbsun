@@ -890,7 +890,24 @@
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="cosmic"] { color: #8a57c6 !important; }
 
 .app-shell .topbar.text-header-v2 .header-brand-v3.brand-glow > .header-brand-title {
-  filter: drop-shadow(0 0 5px #fff5bd) drop-shadow(0 0 10px var(--theme-accent)) !important;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--supporter-glow, #ffb532) 45%, #fff)) drop-shadow(0 0 10px var(--supporter-glow, #ffb532)) !important;
+}
+
+.app-shell .supporter-controls .switch-row .glow-color-picker {
+  appearance: auto !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 38px !important;
+  padding: 3px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 10px !important;
+  background: var(--theme-paper) !important;
+  cursor: pointer !important;
+}
+
+.app-shell .supporter-controls .switch-row .glow-color-picker::before {
+  content: none !important;
+  display: none !important;
 }
 
 /* Anteckningens sparknapp. */

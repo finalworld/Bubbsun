@@ -2083,6 +2083,7 @@ function ListPage({
   const [search, setSearch] = useState("");
   const [showDone, setShowDone] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteItems,setConfirmDeleteItems]=useState<ListItem[]|null>(null);
   const [editing, setEditing] = useState(false);
   const [selectMode, setSelectMode] = useState<"" | "delete" | "move">("");
   const selecting = Boolean(selectMode);
@@ -2509,12 +2510,7 @@ function ListPage({
               className="danger"
               disabled={selectedIds.size === 0}
               onClick={() => {
-                onChange({
-                  ...list,
-                  items: list.items.filter((item) => !selectedIds.has(item.id)),
-                });
-                setSelectMode("");
-                setSelectedIds(new Set());
+                setConfirmDeleteItems(list.items.filter(item=>selectedIds.has(item.id)));
               }}
             >
               TA BORT VALDA
@@ -2600,10 +2596,7 @@ function ListPage({
               <button
                 className="danger"
                 onClick={() => {
-                  onChange({
-                    ...list,
-                    items: list.items.filter((item) => item.id !== itemMenu.id),
-                  });
+                  setConfirmDeleteItems([itemMenu]);
                   setItemMenu(null);
                 }}
               >
@@ -2616,6 +2609,18 @@ function ListPage({
             >
               AVBRYT
             </button>
+          </div>
+        </div>
+      )}
+      {confirmDeleteItems&&(
+        <div className="modal-backdrop">
+          <div className="modal confirm-delete-modal">
+            <h2>{confirmDeleteItems.length===1?"TA BORT POSTEN?":`TA BORT ${confirmDeleteItems.length} POSTER?`}</h2>
+            <p>{confirmDeleteItems.length===1?`“${confirmDeleteItems[0].name}” försvinner från listan.`:"De markerade posterna försvinner från listan."}</p>
+            <div className="modal-actions">
+              <button className="cancel" onClick={()=>setConfirmDeleteItems(null)}>AVBRYT</button>
+              <button className="danger" onClick={()=>{const ids=new Set(confirmDeleteItems.map(item=>item.id));onChange({...list,items:list.items.filter(item=>!ids.has(item.id))});setConfirmDeleteItems(null);setSelectMode("");setSelectedIds(new Set())}}>TA BORT</button>
+            </div>
           </div>
         </div>
       )}

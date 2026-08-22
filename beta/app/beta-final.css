@@ -287,6 +287,17 @@
   color: var(--theme-text) !important;
   font: 800 12px Arial, sans-serif !important;
 }
+
+/* Larger artwork inside the existing group-icon tiles. */
+.app-shell .group-icon-picker button {
+  overflow: hidden !important;
+}
+.app-shell .group-icon-picker .group-picture {
+  width: 100% !important;
+  height: 100% !important;
+  transform: scale(1.45) !important;
+  transform-origin: center !important;
+}
 @media (max-width: 500px) {
   .app-shell .group-space-menu-counts { gap: 4px !important; }
   .app-shell .group-space-menu-counts svg { width: 13px !important; height: 13px !important; }

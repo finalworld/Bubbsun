@@ -2156,6 +2156,24 @@ function ListPage({
   );
   const normalized = (value: string) =>
     value.trim().replace(/\s+/g, " ").toLocaleLowerCase("sv");
+  const suggestionQuery = normalized(name);
+  const itemSuggestions = suggestionQuery.length >= 3
+    ? Array.from(
+        new Map(
+          [list, ...siblingLists]
+            .flatMap((source) => source.items.map((item) => item.name.trim()))
+            .filter(Boolean)
+            .map((value) => [normalized(value), value] as const),
+        ).values(),
+      )
+        .filter((value) => normalized(value).includes(suggestionQuery))
+        .sort((a, b) => {
+          const aStarts = normalized(a).startsWith(suggestionQuery);
+          const bStarts = normalized(b).startsWith(suggestionQuery);
+          return aStarts === bStarts ? a.localeCompare(b, "sv") : aStarts ? -1 : 1;
+        })
+        .slice(0, 6)
+    : [];
   const add = (suggestedName?: string) => {
     const cleanName = (suggestedName ?? name).trim().replace(/\s+/g, " ");
     if (!cleanName) return;
@@ -2456,16 +2474,9 @@ function ListPage({
                 add();
               }}
             />
-            {name.trim().length >= 3 && (
+            {itemSuggestions.length > 0 && (
               <span className="suggestions">
-                {Array.from(new Set(list.items.map((item) => item.name)))
-                  .filter((value) =>
-                    value
-                      .toLocaleLowerCase("sv")
-                      .includes(name.trim().toLocaleLowerCase("sv")),
-                  )
-                  .slice(0, 6)
-                  .map((value) => (
+                {itemSuggestions.map((value) => (
                     <button
                       type="button"
                       key={value}

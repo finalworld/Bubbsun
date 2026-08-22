@@ -291,14 +291,19 @@
 /* Larger artwork inside the existing group-icon tiles. */
 .app-shell .modal .group-icon-picker > button,
 .app-shell .modal .group-icon-picker > button:first-child {
+  position: relative !important;
   overflow: hidden !important;
   background: var(--theme-paper) !important;
 }
-.app-shell .group-icon-picker .group-picture {
-  width: 110% !important;
-  height: 110% !important;
+.app-shell .modal .group-icon-picker > button > .group-picture {
+  position: absolute !important;
+  inset: -5px !important;
+  width: calc(100% + 10px) !important;
+  height: calc(100% + 10px) !important;
   max-width: none !important;
   max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
   transform: none !important;
   transform-origin: center !important;
 }

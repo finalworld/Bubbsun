@@ -2838,12 +2838,13 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .header-brand-tagline::before {
   top: -7px !important;
   border-top-color: color-mix(in srgb, var(--theme-brand-decoration) 58%, transparent) !important;
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--theme-brand-decoration) 58%, transparent) !important;
 }
 .app-shell .topbar .brand-tagline::after,
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .header-brand-tagline::after {
   color: var(--theme-brand-decoration) !important;
 }
 .app-shell .topbar.text-header-v2 .header-brand-v3 > .header-brand-tagline {
-  border-top-color: var(--theme-brand-decoration) !important;
+  border-top-color: transparent !important;
   border-bottom-color: var(--theme-brand-decoration) !important;
 }

@@ -297,9 +297,9 @@
 }
 .app-shell .modal .group-icon-picker > button > .group-picture {
   position: absolute !important;
-  inset: -5px !important;
-  width: calc(100% + 10px) !important;
-  height: calc(100% + 10px) !important;
+  inset: 3px !important;
+  width: calc(100% - 6px) !important;
+  height: calc(100% - 6px) !important;
   max-width: none !important;
   max-height: none !important;
   object-fit: contain !important;

@@ -3114,6 +3114,7 @@ function PeoplePage({
             <p>{roleMember.displayName}</p>
             <div className="role-actions">
               <button
+                className={roleMember.role.toLowerCase()==="member"?"bubbsun-action-confirm":"bubbsun-action-neutral"}
                 onClick={async () => {
                   const transfer =
                     roleMember.role.toLowerCase() === "boss" &&
@@ -3152,6 +3153,7 @@ function PeoplePage({
                 )}
               </button>
               <button
+                className={roleMember.role.toLowerCase()==="member"?"bubbsun-action-neutral":"bubbsun-action-confirm"}
                 onClick={async () => {
                   await updateMembership(group.id, roleMember.uid, {
                     role: "member",
@@ -3165,7 +3167,7 @@ function PeoplePage({
               </button>
               {group.ownerId !== roleMember.uid && (
                 <button
-                  className="danger"
+                  className="danger bubbsun-action-danger role-remove-member"
                   onClick={async () => {
                     if (
                       !window.confirm(
@@ -3177,9 +3179,7 @@ function PeoplePage({
                     setRoleMember(null);
                   }}
                 >
-                  <Trash2 /> TA BORT
-                  <br />
-                  MEDLEM
+                  <Trash2 /> <span>TA BORT MEDLEM</span>
                 </button>
               )}
             </div>

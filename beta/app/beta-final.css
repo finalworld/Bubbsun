@@ -310,6 +310,18 @@
   outline: 3px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
   outline-offset: 2px !important;
 }
+.app-shell .role-actions .role-remove-member {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-height: 62px !important;
+}
+.app-shell .role-actions .role-remove-member svg {
+  width: 23px !important;
+  height: 23px !important;
+}
 @media (max-width: 500px) {
   .app-shell .group-space-menu-counts { gap: 4px !important; }
   .app-shell .group-space-menu-counts svg { width: 13px !important; height: 13px !important; }

@@ -298,6 +298,18 @@
   transform: scale(1.45) !important;
   transform-origin: center !important;
 }
+.app-shell .group-list > div[role="button"] {
+  cursor: pointer !important;
+}
+.app-shell .group-list > div[role="button"].active {
+  border-color: var(--theme-accent) !important;
+  box-shadow: inset 5px 0 0 var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-paper)) !important;
+}
+.app-shell .group-list > div[role="button"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+  outline-offset: 2px !important;
+}
 @media (max-width: 500px) {
   .app-shell .group-space-menu-counts { gap: 4px !important; }
   .app-shell .group-space-menu-counts svg { width: 13px !important; height: 13px !important; }

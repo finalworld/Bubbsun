@@ -2907,6 +2907,7 @@ function PeoplePage({
   memberships,
   groups,
   language,
+  onSelectGroup,
 }: {
   account: Account;
   group?: Group;
@@ -2914,6 +2915,7 @@ function PeoplePage({
   memberships: Membership[];
   groups: Record<string, Group>;
   language: string;
+  onSelectGroup: (groupId: string) => void;
 }) {
   const [groupDialog, setGroupDialog] = useState<"" | "create" | "join">("");
   const [groupMessage, setGroupMessage] = useState("");
@@ -3019,7 +3021,15 @@ function PeoplePage({
       <h2 className="small-heading">MINA GRUPPER</h2>
       <div className="group-list">
         {memberships.map((m) => (
-          <div key={m.groupId}>
+          <div
+            key={m.groupId}
+            className={m.groupId===account.activeGroupId?"active":""}
+            role="button"
+            tabIndex={0}
+            aria-current={m.groupId===account.activeGroupId?"true":undefined}
+            onClick={()=>onSelectGroup(m.groupId)}
+            onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();onSelectGroup(m.groupId)}}}
+          >
             <GroupIcon id={groups[m.groupId]?.iconId} />
             <strong>{groups[m.groupId]?.name || "Grupp"}</strong>
             <small>{m.role}</small>
@@ -5581,6 +5591,7 @@ function AuthenticatedApp() {
           memberships={memberships}
           groups={groups}
           language={language}
+          onSelectGroup={async id=>{if(id===account.activeGroupId)return;await switchGroup(user.uid,id);setPrivateMode(false)}}
         />
       )}
       {page === "stats" && (

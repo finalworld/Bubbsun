@@ -4767,17 +4767,20 @@ function AuthenticatedApp() {
   };
   const saveChanged = async (next: BubbsunList) => {
     setSelected(next);
-    if (selectedPrivate && user) {
-      setPrivateLists((old) => old.map((x) => (x.id === next.id ? next : x)));
-      await savePrivateList(user.uid, next);
-    } else if (account && user)
-      try {
-        await saveList(account.activeGroupId, next, user.uid);
-      } catch (error) {
-        if (error instanceof Error && error.message === "LIST_CONFLICT")
-          setSaveConflict(true);
-        else throw error;
+    try {
+      if (selectedPrivate && user) {
+        setPrivateLists((old) => old.map((x) => (x.id === next.id ? next : x)));
+        await savePrivateList(user.uid, next);
+      } else if (account && user) {
+        const revision = await saveList(account.activeGroupId, next, user.uid);
+        const saved = { ...next, revision };
+        setSelected(saved);
+        setLists((old) => old.map((x) => (x.id === saved.id ? saved : x)));
       }
+    } catch (error) {
+      console.error("Could not save list change", error);
+      window.alert("Ändringen kunde inte sparas. Försök igen.");
+    }
   };
   const inviteFriend = async () => {
     if (!user) return;

@@ -1,6 +1,6 @@
 import {
   collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, orderBy, query, serverTimestamp,
-  setDoc, updateDoc, where, limit, writeBatch, runTransaction, type Unsubscribe,
+  setDoc, updateDoc, where, limit, writeBatch, type Unsubscribe,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
@@ -112,8 +112,20 @@ export function watchAllPrivateLists(callback:(lists:BubbsunList[])=>void, onErr
   return onSnapshot(collectionGroup(db,"privateLists"),snap=>callback(snap.docs.map((item,index)=>parseListDocument(item,index))),error=>onError?.(error));
 }
 
+const listItemsForStorage = (items: BubbsunList["items"]) => items.map(item => ({
+  id: item.id,
+  name: item.name,
+  quantity: item.quantity,
+  ownerId: item.ownerId,
+  completed: item.completed,
+  createdAt: item.createdAt,
+  completedAt: item.completedAt,
+  likedBy: item.likedBy,
+  ...(item.note ? { note: item.note } : {}),
+}));
+
 export async function savePrivateList(uid:string,list:BubbsunList) {
-  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:list.items,updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:listItemsForStorage(list.items),updatedAt:serverTimestamp()},{merge:true});
 }
 
 export async function removePrivateList(uid:string,listId:string) { await deleteDoc(doc(db,"users",uid,"privateLists",listId)); }
@@ -131,11 +143,8 @@ export async function switchGroup(uid: string, groupId: string) {
 
 export async function saveList(groupId: string, list: BubbsunList, actorId: string) {
   const ref=doc(db,"groups",groupId,"lists",list.id);
-  await runTransaction(db,async transaction=>{
-    const current=await transaction.get(ref),data=current.data(),remoteRevision=numberValue(data?.revision);
-    if(current.exists()&&remoteRevision>(list.revision||0)&&textValue(data?.updatedBy)!==actorId) throw new Error("LIST_CONFLICT");
-    transaction.set(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:list.items,revision:remoteRevision+1,updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
-  });
+  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+  return (list.revision||0)+1;
 }
 
 export async function createList(groupId: string, name: string, actorId: string, order: number) {

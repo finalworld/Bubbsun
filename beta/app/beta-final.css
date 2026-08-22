@@ -1495,6 +1495,11 @@
 .app-shell .space-tabs-refined .group-space-tab {
   border-radius: 13px !important;
 }
+.app-shell .space-tabs-refined .group-space-main > .group-picture {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+}
 
 /* Mobile final: fields on top, actions anchored at bottom right. */
 @media (max-width: 700px) {

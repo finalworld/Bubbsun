@@ -17,6 +17,103 @@
   transform: none !important;
 }
 
+/* Theme the illustrated drawer while preserving its hero and colored tabs. */
+.app-shell .drawer {
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+  box-shadow:
+    8px 10px 30px color-mix(in srgb, var(--theme-text) 34%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--theme-accent) 10%, transparent) !important;
+}
+
+.app-shell .drawer-title {
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .drawer-title > button:not(.drawer-invite) {
+  background: var(--theme-accent) !important;
+  color: var(--theme-paper) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer-scroll {
+  scrollbar-color: var(--theme-accent) transparent !important;
+}
+
+.app-shell .drawer .profile-card,
+.app-shell .drawer nav > button:not(.support-nav),
+.app-shell .drawer-split > button,
+.app-shell .drawer-account {
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .profile-card:hover,
+.app-shell .drawer nav > button:not(.support-nav):hover,
+.app-shell .drawer nav > button:not(.support-nav):focus-visible,
+.app-shell .drawer-split > button:hover,
+.app-shell .drawer-split > button:focus-visible,
+.app-shell .drawer-account:hover {
+  background: color-mix(in srgb, var(--theme-accent) 9%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer .profile-card .avatar {
+  box-shadow:
+    0 0 0 3px var(--theme-paper),
+    0 2px 7px color-mix(in srgb, var(--theme-text) 28%, transparent) !important;
+}
+
+.app-shell .drawer .profile-card em,
+.app-shell .drawer .profile-card small,
+.app-shell .drawer nav button:not(.support-nav),
+.app-shell .drawer nav button:not(.support-nav) > svg,
+.app-shell .drawer-split button,
+.app-shell .drawer-account,
+.app-shell .drawer-account > button {
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer nav > button:not(.support-nav) > svg:first-child {
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .group-picker {
+  background: var(--theme-panel) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .group-picker button {
+  background: transparent !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer .group-picker button:hover,
+.app-shell .drawer .group-picker button:focus-visible {
+  background: color-mix(in srgb, var(--theme-accent) 9%, var(--theme-paper)) !important;
+}
+
+.app-shell .drawer .group-picker button.selected {
+  background: var(--theme-accent) !important;
+  color: var(--theme-paper) !important;
+}
+
+.app-shell .drawer-footer {
+  background: color-mix(in srgb, var(--theme-panel) 92%, transparent) !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer-supporter,
+.app-shell .drawer-version-text,
+.app-shell .drawer-account strong,
+.app-shell .drawer-account small {
+  color: var(--theme-text) !important;
+}
+
 /* Give mobile list titles every safe pixel up to the controls, then ellipsize. */
 @media (max-width: 430px) {
   .app-shell .list-card:not(.note-list-card) {

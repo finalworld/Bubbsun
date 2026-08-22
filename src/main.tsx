@@ -14,7 +14,7 @@ if (legacyHosts.has(window.location.hostname)) {
   if (!isAndroid) {
     const manifest = document.createElement("link");
     manifest.rel = "manifest";
-    manifest.href = "/manifest.webmanifest?v=809";
+    manifest.href = "/manifest.webmanifest?v=810";
     document.head.appendChild(manifest);
   }
   if ("serviceWorker" in navigator) {

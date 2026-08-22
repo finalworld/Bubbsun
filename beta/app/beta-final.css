@@ -1734,3 +1734,9 @@
   .app-shell .add-panel-cleaning .new-item-note,
   .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
 }
+.app-shell .global-pin-modal > button.global-pin-close {
+  position: absolute !important;
+  inset: 18px 18px auto auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}

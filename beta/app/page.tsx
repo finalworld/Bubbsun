@@ -822,7 +822,7 @@ function Header({
           aria-label="Gå till Mina listor"
           onClick={onHome}
         >
-          <span className="header-brand-title">Bubbsun</span>
+          <span className="header-brand-title">Bubbsun<span className="header-brand-suffix">.se</span></span>
           <span className="header-brand-tagline">{language === "en" ? "LISTS WITH CHARACTER" : "LISTOR MED KARAKTÄR"}</span>
           {supporterTitle && supporterTitle !== "none" && (
             <small className="supporter-title" data-title={supporterTitle}>
@@ -4575,6 +4575,7 @@ function ThemeEditor({
     header: theme.header || theme.panel,
     headerButton: theme.headerButton || theme.accent,
     brandDecoration: theme.brandDecoration || theme.accent,
+    brandSuffix: theme.brandSuffix || theme.text,
   });
   const [values, setValues] = useState(makeValues),
     [message, setMessage] = useState("");
@@ -4590,6 +4591,7 @@ function ThemeEditor({
       theme.header,
       theme.headerButton,
       theme.brandDecoration,
+      theme.brandSuffix,
     ],
   );
   return (
@@ -4615,7 +4617,7 @@ function ThemeEditor({
       <div className="palette-fields">
         {Object.entries(values).map(([key, value]) => (
           <label key={key}>
-            {key === "brandDecoration" ? "Loggdekor" : key}
+            {key === "brandDecoration" ? "Loggdekor" : key === "brandSuffix" ? "Loggans .se" : key}
             <input
               type="color"
               value={value}
@@ -5057,6 +5059,7 @@ function AuthenticatedApp() {
     "--theme-header": activeTheme.header || activeTheme.panel,
     "--theme-header-button": activeTheme.headerButton || activeTheme.accent,
     "--theme-brand-decoration": activeTheme.brandDecoration || activeTheme.accent,
+    "--theme-brand-suffix": activeTheme.brandSuffix || activeTheme.text,
   } as CSSProperties;
 
   useEffect(() => {

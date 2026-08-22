@@ -2100,3 +2100,13 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .share-site-modal .share-site-actions{position:relative;z-index:1;display:grid!important;grid-template-columns:1fr!important;gap:9px!important}
 .share-site-actions a,.share-site-actions button{box-sizing:border-box;width:100%;min-height:52px;margin:0;padding:12px 16px;border:0;border-radius:11px;background:var(--theme-accent);color:#fff;text-decoration:none;font:900 14px Arial,sans-serif;display:flex;align-items:center;justify-content:center;gap:9px}
 .share-site-actions a:nth-child(2){background:color-mix(in srgb,var(--theme-accent) 72%,var(--theme-text))}.share-site-actions button{background:color-mix(in srgb,var(--theme-text) 68%,var(--theme-paper))!important}.share-site-actions svg{width:20px}.share-facebook-action{background:#4267b2!important}.share-facebook-action b{font:bold 25px Arial,sans-serif;line-height:18px}
+
+/* The logo rules and star have their own admin-controlled theme colour. */
+.app-shell .topbar .brand-tagline::before,
+.app-shell .topbar .header-brand-tagline::before {
+  border-top-color: color-mix(in srgb, var(--theme-brand-decoration) 58%, transparent) !important;
+}
+.app-shell .topbar .brand-tagline::after,
+.app-shell .topbar .header-brand-tagline::after {
+  color: var(--theme-brand-decoration) !important;
+}

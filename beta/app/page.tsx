@@ -4574,6 +4574,7 @@ function ThemeEditor({
     outline: theme.outline,
     header: theme.header || theme.panel,
     headerButton: theme.headerButton || theme.accent,
+    brandDecoration: theme.brandDecoration || theme.accent,
   });
   const [values, setValues] = useState(makeValues),
     [message, setMessage] = useState("");
@@ -4588,6 +4589,7 @@ function ThemeEditor({
       theme.outline,
       theme.header,
       theme.headerButton,
+      theme.brandDecoration,
     ],
   );
   return (
@@ -4613,7 +4615,7 @@ function ThemeEditor({
       <div className="palette-fields">
         {Object.entries(values).map(([key, value]) => (
           <label key={key}>
-            {key}
+            {key === "brandDecoration" ? "Loggdekor" : key}
             <input
               type="color"
               value={value}
@@ -5054,6 +5056,7 @@ function AuthenticatedApp() {
     "--theme-outline": activeTheme.outline,
     "--theme-header": activeTheme.header || activeTheme.panel,
     "--theme-header-button": activeTheme.headerButton || activeTheme.accent,
+    "--theme-brand-decoration": activeTheme.brandDecoration || activeTheme.accent,
   } as CSSProperties;
 
   useEffect(() => {

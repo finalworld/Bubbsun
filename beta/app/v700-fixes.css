@@ -2832,3 +2832,13 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .note-card .note-copy { padding: 11px 6px 10px 15px !important; }
   .app-shell .note-icon-picker { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
 }
+
+/* The logo rules and star have their own admin-controlled theme colour. */
+.app-shell .topbar .brand-tagline::before,
+.app-shell .topbar .header-brand-tagline::before {
+  border-top-color: color-mix(in srgb, var(--theme-brand-decoration) 58%, transparent) !important;
+}
+.app-shell .topbar .brand-tagline::after,
+.app-shell .topbar .header-brand-tagline::after {
+  color: var(--theme-brand-decoration) !important;
+}

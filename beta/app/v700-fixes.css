@@ -2718,6 +2718,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   letter-spacing: -.052em !important;
 }
 .app-shell .topbar.text-header-v2 .header-brand-title > .header-brand-suffix {
+  margin-left: 2px !important;
   color: var(--theme-brand-suffix) !important;
   font-size: .52em !important;
   letter-spacing: -.035em !important;

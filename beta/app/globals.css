@@ -25,7 +25,7 @@ button { font: inherit; }
 .list-copy small { margin-top: 7px; font: 700 14px Arial,sans-serif; }
 .chevron { align-self: center; width: 29px; height: 29px; }
 .card-actions { display: grid; grid-template-columns: 26px 28px; align-items: center; align-self: stretch; }
-.drag-handle,.item-drag-handle { border: 0; background: transparent; color: #795f4c; cursor: grab; touch-action: none; padding: 4px 0; }
+.drag-handle,.item-drag-handle { border: 0; background: transparent; color: var(--theme-text); cursor: grab; touch-action: none; padding: 4px 0; }
 .drag-handle:active,.item-drag-handle:active { cursor: grabbing; }
 .drag-handle svg,.item-drag-handle svg { width: 21px; }
 .dragging { z-index: 10; opacity: .78; box-shadow: 0 12px 28px #39241955; }

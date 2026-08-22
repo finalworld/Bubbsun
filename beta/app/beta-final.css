@@ -289,12 +289,16 @@
 }
 
 /* Larger artwork inside the existing group-icon tiles. */
-.app-shell .group-icon-picker button {
+.app-shell .modal .group-icon-picker > button,
+.app-shell .modal .group-icon-picker > button:first-child {
   overflow: hidden !important;
+  background: var(--theme-paper) !important;
 }
 .app-shell .group-icon-picker .group-picture {
-  width: 94% !important;
-  height: 94% !important;
+  width: 110% !important;
+  height: 110% !important;
+  max-width: none !important;
+  max-height: none !important;
   transform: none !important;
   transform-origin: center !important;
 }

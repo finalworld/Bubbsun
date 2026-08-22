@@ -2915,7 +2915,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 }
 
 /* Final mobile brand proportions: keep this after the legacy mobile overrides. */
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .app-shell .topbar.text-header-v2 .header-brand-title {
     font-size: 31px !important;
   }

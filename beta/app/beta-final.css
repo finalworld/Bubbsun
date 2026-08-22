@@ -1405,6 +1405,21 @@
   .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
 }
 
+/* Notes tab: don't paint beige over the selected group control. */
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-main,
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
+  background: transparent !important;
+  color: inherit !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
+  border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent) !important;
+}
+
 /* Mobile final: name, compact quantity and both actions stay on the first row. */
 @media (max-width: 700px) {
   .app-shell .add-panel > div,

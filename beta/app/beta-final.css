@@ -1417,7 +1417,10 @@
   box-shadow: none !important;
 }
 .app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
-  border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent) !important;
+  border-left: 0 !important;
+}
+.app-shell .notes-page .space-tabs-refined .group-space-tab {
+  border-radius: 13px !important;
 }
 
 /* Mobile final: fields on top, actions anchored at bottom right. */

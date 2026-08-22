@@ -2766,12 +2766,18 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   filter: brightness(1.1) !important;
 }
 @media (max-width: 640px) {
+  .app-shell .topbar.text-header-v2 .header-brand-title {
+    font-size: 31px !important;
+  }
+  .app-shell .topbar.text-header-v2 .header-brand-tagline {
+    font-size: 11px !important;
+  }
   .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count {
-    left: calc(100% + 7px) !important;
-    top: -3px !important;
-    width: 31px !important;
-    height: 31px !important;
-    font-size: 13px !important;
+    left: calc(100% + 8px) !important;
+    top: -4px !important;
+    width: 33px !important;
+    height: 33px !important;
+    font-size: 14px !important;
   }
   .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count::after { inset: 3px !important; }
 }

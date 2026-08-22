@@ -540,7 +540,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
 }
 
-/* Final v0.815 nine-point UI pass. */
+/* Final v0.816 nine-point UI pass. */
 .app-shell .topbar.text-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -923,7 +923,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   }
 }
 
-/* v0.815 banner header: the supplied artwork is the whole top surface. */
+/* v0.816 banner header: the supplied artwork is the whole top surface. */
 .banner-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -2942,3 +2942,4 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .group-space-menu strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}
 .app-shell .group-space-menu>button>svg{width:20px;color:var(--theme-accent)}
 @media(max-width:640px){.app-shell .group-space-tab{grid-template-columns:minmax(0,1fr) 42px;min-height:48px}.app-shell .group-space-main{justify-content:flex-start;padding:5px 6px 5px 16px}.app-shell .group-space-trigger{width:42px}.app-shell .group-space-menu{right:0}}
+.calendar-event.compact{border-left:6px solid var(--creator-color)!important}

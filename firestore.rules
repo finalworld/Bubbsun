@@ -144,6 +144,11 @@ service cloud.firestore {
         allow read: if signedIn() && (request.auth.uid == uid || isMega());
         allow create, update, delete: if signedIn() && request.auth.uid == uid;
       }
+
+      match /privateCalendarEvents/{eventId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isMega());
+        allow create, update, delete: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /groupCodes/{code} {
@@ -230,6 +235,12 @@ service cloud.firestore {
       }
 
       match /notes/{noteId} {
+        allow read: if member(groupId) || isMega();
+        allow create, update, delete: if member(groupId) && groupOpen(groupId);
+      }
+
+
+      match /calendarEvents/{eventId} {
         allow read: if member(groupId) || isMega();
         allow create, update, delete: if member(groupId) && groupOpen(groupId);
       }

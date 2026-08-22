@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
-import type { Account, BubbsunList, BubbsunNote, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Report, ThemePalette } from "../types";
+import type { Account, BubbsunList, BubbsunNote, CalendarEvent, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -193,6 +193,14 @@ export async function removeList(groupId: string, listId: string) {
 const parseNote=(item:{id:string;data:()=>Record<string,unknown>},index:number):BubbsunNote=>{const d=item.data(),history=Array.isArray(d.history)?d.history.map(raw=>{const x=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{uid:textValue(x.uid),name:textValue(x.name,"Bubbsun"),at:numberValue(x.at)}}).filter(value=>value.at):[];return{id:item.id,title:textValue(d.title,"Namnlös anteckning"),text:textValue(d.text),icon:textValue(d.icon,"idea"),color:numberValue(d.color,0xff2b7a78),order:numberValue(d.order,index),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName),creatorColor:typeof d.creatorColor==="number"?d.creatorColor:undefined,history,createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.()),updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.())};};
 export function watchNotes(groupId:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"notes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
 export function watchPrivateNotes(uid:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateNotes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
+
+const parseCalendarEvent=(item:{id:string;data:()=>Record<string,unknown>}):CalendarEvent=>{const d=item.data();return{id:item.id,title:textValue(d.title),date:textValue(d.date),time:textValue(d.time),note:textValue(d.note),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt)}};
+export function watchCalendarEvents(groupId:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"calendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
+export function watchPrivateCalendarEvents(uid:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateCalendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
+export async function saveCalendarEvent(groupId:string,event:CalendarEvent){await setDoc(doc(db,"groups",groupId,"calendarEvents",event.id),event,{merge:true});}
+export async function savePrivateCalendarEvent(uid:string,event:CalendarEvent){await setDoc(doc(db,"users",uid,"privateCalendarEvents",event.id),event,{merge:true});}
+export async function removeCalendarEvent(groupId:string,eventId:string){await deleteDoc(doc(db,"groups",groupId,"calendarEvents",eventId));}
+export async function removePrivateCalendarEvent(uid:string,eventId:string){await deleteDoc(doc(db,"users",uid,"privateCalendarEvents",eventId));}
 function notePayload(note:BubbsunNote){
   const {createdAt:_createdAt,updatedAt:_updatedAt,...values}=note;
   return {...values,title:note.title.slice(0,80),text:note.text.slice(0,20000),updatedAt:serverTimestamp(),createdAt:note.createdAt||serverTimestamp()};

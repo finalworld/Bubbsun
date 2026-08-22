@@ -79,9 +79,21 @@ export type BubbsunList = {
 export type NoteLogEntry={uid:string;name:string;at:number};
 export type BubbsunNote = { id:string; title:string; text:string; icon:string; color:number; order:number; creatorId:string; creatorName?:string; creatorColor?:number; createdAt?:number; updatedAt?:number; history?:NoteLogEntry[] };
 
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  note?: string;
+  creatorId: string;
+  creatorName: string;
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
-export type Page = "lists" | "list" | "notes" | "note" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
+export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };
 export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string };

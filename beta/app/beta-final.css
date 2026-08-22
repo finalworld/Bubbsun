@@ -1235,6 +1235,8 @@
     width: 100% !important;
     min-height: 35px !important;
   }
+  .app-shell .content-tabs-refined .desktop-category-trigger,
+  .app-shell .content-tabs-refined .desktop-category-menu,
   .app-shell .desktop-category-trigger,
   .app-shell .desktop-category-menu {
     display: none !important;

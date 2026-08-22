@@ -540,7 +540,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
 }
 
-/* Final v0.824 nine-point UI pass. */
+/* Final v0.825 nine-point UI pass. */
 .app-shell .topbar.text-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -923,7 +923,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   }
 }
 
-/* v0.824 banner header: the supplied artwork is the whole top surface. */
+/* v0.825 banner header: the supplied artwork is the whole top surface. */
 .banner-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -2952,3 +2952,4 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .calendar-week-nav{width:100%;min-height:38px;margin:-10px 0 12px;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;border-top:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent);border-bottom:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent);color:var(--theme-text)}.calendar-week-nav strong{text-align:center;font:900 14px Georgia,serif}.app-shell .calendar-week-nav>button{width:44px;height:36px;margin:0!important;padding:7px!important;border:0!important;background:transparent!important;color:var(--theme-text)!important;box-shadow:none!important;transform:none!important}.calendar-week-nav>button:last-child{justify-self:end}.calendar-week-nav svg{width:22px;height:22px}.calendar-week-nav>button:hover{color:var(--theme-accent)!important;background:color-mix(in srgb,var(--theme-accent) 9%,transparent)!important}
 @media(max-width:700px){.calendar-week-nav{margin:-6px 0 10px}.calendar-week-nav strong{font-size:12px}}
 .app-shell .calendar-week>section.weekend{background:color-mix(in srgb,#d86b72 9%,var(--theme-paper))!important}.app-shell .calendar-week>section.today{background:var(--theme-paper)!important}.app-shell .calendar-week>section.today.weekend{background:color-mix(in srgb,#d86b72 9%,var(--theme-paper))!important}.app-shell .calendar-week>section.today>h2{background:var(--theme-accent)!important;color:#fff!important}.app-shell .calendar-week>section.today h2 b{width:auto!important;height:auto!important;border-radius:0!important;background:transparent!important;color:inherit!important}
+.app-shell .calendar-event.compact{padding-left:6px!important;padding-right:4px!important}.app-shell .calendar-event.compact .calendar-compact-meta{gap:3px!important}.app-shell .calendar-event.compact .calendar-compact-meta>b{font-size:12px}.app-shell .calendar-event.compact .calendar-compact-meta>time{flex:0 0 auto!important;overflow:visible!important;text-overflow:clip!important;font-size:8.5px!important;letter-spacing:-.15px}.app-shell .calendar-event.compact .calendar-compact-meta>.calendar-repeat{flex:0 0 auto;margin-left:auto!important;font-size:11px!important}

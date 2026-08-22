@@ -146,7 +146,7 @@
 
 .app-shell .modal-backdrop .modal.note-appearance-modal {
   box-sizing: border-box !important;
-  width: min(560px, calc(100vw - 32px)) !important;
+  width: min(380px, calc(100vw - 32px)) !important;
 }
 
 .app-shell .note-appearance-modal .modal-close {

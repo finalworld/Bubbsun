@@ -1128,6 +1128,10 @@
   border-radius: 13px !important;
 }
 
+.app-shell .list-page .list-type-filters > button {
+  border-radius: 13px !important;
+}
+
 .app-shell .desktop-list-tab {
   position: relative !important;
   display: grid !important;
@@ -1230,16 +1234,31 @@
   }
 }
 @media (max-width: 700px) {
+  .app-shell .content-tabs-refined {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
   .app-shell .desktop-list-tab {
-    display: block !important;
-    flex: 1 !important;
-    min-height: 35px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
     padding: 0 !important;
     border-radius: 13px !important;
   }
-  .app-shell .desktop-list-tab .content-tab-main {
+
+  .app-shell .content-tabs-refined .desktop-list-tab .content-tab-main,
+  .app-shell .content-tabs-refined > button {
     width: 100% !important;
-    min-height: 35px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 8px !important;
+    border-radius: 13px !important;
   }
   .app-shell .content-tabs-refined .desktop-category-trigger,
   .app-shell .content-tabs-refined .desktop-category-menu,

@@ -32,6 +32,15 @@ const it: TranslationMap = {"Listor":"Liste","Användare & grupper":"Utenti e gr
 const pl: TranslationMap = {"Listor":"Listy","Användare & grupper":"Użytkownicy i grupy","Statistik":"Statystyki","Inställningar":"Ustawienia","Stöd Bubbsun":"Wesprzyj Bubbsun","Om":"O aplikacji","Hjälp":"Pomoc","Mina listor":"Moje listy","Grupper":"Grupy","Lägg till":"Dodaj","Namn":"Nazwa","Mängd (valfritt)":"Ilość (opcjonalnie)","Sök i listan":"Szukaj na liście","Klart":"Ukończone","Kvar":"Pozostało","Klara":"Ukończone","Redigera":"Edytuj","Redigera lista":"Edytuj listę","Ta bort":"Usuń","Följ lista":"Obserwuj listę","Ta bort poster":"Usuń pozycje","Välj färg":"Wybierz kolor","Välj ikon":"Wybierz ikonę","Avbryt":"Anuluj","Spara":"Zapisz","Språk":"Język","Tema":"Motyw","Logga ut":"Wyloguj"};
 const nl: TranslationMap = {"Listor":"Lijsten","Användare & grupper":"Gebruikers en groepen","Statistik":"Statistieken","Inställningar":"Instellingen","Stöd Bubbsun":"Steun Bubbsun","Om":"Over","Hjälp":"Hulp","Mina listor":"Mijn lijsten","Grupper":"Groepen","Lägg till":"Toevoegen","Namn":"Naam","Mängd (valfritt)":"Aantal (optioneel)","Sök i listan":"Zoeken in lijst","Klart":"Voltooid","Kvar":"Resterend","Klara":"Voltooid","Redigera":"Bewerken","Redigera lista":"Lijst bewerken","Ta bort":"Verwijderen","Följ lista":"Lijst volgen","Ta bort poster":"Items verwijderen","Välj färg":"Kies kleur","Välj ikon":"Kies pictogram","Avbryt":"Annuleren","Spara":"Opslaan","Språk":"Taal","Tema":"Thema","Logga ut":"Uitloggen"};
 
+Object.assign(en, { "Grupp": "Group" });
+Object.assign(fi, { "Grupp": "Ryhmä" });
+Object.assign(de, { "Grupp": "Gruppe" });
+Object.assign(es, { "Grupp": "Grupo" });
+Object.assign(fr, { "Grupp": "Groupe" });
+Object.assign(it, { "Grupp": "Gruppo" });
+Object.assign(pl, { "Grupp": "Grupa" });
+Object.assign(nl, { "Grupp": "Groep" });
+
 Object.assign(en, {
   "Ny grupplista":"New group list", "Ny privat lista":"New private list", "Skriv listans namn":"Enter list name",
   "Ta bort hela listan":"Delete entire list", "Markera alla":"Select all", "Valda":"Selected", "Ta bort valda":"Delete selected",

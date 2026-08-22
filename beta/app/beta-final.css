@@ -1122,6 +1122,12 @@
   }
 }
 /* Desktop list category picker inside the selected LISTOR tab. */
+.app-shell .space-tabs-refined > button,
+.app-shell .content-tabs-refined > button,
+.app-shell .content-tabs-refined > .desktop-list-tab {
+  border-radius: 13px !important;
+}
+
 .app-shell .desktop-list-tab {
   position: relative !important;
   display: grid !important;

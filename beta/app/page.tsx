@@ -1498,10 +1498,21 @@ function NoteFollowButton({note,uid,groupId}:{note:BubbsunNote;uid:string;groupI
   return <button type="button" className="note-follow-tool" onClick={()=>void toggle()}><Bell/><span><strong>{following?"SLUTA FÖLJA":"FÖLJ ANTECKNING"}</strong><small>Få en notis vid ändringar</small></span><ChevronRight/></button>;
 }
 
-function NotesPage({notes,privateMode,groupName,groupIconId,resolveCreatorColor,followedNoteIds,onMode,onLists,onHelp,onOpen,onReorder}:{notes:BubbsunNote[];privateMode:boolean;groupName:string;groupIconId?:string;resolveCreatorColor:(note:BubbsunNote)=>number;followedNoteIds:Set<string>;onMode:(value:boolean)=>void;onLists:()=>void;onHelp:()=>void;onOpen:(note:BubbsunNote)=>void;onReorder:(from:number,to:number)=>void}){
+function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships,groups,onSelect,onSwitch}:{selected:boolean;groupName:string;groupIconId?:string;activeGroupId:string;memberships:Membership[];groups:Record<string,Group>;onSelect:()=>void;onSwitch:(groupId:string)=>void}){
+  const [open,setOpen]=useState(false);
+  const root=useRef<HTMLDivElement>(null);
+  useEffect(()=>{if(!open)return;const close=(event:PointerEvent)=>{if(!root.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[open]);
+  return <div ref={root} className={`group-space-tab ${selected?"selected":""}`}>
+    <button type="button" className="group-space-main" onClick={onSelect}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
+    {!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
+    {open&&<div className="group-space-menu" role="menu">{memberships.map(membership=>{const group=groups[membership.groupId];return <button type="button" role="menuitem" key={membership.groupId} className={membership.groupId===activeGroupId?"selected":""} onClick={()=>{setOpen(false);if(membership.groupId!==activeGroupId)onSwitch(membership.groupId)}}><span className="group-space-menu-icon">{group?.iconId?<GroupIcon id={group.iconId}/>:<Users/>}</span><strong>{group?.name||"Grupp"}</strong>{membership.groupId===activeGroupId&&<Check/>}</button>})}</div>}
+  </div>
+}
+
+function NotesPage({notes,privateMode,groupName,groupIconId,activeGroupId,memberships,groups,resolveCreatorColor,followedNoteIds,onMode,onSwitchGroup,onLists,onHelp,onOpen,onReorder}:{notes:BubbsunNote[];privateMode:boolean;groupName:string;groupIconId?:string;activeGroupId:string;memberships:Membership[];groups:Record<string,Group>;resolveCreatorColor:(note:BubbsunNote)=>number;followedNoteIds:Set<string>;onMode:(value:boolean)=>void;onSwitchGroup:(groupId:string)=>void;onLists:()=>void;onHelp:()=>void;onOpen:(note:BubbsunNote)=>void;onReorder:(from:number,to:number)=>void}){
   const sensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:5}}),useSensor(TouchSensor,{activationConstraint:{delay:180,tolerance:8}}));
   const end=(event:DragEndEvent)=>{if(!event.over||event.active.id===event.over.id)return;const from=notes.findIndex(note=>note.id===event.active.id),to=notes.findIndex(note=>note.id===event.over?.id);if(from>=0&&to>=0)onReorder(from,to)};
-  return <section className="content list-page notes-page"><div className="space-tabs space-tabs-refined"><button className={privateMode?"selected":""} onClick={()=>onMode(true)}><LockKeyhole/><span>PRIVAT</span></button><button className={!privateMode?"selected":""} onClick={()=>onMode(false)}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button></div><div className="content-tabs content-tabs-refined"><button onClick={onLists}><ListChecks/> LISTOR</button><button className="selected"><NotebookPen/> ANTECKNINGAR</button></div>{!notes.length&&<div className="empty-card"><NotebookPen/><strong>{privateMode?"Här är tomt än så länge":"Gruppen har inga anteckningar än"}</strong><span>{privateMode?"Skapa din första anteckning med plusknappen uppe till höger.":"Skapa gruppens första anteckning med plusknappen uppe till höger."}</span><button type="button" onClick={onHelp}><span>👋</span><span><b>NY HÄR?</b><small>Här kan du skriva idéer, planer och sådant du vill minnas.</small></span><ChevronRight/></button></div>}<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={end}><SortableContext items={notes.map(note=>note.id)} strategy={rectSortingStrategy}><div className="list-stack">{notes.map(note=><SortableNoteCard key={note.id} note={note} creatorColor={resolveCreatorColor(note)} followed={!privateMode&&followedNoteIds.has(note.id)} onOpen={()=>onOpen(note)}/>)}</div></SortableContext></DndContext></section>
+  return <section className="content list-page notes-page"><div className="space-tabs space-tabs-refined"><button className={privateMode?"selected":""} onClick={()=>onMode(true)}><LockKeyhole/><span>PRIVAT</span></button><GroupSpaceTab selected={!privateMode} groupName={groupName} groupIconId={groupIconId} activeGroupId={activeGroupId} memberships={memberships} groups={groups} onSelect={()=>onMode(false)} onSwitch={onSwitchGroup}/></div><div className="content-tabs content-tabs-refined"><button onClick={onLists}><ListChecks/> LISTOR</button><button className="selected"><NotebookPen/> ANTECKNINGAR</button></div>{!notes.length&&<div className="empty-card"><NotebookPen/><strong>{privateMode?"Här är tomt än så länge":"Gruppen har inga anteckningar än"}</strong><span>{privateMode?"Skapa din första anteckning med plusknappen uppe till höger.":"Skapa gruppens första anteckning med plusknappen uppe till höger."}</span><button type="button" onClick={onHelp}><span>👋</span><span><b>NY HÄR?</b><small>Här kan du skriva idéer, planer och sådant du vill minnas.</small></span><ChevronRight/></button></div>}<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={end}><SortableContext items={notes.map(note=>note.id)} strategy={rectSortingStrategy}><div className="list-stack">{notes.map(note=><SortableNoteCard key={note.id} note={note} creatorColor={resolveCreatorColor(note)} followed={!privateMode&&followedNoteIds.has(note.id)} onOpen={()=>onOpen(note)}/>)}</div></SortableContext></DndContext></section>
 }
 const noteDateText=(note:BubbsunNote)=>{const changed=(note.history?.length||0)>1,timestamp=changed?(note.updatedAt||note.history?.[0]?.at):(note.createdAt||note.history?.[note.history.length-1]?.at),label=changed?"Ändrad":"Skapad";if(!timestamp)return `${label}: nyss`;const value=new Date(timestamp),today=new Date(),sameDay=value.getFullYear()===today.getFullYear()&&value.getMonth()===today.getMonth()&&value.getDate()===today.getDate();return `${label}: ${sameDay?`Idag ${new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit"}).format(value)}`:new Intl.DateTimeFormat("sv-SE",{dateStyle:"short",timeStyle:"short"}).format(value)}`};
 function SortableNoteCard({note,creatorColor,followed,onOpen}:{note:BubbsunNote;creatorColor:number;followed:boolean;onOpen:()=>void}){const sortable=useSortable({id:note.id});return <div ref={sortable.setNodeRef} style={{transform:CSS.Transform.toString(sortable.transform),transition:sortable.transition} as CSSProperties} className={`list-card-shell ${sortable.isDragging?"dragging":""}`}><div className="list-card note-list-card"><span className="list-icon" style={{background:rgbaHex(note.color)}}><img src={noteIconSource(note.icon)} alt=""/></span><span className="creator-strip" style={{background:rgbaHex(creatorColor)}}/><span className="list-copy"><strong>{note.title}</strong><small className="list-counts note-date-line">{followed&&<Bell className="followed-list-mark" aria-label="Du följer anteckningen"/>}<span>{noteDateText(note)}</span></small></span><button type="button" className="note-card-open" aria-label={`Öppna ${note.title}`} onClick={onOpen}/><span className="card-actions"><button className="drag-handle no-hover" data-dnd-handle aria-label="Flytta anteckning" onClick={event=>event.stopPropagation()} {...sortable.attributes} {...sortable.listeners}><GripVertical/></button></span></div></div>}
@@ -1559,6 +1570,10 @@ function ListsPage({
   groupId,
   groupName,
   groupIconId,
+  activeGroupId,
+  memberships,
+  groups,
+  onSwitchGroup,
   canReorder,
 }: {
   lists: BubbsunList[];
@@ -1587,6 +1602,10 @@ function ListsPage({
   groupId: string;
   groupName: string;
   groupIconId?: string;
+  activeGroupId: string;
+  memberships: Membership[];
+  groups: Record<string,Group>;
+  onSwitchGroup: (groupId:string) => void;
   canReorder: boolean;
 }) {
   const baseShown = privateMode
@@ -1650,12 +1669,7 @@ function ListsPage({
         >
           <LockKeyhole /> <span>PRIVAT</span>
         </button>
-        <button
-          className={!privateMode ? "selected" : ""}
-          onClick={() => onMode(false)}
-        >
-          {groupIconId ? <GroupIcon id={groupIconId} /> : <Users />} <span>GRUPP<small>{groupName}</small></span>
-        </button>
+        <GroupSpaceTab selected={!privateMode} groupName={groupName} groupIconId={groupIconId} activeGroupId={activeGroupId} memberships={memberships} groups={groups} onSelect={()=>onMode(false)} onSwitch={onSwitchGroup}/>
       </div>
       <div className="content-tabs content-tabs-refined">
         <div className="desktop-list-tab selected">
@@ -5493,6 +5507,10 @@ function AuthenticatedApp() {
           groupId={account.activeGroupId}
           groupName={groupName}
           groupIconId={activeGroup?.iconId}
+          activeGroupId={account.activeGroupId}
+          memberships={memberships}
+          groups={groups}
+          onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}}
           canReorder={privateMode || canManageGroup}
         />
       )}
@@ -5530,7 +5548,7 @@ function AuthenticatedApp() {
           unreadAfter={selectedUnreadAfter}
         />
       )}
-      {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
+      {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} activeGroupId={account.activeGroupId} memberships={memberships} groups={groups} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
       {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} creator={selectedNotePrivate?{name:account.displayName,color:account.personalColor??selectedNote.creatorColor??colorOptions[0]}:(()=>{const member=members.find(value=>value.uid===selectedNote.creatorId);return member?{name:member.displayName,color:member.color}:undefined})()} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
       {page === "people" && (
         <PeoplePage

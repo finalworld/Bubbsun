@@ -844,7 +844,22 @@ function Header({
               </span>
             )}
           </span>
-          <span className="header-brand-tagline">{language === "en" ? "LISTS WITH CHARACTER" : "LISTOR MED KARAKTÄR"}</span>
+          <span className="header-brand-tagline">
+            {(
+              {
+                sv: "LISTOR MED KARAKTÄR",
+                en: "LISTS WITH CHARACTER",
+                fi: "LISTAT LUONTEELLA",
+                de: "LISTEN MIT CHARAKTER",
+                es: "LISTAS CON CARÁCTER",
+                fr: "LISTES AVEC DU CARACTÈRE",
+                it: "LISTE CON CARATTERE",
+                pl: "LISTY Z CHARAKTEREM",
+                nl: "LIJSTEN MET KARAKTER",
+                tlh: "TETLHEMEY TLHInGAN",
+              } as Record<string, string>
+            )[language] || "LISTS WITH CHARACTER"}
+          </span>
           {supporterTitle && supporterTitle !== "none" && (
             <small className="supporter-title" data-title={supporterTitle}>
               {(

@@ -182,15 +182,15 @@ const groupIconOptions = [
   "group_home",
   "group_coffee",
   "group_plant",
+  "group_books",
   "group_paws",
-  "group_heart",
-  "group_star",
-  "group_tree",
-  "group_cottage",
-  "group_people",
   "group_cart",
-  "group_sun",
+  "group_yarn",
+  "group_star",
   "group_moon",
+  "group_duck",
+  "group_mushrooms",
+  "group_game",
 ];
 const legacyGroupIcons = [
   "⌂",
@@ -206,9 +206,16 @@ const legacyGroupIcons = [
   "☀",
   "🌙",
 ];
+const legacyStoredGroupIconAliases: Record<string,string> = {
+  group_cottage: "group_home",
+  group_heart: "group_yarn",
+  group_tree: "group_mushrooms",
+  group_people: "group_books",
+  group_sun: "group_duck",
+};
 const normalizedGroupIcon = (value?: string) =>
   value?.startsWith("group_")
-    ? value
+    ? legacyStoredGroupIconAliases[value] || value
     : groupIconOptions[Math.max(0, legacyGroupIcons.indexOf(value || "⌂"))];
 function GroupIcon({
   id,

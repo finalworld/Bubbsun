@@ -78,4 +78,13 @@ Object.assign(en, {
   "Välj typ":"Choose type", "Vem ska packa?":"Who is packing?", "Lägg till namnen på dem som ska ha saker med sig.":"Add the names of those who need to bring things.", "Till exempel Sanja":"For example Sanja", "Välj färg":"Choose colour", "Välj ikon":"Choose icon", "Sparar…":"Saving…", "Sparat ✓":"Saved ✓", "Kunde inte spara":"Could not save"
 });
 
+Object.assign(en, { "Klar": "Done" });
+Object.assign(fi, { "Klar": "Valmis" });
+Object.assign(de, { "Klar": "Fertig" });
+Object.assign(es, { "Klar": "Listo" });
+Object.assign(fr, { "Klar": "Terminé" });
+Object.assign(it, { "Klar": "Fatto" });
+Object.assign(pl, { "Klar": "Gotowe" });
+Object.assign(nl, { "Klar": "Klaar" });
+
 export const uiTranslations: Record<string, TranslationMap> = { en, fi, de, es, fr, it, pl, nl, tlh: en };

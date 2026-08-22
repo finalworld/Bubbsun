@@ -1420,14 +1420,14 @@
   border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent) !important;
 }
 
-/* Mobile final: name, compact quantity and both actions stay on the first row. */
+/* Mobile final: fields on top, actions anchored at bottom right. */
 @media (max-width: 700px) {
   .app-shell .add-panel > div,
   .app-shell .add-panel-stacked-select > div,
   .app-shell .add-panel-cleaning > div,
   .app-shell .add-panel-homefix > div {
-    grid-template-columns: minmax(115px, 1.45fr) minmax(82px, .72fr) 108px !important;
-    grid-template-rows: auto !important;
+    grid-template-columns: minmax(0, 1fr) 108px !important;
+    grid-template-rows: auto auto !important;
     align-items: stretch !important;
   }
   .app-shell .add-panel .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
@@ -1437,11 +1437,11 @@
   .app-shell .add-panel-actions,
   .app-shell .add-panel-stacked-select .add-panel-actions,
   .app-shell .add-panel-cleaning .add-panel-actions,
-  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; position:static !important; align-self:stretch !important; }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; position:static !important; }
+  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 2 !important; grid-row: 2 !important; position:static !important; align-self:end !important; justify-self:end !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
   .app-shell .add-panel-stacked-select select,
   .app-shell .cleaning-quick-fields,
-  .app-shell .homefix-quick-fields { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .app-shell .homefix-quick-fields { grid-column: 1 !important; grid-row: 2 !important; }
   .app-shell .add-panel-stacked-select .new-item-note,
   .app-shell .add-panel-cleaning .new-item-note,
   .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }

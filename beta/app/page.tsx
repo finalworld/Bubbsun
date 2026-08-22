@@ -59,7 +59,6 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   getRedirectResult,
   GoogleAuthProvider,
-  signInWithRedirect,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
@@ -1091,7 +1090,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.805 · Web Edition Beta
+            Bubbsun v0.806 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5179,14 +5178,10 @@ function AuthenticatedApp() {
     setLoginError("");
     try {
       const provider = new GoogleAuthProvider();
-      // Popups/custom tabs are unreliable on some Android tablets. Use the
-      // redirect flow on touch-first mobile devices and keep popup on desktop.
-      const useRedirect = /Android|iPad|iPhone|iPod/i.test(navigator.userAgent) ||
-        (navigator.maxTouchPoints > 1 && window.matchMedia("(max-width: 1180px)").matches);
-      if (useRedirect) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
+      // Keep the whole sign-in result on bubbsun.se. Firebase redirect sign-in
+      // uses the firebaseapp.com helper domain and some Android browsers return
+      // without carrying that cross-domain session back to Bubbsun. A popup or
+      // custom tab starts directly from this click and keeps the session intact.
       await signInWithPopup(auth, provider);
     } catch (e) {
       console.error("Google sign-in failed", e);

@@ -84,6 +84,9 @@ export type CalendarEvent = {
   title: string;
   date: string;
   time?: string;
+  endTime?: string;
+  allDay?: boolean;
+  category?: string;
   note?: string;
   creatorId: string;
   creatorName: string;

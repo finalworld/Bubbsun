@@ -885,7 +885,7 @@ function Header({
         {mode === "add" ? (
           <button
             className="theme-button header-add"
-            aria-label="Skapa en lista"
+            aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}
           >
             <Plus />
@@ -1103,7 +1103,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.811 · Web Edition Beta
+            Bubbsun v0.812 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -2974,8 +2974,11 @@ type CalendarRange="today"|"7"|"30"|"agenda";
 const calendarDateKey=(date:Date)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 const calendarDayLabel=(value:string)=>{const date=new Date(`${value}T12:00:00`),today=calendarDateKey(new Date()),tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);if(value===today)return"IDAG";if(value===calendarDateKey(tomorrow))return"IMORGON";return new Intl.DateTimeFormat("sv-SE",{weekday:"long",day:"numeric",month:"long"}).format(date).toLocaleUpperCase("sv-SE")};
 
-function CalendarPage({events,privateMode,account,memberships,groups,members,onMode,onSwitchGroup,onSave,onDelete}:{events:CalendarEvent[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>}){
-  const [range,setRange]=useState<CalendarRange>(()=>(localStorage.getItem("bubbsun-calendar-range") as CalendarRange)||"7"),[spaceOpen,setSpaceOpen]=useState(false),[editing,setEditing]=useState<CalendarEvent|null>(null),[creating,setCreating]=useState(false),[agendaLimit,setAgendaLimit]=useState(20);const agendaLoader=useRef<HTMLDivElement>(null);
+const calendarCategories=[{id:"birthday",label:"Födelsedag",icon:"🎂"},{id:"meeting",label:"Möte",icon:"👥"},{id:"appointment",label:"Tid / besök",icon:"📍"},{id:"activity",label:"Aktivitet",icon:"⚽"},{id:"reminder",label:"Påminnelse",icon:"🔔"},{id:"other",label:"Annat",icon:"✨"}];
+const calendarCategory=(id?:string)=>calendarCategories.find(value=>value.id===id)||calendarCategories[5];
+
+function CalendarPage({events,privateMode,account,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete}:{events:CalendarEvent[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>}){
+  const [range,setRange]=useState<CalendarRange>(()=>(localStorage.getItem("bubbsun-calendar-range") as CalendarRange)||"7"),[spaceOpen,setSpaceOpen]=useState(false),[editing,setEditing]=useState<CalendarEvent|null>(null),[agendaLimit,setAgendaLimit]=useState(20);const agendaLoader=useRef<HTMLDivElement>(null);
   useEffect(()=>localStorage.setItem("bubbsun-calendar-range",range),[range]);
   useEffect(()=>{setAgendaLimit(20)},[range,privateMode,account.activeGroupId]);
   useEffect(()=>{const loader=agendaLoader.current;if(range!=="agenda"||!loader)return;const observer=new IntersectionObserver(entries=>{if(entries[0]?.isIntersecting)setAgendaLimit(value=>value+20)},{rootMargin:"220px"});observer.observe(loader);return()=>observer.disconnect()},[range,agendaLimit]);
@@ -2984,22 +2987,23 @@ function CalendarPage({events,privateMode,account,memberships,groups,members,onM
   const shown=range==="agenda"?visible.slice(0,agendaLimit):visible;
   const grouped=shown.reduce<Record<string,CalendarEvent[]>>((all,event)=>{(all[event.date]??=[]).push(event);return all},{});
   const activeGroup=groups[account.activeGroupId];
-  const editor=editing||creating?editing||{id:crypto.randomUUID(),title:"",date:today,time:"",note:"",creatorId:account.uid,creatorName:account.displayName,createdAt:Date.now(),updatedAt:Date.now()}:null;
+  const editor=editing||creating?editing||{id:crypto.randomUUID(),title:"",date:today,time:"",endTime:"",allDay:false,category:"other",note:"",creatorId:account.uid,creatorName:account.displayName,createdAt:Date.now(),updatedAt:Date.now()}:null;
+  const eventCard=(event:CalendarEvent,compact=false)=>{const creator=privateMode?null:members.find(member=>member.uid===event.creatorId),color=rgbaHex(creator?.color??account.personalColor??colorOptions[0]),category=calendarCategory(event.category);return <button className={`calendar-event ${compact?"compact":""}`} key={event.id} style={{"--event-color":color} as CSSProperties} onClick={()=>setEditing(event)}><i/><time>{event.allDay||!event.time?"HELA DAGEN":event.endTime?`${event.time}–${event.endTime}`:event.time}</time><span><strong><b>{category.icon}</b>{event.title}</strong>{!compact&&event.note&&<small>{event.note}</small>}</span>{!compact&&<em>{creator?.displayName||event.creatorName}</em>}{!compact&&<ChevronRight/>}</button>};
+  const weekDates=Array.from({length:7},(_,index)=>{const date=new Date();date.setDate(date.getDate()+index);return calendarDateKey(date)});
   return <section className="content calendar-page">
-    <div className="calendar-heading"><span><CalendarDays/><span><h1>KALENDER</h1><small>Enkelt. Tydligt. Tillsammans.</small></span></span><button type="button" onClick={()=>setCreating(true)} aria-label="Ny händelse"><Plus/></button></div>
     <div className="calendar-controls"><div className="calendar-ranges">{([["today","IDAG"],["7","7 DAGAR"],["30","30 DAGAR"],["agenda","AGENDA"]] as const).map(([value,label])=><button key={value} className={range===value?"selected":""} onClick={()=>setRange(value)}>{label}</button>)}</div><div className="calendar-space-wrap"><button className="calendar-space-button" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span><small>{privateMode?"PRIVAT":"GRUPP"}</small><strong>{privateMode?"Bara jag":activeGroup?.name||"Välj grupp"}</strong></span><ChevronDown/></button>{spaceOpen&&<div className="calendar-space-menu"><button className={privateMode?"selected":""} onClick={()=>{onMode(true);setSpaceOpen(false)}}><LockKeyhole/><strong>Privat</strong>{privateMode&&<Check/>}</button>{memberships.map(item=><button key={item.groupId} className={!privateMode&&item.groupId===account.activeGroupId?"selected":""} onClick={()=>{onSwitchGroup(item.groupId);setSpaceOpen(false)}}><GroupIcon id={groups[item.groupId]?.iconId}/><strong>{groups[item.groupId]?.name||"Grupp"}</strong>{!privateMode&&item.groupId===account.activeGroupId&&<Check/>}</button>)}</div>}</div></div>
-    {!visible.length?<div className="calendar-empty"><CalendarDays/><strong>Inget planerat här</strong><span>Skönt — eller dags att lägga till något?</span><button onClick={()=>setCreating(true)}><Plus/> LÄGG TILL</button></div>:<div className="calendar-agenda">{Object.entries(grouped).map(([date,items])=><section key={date}><h2>{calendarDayLabel(date)}<small>{new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${date}T12:00:00`))}</small></h2>{items.map(event=>{const creator=privateMode?null:members.find(member=>member.uid===event.creatorId),color=rgbaHex(creator?.color??account.personalColor??colorOptions[0]);return <button className="calendar-event" key={event.id} style={{"--event-color":color} as CSSProperties} onClick={()=>setEditing(event)}><i/><time>{event.time||"HELA DAGEN"}</time><span><strong>{event.title}</strong>{event.note&&<small>{event.note}</small>}</span><em>{creator?.displayName||event.creatorName}</em><ChevronRight/></button>})}</section>)}{range==="agenda"&&agendaLimit<visible.length&&<div ref={agendaLoader} className="calendar-loader">LADDAR FLER…</div>}</div>}
+    {!visible.length?<div className="calendar-empty"><CalendarDays/><strong>Inget planerat här</strong><span>Skönt — eller dags att lägga till något?</span><button onClick={()=>onCreating(true)}><Plus/> LÄGG TILL</button></div>:range==="7"?<div className="calendar-week">{weekDates.map(date=><section key={date} className={date===today?"today":""}><h2><strong>{new Intl.DateTimeFormat("sv-SE",{weekday:"short"}).format(new Date(`${date}T12:00:00`))}</strong><b>{Number(date.slice(-2))}</b></h2><div>{(grouped[date]||[]).map(event=>eventCard(event,true))}</div></section>)}</div>:<div className="calendar-agenda">{Object.entries(grouped).map(([date,items])=><section key={date}><h2>{calendarDayLabel(date)}<small>{new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${date}T12:00:00`))}</small></h2>{items.map(event=>eventCard(event))}</section>)}{range==="agenda"&&agendaLimit<visible.length&&<div ref={agendaLoader} className="calendar-loader">LADDAR FLER…</div>}</div>}
     {editor&&<CalendarEditor
       event={editor}
       existing={Boolean(editing)}
-      onClose={()=>{setEditing(null);setCreating(false)}}
-      onSave={async next=>{await onSave(next);setEditing(null);setCreating(false)}}
+      onClose={()=>{setEditing(null);onCreating(false)}}
+      onSave={async next=>{await onSave(next);setEditing(null);onCreating(false)}}
       onDelete={editing?async()=>{await onDelete(editing);setEditing(null)}:undefined}
     />}
   </section>;
 }
 
-function CalendarEditor({event,existing,onClose,onSave,onDelete}:{event:CalendarEvent;existing:boolean;onClose:()=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete?:()=>Promise<void>}){const [title,setTitle]=useState(event.title),[date,setDate]=useState(event.date),[time,setTime]=useState(event.time||""),[note,setNote]=useState(event.note||""),[busy,setBusy]=useState(false);return <div className="modal-backdrop"><div className="modal calendar-editor"><button className="calendar-editor-close" aria-label="Stäng" onClick={onClose}><X/></button><CalendarDays/><h2>{existing?"REDIGERA HÄNDELSE":"NY HÄNDELSE"}</h2><label>VAD HÄNDER?<input autoFocus value={title} maxLength={80} onChange={e=>setTitle(e.target.value)} placeholder="Till exempel tandläkaren"/></label><div><label>DATUM<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><label>TID <small>(valfritt)</small><input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label></div><label>ANTECKNING <small>(valfritt)</small><textarea value={note} maxLength={300} onChange={e=>setNote(e.target.value)} placeholder="Något som är bra att komma ihåg…"/></label><div className="calendar-editor-actions">{onDelete&&<button className="calendar-delete" onClick={()=>void onDelete()}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!date} onClick={async()=>{setBusy(true);await onSave({...event,title:title.trim(),date,time,note:note.trim(),updatedAt:Date.now()});setBusy(false)}}>{busy?"SPARAR…":existing?"SPARA":"SKAPA"}</button></div></div></div>}
+function CalendarEditor({event,existing,onClose,onSave,onDelete}:{event:CalendarEvent;existing:boolean;onClose:()=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete?:()=>Promise<void>}){const [title,setTitle]=useState(event.title),[date,setDate]=useState(event.date),[time,setTime]=useState(event.time||""),[endTime,setEndTime]=useState(event.endTime||""),[allDay,setAllDay]=useState(event.allDay===true),[category,setCategory]=useState(event.category||"other"),[note,setNote]=useState(event.note||""),[busy,setBusy]=useState(false);return <div className="modal-backdrop"><div className="modal calendar-editor"><button className="calendar-editor-close" aria-label="Stäng" onClick={onClose}><X/></button><CalendarDays/><h2>{existing?"REDIGERA HÄNDELSE":"NY HÄNDELSE"}</h2><label>VAD HÄNDER?<input autoFocus value={title} maxLength={80} onChange={e=>setTitle(e.target.value)} placeholder="Till exempel tandläkaren"/></label><label>KATEGORI<select value={category} onChange={e=>setCategory(e.target.value)}>{calendarCategories.map(value=><option key={value.id} value={value.id}>{value.icon} {value.label}</option>)}</select></label><div><label>DATUM<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><label className="calendar-all-day"><input type="checkbox" checked={allDay} onChange={e=>setAllDay(e.target.checked)}/><span>HELDAG</span></label></div>{!allDay&&<div><label>FRÅN<input type="time" value={time} onChange={e=>setTime(e.target.value)}/></label><label>TILL<input type="time" value={endTime} min={time} onChange={e=>setEndTime(e.target.value)}/></label></div>}<label>ANTECKNING <small>(valfritt)</small><textarea value={note} maxLength={300} onChange={e=>setNote(e.target.value)} placeholder="Något som är bra att komma ihåg…"/></label><div className="calendar-editor-actions">{onDelete&&<button className="calendar-delete" onClick={()=>void onDelete()}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!date||(!allDay&&Boolean(time&&endTime&&endTime<=time))} onClick={async()=>{setBusy(true);await onSave({...event,title:title.trim(),date,time:allDay?"":time,endTime:allDay?"":endTime,allDay,category,note:note.trim(),updatedAt:Date.now()});setBusy(false)}}>{busy?"SPARAR…":existing?"SPARA":"SKAPA"}</button></div></div></div>}
 
 function PeoplePage({
   account,
@@ -4826,6 +4830,7 @@ function AuthenticatedApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addingNote,setAddingNote]=useState(false);
+  const [addingCalendar,setAddingCalendar]=useState(false);
   const [listToolsOpen, setListToolsOpen] = useState(false);
   const [themeId, setThemeId] = useState(
     () => localStorage.getItem("bubbsun-theme") || "retro",
@@ -5610,12 +5615,12 @@ function AuthenticatedApp() {
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
         glowColor={account.supporterGlowColor}
-        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : undefined}
+        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
-        onHome={() => navigate(page==="notes"||page==="note"?"notes":"lists")}
-        onAdd={() => page === "notes" ? setAddingNote(true) : setAdding(true)}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":"lists")}
+        onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
-        mode={page === "lists" || page === "notes" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
+        mode={page === "lists" || page === "notes" || page === "calendar" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
         onOpenAdmin={
           account.megaSuperBoss || account.founder
@@ -5711,6 +5716,8 @@ function AuthenticatedApp() {
         memberships={memberships}
         groups={groups}
         members={members}
+        creating={addingCalendar}
+        onCreating={setAddingCalendar}
         onMode={setPrivateMode}
         onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}}
         onSave={persistCalendarEvent}

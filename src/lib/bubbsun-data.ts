@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
-import type { Account, BubbsunList, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Report, ThemePalette } from "../types";
+import type { Account, BubbsunList, BubbsunNote, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -46,6 +46,29 @@ export function watchOnlineCount(callback: (count: number) => void): Unsubscribe
   return () => { window.clearInterval(timer); unsubscribe(); };
 }
 
+/** Active during the last five minutes. Kept separate from the count so the
+ * admin can see exactly who is currently around without exposing it to users. */
+export function watchOnlineUserIds(callback: (ids: Set<string>) => void): Unsubscribe {
+  let seen: Array<{ uid: string; lastSeenAt: number }> = [];
+  const emit = () =>
+    callback(
+      new Set(
+        seen
+          .filter((entry) => entry.lastSeenAt >= Date.now() - 5 * 60 * 1000)
+          .map((entry) => entry.uid),
+      ),
+    );
+  const unsubscribe = onSnapshot(collection(db, "presence"), (snapshot) => {
+    seen = snapshot.docs.map((item) => {
+      const value = item.data().lastSeenAt as { toMillis?: () => number } | undefined;
+      return { uid: item.id, lastSeenAt: value?.toMillis?.() ?? 0 };
+    });
+    emit();
+  });
+  const timer = window.setInterval(emit, 30000);
+  return () => { window.clearInterval(timer); unsubscribe(); };
+}
+
 export function watchAccount(uid: string, callback: (account: Account | null) => void): Unsubscribe {
   return onSnapshot(doc(db, "users", uid), snap => {
     if (!snap.exists()) return callback(null);
@@ -54,7 +77,7 @@ export function watchAccount(uid: string, callback: (account: Account | null) =>
       uid, displayName: textValue(d.displayName, textValue(d.name, "Bubbsun")),
       activeGroupId: textValue(d.activeGroupId, textValue(d.groupId)),
       globalTitle: textValue(d.globalTitle), titleColor: numberValue(d.titleColor),
-      supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
+      supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, supporterGlowColor: textValue(d.supporterGlowColor, "#ffb532"), personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
       founder: d.founder === true, suspended: d.suspended === true, hiddenGlobalPinRevision: numberValue(d.hiddenGlobalPinRevision), hiddenGlobalPinId:textValue(d.hiddenGlobalPinId), privacyVersion: numberValue(d.privacyVersion),
     });
   });
@@ -84,20 +107,20 @@ export function watchGroupMembers(groupId: string, callback: (members: Membershi
 
 const parseItem = (raw: unknown): ListItem => {
   const d = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, Date.now()), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
+  return { id: textValue(d.id, crypto.randomUUID()), name: textValue(d.name), quantity: textValue(d.quantity), note: textValue(d.note), assignedTo:textValue(d.assignedTo),assigneeId:textValue(d.assigneeId),assigneeName:textValue(d.assigneeName),status:textValue(d.status),priority:textValue(d.priority),room:textValue(d.room),recurrence:textValue(d.recurrence),dueDate:textValue(d.dueDate),taskType:textValue(d.taskType), ownerId: textValue(d.ownerId), completed: d.completed === true, createdAt: numberValue(d.createdAt, 0), completedAt: typeof d.completedAt === "number" ? d.completedAt : null, likedBy: Array.isArray(d.likedBy) ? d.likedBy.filter((x): x is string => typeof x === "string") : [] };
 };
 
 export function watchLists(groupId: string, callback: (lists: BubbsunList[]) => void): Unsubscribe {
   const listQuery = query(collection(db, "groups", groupId, "lists"), orderBy("order", "asc"));
   return onSnapshot(listQuery, snap => callback(snap.docs.map((item, index) => {
     const d = item.data();
-    return { id: item.id, name: textValue(d.name, "Lista"), icon: textValue(d.icon, "list_cart"), iconColor: (d.iconColor as number | string | undefined) ?? 0xff2b7a78, creatorId: textValue(d.creatorId), sortMode: textValue(d.sortMode, "custom"), doneFirst: d.doneFirst === true, doneExpanded: d.doneExpanded === true, order: numberValue(d.order, index), updatedBy:textValue(d.updatedBy), updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.()), revision:numberValue(d.revision), items: Array.isArray(d.items) ? d.items.map(parseItem) : [] };
+    return { id: item.id, name: textValue(d.name, "Lista"), icon: textValue(d.icon, "list_cart"), iconColor: (d.iconColor as number | string | undefined) ?? 0xff2b7a78, listType:textValue(d.listType,"other"),packPeople:Array.isArray(d.packPeople)?d.packPeople.filter((x):x is string=>typeof x==="string"):[], creatorId: textValue(d.creatorId), sortMode: textValue(d.sortMode, "custom"), doneFirst: d.doneFirst === true, doneExpanded: d.doneExpanded === true, order: numberValue(d.order, index), updatedBy:textValue(d.updatedBy), updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.()), revision:numberValue(d.revision), items: Array.isArray(d.items) ? d.items.map(parseItem) : [] };
   })));
 }
 
 const parseListDocument = (item:{id:string;data:()=>Record<string,unknown>}, index:number):BubbsunList => {
   const d=item.data();
-  return { id:item.id,name:textValue(d.name,"Lista"),icon:textValue(d.icon,"list_cart"),iconColor:(d.iconColor as number|string|undefined)??0xff2b7a78,creatorId:textValue(d.creatorId),sortMode:textValue(d.sortMode,"custom"),doneFirst:d.doneFirst===true,doneExpanded:d.doneExpanded===true,order:numberValue(d.order,index),pinned:d.pinned===true,items:Array.isArray(d.items)?d.items.map(parseItem):[] };
+  return { id:item.id,name:textValue(d.name,"Lista"),icon:textValue(d.icon,"list_cart"),iconColor:(d.iconColor as number|string|undefined)??0xff2b7a78,listType:textValue(d.listType,"other"),packPeople:Array.isArray(d.packPeople)?d.packPeople.filter((x):x is string=>typeof x==="string"):[],creatorId:textValue(d.creatorId),sortMode:textValue(d.sortMode,"custom"),doneFirst:d.doneFirst===true,doneExpanded:d.doneExpanded===true,order:numberValue(d.order,index),pinned:d.pinned===true,items:Array.isArray(d.items)?d.items.map(parseItem):[] };
 };
 
 export function watchPrivateLists(uid:string,callback:(lists:BubbsunList[])=>void):Unsubscribe {
@@ -122,10 +145,19 @@ const listItemsForStorage = (items: BubbsunList["items"]) => items.map(item => (
   completedAt: item.completedAt,
   likedBy: item.likedBy,
   ...(item.note ? { note: item.note } : {}),
+  ...(item.assignedTo ? { assignedTo: item.assignedTo } : {}),
+  ...(item.assigneeId ? { assigneeId: item.assigneeId } : {}),
+  ...(item.assigneeName ? { assigneeName: item.assigneeName } : {}),
+  ...(item.status ? { status: item.status } : {}),
+  ...(item.priority ? { priority: item.priority } : {}),
+  ...(item.room ? { room: item.room } : {}),
+  ...(item.recurrence ? { recurrence: item.recurrence } : {}),
+  ...(item.dueDate ? { dueDate: item.dueDate } : {}),
+  ...(item.taskType ? { taskType: item.taskType } : {}),
 }));
 
 export async function savePrivateList(uid:string,list:BubbsunList) {
-  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:listItemsForStorage(list.items),updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(doc(db,"users",uid,"privateLists",list.id),{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:uid,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,pinned:list.pinned===true,items:listItemsForStorage(list.items),updatedAt:serverTimestamp()},{merge:true});
 }
 
 export async function removePrivateList(uid:string,listId:string) { await deleteDoc(doc(db,"users",uid,"privateLists",listId)); }
@@ -143,13 +175,13 @@ export async function switchGroup(uid: string, groupId: string) {
 
 export async function saveList(groupId: string, list: BubbsunList, actorId: string) {
   const ref=doc(db,"groups",groupId,"lists",list.id);
-  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
   return (list.revision||0)+1;
 }
 
-export async function createList(groupId: string, name: string, actorId: string, order: number) {
+export async function createList(groupId: string, name: string, actorId: string, order: number, listType = "other") {
   const ref = doc(collection(db, "groups", groupId, "lists"));
-  const list: BubbsunList = { id: ref.id, name: name.trim().slice(0, 60), icon: "list_cart", iconColor: 0xff2b7a78, creatorId: actorId, sortMode: "custom", doneFirst: false, doneExpanded: false, order, items: [] };
+  const list: BubbsunList = { id: ref.id, name: name.trim().slice(0, 60), icon: "list_cart", iconColor: 0xff2b7a78, listType, creatorId: actorId, sortMode: "custom", doneFirst: false, doneExpanded: false, order, items: [] };
   await saveList(groupId, list, actorId);
   return list;
 }
@@ -157,6 +189,18 @@ export async function createList(groupId: string, name: string, actorId: string,
 export async function removeList(groupId: string, listId: string) {
   await deleteDoc(doc(db, "groups", groupId, "lists", listId));
 }
+
+const parseNote=(item:{id:string;data:()=>Record<string,unknown>},index:number):BubbsunNote=>{const d=item.data(),history=Array.isArray(d.history)?d.history.map(raw=>{const x=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{uid:textValue(x.uid),name:textValue(x.name,"Bubbsun"),at:numberValue(x.at)}}).filter(value=>value.at):[];return{id:item.id,title:textValue(d.title,"Namnlös anteckning"),text:textValue(d.text),icon:textValue(d.icon,"idea"),color:numberValue(d.color,0xff2b7a78),order:numberValue(d.order,index),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName),creatorColor:typeof d.creatorColor==="number"?d.creatorColor:undefined,history,createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.()),updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.())};};
+export function watchNotes(groupId:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"notes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
+export function watchPrivateNotes(uid:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateNotes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
+function notePayload(note:BubbsunNote){
+  const {createdAt:_createdAt,updatedAt:_updatedAt,...values}=note;
+  return {...values,title:note.title.slice(0,80),text:note.text.slice(0,20000),updatedAt:serverTimestamp(),createdAt:note.createdAt||serverTimestamp()};
+}
+export async function saveNote(groupId:string,note:BubbsunNote){await setDoc(doc(db,"groups",groupId,"notes",note.id),notePayload(note),{merge:true});}
+export async function savePrivateNote(uid:string,note:BubbsunNote){await setDoc(doc(db,"users",uid,"privateNotes",note.id),notePayload(note),{merge:true});}
+export async function removeNote(groupId:string,id:string){await deleteDoc(doc(db,"groups",groupId,"notes",id));}
+export async function removePrivateNote(uid:string,id:string){await deleteDoc(doc(db,"users",uid,"privateNotes",id));}
 
 export async function createPublicListShare(list:BubbsunList, creatorId:string, showNotes=false) {
   const id=crypto.randomUUID().replace(/-/g,"").slice(0,10);
@@ -199,7 +243,7 @@ export async function transferGroupOwnership(groupId:string, currentOwnerId:stri
   await batch.commit();
 }
 
-export function watchAllAccounts(callback:(items:Account[])=>void):Unsubscribe { return onSnapshot(collection(db,"users"),snap=>callback(snap.docs.map(item=>{const d=item.data();return {uid:item.id,displayName:textValue(d.displayName,textValue(d.name,"Bubbsun")),activeGroupId:textValue(d.activeGroupId),globalTitle:textValue(d.globalTitle),titleColor:numberValue(d.titleColor),supporter:d.supporter===true,supporterTitle:textValue(d.supporterTitle,"lifetime"),supporterGlow:d.supporterGlow!==false,personalColor:numberValue(d.personalColor,0xff2b7a78),megaSuperBoss:d.megaSuperBoss===true,founder:d.founder===true,suspended:d.suspended===true,hiddenGlobalPinRevision:numberValue(d.hiddenGlobalPinRevision),hiddenGlobalPinId:textValue(d.hiddenGlobalPinId),privacyVersion:numberValue(d.privacyVersion)};}))); }
+export function watchAllAccounts(callback:(items:Account[])=>void):Unsubscribe { return onSnapshot(collection(db,"users"),snap=>callback(snap.docs.map(item=>{const d=item.data();return {uid:item.id,displayName:textValue(d.displayName,textValue(d.name,"Bubbsun")),activeGroupId:textValue(d.activeGroupId),globalTitle:textValue(d.globalTitle),titleColor:numberValue(d.titleColor),supporter:d.supporter===true,supporterTitle:textValue(d.supporterTitle,"lifetime"),supporterGlow:d.supporterGlow!==false,supporterGlowColor:textValue(d.supporterGlowColor,"#ffb532"),personalColor:numberValue(d.personalColor,0xff2b7a78),megaSuperBoss:d.megaSuperBoss===true,founder:d.founder===true,suspended:d.suspended===true,hiddenGlobalPinRevision:numberValue(d.hiddenGlobalPinRevision),hiddenGlobalPinId:textValue(d.hiddenGlobalPinId),privacyVersion:numberValue(d.privacyVersion)};}))); }
 export function watchReports(callback:(items:Report[])=>void):Unsubscribe { return onSnapshot(query(collection(db,"reports"),orderBy("createdAt","desc"),limit(100)),snap=>callback(snap.docs.map(item=>{const d=item.data();return{id:item.id,authorUid:textValue(d.authorUid),kind:textValue(d.kind),category:textValue(d.category),title:textValue(d.title),description:textValue(d.description),status:textValue(d.status,"new"),createdAt:d.createdAt};}))); }
 export async function updateAccountAdmin(uid:string, values:Record<string,unknown>){await setDoc(doc(db,"users",uid),{...values,lastActiveAt:serverTimestamp()},{merge:true});}
 export async function removeReport(id:string){await deleteDoc(doc(db,"reports",id));}
@@ -278,6 +322,15 @@ export function watchAllFollowedLists(uids:string[],callback:(count:number)=>voi
 export async function setListFollowing(uid:string,groupId:string,listId:string,following:boolean) {
   const ref=doc(db,"users",uid,"notificationPreferences",`${groupId}_${listId}`);
   if(following)await setDoc(ref,{groupId,listId,following:true,updatedAt:serverTimestamp()},{merge:true});else await deleteDoc(ref);
+}
+
+export function watchFollowedNotes(uid:string,callback:(ids:Set<string>)=>void):Unsubscribe {
+  return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback(new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))));
+}
+
+export async function setNoteFollowing(uid:string,groupId:string,noteId:string,following:boolean) {
+  const ref=doc(db,"users",uid,"notificationPreferences",`note_${groupId}_${noteId}`);
+  if(following)await setDoc(ref,{kind:"note",groupId,noteId,following:true,updatedAt:serverTimestamp()},{merge:true});else await deleteDoc(ref);
 }
 
 export function watchGlobalPin(callback: (pin: GlobalPin | null) => void): Unsubscribe {

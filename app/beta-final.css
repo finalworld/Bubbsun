@@ -1,0 +1,1703 @@
+/* Beta final corrections — loaded last on purpose. */
+
+/* Group icon: use the actual group art, but keep it small and calm. */
+.space-tabs-refined > button > img,
+.space-tabs-refined > button > .group-icon,
+.space-tabs-refined > button > span:first-child:not(:last-child) img {
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  object-fit: contain !important;
+  flex: 0 0 34px !important;
+}
+
+/* Notes should visually and mechanically match list cards. */
+.app-shell .notes-page .note-list-card:hover {
+  transform: none !important;
+}
+
+/* Theme the illustrated drawer while preserving its hero and colored tabs. */
+.app-shell .drawer {
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+  box-shadow:
+    8px 10px 30px color-mix(in srgb, var(--theme-text) 34%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--theme-accent) 10%, transparent) !important;
+}
+
+.app-shell .drawer-title {
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .drawer-title > button:not(.drawer-invite) {
+  background: var(--theme-accent) !important;
+  color: var(--theme-paper) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer-scroll {
+  scrollbar-color: var(--theme-accent) transparent !important;
+}
+
+.app-shell .drawer .profile-card,
+.app-shell .drawer nav > button:not(.support-nav),
+.app-shell .drawer-split > button,
+.app-shell .drawer-account {
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .profile-card:hover,
+.app-shell .drawer nav > button:not(.support-nav):hover,
+.app-shell .drawer nav > button:not(.support-nav):focus-visible,
+.app-shell .drawer-split > button:hover,
+.app-shell .drawer-split > button:focus-visible,
+.app-shell .drawer-account:hover {
+  background: color-mix(in srgb, var(--theme-accent) 9%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer .profile-card .avatar {
+  box-shadow:
+    0 0 0 3px var(--theme-paper),
+    0 2px 7px color-mix(in srgb, var(--theme-text) 28%, transparent) !important;
+}
+
+.app-shell .drawer .profile-card em,
+.app-shell .drawer .profile-card small,
+.app-shell .drawer nav button:not(.support-nav),
+.app-shell .drawer nav button:not(.support-nav) > svg,
+.app-shell .drawer-split button,
+.app-shell .drawer-account,
+.app-shell .drawer-account > button {
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer nav > button:not(.support-nav) > svg:first-child {
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .group-picker {
+  background: var(--theme-panel) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+.app-shell .drawer .group-picker button {
+  background: transparent !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer .group-picker button:hover,
+.app-shell .drawer .group-picker button:focus-visible {
+  background: color-mix(in srgb, var(--theme-accent) 9%, var(--theme-paper)) !important;
+}
+
+.app-shell .drawer .group-picker button.selected {
+  background: var(--theme-accent) !important;
+  color: var(--theme-paper) !important;
+}
+
+.app-shell .drawer-footer {
+  background: color-mix(in srgb, var(--theme-panel) 92%, transparent) !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer-supporter,
+.app-shell .drawer-version-text,
+.app-shell .drawer-account strong,
+.app-shell .drawer-account small {
+  color: var(--theme-text) !important;
+}
+
+/* Give mobile list titles every safe pixel up to the controls, then ellipsize. */
+@media (max-width: 430px) {
+  .app-shell .list-card:not(.note-list-card) {
+    grid-template-columns: 82px 8px minmax(0, 1fr) 46px !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .list-copy {
+    padding-right: 5px !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .list-copy strong {
+    display: block !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .app-shell .list-card:not(.note-list-card) .card-actions {
+    grid-template-columns: 22px 24px !important;
+  }
+}
+
+/* Follow status belongs to the list artwork, leaving metadata on one line. */
+.app-shell .list-card:not(.note-list-card) .list-icon {
+  position: relative !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-icon-follow-mark {
+  position: absolute !important;
+  top: 7px !important;
+  right: 7px !important;
+  z-index: 3 !important;
+  width: 17px !important;
+  height: 17px !important;
+  color: #15110e !important;
+  stroke: currentColor !important;
+  stroke-width: 2.6 !important;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, .55)) !important;
+  pointer-events: none !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-counts {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-count-summary {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-type-mark {
+  justify-self: start !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-stack {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+.note-card {
+  position: relative !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 18px rgba(78, 54, 31, .12) !important;
+}
+
+.note-card .note-creator-stripe {
+  position: absolute !important;
+  left: 148px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 12px !important;
+  z-index: 2 !important;
+}
+
+.note-card .note-card-icon {
+  width: 148px !important;
+  flex: 0 0 148px !important;
+}
+
+.note-card .note-card-body {
+  min-width: 0 !important;
+  padding-left: 28px !important;
+}
+
+.note-card .note-card-body h3,
+.note-card .note-card-body p {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-card [data-dnd-handle],
+.note-card .drag-handle,
+.note-card button[aria-label*="Flytta"],
+.note-card button[title*="Flytta"] {
+  cursor: grab !important;
+  touch-action: none !important;
+}
+
+.note-card [data-dnd-handle]:active,
+.note-card .drag-handle:active {
+  cursor: grabbing !important;
+}
+
+/* Note icon pickers: two equal rows of four, aligned with the colour grid. */
+.app-shell .note-appearance-modal .note-icon-picker,
+.app-shell .note-new-editor .note-icon-picker {
+  display: grid !important;
+  grid-template-columns: repeat(4, 71px) !important;
+  gap: 10px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 18px 0 20px !important;
+}
+
+.app-shell .note-appearance-modal .note-icon-picker button,
+.app-shell .note-appearance-modal .note-icon-picker button:first-child,
+.app-shell .note-new-editor .note-icon-picker button,
+.app-shell .note-new-editor .note-icon-picker button:first-child {
+  box-sizing: border-box !important;
+  width: 71px !important;
+  height: 71px !important;
+  min-height: 71px !important;
+  padding: 5px !important;
+  border-radius: 16px !important;
+  background: var(--theme-paper) !important;
+  border: 2px solid transparent !important;
+  overflow: hidden !important;
+}
+
+.app-shell .note-appearance-modal .note-icon-picker button img,
+.app-shell .note-new-editor .note-icon-picker button img {
+  display: block !important;
+  width: 86% !important;
+  height: 86% !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: translateY(-2px) !important;
+}
+
+.app-shell .note-appearance-modal .note-icon-picker button.selected,
+.app-shell .note-appearance-modal .note-icon-picker button:first-child.selected,
+.app-shell .note-new-editor .note-icon-picker button.selected,
+.app-shell .note-new-editor .note-icon-picker button:first-child.selected {
+  background: var(--theme-accent) !important;
+  border-color: color-mix(in srgb, var(--theme-accent) 68%, #253a28) !important;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, #fff 38%, transparent) !important;
+}
+
+.note-appearance-modal .modal-close svg,
+.note-log-modal .modal-close svg {
+  display: block !important;
+  margin: auto !important;
+  transform: none !important;
+}
+
+/* Consistent actions. */
+.note-editor-actions > button:last-child,
+.new-note-modal button[type="submit"],
+.note-appearance-modal .modal-actions button {
+  background: var(--accent) !important;
+  color: var(--accent-text, #fff) !important;
+}
+
+.note-editor-actions .cancel,
+.new-note-modal .cancel,
+.confirm-delete-modal .cancel {
+  background: #ad625f !important;
+  color: #fff8eb !important;
+}
+
+/* Anchor each list-card menu beside the ellipsis that opened it. */
+.list-card-menu {
+  position: absolute !important;
+  z-index: 1000 !important;
+  right: 52px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  max-height: min(240px, calc(100dvh - 28px)) !important;
+  overflow-y: auto !important;
+}
+
+.app-shell .modal-backdrop .modal.note-appearance-modal,
+.app-shell .modal-backdrop .modal.note-new-editor {
+  box-sizing: border-box !important;
+  width: min(380px, calc(100vw - 32px)) !important;
+}
+
+/* Header actions are quiet, standalone symbols matching the menu icon. */
+.app-shell .topbar.text-header-v2 .header-add,
+.app-shell .topbar.text-header-v2 .header-manage {
+  display: grid !important;
+  place-items: center !important;
+  width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  color: var(--theme-text) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-add svg,
+.app-shell .topbar.text-header-v2 .header-manage svg {
+  width: 35px !important;
+  height: 35px !important;
+  stroke-width: 2.2 !important;
+}
+
+.app-shell .topbar.text-header-v2 .header-add:hover,
+.app-shell .topbar.text-header-v2 .header-manage:hover {
+  color: var(--theme-accent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.app-shell .note-appearance-modal .modal-close {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+.app-shell .note-appearance-modal .modal-close svg {
+  width: 25px !important;
+  height: 25px !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
+  .note-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  .note-card .note-card-icon {
+    width: 116px !important;
+    flex-basis: 116px !important;
+  }
+
+  .note-card .note-creator-stripe {
+    left: 116px !important;
+    width: 9px !important;
+  }
+
+  .note-card .note-card-body {
+    padding-left: 20px !important;
+  }
+
+  .app-shell .topbar.text-header-v2 .header-add,
+  .app-shell .topbar.text-header-v2 .header-manage {
+    width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+
+  .app-shell .topbar.text-header-v2 .header-add svg,
+  .app-shell .topbar.text-header-v2 .header-manage svg {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .app-shell .note-appearance-modal .note-icon-picker,
+  .app-shell .note-new-editor .note-icon-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .app-shell .note-appearance-modal .note-icon-picker button,
+  .app-shell .note-appearance-modal .note-icon-picker button:first-child,
+  .app-shell .note-new-editor .note-icon-picker button,
+  .app-shell .note-new-editor .note-icon-picker button:first-child {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 !important;
+  }
+
+}
+
+/* Group switcher: separate live totals for lists and notes. */
+.app-shell .space-tabs-refined .group-space-menu > button {
+  grid-template-columns: 38px minmax(0, 1fr) auto 24px !important;
+}
+.app-shell .group-space-menu-counts {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+.app-shell .group-space-menu-counts > span {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 3px !important;
+  margin: 0 !important;
+}
+.app-shell .group-space-menu-counts svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: var(--theme-accent) !important;
+}
+.app-shell .group-space-menu-counts b {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 27px !important;
+  height: 27px !important;
+  padding: 0 5px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+  font: 800 12px Arial, sans-serif !important;
+}
+
+/* Larger artwork inside the existing group-icon tiles. */
+.app-shell .modal .group-icon-picker > button,
+.app-shell .modal .group-icon-picker > button:first-child {
+  position: relative !important;
+  overflow: hidden !important;
+  background: var(--theme-paper) !important;
+}
+.app-shell .modal .group-icon-picker > button > .group-picture {
+  position: absolute !important;
+  inset: 3px !important;
+  width: calc(100% - 6px) !important;
+  height: calc(100% - 6px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
+  transform: none !important;
+  transform-origin: center !important;
+}
+.app-shell .group-list > div[role="button"] {
+  cursor: pointer !important;
+}
+.app-shell .group-list > div[role="button"].active {
+  border-color: var(--theme-accent) !important;
+  box-shadow: inset 5px 0 0 var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-paper)) !important;
+}
+.app-shell .group-list > div[role="button"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--theme-accent) 65%, transparent) !important;
+  outline-offset: 2px !important;
+}
+.app-shell .role-actions .role-remove-member {
+  grid-column: 1 / -1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-height: 62px !important;
+}
+.app-shell .role-actions .role-remove-member svg {
+  width: 23px !important;
+  height: 23px !important;
+}
+@media (max-width: 500px) {
+  .app-shell .group-space-menu-counts { gap: 4px !important; }
+  .app-shell .group-space-menu-counts svg { width: 13px !important; height: 13px !important; }
+  .app-shell .group-space-menu-counts b { min-width: 24px !important; height: 24px !important; }
+}
+
+/* Redigera/flytta i listverktygen är neutrala verktygskort, inte åtgärdsknappar. */
+.app-shell .list-tools-card > button.item-action-edit,
+.app-shell .list-tools-card > button.item-action-move {
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  border-color: var(--theme-outline) !important;
+}
+
+/* Slutlig kortlayout: anteckningar följer listkortens struktur. */
+.note-card {
+  display: grid !important;
+  grid-template-columns: 100px 9px minmax(0, 1fr) 58px !important;
+  min-height: 104px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  align-items: stretch !important;
+}
+
+.note-card::before { content: none !important; }
+
+.app-shell .note-card .note-card-icon {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 0 !important;
+}
+
+.app-shell .note-card .note-card-icon img {
+  width: 76px !important;
+  height: 76px !important;
+  object-fit: contain !important;
+}
+
+.app-shell .note-card .note-creator-stripe {
+  position: absolute !important;
+  left: 130px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 9px !important;
+  height: auto !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+}
+
+.note-card .note-card-body {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  padding: 10px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.note-card .note-card-body strong {
+  font-size: 25px !important;
+  line-height: 1.05 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-card .note-card-body small {
+  margin-top: 7px !important;
+  font: 700 14px Arial, sans-serif !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-card .card-actions {
+  grid-column: 4 !important;
+  grid-row: 1 !important;
+  display: grid !important;
+  grid-template-columns: 26px 28px !important;
+  align-items: center !important;
+  align-self: stretch !important;
+}
+
+@media (max-width: 430px) {
+  .note-card {
+    grid-template-columns: 82px 8px minmax(0, 1fr) 54px !important;
+    min-height: 91px !important;
+  }
+
+  .app-shell .note-card .note-card-icon {
+    width: auto !important;
+    flex-basis: auto !important;
+  }
+
+  .app-shell .note-card .note-card-icon img {
+    width: 63px !important;
+    height: 63px !important;
+  }
+
+  .app-shell .note-card .note-creator-stripe {
+    left: 100px !important;
+    width: 8px !important;
+  }
+
+  .note-card .note-card-body {
+    padding: 10px 14px !important;
+  }
+
+  .note-card .note-card-body strong { font-size: 21px !important; }
+}
+
+/* Anteckningsredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
+.app-shell .note-editor-page {
+  width: min(var(--bubbsun-rail, 980px), 100%) !important;
+  max-width: 980px !important;
+}
+
+.app-shell .note-editor-page .back-button {
+  min-height: 42px !important;
+  margin: 4px 0 12px !important;
+  padding: 0 16px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 13px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  font: 800 13px Arial, sans-serif !important;
+}
+
+.app-shell .note-editor-page article {
+  padding: clamp(16px, 3vw, 28px) !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 24px !important;
+  background: color-mix(in srgb, var(--theme-panel) 92%, var(--theme-paper)) !important;
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--theme-text) 10%, transparent) !important;
+}
+
+.app-shell .note-editor-heading {
+  display: grid !important;
+  grid-template-columns: 112px minmax(0, 1fr) !important;
+  gap: 20px !important;
+  align-items: stretch !important;
+}
+
+.app-shell .note-editor-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 112px !important;
+  min-height: 112px !important;
+  border-radius: 19px !important;
+  border: 2px solid color-mix(in srgb, var(--theme-outline) 70%, transparent) !important;
+}
+
+.app-shell .note-editor-icon img {
+  width: 92px !important;
+  height: 92px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 3px 2px #24170f33) !important;
+}
+
+.app-shell .note-editor-heading-copy {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.app-shell .note-editor-heading-copy > label,
+.app-shell .note-body-label {
+  display: block !important;
+  margin: 0 0 7px !important;
+  font: 800 12px Arial, sans-serif !important;
+  letter-spacing: .7px !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .note-editor-heading-copy input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 58px !important;
+  padding: 8px 14px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 15px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 700 clamp(25px, 4vw, 36px)/1.1 Georgia, serif !important;
+}
+
+.app-shell .note-editor-page .note-created {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin: 9px 2px 0 !important;
+  color: var(--theme-text) !important;
+  font: 600 13px Arial, sans-serif !important;
+}
+
+.app-shell .note-editor-page .note-created::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  background: var(--creator-color, var(--theme-accent)) !important;
+}
+
+.app-shell .note-editor-tools {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin: 20px 0 !important;
+}
+
+.app-shell .note-editor-tools.has-follow {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.app-shell .note-body-label {
+  margin-top: 22px !important;
+}
+
+.app-shell .note-editor-tools > button {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 22px !important;
+  align-items: center !important;
+  gap: 11px !important;
+  width: 100% !important;
+  min-height: 72px !important;
+  padding: 10px 15px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 16px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+.app-shell .note-editor-tools > button:hover,
+.app-shell .note-editor-tools > button:focus-visible {
+  background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-paper)) !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.app-shell .note-editor-tools > button > svg:first-child {
+  width: 29px !important;
+  height: 29px !important;
+  color: var(--theme-accent) !important;
+}
+
+.app-shell .note-editor-tools > button > svg:last-child {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.app-shell .note-editor-tools span,
+.app-shell .note-editor-tools strong,
+.app-shell .note-editor-tools small {
+  display: block !important;
+  min-width: 0 !important;
+}
+
+.app-shell .note-editor-tools strong {
+  font: 800 15px Georgia, serif !important;
+}
+
+.app-shell .note-editor-tools small {
+  margin-top: 3px !important;
+  font: 12px Arial, sans-serif !important;
+  opacity: .75 !important;
+}
+
+.app-shell .note-editor-page textarea {
+  min-height: 42vh !important;
+  margin: 0 !important;
+  padding: 18px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 19px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .app-shell .note-editor-page { padding-inline: 12px !important; }
+  .app-shell .note-editor-page article { padding: 14px !important; border-radius: 20px !important; }
+  .app-shell .note-editor-heading { grid-template-columns: 76px minmax(0, 1fr) !important; gap: 11px !important; }
+  .app-shell .note-editor-icon { width: 76px !important; min-height: 94px !important; border-radius: 15px !important; }
+  .app-shell .note-editor-icon img { width: 66px !important; height: 66px !important; }
+  .app-shell .note-editor-heading-copy input { min-height: 51px !important; padding: 7px 10px !important; font-size: 24px !important; }
+  .app-shell .note-editor-page .note-created { margin-top: 7px !important; font-size: 11px !important; }
+  .app-shell .note-editor-page .note-created::before { width: 6px !important; height: 19px !important; }
+  .app-shell .note-editor-tools { grid-template-columns: 1fr !important; gap: 8px !important; margin: 14px 0 !important; }
+  .app-shell .note-editor-tools.has-follow { grid-template-columns: 1fr !important; }
+  .app-shell .note-editor-tools > button { min-height: 58px !important; padding: 8px 12px !important; }
+  .app-shell .note-editor-page textarea { min-height: 40vh !important; padding: 14px !important; }
+}
+
+/* Mobilens diskreta radera-länk ska inte få den globala sydda knappdekoren. */
+@media (max-width: 430px) {
+  .app-shell .note-editor-page .note-editor-actions > button.danger::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    overflow: visible !important;
+    filter: none !important;
+  }
+}
+
+/* Gemensamt formspråk för bekräftande, avbrytande och farliga åtgärder. */
+.app-shell button.bubbsun-action-confirm,
+.app-shell button.bubbsun-action-cancel,
+.app-shell button.bubbsun-action-danger,
+.app-shell button.bubbsun-action-neutral {
+  position: relative !important;
+  overflow: hidden !important;
+  color: #fff8e8 !important;
+  border-radius: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
+  transform: none !important;
+}
+
+.app-shell button.bubbsun-action-confirm {
+  background: var(--theme-accent, #748b58) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #748b58) 68%, #21170f) !important;
+  box-shadow: 0 2px 3px color-mix(in srgb, var(--theme-accent, #748b58) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+}
+
+.app-shell button.bubbsun-action-cancel {
+  background: #a95e5e !important;
+  border: 1px solid #703535 !important;
+  box-shadow: 0 2px 3px rgba(70, 34, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+}
+
+/* Modalernas äldre förstaknappsregel får inte skriva över STÄNG/AVBRYT. */
+.app-shell .modal button.bubbsun-action-cancel {
+  background: #a95e5e !important;
+  border-color: #703535 !important;
+}
+
+/* Listredigerarens valfält ska se ut som de övriga formulärfälten. */
+.app-shell .item-inline-editor select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-height: 43px !important;
+  padding: 10px 36px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+  cursor: pointer;
+}
+
+.app-shell .item-inline-editor select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--theme-accent) 38%, transparent) !important;
+  outline-offset: 1px !important;
+  border-color: var(--theme-accent) !important;
+}
+
+/* Önskelistans snabbfält: namn/mängd överst, prioritet och klar-knapp underst. */
+.app-shell .add-panel-cleaning > div {
+  grid-template-columns: minmax(240px, 1.55fr) minmax(180px, 1fr) 54px !important;
+  grid-template-rows: auto auto !important;
+  align-items: stretch !important;
+}
+.app-shell .add-panel-cleaning .autocomplete-wrap {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+.app-shell .add-panel-cleaning > div > input {
+  grid-column: 2 / 4 !important;
+  grid-row: 1 !important;
+}
+.app-shell .cleaning-quick-fields {
+  grid-column: 1 / 3 !important;
+  grid-row: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+.app-shell .cleaning-quick-fields select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 53px !important;
+  padding: 10px 34px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+}
+.app-shell .add-panel-cleaning > div > button:last-child {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  min-height: 53px !important;
+  padding: 0 !important;
+}
+.app-shell .add-panel-homefix > div {
+  grid-template-columns: minmax(240px, 1.55fr) minmax(180px, 1fr) 54px !important;
+  grid-template-rows: auto auto !important;
+  align-items: stretch !important;
+}
+.app-shell .add-panel-homefix .autocomplete-wrap {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+.app-shell .add-panel-homefix > div > input {
+  grid-column: 2 / 4 !important;
+  grid-row: 1 !important;
+}
+.app-shell .homefix-quick-fields {
+  grid-column: 1 / 3 !important;
+  grid-row: 2 !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+.app-shell .homefix-quick-fields select {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 53px !important;
+  padding: 10px 34px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+}
+.app-shell .add-panel-homefix > div > button:last-child {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  min-height: 53px !important;
+  padding: 0 !important;
+}
+
+.app-shell .add-panel-stacked-select > div {
+  grid-template-columns: minmax(240px, 1.55fr) minmax(180px, 1fr) 54px !important;
+  grid-template-rows: auto auto !important;
+  align-items: stretch !important;
+}
+
+.app-shell .add-panel-stacked-select .autocomplete-wrap {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+.app-shell .add-panel-stacked-select > div > input {
+  grid-column: 2 / 4 !important;
+  grid-row: 1 !important;
+}
+
+.app-shell .add-panel-stacked-select select {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 53px !important;
+  padding: 10px 34px 10px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background-color: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px Arial, sans-serif !important;
+  cursor: pointer;
+}
+
+.app-shell .add-panel-stacked-select > div > button:last-child {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  min-height: 53px !important;
+  padding: 0 !important;
+  justify-self: end !important;
+}
+
+@media (max-width: 700px) {
+  .app-shell .add-panel-cleaning > div {
+    grid-template-columns: minmax(0, 1fr) 52px !important;
+    grid-template-rows: auto auto auto !important;
+  }
+  .app-shell .add-panel-cleaning .autocomplete-wrap,
+  .app-shell .add-panel-cleaning > div > input {
+    grid-column: 1 / -1 !important;
+  }
+  .app-shell .add-panel-cleaning .autocomplete-wrap { grid-row: 1 !important; }
+  .app-shell .add-panel-cleaning > div > input { grid-row: 2 !important; }
+  .app-shell .cleaning-quick-fields {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    grid-template-columns: 1fr !important;
+  }
+  .app-shell .add-panel-cleaning > div > button:last-child {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    align-self: end !important;
+  }
+  .app-shell .add-panel-homefix > div {
+    grid-template-columns: minmax(0, 1fr) 52px !important;
+    grid-template-rows: auto auto auto !important;
+  }
+  .app-shell .add-panel-homefix .autocomplete-wrap,
+  .app-shell .add-panel-homefix > div > input {
+    grid-column: 1 / -1 !important;
+  }
+  .app-shell .add-panel-homefix .autocomplete-wrap { grid-row: 1 !important; }
+  .app-shell .add-panel-homefix > div > input { grid-row: 2 !important; }
+  .app-shell .homefix-quick-fields {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    grid-template-columns: 1fr !important;
+  }
+  .app-shell .add-panel-homefix > div > button:last-child {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    align-self: end !important;
+  }
+
+  .app-shell .add-panel-stacked-select > div {
+    grid-template-columns: minmax(0, 1fr) 52px !important;
+    grid-template-rows: auto auto auto !important;
+  }
+
+  .app-shell .add-panel-stacked-select .autocomplete-wrap {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
+  }
+
+  .app-shell .add-panel-stacked-select > div > input {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+
+  .app-shell .add-panel-stacked-select select {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+  }
+
+  .app-shell .add-panel-stacked-select > div > button:last-child {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    width: 52px !important;
+    min-width: 52px !important;
+  }
+}
+
+.app-shell button.bubbsun-action-danger {
+  background: #b7554e !important;
+  border: 1px solid #823a36 !important;
+  box-shadow: 0 2px 3px rgba(75, 31, 28, .4), inset 0 1px 0 rgba(255, 255, 255, .24) !important;
+}
+
+/* List editor: keep the full-list delete action readable above the sticky footer. */
+.app-shell .list-editor button.edit-delete-list {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  height: auto !important;
+  flex: 0 0 auto !important;
+  margin: 0 0 16px !important;
+  padding: 14px 18px !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+}
+
+.app-shell button.bubbsun-action-neutral {
+  background: #fffdf8 !important;
+  color: #211b17 !important;
+  border: 1px solid #211b17 !important;
+  box-shadow: 0 2px 3px rgba(45, 36, 30, .2), inset 0 1px 0 rgba(255, 255, 255, .7) !important;
+}
+
+.app-shell button.bubbsun-action-confirm::after,
+.app-shell button.bubbsun-action-cancel::after,
+.app-shell button.bubbsun-action-danger::after,
+.app-shell button.bubbsun-action-neutral::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  border: 1px dashed rgba(255, 248, 224, .68) !important;
+  border-radius: 5px !important;
+  pointer-events: none !important;
+}
+
+.app-shell button.bubbsun-action-neutral::after {
+  border-color: rgba(25, 20, 17, .75) !important;
+}
+
+.app-shell button.bubbsun-action-confirm:hover,
+.app-shell button.bubbsun-action-confirm:focus-visible,
+.app-shell button.bubbsun-action-cancel:hover,
+.app-shell button.bubbsun-action-cancel:focus-visible,
+.app-shell button.bubbsun-action-danger:hover,
+.app-shell button.bubbsun-action-danger:focus-visible,
+.app-shell button.bubbsun-action-neutral:hover,
+.app-shell button.bubbsun-action-neutral:focus-visible {
+  transform: none !important;
+  filter: brightness(1.08) !important;
+}
+
+.app-shell button.bubbsun-action-confirm:disabled,
+.app-shell button.bubbsun-action-cancel:disabled,
+.app-shell button.bubbsun-action-danger:disabled,
+.app-shell button.bubbsun-action-neutral:disabled {
+  opacity: .55 !important;
+  filter: none !important;
+}
+
+/* Supportertitlarnas egna färger och glow för den nuvarande textloggan. */
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="lifetime"] { color: #b63c72 !important; }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="royal"] { color: #8b62d2 !important; }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="band"] { color: #238e9a !important; }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="signature"] { color: #c65567 !important; }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="founding"] { color: #a96c16 !important; }
+.app-shell .topbar.text-header-v2 .header-brand-v3 > .supporter-title[data-title="cosmic"] { color: #8a57c6 !important; }
+
+.app-shell .topbar.text-header-v2 .header-brand-v3.brand-glow > .header-brand-title {
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--supporter-glow, #ffb532) 45%, #fff)) drop-shadow(0 0 10px var(--supporter-glow, #ffb532)) !important;
+}
+
+.app-shell .supporter-controls .switch-row .glow-color-picker {
+  appearance: auto !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  height: 38px !important;
+  padding: 3px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 10px !important;
+  background: var(--theme-paper) !important;
+  cursor: pointer !important;
+}
+
+.app-shell .supporter-controls .switch-row .glow-color-picker::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Anteckningens sparknapp. */
+.app-shell .note-editor-page .note-editor-actions > button:last-child {
+  position: relative !important;
+  overflow: hidden !important;
+  background: var(--theme-accent, #748b58) !important;
+  color: #fff8e8 !important;
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #748b58) 68%, #21170f) !important;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 3px color-mix(in srgb, var(--theme-accent, #748b58) 42%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button:last-child::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  border: 1px dashed rgba(255, 248, 224, .68) !important;
+  border-radius: 5px !important;
+  pointer-events: none !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button:last-child:disabled {
+  opacity: .55 !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button.cancel {
+  position: relative !important;
+  overflow: hidden !important;
+  background: #a95e5e !important;
+  color: #fff8e8 !important;
+  border: 1px solid #703535 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 2px 3px rgba(70, 34, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button.cancel::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 4px !important;
+  border: 1px dashed rgba(255, 248, 232, .68) !important;
+  border-radius: 5px !important;
+  pointer-events: none !important;
+}
+
+.app-shell .note-editor-page .note-editor-actions > button.cancel:hover,
+.app-shell .note-editor-page .note-editor-actions > button.cancel:focus-visible {
+  transform: none !important;
+  filter: brightness(1.08) !important;
+}
+
+/* På PC är menyn en beständig, icke-blockerande sidopanel. */
+@media (min-width: 900px) {
+  .app-shell .drawer-backdrop.visible {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .app-shell .drawer {
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border-radius: 0 22px 22px 0 !important;
+  }
+}
+
+/* Anteckningskort använder listkortens exakta mått och struktur. */
+.notes-page .note-list-card {
+  position: relative !important;
+  height: 104px !important;
+  min-height: 104px !important;
+  max-height: 104px !important;
+  grid-template-columns: 100px 9px minmax(0, 1fr) 42px !important;
+}
+
+.notes-page .note-card-open {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.notes-page .note-list-card .card-actions {
+  position: relative !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+}
+
+.notes-page .note-list-card .card-actions .drag-handle {
+  pointer-events: auto !important;
+}
+
+.notes-page .note-list-card .list-icon img {
+  width: 76px !important;
+  height: 76px !important;
+  max-width: 76px !important;
+  max-height: 76px !important;
+}
+
+.note-list-card .list-copy strong {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.note-list-card .note-date-line {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+}
+
+.note-follow-panel {
+  max-width: 980px !important;
+  min-height: 0 !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.note-follow-panel + .note-editor-page {
+  min-height: 0 !important;
+  padding-top: 0 !important;
+}
+
+.note-follow-panel > button {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) 24px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  text-align: left !important;
+  border-radius: 15px !important;
+}
+
+.note-follow-panel > button span,
+.note-follow-panel > button strong,
+.note-follow-panel > button small {
+  display: block !important;
+}
+
+@media (max-width: 430px) {
+  .notes-page .note-list-card {
+    height: 91px !important;
+    min-height: 91px !important;
+    max-height: 91px !important;
+    grid-template-columns: 82px 8px minmax(0, 1fr) 36px !important;
+  }
+
+  .notes-page .note-list-card .list-icon img {
+    width: 63px !important;
+    height: 63px !important;
+    max-width: 63px !important;
+    max-height: 63px !important;
+  }
+
+  .app-shell .note-editor-page textarea {
+    min-height: 38vh !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 12px 10px !important;
+    align-items: center !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > span {
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.cancel {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button:last-child {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    justify-self: start !important;
+    min-height: 34px !important;
+    width: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--theme-text) !important;
+    box-shadow: none !important;
+    font: 800 13px Arial, sans-serif !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger svg {
+    width: 30px !important;
+    height: 30px !important;
+    padding: 2px !important;
+    background: transparent !important;
+    color: #bd5752 !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .app-shell .note-editor-page .note-editor-actions > button.danger {
+    overflow: visible !important;
+    filter: none !important;
+  }
+}
+/* Desktop list category picker inside the selected LISTOR tab. */
+.app-shell .space-tabs-refined > button,
+.app-shell .content-tabs-refined > button,
+.app-shell .content-tabs-refined > .desktop-list-tab {
+  border-radius: 13px !important;
+}
+
+.app-shell .list-page .list-type-filters > button {
+  border-radius: 13px !important;
+}
+
+.app-shell .desktop-list-tab {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  min-height: 50px !important;
+  padding: 3px 5px 3px 10px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 17px !important;
+  background: var(--theme-accent) !important;
+  color: #fff8e8 !important;
+}
+.app-shell .content-tabs-refined .desktop-list-tab .content-tab-main {
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-weight: 900 !important;
+}
+.app-shell .content-tabs-refined .desktop-category-trigger {
+  display: grid !important;
+  grid-template-columns: auto auto auto 16px !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 36px !important;
+  padding: 3px 8px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 13px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  font: 700 12px Arial, sans-serif !important;
+}
+.app-shell .content-tabs-refined .desktop-category-trigger small {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 15%, var(--theme-paper)) !important;
+}
+.app-shell .content-tabs-refined .desktop-category-trigger svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+.app-shell .desktop-category-menu {
+  position: absolute !important;
+  z-index: 60 !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  width: min(330px, calc(100vw - 40px)) !important;
+  padding: 8px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 16px !important;
+  background: var(--theme-panel) !important;
+  box-shadow: 0 14px 30px rgba(36, 23, 15, 0.25) !important;
+  display: grid !important;
+  gap: 5px !important;
+}
+.app-shell .content-tabs-refined .desktop-category-menu > button {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto 20px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 44px !important;
+  padding: 7px 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.app-shell .content-tabs-refined .desktop-category-menu > button.selected {
+  border-color: var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-paper)) !important;
+}
+.app-shell .desktop-category-menu b {
+  font: 700 14px Arial, sans-serif !important;
+}
+.app-shell .desktop-category-menu small {
+  font: 700 12px Arial, sans-serif !important;
+}
+.app-shell .desktop-category-menu svg {
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--theme-accent) !important;
+}
+@media (min-width: 701px) {
+  .app-shell .list-page .list-type-filters {
+    display: none !important;
+  }
+}
+
+.app-shell .drawer .drawer-title > button:not(.drawer-invite) {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
+  .app-shell > .content.subpage,
+  .app-shell > .content.detail-page,
+  .app-shell > .content.note-editor-page {
+    padding-top: 8px !important;
+  }
+
+  .app-shell .content-tabs-refined {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .app-shell .desktop-list-tab {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    border-radius: 13px !important;
+  }
+
+  .app-shell .content-tabs-refined .desktop-list-tab .content-tab-main,
+  .app-shell .content-tabs-refined > button {
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 8px !important;
+    border-radius: 13px !important;
+  }
+  .app-shell .content-tabs-refined .desktop-category-trigger,
+  .app-shell .content-tabs-refined .desktop-category-menu,
+  .app-shell .desktop-category-trigger,
+  .app-shell .desktop-category-menu {
+    display: none !important;
+  }
+}
+.app-shell .add-panel > div {
+  grid-template-columns: minmax(190px, 1.55fr) minmax(150px, 1fr) 116px !important;
+}
+.app-shell .add-panel-actions {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  display: grid !important;
+  grid-template-columns: 54px 54px !important;
+  gap: 8px !important;
+  min-width: 116px !important;
+}
+.app-shell .add-panel-actions button {
+  box-sizing: border-box !important;
+  width: 54px !important;
+  min-width: 54px !important;
+  min-height: 53px !important;
+  padding: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+.app-shell .add-panel-actions button:first-child {
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  border: 1px solid var(--theme-outline) !important;
+}
+.app-shell .add-panel-actions button:first-child.active {
+  background: color-mix(in srgb, var(--theme-accent) 20%, var(--theme-paper)) !important;
+  outline: 2px solid var(--theme-accent) !important;
+  outline-offset: -3px !important;
+}
+.app-shell .add-panel-actions svg { width: 23px !important; height: 23px !important; }
+.app-shell .new-item-note {
+  box-sizing: border-box !important;
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  min-height: 88px !important;
+  resize: vertical !important;
+  padding: 13px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 9px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  font: 15px/1.4 Arial, sans-serif !important;
+}
+.app-shell .add-panel-stacked-select > div,
+.app-shell .add-panel-cleaning > div,
+.app-shell .add-panel-homefix > div {
+  grid-template-columns: minmax(220px, 1.55fr) minmax(160px, 1fr) 116px !important;
+}
+.app-shell .add-panel-stacked-select > div > input { grid-column: 2 / 4 !important; }
+.app-shell .add-panel-stacked-select .add-panel-actions,
+.app-shell .add-panel-cleaning .add-panel-actions,
+.app-shell .add-panel-homefix .add-panel-actions { grid-column: 3 !important; grid-row: 2 !important; }
+.app-shell .add-panel-stacked-select .new-item-note,
+.app-shell .add-panel-cleaning .new-item-note,
+.app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; }
+
+@media (max-width: 700px) {
+  .app-shell .add-panel > div,
+  .app-shell .add-panel-stacked-select > div,
+  .app-shell .add-panel-cleaning > div,
+  .app-shell .add-panel-homefix > div {
+    grid-template-columns: minmax(0, 1fr) 108px !important;
+  }
+  .app-shell .add-panel-actions { grid-column: 2 !important; grid-row: 1 !important; grid-template-columns: 50px 50px !important; min-width: 108px !important; }
+  .app-shell .add-panel-actions button { width: 50px !important; min-width: 50px !important; }
+  .app-shell .add-panel > div > .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
+  .app-shell .add-panel > div > input { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .app-shell .add-panel > div > .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; }
+  .app-shell .add-panel-stacked-select .add-panel-actions,
+  .app-shell .add-panel-cleaning .add-panel-actions,
+  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 2 !important; grid-row: 3 !important; align-self: end !important; }
+  .app-shell .add-panel-stacked-select .new-item-note,
+  .app-shell .add-panel-cleaning .new-item-note,
+  .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 4 !important; }
+}
+
+/* Desktop: name + compact quantity stay together; an opened note owns its own row. */
+@media (min-width: 701px) {
+  .app-shell .add-panel > div,
+  .app-shell .add-panel-stacked-select > div,
+  .app-shell .add-panel-cleaning > div,
+  .app-shell .add-panel-homefix > div {
+    grid-template-columns: minmax(260px, 1.8fr) minmax(145px, .8fr) 116px !important;
+    grid-auto-flow: row !important;
+  }
+  .app-shell .add-panel .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
+  .app-shell .add-panel .autocomplete-wrap > input {
+    height: 53px !important;
+    min-height: 53px !important;
+  }
+  .app-shell .add-panel > div > input { grid-column: 2 !important; grid-row: 1 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .app-shell .add-panel-stacked-select select { grid-column: 1 / 3 !important; grid-row: 2 !important; }
+  .app-shell .add-panel-stacked-select .add-panel-actions,
+  .app-shell .add-panel-cleaning .add-panel-actions,
+  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 3 !important; grid-row: 2 !important; position:static !important; align-self:stretch !important; }
+  .app-shell .add-panel-stacked-select .new-item-note,
+  .app-shell .add-panel-cleaning .new-item-note,
+  .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
+}
+
+/* Notes tab: don't paint beige over the selected group control. */
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-main,
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
+  background: transparent !important;
+  color: inherit !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
+  border-left: 0 !important;
+}
+.app-shell .space-tabs-refined .group-space-tab {
+  border-radius: 13px !important;
+}
+.app-shell .space-tabs-refined .group-space-main > .group-picture {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+}
+
+/* Mobile final: fields on top, actions anchored at bottom right. */
+@media (max-width: 700px) {
+  .app-shell .add-panel > div,
+  .app-shell .add-panel-stacked-select > div,
+  .app-shell .add-panel-cleaning > div,
+  .app-shell .add-panel-homefix > div {
+    grid-template-columns: minmax(0, 1fr) 108px !important;
+    grid-template-rows: auto auto !important;
+    align-items: stretch !important;
+  }
+  .app-shell .add-panel .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
+  .app-shell .add-panel .autocomplete-wrap > input,
+  .app-shell .add-panel > div > input { height: 53px !important; min-height: 53px !important; }
+  .app-shell .add-panel > div > input { grid-column: 2 !important; grid-row: 1 !important; }
+  .app-shell .add-panel-actions,
+  .app-shell .add-panel-stacked-select .add-panel-actions,
+  .app-shell .add-panel-cleaning .add-panel-actions,
+  .app-shell .add-panel-homefix .add-panel-actions { grid-column: 2 !important; grid-row: 2 !important; position:static !important; align-self:end !important; justify-self:end !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
+  .app-shell .add-panel-stacked-select select,
+  .app-shell .cleaning-quick-fields,
+  .app-shell .homefix-quick-fields { grid-column: 1 !important; grid-row: 2 !important; }
+  .app-shell .add-panel-stacked-select .new-item-note,
+  .app-shell .add-panel-cleaning .new-item-note,
+  .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
+}

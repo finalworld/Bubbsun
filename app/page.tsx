@@ -15,6 +15,7 @@ import {
   CirclePlus,
   Copy,
   Home,
+  History,
   ListChecks,
   LockKeyhole,
   GripVertical,
@@ -30,11 +31,11 @@ import {
   Search,
   Share2,
   Settings,
-  SlidersHorizontal,
   Trash2,
   UserCog,
   UserRound,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 import {
@@ -86,10 +87,13 @@ import {
   requestToJoin,
   saveGlobalPin,
   saveList,
+  saveNote,
+  savePrivateNote,
   savePreferences,
   savePrivateList,
   saveThemePalette,
   setListFollowing,
+  setNoteFollowing,
   switchGroup,
   toggleGlobalPinReaction,
   transferGroupOwnership,
@@ -104,6 +108,7 @@ import {
   watchAllLists,
   watchAllPrivateLists,
   watchFollowedLists,
+  watchFollowedNotes,
   watchGlobalPin,
   watchGlobalPins,
   watchGroup,
@@ -113,13 +118,19 @@ import {
   watchListReadStates,
   watchMemberships,
   watchOnlineCount,
+  watchOnlineUserIds,
+  watchNotes,
+  watchPrivateNotes,
   watchPrivateLists,
   watchReports,
   watchThemePalettes,
+  removeNote,
+  removePrivateNote,
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
   BubbsunList,
+  BubbsunNote,
   GlobalPin,
   Group,
   JoinRequest,
@@ -134,6 +145,7 @@ import { LanguageBridge } from "../src/LanguageBridge";
 import "./globals.css";
 import "./v700.css";
 import "./v700-fixes.css";
+import "./beta-final.css";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
 
@@ -171,15 +183,15 @@ const groupIconOptions = [
   "group_home",
   "group_coffee",
   "group_plant",
+  "group_books",
   "group_paws",
-  "group_heart",
-  "group_star",
-  "group_tree",
-  "group_cottage",
-  "group_people",
   "group_cart",
-  "group_sun",
+  "group_yarn",
+  "group_star",
   "group_moon",
+  "group_duck",
+  "group_mushrooms",
+  "group_game",
 ];
 const legacyGroupIcons = [
   "⌂",
@@ -195,9 +207,16 @@ const legacyGroupIcons = [
   "☀",
   "🌙",
 ];
+const legacyStoredGroupIconAliases: Record<string,string> = {
+  group_cottage: "group_home",
+  group_heart: "group_yarn",
+  group_tree: "group_mushrooms",
+  group_people: "group_books",
+  group_sun: "group_duck",
+};
 const normalizedGroupIcon = (value?: string) =>
   value?.startsWith("group_")
-    ? value
+    ? legacyStoredGroupIconAliases[value] || value
     : groupIconOptions[Math.max(0, legacyGroupIcons.indexOf(value || "⌂"))];
 function GroupIcon({
   id,
@@ -209,7 +228,7 @@ function GroupIcon({
   return (
     <img
       className={`group-picture ${className}`}
-      src={`/assets/new-icons/groups/${normalizedGroupIcon(id)}.png`}
+      src={`${import.meta.env.BASE_URL}assets/new-icons/groups/${normalizedGroupIcon(id)}.png?v=5`}
       alt=""
     />
   );
@@ -222,6 +241,27 @@ const listColorOptions = [
   0xff4f938f, 0xffe88fb0, 0xffffae6f, 0xffa9cf8b, 0xff6f96c5, 0xffad8acb,
   0xff55b9b0, 0xff8fbd68, 0xffdb806b, 0xff9c6daf, 0xff58a7d2, 0xfff2b7a7,
 ];
+const listTypes = [
+  { id: "shopping", label: "Inköp", icon: "🛒" },
+  { id: "packing", label: "Packlista", icon: "🎒" },
+  { id: "cleaning", label: "Städlista", icon: "🧹" },
+  { id: "home", label: "Hemfix", icon: "🔧" },
+  { id: "orders", label: "Beställningar", icon: "📦" },
+  { id: "wishlist", label: "Önskelista", icon: "🎁" },
+  { id: "other", label: "Annat", icon: "📝" },
+] as const;
+const cleaningRooms = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Ute"];
+const cleaningRecurrences = ["En gång", "Varje dag", "Varje vecka", "Varannan vecka", "Varje månad"];
+const homeFixPlaces = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Garage", "Förråd", "Ute"];
+const homeFixPriorities = ["Låg", "Normal", "Hög", "Akut"];
+const homeFixTypes = ["Reparera", "Montera", "Underhåll", "Förbättring", "Annat"];
+const shortDate = (value?: string) => value
+  ? new Date(`${value}T12:00:00`).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
+  : "";
+const noteIcons=["idea","star","search","alarm","palette","archive","tag","lock"] as const;
+const noteIconSource=(icon:string)=>`${import.meta.env.BASE_URL}assets/note-icons/${noteIcons.includes(icon as typeof noteIcons[number])?icon:"idea"}.png`;
+const listTypeInfo = (id?: string) =>
+  listTypes.find((type) => type.id === id) || listTypes[listTypes.length - 1];
 const themes = [
   {
     id: "retro",
@@ -419,13 +459,6 @@ function isAppleMobile() {
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
   );
 }
-
-function isAndroidMobile() {
-  return /Android/i.test(navigator.userAgent);
-}
-
-const ANDROID_APP_URL =
-  "https://github.com/finalworld/Bubbsun/releases/download/v0.702/Bubbsun-v0.702-Web-Edition.apk";
 
 function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) {
   const [installed, setInstalled] = useState(false);
@@ -716,6 +749,32 @@ function LoginPage({
   );
 }
 
+function ActionButtonBridge(){
+  useEffect(()=>{
+    const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
+      const text=(button.textContent||button.getAttribute("aria-label")||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
+      button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger","bubbsun-action-neutral");
+      if(button.closest(".topbar")||button.matches(".drag-handle, .item-drag-handle, [data-dnd-handle], .list-tools-card .item-action-edit, .list-tools-card .item-action-move"))return;
+      const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
+      if(starts(["MARKERA ALLA","AVMARKERA ALLT","SELECT ALL","DESELECT ALL"]))button.classList.add("bubbsun-action-neutral");
+      else if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
+      else if(starts(["AVBRYT","STÄNG","NEJ","CANCEL","CLOSE","NO"]))button.classList.add("bubbsun-action-cancel");
+      else if(starts(["SPARA","SKAPA","KLAR","LÄGG TILL","GÅ MED","FLYTTA","REDIGERA","SAVE","CREATE","DONE","ADD","JOIN","MOVE","EDIT"])||text==="JA"||text==="YES")button.classList.add("bubbsun-action-confirm");
+    });
+    classify();
+    const observer=new MutationObserver(classify);observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    return()=>observer.disconnect();
+  },[]);
+  return null;
+}
+
+function isAndroidMobile() {
+  return /Android/i.test(navigator.userAgent);
+}
+
+const ANDROID_APP_URL =
+  "https://github.com/finalworld/Bubbsun/releases/download/v0.702/Bubbsun-v0.702-Web-Edition.apk";
+
 function Header({
   onMenu,
   onHome,
@@ -724,8 +783,11 @@ function Header({
   mode,
   supporterTitle,
   glow,
+  glowColor,
   tabTitle,
   onlineCount,
+  onOpenAdmin,
+  language,
 }: {
   onMenu: () => void;
   onHome: () => void;
@@ -734,8 +796,11 @@ function Header({
   mode: "add" | "manage" | "none";
   supporterTitle?: string;
   glow?: boolean;
+  glowColor?: string;
   tabTitle?: string;
   onlineCount?: number;
+  onOpenAdmin?: () => void;
+  language: string;
 }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -745,34 +810,56 @@ function Header({
     return () => window.removeEventListener("scroll", check);
   }, []);
   return (
-    <header className={`topbar text-topbar ${scrolled ? "is-scrolled" : ""}`}>
+    <header className={`topbar text-topbar text-header-v2 ${scrolled ? "is-scrolled" : ""}`}>
       <div className="topbar-inner">
-        <div className="header-menu-slot">
-          <button
-            className="icon-button"
-            aria-label="Öppna meny"
-            onClick={onMenu}
-          >
-            <Menu />
-          </button>
+        <div className="header-left">
+          <div className="header-menu-slot">
+            <button
+              className="icon-button"
+              aria-label="Öppna meny"
+              onClick={onMenu}
+            >
+              <Menu />
+            </button>
+          </div>
         </div>
-        {typeof onlineCount === "number" && (
-          <small className="admin-online-count">
-            Online: {onlineCount} {onlineCount === 1 ? "person" : "personer"}
-          </small>
-        )}
         <button
-          className={`brand text-brand ${glow ? "brand-glow" : ""}`}
+          className={`brand text-brand header-brand-v3 ${glow ? "brand-glow" : ""}`}
+          style={{ "--supporter-glow": glowColor || "#ffb532" } as CSSProperties}
           aria-label="Gå till Mina listor"
           onClick={onHome}
         >
-          <img
-            className="header-illustrated-logo"
-            src="/assets/bubbsun-header-illustrated.png"
-            alt="Bubbsun – Listor med karaktär"
-          />
-          <span className="brand-name">Bubbsun</span>
-          <span className="brand-tagline">LISTOR MED KARAKTÄR</span>
+          <span className="header-brand-title">
+            Bubbsun<span className="header-brand-suffix">.se</span>
+            {typeof onlineCount === "number" && (
+              <span
+                className="admin-online-count"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenAdmin?.();
+                }}
+                title="Online just nu"
+              >
+                <span className="online-count-number">{onlineCount}</span>
+              </span>
+            )}
+          </span>
+          <span className="header-brand-tagline">
+            {(
+              {
+                sv: "LISTOR MED KARAKTÄR",
+                en: "LISTS WITH CHARACTER",
+                fi: "LISTAT LUONTEELLA",
+                de: "LISTEN MIT CHARAKTER",
+                es: "LISTAS CON CARÁCTER",
+                fr: "LISTES AVEC DU CARACTÈRE",
+                it: "LISTE CON CARATTERE",
+                pl: "LISTY Z CHARAKTEREM",
+                nl: "LIJSTEN MET KARAKTER",
+                tlh: "TETLHEMEY TLHInGAN",
+              } as Record<string, string>
+            )[language] || "LISTS WITH CHARACTER"}
+          </span>
           {supporterTitle && supporterTitle !== "none" && (
             <small className="supporter-title" data-title={supporterTitle}>
               {(
@@ -802,7 +889,7 @@ function Header({
             aria-label={tabTitle ? `Hantera ${tabTitle}` : "Hantera listan"}
             onClick={onManage}
           >
-            <SlidersHorizontal />
+            <Wrench />
           </button>
         ) : (
           <span className="header-spacer" />
@@ -907,12 +994,6 @@ function Drawer({
           </button>
           {expanded && (
             <div className="group-picker">
-              <button
-                className={activePrivate ? "selected" : ""}
-                onClick={onPrivate}
-              >
-                <LockKeyhole /> Mina listor
-              </button>
               {memberships.map((m) => (
                 <button
                   className={
@@ -1010,7 +1091,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.800 · Web Edition Beta
+            Bubbsun v0.800 · Web Edition
           </small>
         </div>
       </aside>
@@ -1042,6 +1123,7 @@ function ListCard({
   canDrag: boolean;
 }) {
   const done = list.items.filter((x) => x.completed).length;
+  const type = listTypeInfo(list.listType);
   const creator = members.find((x) => x.uid === list.creatorId);
   const sortable = useSortable({ id: list.id, disabled: !canDrag });
   const [offset, setOffset] = useState(0);
@@ -1123,6 +1205,9 @@ function ListCard({
           }}
         >
           <img src={iconSources[list.icon] || fallbackIcon} alt="" />
+          {followed && (
+            <Bell className="list-icon-follow-mark" aria-label="Du följer listan" />
+          )}
         </span>
         <span
           className="creator-strip"
@@ -1143,10 +1228,10 @@ function ListCard({
             {hasNew&&<em className="new-badge">NYTT</em>}
           </strong>
           <small className="list-counts">
-            {followed && (
-              <Bell className="followed-list-mark" aria-label="Du följer listan" />
-            )}
-            {list.items.length - done} kvar · {done} klara
+            <span className="list-count-summary">{list.items.length - done} kvar · {done} klara</span>
+            <span className="list-type-mark" title={`Typ: ${type.label}`}>
+              {type.icon} {type.label}
+            </span>
           </small>
         </span>
         <span className="card-actions">
@@ -1220,7 +1305,7 @@ function ListEditor({
   allowDelete?: boolean;
   onCancel: () => void;
   onSupport: () => void;
-  onSave: (values: { name: string; icon: string; iconColor: number }) => void;
+  onSave: (values: { name: string; icon: string; iconColor: number; listType: string; packPeople:string[] }) => void;
   onDelete?: () => void;
 }) {
   const [name, setName] = useState(initial?.name || "");
@@ -1230,6 +1315,9 @@ function ListEditor({
       ? initial.iconColor
       : listColorOptions[0],
   );
+  const [listType, setListType] = useState(initial?.listType || "other");
+  const [packPeople,setPackPeople]=useState(initial?.packPeople||[]);
+  const [packPerson,setPackPerson]=useState("");
   return (
     <div className="modal-backdrop">
       <form
@@ -1237,7 +1325,7 @@ function ListEditor({
         onSubmit={(event) => {
           event.preventDefault();
           if (name.trim())
-            onSave({ name: name.trim().slice(0, 60), icon, iconColor });
+            onSave({ name: name.trim().slice(0, 60), icon, iconColor, listType, packPeople });
         }}
       >
         <h2>{title}</h2>
@@ -1248,6 +1336,21 @@ function ListEditor({
           maxLength={60}
           placeholder="Skriv listans namn"
         />
+        <h3>VÄLJ TYP</h3>
+        <div className="list-type-picker">
+          {listTypes.map((type) => (
+            <button
+              type="button"
+              key={type.id}
+              className={listType === type.id ? "selected" : ""}
+              onClick={() => setListType(type.id)}
+            >
+              <i aria-hidden="true">{type.icon}</i>
+              <span>{type.label}</span>
+            </button>
+          ))}
+        </div>
+        {listType === "packing" && <section className="pack-people-editor"><h3>VEM SKA PACKA?</h3><p>Lägg till namnen på dem som ska ha saker med sig.</p><div><input value={packPerson} onChange={event=>setPackPerson(event.target.value)} placeholder="Till exempel Sanja" /><button type="button" onClick={()=>{const value=packPerson.trim();if(value&&!packPeople.includes(value))setPackPeople(old=>[...old,value]);setPackPerson("")}}>LÄGG TILL</button></div><div className="pack-person-chips">{packPeople.map(person=><button type="button" key={person} onClick={()=>setPackPeople(old=>old.filter(value=>value!==person))}>{person} <X /></button>)}</div></section>}
         <h3>VÄLJ FÄRG</h3>
         <div className="color-picker">
           {listColorOptions.map((color, index) => (
@@ -1289,7 +1392,7 @@ function ListEditor({
           </button>
         )}
         <div>
-          <button type="button" onClick={onCancel}>
+          <button type="button" className="cancel" onClick={onCancel}>
             AVBRYT
           </button>
           <button type="submit">SPARA</button>
@@ -1421,6 +1524,69 @@ function GlobalPinCard({
   );
 }
 
+function NoteFollowButton({note,uid,groupId}:{note:BubbsunNote;uid:string;groupId:string}){
+  const [following,setFollowing]=useState(false);
+  useEffect(()=>watchFollowedNotes(uid,ids=>setFollowing(ids.has(note.id))),[uid,groupId,note.id]);
+  const toggle=async()=>{const next=!following;if(next&&"Notification" in window&&Notification.permission==="default")await Notification.requestPermission();setFollowing(next);await setNoteFollowing(uid,groupId,note.id,next)};
+  return <button type="button" className="note-follow-tool" onClick={()=>void toggle()}><Bell/><span><strong>{following?"SLUTA FÖLJA":"FÖLJ ANTECKNING"}</strong><small>Få en notis vid ändringar</small></span><ChevronRight/></button>;
+}
+
+function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships,groups,onSelect,onSwitch}:{selected:boolean;groupName:string;groupIconId?:string;activeGroupId:string;memberships:Membership[];groups:Record<string,Group>;onSelect:()=>void;onSwitch:(groupId:string)=>void}){
+  const [open,setOpen]=useState(false);
+  const [counts,setCounts]=useState<Record<string,{lists:number;notes:number}>>({});
+  const root=useRef<HTMLDivElement>(null);
+  useEffect(()=>{if(!open)return;const close=(event:PointerEvent)=>{if(!root.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[open]);
+  useEffect(()=>{
+    const unsubs=memberships.flatMap(membership=>[
+      watchLists(membership.groupId,items=>setCounts(current=>({...current,[membership.groupId]:{lists:items.length,notes:current[membership.groupId]?.notes??0}}))),
+      watchNotes(membership.groupId,items=>setCounts(current=>({...current,[membership.groupId]:{lists:current[membership.groupId]?.lists??0,notes:items.length}}))),
+    ]);
+    return()=>unsubs.forEach(unsubscribe=>unsubscribe());
+  },[memberships]);
+  return <div ref={root} className={`group-space-tab ${selected?"selected":""}`}>
+    <button type="button" className="group-space-main" aria-label="Byt grupp" aria-expanded={open} onClick={()=>{onSelect();if(memberships.length)setOpen(value=>!value)}}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
+    {!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
+    {open&&<div className="group-space-menu" role="menu">{memberships.map(membership=>{const group=groups[membership.groupId],count=counts[membership.groupId]??{lists:0,notes:0};return <button type="button" role="menuitem" key={membership.groupId} className={membership.groupId===activeGroupId?"selected":""} onClick={()=>{setOpen(false);if(membership.groupId!==activeGroupId)onSwitch(membership.groupId)}}><span className="group-space-menu-icon">{group?.iconId?<GroupIcon id={group.iconId}/>:<Users/>}</span><strong>{group?.name||"Grupp"}</strong><span className="group-space-menu-counts"><span title={`${count.lists} listor`}><ListChecks/><b>{count.lists}</b></span><span title={`${count.notes} anteckningar`}><NotebookPen/><b>{count.notes}</b></span></span>{membership.groupId===activeGroupId&&<Check/>}</button>})}</div>}
+  </div>
+}
+
+function NotesPage({notes,privateMode,groupName,groupIconId,activeGroupId,memberships,groups,resolveCreatorColor,followedNoteIds,onMode,onSwitchGroup,onLists,onHelp,onOpen,onReorder}:{notes:BubbsunNote[];privateMode:boolean;groupName:string;groupIconId?:string;activeGroupId:string;memberships:Membership[];groups:Record<string,Group>;resolveCreatorColor:(note:BubbsunNote)=>number;followedNoteIds:Set<string>;onMode:(value:boolean)=>void;onSwitchGroup:(groupId:string)=>void;onLists:()=>void;onHelp:()=>void;onOpen:(note:BubbsunNote)=>void;onReorder:(from:number,to:number)=>void}){
+  const sensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:5}}),useSensor(TouchSensor,{activationConstraint:{delay:180,tolerance:8}}));
+  const end=(event:DragEndEvent)=>{if(!event.over||event.active.id===event.over.id)return;const from=notes.findIndex(note=>note.id===event.active.id),to=notes.findIndex(note=>note.id===event.over?.id);if(from>=0&&to>=0)onReorder(from,to)};
+  return <section className="content list-page notes-page"><div className="space-tabs space-tabs-refined"><button className={privateMode?"selected":""} onClick={()=>onMode(true)}><LockKeyhole/><span>PRIVAT</span></button><GroupSpaceTab selected={!privateMode} groupName={groupName} groupIconId={groupIconId} activeGroupId={activeGroupId} memberships={memberships} groups={groups} onSelect={()=>onMode(false)} onSwitch={onSwitchGroup}/></div><div className="content-tabs content-tabs-refined"><button onClick={onLists}><ListChecks/> LISTOR</button><button className="selected"><NotebookPen/> ANTECKNINGAR</button></div>{!notes.length&&<div className="empty-card"><NotebookPen/><strong>{privateMode?"Här är tomt än så länge":"Gruppen har inga anteckningar än"}</strong><span>{privateMode?"Skapa din första anteckning med plusknappen uppe till höger.":"Skapa gruppens första anteckning med plusknappen uppe till höger."}</span><button type="button" onClick={onHelp}><span>👋</span><span><b>NY HÄR?</b><small>Här kan du skriva idéer, planer och sådant du vill minnas.</small></span><ChevronRight/></button></div>}<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={end}><SortableContext items={notes.map(note=>note.id)} strategy={rectSortingStrategy}><div className="list-stack">{notes.map(note=><SortableNoteCard key={note.id} note={note} creatorColor={resolveCreatorColor(note)} followed={!privateMode&&followedNoteIds.has(note.id)} onOpen={()=>onOpen(note)}/>)}</div></SortableContext></DndContext></section>
+}
+const noteDateText=(note:BubbsunNote)=>{const changed=(note.history?.length||0)>1,timestamp=changed?(note.updatedAt||note.history?.[0]?.at):(note.createdAt||note.history?.[note.history.length-1]?.at),label=changed?"Ändrad":"Skapad";if(!timestamp)return `${label}: nyss`;const value=new Date(timestamp),today=new Date(),sameDay=value.getFullYear()===today.getFullYear()&&value.getMonth()===today.getMonth()&&value.getDate()===today.getDate();return `${label}: ${sameDay?`Idag ${new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit"}).format(value)}`:new Intl.DateTimeFormat("sv-SE",{dateStyle:"short",timeStyle:"short"}).format(value)}`};
+function SortableNoteCard({note,creatorColor,followed,onOpen}:{note:BubbsunNote;creatorColor:number;followed:boolean;onOpen:()=>void}){const sortable=useSortable({id:note.id});return <div ref={sortable.setNodeRef} style={{transform:CSS.Transform.toString(sortable.transform),transition:sortable.transition} as CSSProperties} className={`list-card-shell ${sortable.isDragging?"dragging":""}`}><div className="list-card note-list-card"><span className="list-icon" style={{background:rgbaHex(note.color)}}><img src={noteIconSource(note.icon)} alt=""/></span><span className="creator-strip" style={{background:rgbaHex(creatorColor)}}/><span className="list-copy"><strong>{note.title}</strong><small className="list-counts note-date-line">{followed&&<Bell className="followed-list-mark" aria-label="Du följer anteckningen"/>}<span>{noteDateText(note)}</span></small></span><button type="button" className="note-card-open" aria-label={`Öppna ${note.title}`} onClick={onOpen}/><span className="card-actions"><button className="drag-handle no-hover" data-dnd-handle aria-label="Flytta anteckning" onClick={event=>event.stopPropagation()} {...sortable.attributes} {...sortable.listeners}><GripVertical/></button></span></div></div>}
+function NoteAppearancePicker({icon,color,onIcon,onColor}:{icon:string;color:number;onIcon:(icon:string)=>void;onColor:(color:number)=>void}){return <><div className="note-icon-picker">{noteIcons.map(value=><button type="button" key={value} className={icon===value?"selected":""} onClick={()=>onIcon(value)}><img src={noteIconSource(value)} alt=""/></button>)}</div><div className="color-picker">{listColorOptions.map(value=><button type="button" key={value} className={color===value?"selected":""} onClick={()=>onColor(value)} style={{"--choice-color":rgbaHex(value)} as CSSProperties}/>)}</div></>}
+function NoteEditorPage({note,onSave,onBack,onDelete,follow,creator,toolsOpen,onToolsOpen}:{note:BubbsunNote;onSave:(note:BubbsunNote)=>Promise<boolean>;onBack:()=>void;onDelete:()=>void;follow?:{uid:string;groupId:string};creator?:{name:string;color:number};toolsOpen:boolean;onToolsOpen:(open:boolean)=>void}){
+  const [title,setTitle]=useState(note.title),[text,setText]=useState(note.text),[icon,setIcon]=useState(note.icon),[color,setColor]=useState(note.color),[logOpen,setLogOpen]=useState(false),[appearanceOpen,setAppearanceOpen]=useState(false),[confirmDelete,setConfirmDelete]=useState(false),[saving,setSaving]=useState(false);
+  useEffect(()=>{setTitle(note.title);setText(note.text);setIcon(note.icon);setColor(note.color)},[note.id,note.title,note.text,note.icon,note.color]);
+  const save=async()=>{if(!title.trim()||saving)return;setSaving(true);try{if(await onSave({...note,title:title.trim(),text,icon,color}))onBack()}finally{setSaving(false)}};
+  return <section className="content note-editor-page">
+    {toolsOpen&&<div className={`list-tools-card note-editor-tools ${follow?"has-follow":""}`}>
+      <button className="note-appearance-button" onClick={()=>{setAppearanceOpen(true);onToolsOpen(false)}}><Palette/><span><strong>ÄNDRA UTSEENDE</strong><small>Välj ikon och färg</small></span><ChevronRight/></button>
+      <button className="note-log-button" onClick={()=>{setLogOpen(true);onToolsOpen(false)}}><History/><span><strong>ÄNDRINGSLOGG</strong><small>Se vem som har ändrat</small></span><ChevronRight/></button>
+      {follow&&<NoteFollowButton note={note} uid={follow.uid} groupId={follow.groupId}/>}
+    </div>}
+    <article>
+      <header className="note-editor-heading">
+        <span className="note-editor-icon" style={{background:rgbaHex(color)}}><img src={noteIconSource(icon)} alt=""/></span>
+        <div className="note-editor-heading-copy">
+          <input id="note-title" value={title} onChange={event=>setTitle(event.target.value)} maxLength={80} placeholder="Rubrik"/>
+          <p className="note-created" style={(creator?.color??note.creatorColor)?{"--creator-color":rgbaHex(creator?.color??note.creatorColor!)} as CSSProperties:undefined}>Skapad av <strong>{creator?.name||note.creatorName||"Bubbsun"}</strong></p>
+        </div>
+      </header>
+      <label className="note-body-label" htmlFor="note-body">ANTECKNING</label>
+      <textarea id="note-body" value={text} onChange={event=>setText(event.target.value)} placeholder="Skriv din anteckning här…"/>
+      <div className="note-editor-actions"><button className="danger" onClick={()=>setConfirmDelete(true)}><Trash2/> TA BORT</button><span/><button className="cancel" onClick={onBack}>AVBRYT</button><button disabled={saving||!title.trim()} onClick={()=>void save()}>{saving?"SPARAR…":"SPARA"}</button></div>
+    </article>
+    {appearanceOpen&&<div className="modal-backdrop"><div className="modal note-appearance-modal"><div className="note-log-head"><h2>ÄNDRA UTSEENDE</h2><button className="modal-close" onClick={()=>setAppearanceOpen(false)} aria-label="Stäng"><X/></button></div><NoteAppearancePicker icon={icon} color={color} onIcon={setIcon} onColor={setColor}/><div className="modal-actions"><button className="cancel" onClick={()=>setAppearanceOpen(false)}>KLAR</button></div></div></div>}
+    {confirmDelete&&<div className="modal-backdrop"><div className="modal confirm-delete-modal"><h2>TA BORT ANTECKNINGEN?</h2><p>Anteckningen “{note.title}” försvinner.</p><div className="modal-actions"><button className="cancel" onClick={()=>setConfirmDelete(false)}>AVBRYT</button><button className="danger" onClick={()=>onDelete()}>TA BORT</button></div></div></div>}
+    {logOpen&&<div className="modal-backdrop"><div className="modal note-log-modal"><div className="note-log-head"><h2>ÄNDRINGSLOGG</h2><button className="modal-close" onClick={()=>setLogOpen(false)} aria-label="Stäng"><X/></button></div>{note.history?.length?<ul>{note.history.map((entry,index)=><li key={`${entry.at}-${index}`}><strong>{entry.name}</strong><small>{new Date(entry.at).toLocaleString("sv-SE")}</small></li>)}</ul>:<p>Ingen har sparat några ändringar ännu.</p>}</div></div>}
+  </section>
+}
+function NewNoteEditor({onCancel,onSave}:{onCancel:()=>void;onSave:(note:BubbsunNote)=>void}){const [title,setTitle]=useState(""),[icon,setIcon]=useState("idea"),[color,setColor]=useState(listColorOptions[0]);return <div className="modal-backdrop"><form className="modal note-new-editor" onSubmit={event=>{event.preventDefault();if(title.trim())onSave({id:crypto.randomUUID(),title:title.trim(),text:"",icon,color,order:Date.now(),creatorId:""})}}><h2>NY ANTECKNING</h2><input autoFocus value={title} onChange={event=>setTitle(event.target.value)} placeholder="Vad handlar den om?"/><NoteAppearancePicker icon={icon} color={color} onIcon={setIcon} onColor={setColor}/><div className="modal-actions"><button type="button" className="cancel" onClick={onCancel}>AVBRYT</button><button type="submit">SKAPA</button></div></form></div>}
+
 function ListsPage({
   lists,
   privateLists,
@@ -1433,6 +1599,7 @@ function ListsPage({
   onHidePin,
   onOpen,
   onHelp,
+  onNotes,
   onSupport,
   onMode,
   onReorder,
@@ -1442,6 +1609,12 @@ function ListsPage({
   followedListIds,
   listReadAt,
   groupId,
+  groupName,
+  groupIconId,
+  activeGroupId,
+  memberships,
+  groups,
+  onSwitchGroup,
   canReorder,
 }: {
   lists: BubbsunList[];
@@ -1455,27 +1628,40 @@ function ListsPage({
   supporter: boolean;
   onOpen: (list: BubbsunList, isPrivate: boolean) => void;
   onHelp: () => void;
+  onNotes: () => void;
   onSupport: () => void;
   onMode: (value: boolean) => void;
   onReorder: (from: number, to: number) => void;
   onEdit: (
     list: BubbsunList,
-    values: { name: string; icon: string; iconColor: number },
+    values: { name: string; icon: string; iconColor: number; listType: string; packPeople:string[] },
   ) => void;
   onDelete: (list: BubbsunList) => void;
   onPin: (list: BubbsunList) => void;
   followedListIds: Set<string>;
   listReadAt: Map<string,number>;
   groupId: string;
+  groupName: string;
+  groupIconId?: string;
+  activeGroupId: string;
+  memberships: Membership[];
+  groups: Record<string,Group>;
+  onSwitchGroup: (groupId:string) => void;
   canReorder: boolean;
 }) {
-  const shown = privateMode
+  const baseShown = privateMode
     ? [...privateLists].sort(
         (a, b) =>
           Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) ||
           a.order - b.order,
       )
     : lists;
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const shown =
+    typeFilter === "all"
+      ? baseShown
+      : baseShown.filter((list) => (list.listType || "other") === typeFilter);
   const privatePinned = privateMode
     ? []
     : [...privateLists]
@@ -1489,6 +1675,26 @@ function ListsPage({
       activationConstraint: { delay: 180, tolerance: 8 },
     }),
   );
+  useEffect(() => {
+    if (!categoryMenuOpen) return;
+    const closeMenu = (event: PointerEvent) => {
+      if (!(event.target as HTMLElement).closest(".desktop-list-tab")) {
+        setCategoryMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeMenu);
+    return () => document.removeEventListener("pointerdown", closeMenu);
+  }, [categoryMenuOpen]);
+  const activeType =
+    typeFilter === "all"
+      ? null
+      : listTypes.find((type) => type.id === typeFilter);
+  const activeTypeCount =
+    typeFilter === "all"
+      ? baseShown.length
+      : baseShown.filter(
+          (list) => (list.listType || "other") === typeFilter,
+        ).length;
   const dragEnd = (event: DragEndEvent) => {
     if (!event.over || event.active.id === event.over.id) return;
     const from = shown.findIndex((x) => x.id === event.active.id),
@@ -1497,19 +1703,92 @@ function ListsPage({
   };
   return (
     <section className="content list-page">
-      <div className="space-tabs">
+      <div className="space-tabs space-tabs-refined">
         <button
           className={privateMode ? "selected" : ""}
           onClick={() => onMode(true)}
         >
-          <LockKeyhole /> MINA LISTOR
+          <LockKeyhole /> <span>PRIVAT</span>
         </button>
+        <GroupSpaceTab selected={!privateMode} groupName={groupName} groupIconId={groupIconId} activeGroupId={activeGroupId} memberships={memberships} groups={groups} onSelect={()=>onMode(false)} onSwitch={onSwitchGroup}/>
+      </div>
+      <div className="content-tabs content-tabs-refined">
+        <div className="desktop-list-tab selected">
+          <button type="button" className="content-tab-main">
+            <ListChecks /> LISTOR
+          </button>
+          <button
+            type="button"
+            className="desktop-category-trigger"
+            aria-label="Välj listkategori"
+            aria-expanded={categoryMenuOpen}
+            onClick={() => setCategoryMenuOpen((open) => !open)}
+          >
+            <span>{activeType?.icon || ""}</span>
+            <b>{activeType?.label || "Alla listor"}</b>
+            <small>{activeTypeCount}</small>
+            <ChevronDown className={categoryMenuOpen ? "turn" : ""} />
+          </button>
+          {categoryMenuOpen && (
+            <div className="desktop-category-menu" role="menu">
+              <button
+                type="button"
+                className={typeFilter === "all" ? "selected" : ""}
+                onClick={() => {
+                  setTypeFilter("all");
+                  setCategoryMenuOpen(false);
+                }}
+              >
+                <span aria-hidden="true" /><b>Alla listor</b>
+                <small>{baseShown.length}</small>
+                {typeFilter === "all" && <Check />}
+              </button>
+              {listTypes.map((type) => {
+                const count = baseShown.filter(
+                  (list) => (list.listType || "other") === type.id,
+                ).length;
+                return (
+                  <button
+                    type="button"
+                    key={type.id}
+                    className={typeFilter === type.id ? "selected" : ""}
+                    onClick={() => {
+                      setTypeFilter(type.id);
+                      setCategoryMenuOpen(false);
+                    }}
+                  >
+                    <span>{type.icon}</span><b>{type.label}</b><small>{count}</small>
+                    {typeFilter === type.id && <Check />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <button onClick={onNotes}><NotebookPen /> ANTECKNINGAR</button>
+      </div>
+      <div className="list-type-filters" aria-label="Filtrera listor efter typ">
         <button
-          className={!privateMode ? "selected" : ""}
-          onClick={() => onMode(false)}
+          className={typeFilter === "all" ? "selected" : ""}
+          onClick={() => setTypeFilter("all")}
         >
-          <Users /> GRUPPER
+          ALLA <small>{baseShown.length}</small>
         </button>
+        {listTypes.map((type) => {
+          const count = baseShown.filter(
+            (list) => (list.listType || "other") === type.id,
+          ).length;
+          return (
+            <button
+              key={type.id}
+              className={typeFilter === type.id ? "selected" : ""}
+              onClick={() => setTypeFilter(type.id)}
+            >
+              <i aria-hidden="true">{type.icon}</i> {type.label}
+              {count > 0 && <small>{count}</small>}
+            </button>
+          );
+        })}
       </div>
       <InstallLauncher place="banner" />
       {!privateMode && globalPin && (
@@ -1578,7 +1857,7 @@ function ListsPage({
                   !privateMode && followedListIds.has(`${groupId}_${list.id}`)
                 }
                 hasNew={!privateMode&&list.items.some(item=>item.ownerId!==uid&&item.createdAt>(listReadAt.get(`${groupId}_${list.id}`)??NEW_BADGE_EPOCH))}
-                canDrag={canReorder}
+                canDrag={canReorder && typeFilter === "all"}
                 onOpen={() => onOpen(list, privateMode)}
                 onPin={privateMode ? () => onPin(list) : undefined}
                 onEdit={() => setEditingList(list)}
@@ -1610,7 +1889,7 @@ function ListsPage({
             <h2>TA BORT LISTAN?</h2>
             <p>Alla poster i “{deletingList.name}” försvinner.</p>
             <div>
-              <button onClick={() => setDeletingList(null)}>AVBRYT</button>
+              <button className="cancel" onClick={() => setDeletingList(null)}>AVBRYT</button>
               <button
                 className="danger"
                 onClick={() => {
@@ -1645,6 +1924,9 @@ function SortableItemRow({
   onDirtyChange,
   onCloseEditor,
   isNew,
+  listType,
+  packPeople,
+  members,
 }: {
   item: ListItem;
   owner?: Membership;
@@ -1662,17 +1944,28 @@ function SortableItemRow({
   onDirtyChange: (dirty:boolean) => void;
   onCloseEditor: () => void;
   isNew: boolean;
+  listType?: string;
+  packPeople?: string[];
+  members: Membership[];
 }) {
   const sortable = useSortable({ id: item.id, disabled: !canDrag });
   const liked = item.likedBy.includes(uid);
   const [draftName,setDraftName]=useState(item.name);
   const [draftQuantity,setDraftQuantity]=useState(item.quantity);
   const [draftNote,setDraftNote]=useState(item.note||"");
+  const [draftAssignedTo,setDraftAssignedTo]=useState(item.assignedTo||"");
+  const [draftAssigneeId,setDraftAssigneeId]=useState(item.assigneeId||members.find(member=>member.displayName===(item.assigneeName||item.assignedTo))?.uid||"");
+  const [draftStatus,setDraftStatus]=useState(item.status||"");
+  const [draftPriority,setDraftPriority]=useState(item.priority||"Normal");
+  const [draftRoom,setDraftRoom]=useState(item.room||"");
+  const [draftRecurrence,setDraftRecurrence]=useState(item.recurrence||"");
+  const [draftDueDate,setDraftDueDate]=useState(item.dueDate||"");
+  const [draftTaskType,setDraftTaskType]=useState(item.taskType||"");
   const swipeStart=useRef<{x:number;y:number;pointerId:number}|null>(null);
   const suppressSwipeClick=useRef(false);
   const [swipeOffset,setSwipeOffset]=useState(0);
   const [swiping,setSwiping]=useState(false);
-  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");},[item.name,item.quantity,item.note]);
+  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||members.find(member=>member.displayName===(item.assigneeName||item.assignedTo))?.uid||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");},[item.name,item.quantity,item.note,item.assignedTo,item.assigneeId,item.assigneeName,item.status,item.priority,item.room,item.recurrence,item.dueDate,item.taskType,members]);
   const startSwipe=(event:ReactPointerEvent<HTMLDivElement>)=>{
     if(event.pointerType!=="touch"||selecting||expanded)return;
     const target=event.target as HTMLElement;
@@ -1728,7 +2021,7 @@ function SortableItemRow({
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
-        {item.quantity && <small>{item.quantity}</small>}
+        {(item.quantity||item.assignedTo||item.assigneeName||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,(item.assigneeName||item.assignedTo)&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assigneeName||item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
@@ -1767,7 +2060,13 @@ function SortableItemRow({
       <label>Namn<input value={draftName} onChange={event=>{setDraftName(event.target.value);onDirtyChange(true)}} /></label>
       <label>Mängd (valfritt)<input value={draftQuantity} onChange={event=>{setDraftQuantity(event.target.value);onDirtyChange(true)}} /></label>
       <label className="item-note-field">Anteckning (valfritt)<textarea value={draftNote} onChange={event=>{setDraftNote(event.target.value);onDirtyChange(true)}} placeholder="Skriv en anteckning…" /></label>
-      <div><button onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim()}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
+      {listType==="packing"&&<label>Vem ska ha med den?<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Alla</option>{(packPeople||[]).map(person=><option key={person}>{person}</option>)}</select></label>}
+      {listType==="home"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Att göra</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select></label>}
+      {listType==="orders"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Välj status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select></label>}
+      {listType==="wishlist"&&<label>Önskas mest?<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select></label>}
+      {listType==="cleaning"&&<><label>Rum<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select></label><label>Ansvarig<select value={draftAssigneeId} onChange={event=>{setDraftAssigneeId(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select></label><label>Upprepas<select value={draftRecurrence} onChange={event=>{setDraftRecurrence(event.target.value);onDirtyChange(true)}}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></label></>}
+      {listType==="home"&&<><label>Plats<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select></label><label>Ansvarig<select value={draftAssigneeId} onChange={event=>{setDraftAssigneeId(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select></label><label>Prioritet<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></label><label>Typ av jobb<select value={draftTaskType} onChange={event=>{setDraftTaskType(event.target.value);onDirtyChange(true)}}><option value="">Välj typ</option>{homeFixTypes.map(value=><option key={value}>{value}</option>)}</select></label><label>Deadline (valfritt)<input type="date" value={draftDueDate} onChange={event=>{setDraftDueDate(event.target.value);onDirtyChange(true)}} /></label></>}
+      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;const assignee=members.find(member=>member.uid===draftAssigneeId);onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"?draftAssignedTo:undefined,assigneeId:listType==="cleaning"||listType==="home"?assignee?.uid:undefined,assigneeName:listType==="cleaning"||listType==="home"?assignee?.displayName:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"||listType==="home"?draftPriority:undefined,room:listType==="cleaning"||listType==="home"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined,dueDate:listType==="home"?draftDueDate:undefined,taskType:listType==="home"?draftTaskType:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
     </div>}
     </div>
   );
@@ -1812,13 +2111,38 @@ function ListPage({
 }) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [newItemNote,setNewItemNote]=useState("");
+  const [showNewItemNote,setShowNewItemNote]=useState(false);
+  const [assignedTo,setAssignedTo]=useState("");
+  const [itemStatus,setItemStatus]=useState("");
+  const [priority,setPriority]=useState("Normal");
+  const [cleaningRoom,setCleaningRoom]=useState("");
+  const [cleaningAssignee,setCleaningAssignee]=useState("");
+  const [cleaningRecurrence,setCleaningRecurrence]=useState("");
+  const [homeFixPlace,setHomeFixPlace]=useState("");
+  const [homeFixPriority,setHomeFixPriority]=useState("Normal");
   const [search, setSearch] = useState("");
-  const [showDone, setShowDone] = useState(true);
+  const [showDone, setShowDone] = useState(() => {
+    try {
+      return localStorage.getItem("bubbsun-show-completed") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("bubbsun-show-completed", String(showDone));
+    } catch {
+      // The preference is optional when storage is unavailable.
+    }
+  }, [showDone]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeleteItems,setConfirmDeleteItems]=useState<ListItem[]|null>(null);
   const [editing, setEditing] = useState(false);
   const [selectMode, setSelectMode] = useState<"" | "delete" | "move">("");
   const selecting = Boolean(selectMode);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const allItemsSelected = list.items.length > 0 && selectedIds.size === list.items.length;
   const [itemMenu, setItemMenu] = useState<ListItem | null>(null);
   const [moveItem, setMoveItem] = useState<ListItem | null>(null);
   const [moveMany, setMoveMany] = useState(false);
@@ -1871,6 +2195,24 @@ function ListPage({
   );
   const normalized = (value: string) =>
     value.trim().replace(/\s+/g, " ").toLocaleLowerCase("sv");
+  const suggestionQuery = normalized(name);
+  const itemSuggestions = suggestionQuery.length >= 3
+    ? Array.from(
+        new Map(
+          [list, ...siblingLists]
+            .flatMap((source) => source.items.map((item) => item.name.trim()))
+            .filter(Boolean)
+            .map((value) => [normalized(value), value] as const),
+        ).values(),
+      )
+        .filter((value) => normalized(value).includes(suggestionQuery))
+        .sort((a, b) => {
+          const aStarts = normalized(a).startsWith(suggestionQuery);
+          const bStarts = normalized(b).startsWith(suggestionQuery);
+          return aStarts === bStarts ? a.localeCompare(b, "sv") : aStarts ? -1 : 1;
+        })
+        .slice(0, 6)
+    : [];
   const add = (suggestedName?: string) => {
     const cleanName = (suggestedName ?? name).trim().replace(/\s+/g, " ");
     if (!cleanName) return;
@@ -1884,6 +2226,7 @@ function ListPage({
           completed: false,
           completedAt: null,
           quantity: quantity.trim() || existing.quantity,
+          note: newItemNote.trim() || existing.note,
         };
         onChange({
           ...list,
@@ -1895,6 +2238,8 @@ function ListPage({
       }
       setName("");
       setQuantity("");
+      setNewItemNote("");
+      setShowNewItemNote(false);
       return;
     }
     const item: ListItem = {
@@ -1906,10 +2251,22 @@ function ListPage({
       createdAt: Date.now(),
       completedAt: null,
       likedBy: [],
+      ...(newItemNote.trim()?{note:newItemNote.trim()}:{}),
+      ...(list.listType==="packing"&&assignedTo?{assignedTo}:{}),
+      ...((list.listType==="home"||list.listType==="orders")&&itemStatus?{status:itemStatus}:{}),
+      ...(list.listType==="wishlist"?{priority}:{}),
+      ...(list.listType==="cleaning"&&cleaningRoom?{room:cleaningRoom}:{}),
+      ...(list.listType==="cleaning"&&cleaningAssignee?{assigneeId:cleaningAssignee,assigneeName:members.find(member=>member.uid===cleaningAssignee)?.displayName||""}:{}),
+      ...(list.listType==="cleaning"&&cleaningRecurrence?{recurrence:cleaningRecurrence}:{}),
+      ...(list.listType==="home"&&homeFixPlace?{room:homeFixPlace}:{}),
+      ...(list.listType==="home"?{priority:homeFixPriority}:{}),
     };
     onChange({ ...list, items: [item, ...list.items] });
     setName("");
     setQuantity("");
+    setNewItemNote("");
+    setShowNewItemNote(false);
+    setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");setHomeFixPlace("");setHomeFixPriority("Normal");
   };
   const patchItem = (id: string, updater: (x: ListItem) => ListItem) =>
     onChange({
@@ -1969,6 +2326,9 @@ function ListPage({
       onDirtyChange={dirty=>setDirtyItemId(dirty?item.id:null)}
       onCloseEditor={()=>{setExpandedItemId(null);setFlashUnsavedId(null)}}
       isNew={!isPrivate&&item.ownerId!==uid&&item.createdAt>unreadAfter}
+      listType={list.listType}
+      packPeople={list.packPeople}
+      members={members}
     />
   );
   const dragEnd = (event: DragEndEvent) => {
@@ -2139,9 +2499,9 @@ function ListPage({
           popup.document.write(`<!doctype html><html lang="sv"><head><title>${escape(list.name)}</title><style>body{max-width:760px;margin:35px auto;padding:0 24px;color:#24170f;font-family:Arial,sans-serif}h1{font:800 38px Georgia,serif;border-bottom:3px solid #587556;padding-bottom:12px}ul{list-style:none;padding:0;display:grid;gap:10px}li{display:grid;grid-template-columns:25px 1fr auto;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid #cbb89f}.box{width:18px;height:18px;border:2px solid #587556;border-radius:4px}.done .box:after{content:'✓';display:block;text-align:center;line-height:16px}.done strong{text-decoration:line-through;color:#777}small{color:#69584d}.note{grid-column:2/-1;margin:5px 0 0;padding:8px;background:#f3eadc;border-radius:6px;white-space:pre-wrap}@media print{body{margin:0}}</style></head><body><h1>${escape(list.name)}</h1><ul>${chosen.map(item=>`<li class="${item.completed?"done":""}"><span class="box"></span><strong>${escape(item.name)}</strong><small>${escape(item.quantity)}</small>${printNotes&&item.note?`<p class="note">${escape(item.note)}</p>`:""}</li>`).join("")}</ul><script>window.onload=()=>window.print()<\/script></body></html>`);popup.document.close();setPrintOpen(false);
         }}>ÖPPNA UTSKRIFT</button>
       </div></div>}
-      <div className="add-panel">
+      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""}`}>
         <h2>LÄGG TILL</h2>
-        <div>
+        <div className={showNewItemNote?"has-add-note":""}>
           <span className="autocomplete-wrap">
             <input
               value={name}
@@ -2153,16 +2513,9 @@ function ListPage({
                 add();
               }}
             />
-            {name.trim().length >= 3 && (
+            {itemSuggestions.length > 0 && (
               <span className="suggestions">
-                {Array.from(new Set(list.items.map((item) => item.name)))
-                  .filter((value) =>
-                    value
-                      .toLocaleLowerCase("sv")
-                      .includes(name.trim().toLocaleLowerCase("sv")),
-                  )
-                  .slice(0, 6)
-                  .map((value) => (
+                {itemSuggestions.map((value) => (
                     <button
                       type="button"
                       key={value}
@@ -2184,9 +2537,16 @@ function ListPage({
             }}
             placeholder="Mängd (valfritt)"
           />
-          <button onClick={() => add()}>
-            <Check />
-          </button>
+          {list.listType==="packing"&&<select value={assignedTo} onChange={event=>setAssignedTo(event.target.value)}><option value="">För alla</option>{(list.packPeople||[]).map(person=><option key={person}>{person}</option>)}</select>}
+          {list.listType==="home"&&<div className="homefix-quick-fields"><select aria-label="Plats" value={homeFixPlace} onChange={event=>setHomeFixPlace(event.target.value)}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select><select aria-label="Prioritet" value={homeFixPriority} onChange={event=>setHomeFixPriority(event.target.value)}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></div>}
+          {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
+          {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
+          {list.listType==="cleaning"&&<div className="cleaning-quick-fields"><select aria-label="Rum" value={cleaningRoom} onChange={event=>setCleaningRoom(event.target.value)}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select><select aria-label="Ansvarig" value={cleaningAssignee} onChange={event=>setCleaningAssignee(event.target.value)}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select><select aria-label="Upprepas" value={cleaningRecurrence} onChange={event=>setCleaningRecurrence(event.target.value)}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></div>}
+          {showNewItemNote&&<textarea className="new-item-note" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en anteckning (valfritt)…" autoFocus/>}
+          <span className="add-panel-actions">
+            <button type="button" className={showNewItemNote?"active":""} aria-label={showNewItemNote?"Dölj anteckning":"Lägg till anteckning"} aria-pressed={showNewItemNote} onClick={()=>setShowNewItemNote(value=>!value)}><NotebookPen/></button>
+            <button type="button" aria-label="Lägg till" onClick={() => add()}><Check /></button>
+          </span>
         </div>
       </div>
       {selecting && (
@@ -2194,11 +2554,13 @@ function ListPage({
           className={`bulk-delete-bar ${selectMode === "move" ? "bulk-move-bar" : ""}`}
         >
           <button
-            onClick={() =>
-              setSelectedIds(new Set(list.items.map((item) => item.id)))
-            }
+            onClick={() => setSelectedIds(
+              allItemsSelected
+                ? new Set()
+                : new Set(list.items.map((item) => item.id)),
+            )}
           >
-            MARKERA ALLA
+            {allItemsSelected ? "AVMARKERA ALLT" : "MARKERA ALLA"}
           </button>
           <strong>{selectedIds.size} VALDA</strong>
           {selectMode === "move" ? (
@@ -2213,18 +2575,14 @@ function ListPage({
               className="danger"
               disabled={selectedIds.size === 0}
               onClick={() => {
-                onChange({
-                  ...list,
-                  items: list.items.filter((item) => !selectedIds.has(item.id)),
-                });
-                setSelectMode("");
-                setSelectedIds(new Set());
+                setConfirmDeleteItems(list.items.filter(item=>selectedIds.has(item.id)));
               }}
             >
               TA BORT VALDA
             </button>
           )}
           <button
+            className="cancel"
             onClick={() => {
               setSelectMode("");
               setSelectedIds(new Set());
@@ -2277,7 +2635,7 @@ function ListPage({
             <h2>TA BORT LISTAN?</h2>
             <p>Alla poster i “{list.name}” försvinner.</p>
             <div>
-              <button onClick={() => setConfirmDelete(false)}>AVBRYT</button>
+              <button className="cancel" onClick={() => setConfirmDelete(false)}>AVBRYT</button>
               <button className="danger" onClick={onDelete}>
                 TA BORT
               </button>
@@ -2303,10 +2661,7 @@ function ListPage({
               <button
                 className="danger"
                 onClick={() => {
-                  onChange({
-                    ...list,
-                    items: list.items.filter((item) => item.id !== itemMenu.id),
-                  });
+                  setConfirmDeleteItems([itemMenu]);
                   setItemMenu(null);
                 }}
               >
@@ -2314,11 +2669,23 @@ function ListPage({
               </button>
             </div>
             <button
-              className="item-action-cancel item-action-cancel-neutral"
+              className="item-action-cancel item-action-cancel-neutral cancel"
               onClick={() => setItemMenu(null)}
             >
               AVBRYT
             </button>
+          </div>
+        </div>
+      )}
+      {confirmDeleteItems&&(
+        <div className="modal-backdrop">
+          <div className="modal confirm-delete-modal">
+            <h2>{confirmDeleteItems.length===1?"TA BORT POSTEN?":`TA BORT ${confirmDeleteItems.length} POSTER?`}</h2>
+            <p>{confirmDeleteItems.length===1?`“${confirmDeleteItems[0].name}” försvinner från listan.`:"De markerade posterna försvinner från listan."}</p>
+            <div className="modal-actions">
+              <button className="cancel" onClick={()=>setConfirmDeleteItems(null)}>AVBRYT</button>
+              <button className="danger" onClick={()=>{const ids=new Set(confirmDeleteItems.map(item=>item.id));onChange({...list,items:list.items.filter(item=>!ids.has(item.id))});setConfirmDeleteItems(null);setSelectMode("");setSelectedIds(new Set())}}>TA BORT</button>
+            </div>
           </div>
         </div>
       )}
@@ -2362,7 +2729,7 @@ function ListPage({
               ))}
             </div>
             <button
-              className="item-action-cancel"
+              className="item-action-cancel cancel"
               disabled={moving}
               onClick={() => setMoveItem(null)}
             >
@@ -2416,7 +2783,7 @@ function ListPage({
               ))}
             </div>
             <button
-              className="item-action-cancel"
+              className="item-action-cancel cancel"
               disabled={moving}
               onClick={() => setMoveMany(false)}
             >
@@ -2519,7 +2886,7 @@ function ProfileEditor({
           ))}
         </div>
         <div className="modal-actions">
-          <button type="button" onClick={onClose}>
+          <button type="button" className="cancel" onClick={onClose}>
             AVBRYT
           </button>
           <button>SPARA</button>
@@ -2580,7 +2947,7 @@ function GroupEditor({
           ))}
         </div>
         <div className="modal-actions">
-          <button type="button" onClick={onClose}>
+          <button type="button" className="cancel" onClick={onClose}>
             AVBRYT
           </button>
           <button>SPARA</button>
@@ -2597,6 +2964,7 @@ function PeoplePage({
   memberships,
   groups,
   language,
+  onSelectGroup,
 }: {
   account: Account;
   group?: Group;
@@ -2604,6 +2972,7 @@ function PeoplePage({
   memberships: Membership[];
   groups: Record<string, Group>;
   language: string;
+  onSelectGroup: (groupId: string) => void;
 }) {
   const [groupDialog, setGroupDialog] = useState<"" | "create" | "join">("");
   const [groupMessage, setGroupMessage] = useState("");
@@ -2709,7 +3078,15 @@ function PeoplePage({
       <h2 className="small-heading">MINA GRUPPER</h2>
       <div className="group-list">
         {memberships.map((m) => (
-          <div key={m.groupId}>
+          <div
+            key={m.groupId}
+            className={m.groupId===account.activeGroupId?"active":""}
+            role="button"
+            tabIndex={0}
+            aria-current={m.groupId===account.activeGroupId?"true":undefined}
+            onClick={()=>onSelectGroup(m.groupId)}
+            onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();onSelectGroup(m.groupId)}}}
+          >
             <GroupIcon id={groups[m.groupId]?.iconId} />
             <strong>{groups[m.groupId]?.name || "Grupp"}</strong>
             <small>{m.role}</small>
@@ -2787,6 +3164,7 @@ function PeoplePage({
             <p>{roleMember.displayName}</p>
             <div className="role-actions">
               <button
+                className={roleMember.role.toLowerCase()==="member"?"bubbsun-action-confirm":"bubbsun-action-neutral"}
                 onClick={async () => {
                   const transfer =
                     roleMember.role.toLowerCase() === "boss" &&
@@ -2825,6 +3203,7 @@ function PeoplePage({
                 )}
               </button>
               <button
+                className={roleMember.role.toLowerCase()==="member"?"bubbsun-action-neutral":"bubbsun-action-confirm"}
                 onClick={async () => {
                   await updateMembership(group.id, roleMember.uid, {
                     role: "member",
@@ -2838,7 +3217,7 @@ function PeoplePage({
               </button>
               {group.ownerId !== roleMember.uid && (
                 <button
-                  className="danger"
+                  className="danger bubbsun-action-danger role-remove-member"
                   onClick={async () => {
                     if (
                       !window.confirm(
@@ -2850,9 +3229,7 @@ function PeoplePage({
                     setRoleMember(null);
                   }}
                 >
-                  <Trash2 /> TA BORT
-                  <br />
-                  MEDLEM
+                  <Trash2 /> <span>TA BORT MEDLEM</span>
                 </button>
               )}
             </div>
@@ -2893,7 +3270,7 @@ function PeoplePage({
             />
             <p>Du blir gruppens SuperBoss och får en unik gruppkod.</p>
             <div>
-              <button type="button" onClick={() => setGroupDialog("")}>
+              <button type="button" className="cancel" onClick={() => setGroupDialog("")}>
                 AVBRYT
               </button>
               <button>SKAPA</button>
@@ -2930,7 +3307,7 @@ function PeoplePage({
             <input name="code" autoFocus placeholder="ABCD-EFGH" />
             <p>Efter godkännande väljer du en färg som är ledig i gruppen.</p>
             <div>
-              <button type="button" onClick={() => setGroupDialog("")}>
+              <button type="button" className="cancel" onClick={() => setGroupDialog("")}>
                 AVBRYT
               </button>
               <button>SKICKA</button>
@@ -3277,6 +3654,16 @@ function SupportPage({
               <small>Mjukt sken runt Bubbsun-loggan.</small>
             </span>
             <input
+              className="glow-color-picker"
+              type="color"
+              aria-label="Välj färg på Fancy Glow"
+              value={account.supporterGlowColor || "#ffb532"}
+              onChange={(event) =>
+                onSave({ supporterGlowColor: event.target.value })
+              }
+            />
+            <input
+              className="glow-toggle"
               type="checkbox"
               checked={account.supporterGlow !== false}
               onChange={(event) =>
@@ -3785,6 +4172,7 @@ function AdminPage({
   reports,
   palettes,
   followedCount,
+  onlineUserIds,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -3792,12 +4180,17 @@ function AdminPage({
   reports: Report[];
   palettes: Record<string, ThemePalette>;
   followedCount: number;
+  onlineUserIds: Set<string>;
 }) {
   const [tab, setTab] = useState<"members" | "reports" | "pin" | "themes">(
       "members",
     ),
     [selected, setSelected] = useState<Account | null>(null);
   const items = lists.flatMap((list) => list.items);
+  const orderedAccounts = [...accounts].sort((a, b) => {
+    const onlineDifference = Number(onlineUserIds.has(b.uid)) - Number(onlineUserIds.has(a.uid));
+    return onlineDifference || a.displayName.localeCompare(b.displayName, "sv");
+  });
   return (
     <section className="content subpage admin-page">
       <div className="content-heading">
@@ -3864,7 +4257,7 @@ function AdminPage({
       </div>
       {tab === "members" && (
         <div className="admin-member-list">
-          {accounts.map((person) => (
+          {orderedAccounts.map((person) => (
             <button key={person.uid} onClick={() => setSelected(person)}>
               <i
                 style={{
@@ -3874,7 +4267,10 @@ function AdminPage({
                 {person.displayName.slice(0, 1)}
               </i>
               <span>
-                <strong>{person.displayName}</strong>
+                <strong>
+                  {onlineUserIds.has(person.uid) && <b className="admin-online-dot" aria-label="Online" />}
+                  {person.displayName}
+                </strong>
                 <small
                   style={{
                     color: rgbaHex(person.titleColor || colorOptions[0]),
@@ -4286,6 +4682,7 @@ function ThemeEditor({
     header: theme.header || theme.panel,
     headerButton: theme.headerButton || theme.accent,
     brandDecoration: theme.brandDecoration || theme.accent,
+    brandSuffix: theme.brandSuffix || theme.text,
   });
   const [values, setValues] = useState(makeValues),
     [message, setMessage] = useState("");
@@ -4301,6 +4698,7 @@ function ThemeEditor({
       theme.header,
       theme.headerButton,
       theme.brandDecoration,
+      theme.brandSuffix,
     ],
   );
   return (
@@ -4326,7 +4724,7 @@ function ThemeEditor({
       <div className="palette-fields">
         {Object.entries(values).map(([key, value]) => (
           <label key={key}>
-            {key === "brandDecoration" ? "Loggdekor" : key}
+            {key === "brandDecoration" ? "Loggdekor" : key === "brandSuffix" ? "Loggans .se" : key}
             <input
               type="color"
               value={value}
@@ -4360,6 +4758,8 @@ function AuthenticatedApp() {
   const privateListsLoadedFor = useRef("");
   const listsHistoryRef = useRef<BubbsunList[]>([]);
   const privateListsHistoryRef = useRef<BubbsunList[]>([]);
+  const notesHistoryRef = useRef<BubbsunNote[]>([]);
+  const privateNotesHistoryRef = useRef<BubbsunNote[]>([]);
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -4369,12 +4769,17 @@ function AuthenticatedApp() {
   const [members, setMembers] = useState<Membership[]>([]);
   const [lists, setLists] = useState<BubbsunList[]>([]);
   const [privateLists, setPrivateLists] = useState<BubbsunList[]>([]);
+  const [notes,setNotes]=useState<BubbsunNote[]>([]);
+  const [privateNotes,setPrivateNotes]=useState<BubbsunNote[]>([]);
   const [privateMode, setPrivateMode] = useState(false);
-  const [page, setPage] = useState<Page>("lists");
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
+  const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
+  const [selectedNotePrivate,setSelectedNotePrivate]=useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [addingNote,setAddingNote]=useState(false);
   const [listToolsOpen, setListToolsOpen] = useState(false);
   const [themeId, setThemeId] = useState(
     () => localStorage.getItem("bubbsun-theme") || "retro",
@@ -4386,6 +4791,7 @@ function AuthenticatedApp() {
   const [followedListIds, setFollowedListIds] = useState<Set<string>>(
     new Set(),
   );
+  const [followedNoteIds,setFollowedNoteIds]=useState<Set<string>>(new Set());
   const [listReadAt,setListReadAt]=useState<Map<string,number>>(new Map());
   const [selectedUnreadAfter,setSelectedUnreadAfter]=useState(NEW_BADGE_EPOCH);
   const notifiedVersions = useRef<Record<string, number>>({});
@@ -4400,6 +4806,7 @@ function AuthenticatedApp() {
   >([]);
   const [allAdminFollowedCount, setAllAdminFollowedCount] = useState(0);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
 
@@ -4411,13 +4818,24 @@ function AuthenticatedApp() {
     privateListsHistoryRef.current = privateLists;
   }, [privateLists]);
 
+  useEffect(()=>{notesHistoryRef.current=notes},[notes]);
+  useEffect(()=>{privateNotesHistoryRef.current=privateNotes},[privateNotes]);
+
+  useEffect(()=>{
+    const stablePage=page==="note"?"notes":page==="list"?"lists":page;
+    localStorage.setItem("bubbsun-last-page",stablePage);
+  },[page]);
+
   useEffect(() => {
     const currentState = window.history.state ?? {};
     if (!currentState.bubbsunPage) {
       window.history.replaceState(
-        { ...currentState, bubbsunPage: "lists", privateMode: false },
+        { ...currentState, bubbsunPage: page, privateMode },
         "",
       );
+    } else {
+      if(typeof currentState.privateMode==="boolean")setPrivateMode(currentState.privateMode);
+      setPage(currentState.bubbsunPage==="list"?"lists":currentState.bubbsunPage==="note"?"notes":currentState.bubbsunPage);
     }
 
     const restoreFromHistory = (event: PopStateEvent) => {
@@ -4426,12 +4844,14 @@ function AuthenticatedApp() {
             bubbsunPage?: Page;
             listId?: string;
             privateList?: boolean;
+            noteId?: string;
+            privateNote?: boolean;
             privateMode?: boolean;
           }
         | null;
       if (!state?.bubbsunPage) return;
 
-      setMenuOpen(false);
+      if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);
       setListToolsOpen(false);
       if (typeof state.privateMode === "boolean")
         setPrivateMode(state.privateMode);
@@ -4451,13 +4871,24 @@ function AuthenticatedApp() {
         }
       }
 
+      if(state.bubbsunPage==="note"&&state.noteId){
+        const isPrivate=state.privateNote===true,restored=(isPrivate?privateNotesHistoryRef.current:notesHistoryRef.current).find(candidate=>candidate.id===state.noteId);
+        if(restored){setSelectedNote(restored);setSelectedNotePrivate(isPrivate);setPage("note");return;}
+      }
+
       setSelected(null);
-      setPage(state.bubbsunPage === "list" ? "lists" : state.bubbsunPage);
+      setPage(state.bubbsunPage === "list" ? "lists" : state.bubbsunPage==="note"?"notes":state.bubbsunPage);
     };
 
     window.addEventListener("popstate", restoreFromHistory);
     return () => window.removeEventListener("popstate", restoreFromHistory);
   }, []);
+
+  useEffect(()=>{
+    const state=window.history.state as {bubbsunPage?:Page;listId?:string;privateList?:boolean;noteId?:string;privateNote?:boolean}|null;
+    if(state?.bubbsunPage==="list"&&state.listId&&!selected){const isPrivate=state.privateList===true,restored=(isPrivate?privateLists:lists).find(item=>item.id===state.listId);if(restored){setSelected(restored);setSelectedPrivate(isPrivate);setPage("list");}}
+    if(state?.bubbsunPage==="note"&&state.noteId&&!selectedNote){const isPrivate=state.privateNote===true,restored=(isPrivate?privateNotes:notes).find(item=>item.id===state.noteId);if(restored){setSelectedNote(restored);setSelectedNotePrivate(isPrivate);setPage("note");}}
+  },[lists,privateLists,notes,privateNotes,selected,selectedNote]);
 
   useEffect(
     () =>
@@ -4517,6 +4948,7 @@ function AuthenticatedApp() {
       }),
     [],
   );
+  useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
   useEffect(
     () =>
       user && databaseReady ? watchAccount(user.uid, setAccount) : undefined,
@@ -4543,6 +4975,13 @@ function AuthenticatedApp() {
       return;
     }
     return watchOnlineCount(setOnlineCount);
+  }, [account?.megaSuperBoss, account?.founder]);
+  useEffect(() => {
+    if (!account?.megaSuperBoss && !account?.founder) {
+      setOnlineUserIds(new Set());
+      return;
+    }
+    return watchOnlineUserIds(setOnlineUserIds);
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(
     () =>
@@ -4584,6 +5023,7 @@ function AuthenticatedApp() {
       b();
     };
   }, [account?.activeGroupId, privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(
@@ -4601,6 +5041,10 @@ function AuthenticatedApp() {
         ? watchFollowedLists(user.uid, setFollowedListIds)
         : undefined,
     [user, databaseReady],
+  );
+  useEffect(
+    () => user&&databaseReady?watchFollowedNotes(user.uid,setFollowedNoteIds):undefined,
+    [user,databaseReady],
   );
   useEffect(
     () => user&&databaseReady?watchListReadStates(user.uid,setListReadAt):undefined,
@@ -4628,6 +5072,14 @@ function AuthenticatedApp() {
       notifiedVersions.current[key] = Math.max(previous || 0, version);
     }
   }, [lists, user, account?.activeGroupId, privateMode, followedListIds]);
+  useEffect(()=>{
+    if(!user||privateMode||!account?.activeGroupId)return;
+    for(const note of notes){
+      const key=`note_${account.activeGroupId}_${note.id}`,version=note.updatedAt||0,previous=notifiedVersions.current[key];
+      if(previous&&version>previous&&note.history?.[0]?.uid!==user.uid&&followedNoteIds.has(note.id)&&"Notification" in window&&Notification.permission==="granted")new Notification(`Bubbsun · ${note.title}`,{body:"Anteckningen har ändrats. Tryck för att öppna Bubbsun.",icon:"/assets/bubbsun-header-illustrated.png"});
+      notifiedVersions.current[key]=Math.max(previous||0,version);
+    }
+  },[notes,user,account?.activeGroupId,privateMode,followedNoteIds]);
   useEffect(() => {
     if (!account?.megaSuperBoss && !account?.founder) return;
     const a = watchAllAccounts(setAllAccounts),
@@ -4714,6 +5166,7 @@ function AuthenticatedApp() {
     "--theme-header": activeTheme.header || activeTheme.panel,
     "--theme-header-button": activeTheme.headerButton || activeTheme.accent,
     "--theme-brand-decoration": activeTheme.brandDecoration || activeTheme.accent,
+    "--theme-brand-suffix": activeTheme.brandSuffix || activeTheme.text,
   } as CSSProperties;
 
   useEffect(() => {
@@ -4756,7 +5209,7 @@ function AuthenticatedApp() {
       );
     setPage(next);
     setSelected(null);
-    setMenuOpen(false);
+    if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);
     setListToolsOpen(false);
   };
   const openList = (list: BubbsunList, isPrivate: boolean) => {
@@ -4780,10 +5233,15 @@ function AuthenticatedApp() {
     setPage("list");
   };
   const saveChanged = async (next: BubbsunList) => {
+    const previous = activeSelected;
     setSelected(next);
+    if (selectedPrivate) {
+      setPrivateLists((old) => old.map((x) => (x.id === next.id ? next : x)));
+    } else {
+      setLists((old) => old.map((x) => (x.id === next.id ? next : x)));
+    }
     try {
       if (selectedPrivate && user) {
-        setPrivateLists((old) => old.map((x) => (x.id === next.id ? next : x)));
         await savePrivateList(user.uid, next);
       } else if (account && user) {
         const revision = await saveList(account.activeGroupId, next, user.uid);
@@ -4792,8 +5250,13 @@ function AuthenticatedApp() {
         setLists((old) => old.map((x) => (x.id === saved.id ? saved : x)));
       }
     } catch (error) {
+      if (previous) {
+        setSelected(previous);
+        if (selectedPrivate) setPrivateLists((old) => old.map((x) => (x.id === previous.id ? previous : x)));
+        else setLists((old) => old.map((x) => (x.id === previous.id ? previous : x)));
+      }
+      if (error instanceof Error && error.message === "LIST_CONFLICT") setSaveConflict(true);
       console.error("Could not save list change", error);
-      window.alert("Ändringen kunde inte sparas. Försök igen.");
     }
   };
   const inviteFriend = async () => {
@@ -4814,6 +5277,8 @@ function AuthenticatedApp() {
     name: string;
     icon: string;
     iconColor: number;
+    listType: string;
+    packPeople: string[];
   }) => {
     if (!user || !values.name.trim()) return;
     if (privateMode) {
@@ -4835,10 +5300,11 @@ function AuthenticatedApp() {
         values.name,
         user.uid,
         lists.length,
+        values.listType,
       );
       await saveList(
         account.activeGroupId,
-        { ...created, icon: values.icon, iconColor: values.iconColor },
+        { ...created, icon: values.icon, iconColor: values.iconColor, packPeople: values.packPeople },
         user.uid,
       );
     }
@@ -4873,7 +5339,7 @@ function AuthenticatedApp() {
   };
   const editList = async (
     list: BubbsunList,
-    values: { name: string; icon: string; iconColor: number },
+    values: { name: string; icon: string; iconColor: number; listType: string; packPeople:string[] },
   ) => {
     const next = { ...list, ...values };
     if (privateMode && user) {
@@ -4994,6 +5460,11 @@ function AuthenticatedApp() {
       ]);
     }
   };
+  const activeNotes=privateMode?privateNotes:notes;
+  const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};
+  const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
+  const createNote=async(note:BubbsunNote)=>{if(!user||!account)return;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor,history:[entry],order:activeNotes.length};try{if(privateMode){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>[...current,complete]);}else if(account.activeGroupId){await saveNote(account.activeGroupId,complete);setNotes(current=>[...current,complete]);}else return;setAddingNote(false);openNote(complete,privateMode);}catch(error){console.error("Could not create note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");}};
+  const reorderNotes=async(from:number,to:number)=>{if(!user)return;const changed=arrayMove(activeNotes,from,to).map((note,index)=>({...note,order:index}));if(privateMode){setPrivateNotes(changed);await Promise.all(changed.map(note=>savePrivateNote(user.uid,note)));}else if(account?.activeGroupId){setNotes(changed);await Promise.all(changed.map(note=>saveNote(account.activeGroupId,note)));}};
 
   if (user === undefined) {
     const loadingTheme =
@@ -5063,7 +5534,7 @@ function AuthenticatedApp() {
           <button onClick={() => void acceptPrivacy(user.uid)}>
             <Check /> JAG GODKÄNNER
           </button>
-          <button className="privacy-cancel" onClick={() => void signOut(auth)}>
+          <button className="privacy-cancel cancel" onClick={() => void signOut(auth)}>
             AVBRYT & LOGGA UT
           </button>
         </section>
@@ -5073,16 +5544,24 @@ function AuthenticatedApp() {
   return (
     <main className={`app-shell theme-${activeTheme.id}`} style={themeStyle}>
       <LanguageBridge language={language} />
+      <ActionButtonBridge />
       <Header
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
-        tabTitle={page === "list" ? activeSelected?.name : undefined}
-        onMenu={() => setMenuOpen(true)}
-        onHome={() => navigate("lists")}
-        onAdd={() => setAdding(true)}
+        glowColor={account.supporterGlowColor}
+        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : undefined}
+        onMenu={() => setMenuOpen(open=>!open)}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":"lists")}
+        onAdd={() => page === "notes" ? setAddingNote(true) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
-        mode={page === "lists" ? "add" : page === "list" ? "manage" : "none"}
+        mode={page === "lists" || page === "notes" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
+        onOpenAdmin={
+          account.megaSuperBoss || account.founder
+            ? () => navigate("admin")
+            : undefined
+        }
+        language={language}
       />
       {page === "lists" && (
         <ListsPage
@@ -5106,6 +5585,7 @@ function AuthenticatedApp() {
           }
           onOpen={openList}
           onHelp={() => navigate("help")}
+          onNotes={() => navigate("notes")}
           onSupport={() => navigate("support")}
           onMode={(value) => {
             setPrivateMode(value);
@@ -5118,6 +5598,12 @@ function AuthenticatedApp() {
           followedListIds={followedListIds}
           listReadAt={listReadAt}
           groupId={account.activeGroupId}
+          groupName={groupName}
+          groupIconId={activeGroup?.iconId}
+          activeGroupId={account.activeGroupId}
+          memberships={memberships}
+          groups={groups}
+          onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}}
           canReorder={privateMode || canManageGroup}
         />
       )}
@@ -5155,6 +5641,8 @@ function AuthenticatedApp() {
           unreadAfter={selectedUnreadAfter}
         />
       )}
+      {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} activeGroupId={account.activeGroupId} memberships={memberships} groups={groups} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
+      {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} creator={selectedNotePrivate?{name:account.displayName,color:account.personalColor??selectedNote.creatorColor??colorOptions[0]}:(()=>{const member=members.find(value=>value.uid===selectedNote.creatorId);return member?{name:member.displayName,color:member.color}:undefined})()} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} toolsOpen={listToolsOpen} onToolsOpen={setListToolsOpen} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
       {page === "people" && (
         <PeoplePage
           account={account}
@@ -5163,6 +5651,7 @@ function AuthenticatedApp() {
           memberships={memberships}
           groups={groups}
           language={language}
+          onSelectGroup={async id=>{if(id===account.activeGroupId)return;await switchGroup(user.uid,id);setPrivateMode(false)}}
         />
       )}
       {page === "stats" && (
@@ -5210,6 +5699,7 @@ function AuthenticatedApp() {
           reports={reports}
           palettes={themePalettes}
           followedCount={allAdminFollowedCount}
+          onlineUserIds={onlineUserIds}
         />
       )}
       <Drawer
@@ -5258,6 +5748,7 @@ function AuthenticatedApp() {
           onSave={(values) => void addNewList(values)}
         />
       )}
+      {addingNote&&<NewNoteEditor onCancel={()=>setAddingNote(false)} onSave={note=>void createNote(note)}/>}
     </main>
   );
 }

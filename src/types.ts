@@ -7,6 +7,7 @@ export type Account = {
   supporter: boolean;
   supporterTitle?: string;
   supporterGlow?: boolean;
+  supporterGlowColor?: string;
   personalColor?: number;
   megaSuperBoss: boolean;
   founder: boolean;
@@ -46,6 +47,15 @@ export type ListItem = {
   completedAt: number | null;
   likedBy: string[];
   note?: string;
+  assignedTo?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  status?: string;
+  priority?: string;
+  room?: string;
+  recurrence?: string;
+  dueDate?: string;
+  taskType?: string;
 };
 
 export type BubbsunList = {
@@ -53,6 +63,8 @@ export type BubbsunList = {
   name: string;
   icon: string;
   iconColor: number | string;
+  listType?: string;
+  packPeople?: string[];
   creatorId: string;
   sortMode: string;
   doneFirst: boolean;
@@ -64,10 +76,12 @@ export type BubbsunList = {
   revision?: number;
   items: ListItem[];
 };
+export type NoteLogEntry={uid:string;name:string;at:number};
+export type BubbsunNote = { id:string; title:string; text:string; icon:string; color:number; order:number; creatorId:string; creatorName?:string; creatorColor?:number; createdAt?:number; updatedAt?:number; history?:NoteLogEntry[] };
 
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
-export type Page = "lists" | "list" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
+export type Page = "lists" | "list" | "notes" | "note" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };
-export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string };
+export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string };

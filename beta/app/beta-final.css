@@ -40,6 +40,32 @@
   }
 }
 
+/* Follow status belongs to the list artwork, leaving metadata on one line. */
+.app-shell .list-card:not(.note-list-card) .list-icon {
+  position: relative !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-icon-follow-mark {
+  position: absolute !important;
+  top: 7px !important;
+  right: 7px !important;
+  z-index: 3 !important;
+  width: 17px !important;
+  height: 17px !important;
+  color: #15110e !important;
+  stroke: currentColor !important;
+  stroke-width: 2.6 !important;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, .55)) !important;
+  pointer-events: none !important;
+}
+
+.app-shell .list-card:not(.note-list-card) .list-counts {
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
 .note-stack {
   display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;

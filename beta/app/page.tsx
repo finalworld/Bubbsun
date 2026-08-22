@@ -1179,6 +1179,9 @@ function ListCard({
           }}
         >
           <img src={iconSources[list.icon] || fallbackIcon} alt="" />
+          {followed && (
+            <Bell className="list-icon-follow-mark" aria-label="Du följer listan" />
+          )}
         </span>
         <span
           className="creator-strip"
@@ -1202,9 +1205,6 @@ function ListCard({
             <span className="list-type-mark" title={`Typ: ${type.label}`}>
               {type.icon} {type.label}
             </span>
-            {followed && (
-              <Bell className="followed-list-mark" aria-label="Du följer listan" />
-            )}
             <span>{list.items.length - done} kvar · {done} klara</span>
           </small>
         </span>

@@ -31,7 +31,6 @@ import {
   Search,
   Share2,
   Settings,
-  SlidersHorizontal,
   Trash2,
   UserCog,
   UserRound,
@@ -850,7 +849,8 @@ function Header({
             aria-label={tabTitle ? `Hantera ${tabTitle}` : "Hantera listan"}
             onClick={onManage}
           >
-            <SlidersHorizontal />
+            <span className="header-manage-dots" aria-hidden="true"><i /><i /><i /></span>
+            <span className="header-manage-label">HANTERA</span>
           </button>
         ) : (
           <span className="header-spacer" />

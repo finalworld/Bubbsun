@@ -156,6 +156,37 @@
   width: min(380px, calc(100vw - 32px)) !important;
 }
 
+/* The list-management button should advertise that it opens more actions. */
+.app-shell .topbar.text-header-v2 .header-manage {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 7px 5px 6px !important;
+}
+
+.app-shell .header-manage-dots {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  height: 9px !important;
+}
+
+.app-shell .header-manage-dots i {
+  display: block !important;
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+}
+
+.app-shell .header-manage-label {
+  font: 800 8px/1 Arial, sans-serif !important;
+  letter-spacing: .35px !important;
+}
+
 .app-shell .note-appearance-modal .modal-close {
   display: grid !important;
   place-items: center !important;
@@ -190,6 +221,15 @@
 
   .note-card .note-card-body {
     padding-left: 20px !important;
+  }
+
+  .app-shell .topbar.text-header-v2 .header-manage {
+    gap: 3px !important;
+    padding: 5px 3px 4px !important;
+  }
+
+  .app-shell .header-manage-label {
+    font-size: 7px !important;
   }
 
   .app-shell .note-appearance-modal .note-icon-picker,

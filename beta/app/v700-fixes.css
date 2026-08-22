@@ -2747,9 +2747,13 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   font: 800 16px/1 Georgia, "Times New Roman", serif !important;
   letter-spacing: 0 !important;
   text-decoration: none !important;
-  transform: rotate(-8deg) !important;
+  transform: rotate(12deg) !important;
   cursor: pointer !important;
   isolation: isolate !important;
+}
+.app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count > .online-count-number {
+  display: inline-block !important;
+  transform: translateY(-2px) !important;
 }
 .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count::after {
   content: "" !important;
@@ -2780,6 +2784,9 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
     font-size: 14px !important;
   }
   .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count::after { inset: 3px !important; }
+  .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count > .online-count-number {
+    transform: none !important;
+  }
 }
 .app-shell .topbar.text-header-v2 .header-brand-tagline {
   width: min(100%, 410px) !important;

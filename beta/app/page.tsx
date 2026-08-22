@@ -822,7 +822,7 @@ function Header({
                 }}
                 title="Online just nu"
               >
-                {onlineCount}
+                <span className="online-count-number">{onlineCount}</span>
               </span>
             )}
           </span>

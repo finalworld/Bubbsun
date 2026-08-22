@@ -540,7 +540,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
 }
 
-/* Final v0.817 nine-point UI pass. */
+/* Final v0.818 nine-point UI pass. */
 .app-shell .topbar.text-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -923,7 +923,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   }
 }
 
-/* v0.817 banner header: the supplied artwork is the whole top surface. */
+/* v0.818 banner header: the supplied artwork is the whole top surface. */
 .banner-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -2944,3 +2944,4 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 @media(max-width:640px){.app-shell .group-space-tab{grid-template-columns:minmax(0,1fr) 42px;min-height:48px}.app-shell .group-space-main{justify-content:flex-start;padding:5px 6px 5px 16px}.app-shell .group-space-trigger{width:42px}.app-shell .group-space-menu{right:0}}
 .calendar-event.compact{border-left:6px solid var(--creator-color)!important}
 .calendar-event.compact{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-content:start!important;gap:5px!important;padding:7px 7px 8px 8px!important;text-align:left!important}.calendar-compact-meta{min-width:0;display:flex!important;align-items:center!important;gap:5px!important;white-space:nowrap}.calendar-compact-meta>b{flex:0 0 auto;font-size:13px;line-height:1}.calendar-compact-meta>time{min-width:0;font:900 9px Arial,sans-serif!important;overflow:hidden;text-overflow:ellipsis}.calendar-compact-meta>.calendar-repeat{margin-left:auto;color:#fff!important}.calendar-compact-title{display:block;min-width:0;font:900 12px/1.15 Arial,sans-serif;overflow-wrap:break-word;word-break:normal}
+.app-shell .calendar-event.birthday{isolation:isolate;box-shadow:0 5px 16px color-mix(in srgb,var(--event-color) 42%,transparent)!important;background-image:linear-gradient(118deg,transparent 0 30%,#fff4 43%,transparent 56%),linear-gradient(90deg,color-mix(in srgb,var(--event-color) 30%,var(--theme-paper)),var(--theme-paper) 72%)!important}.app-shell .calendar-event.birthday::after{content:"✦  ·  ✧";position:absolute;z-index:-1;right:10%;top:3px;color:var(--event-color);font:900 18px Georgia,serif;opacity:.42;transform:rotate(-7deg);pointer-events:none}.app-shell .calendar-event.birthday.compact{background-color:var(--event-color)!important;background-image:linear-gradient(135deg,#fff2 0 24%,transparent 25% 60%,#fff2 61% 68%,transparent 69%)!important;box-shadow:inset 0 0 0 1px #ffffff70,0 4px 12px color-mix(in srgb,var(--event-color) 52%,transparent)!important}.app-shell .calendar-event.birthday.compact::after{content:"✦";z-index:0;right:5px;top:auto;bottom:3px;color:#fff;opacity:.7;font-size:13px}.app-shell .calendar-event.birthday .calendar-compact-title,.app-shell .calendar-event.birthday .calendar-compact-meta{position:relative;z-index:1}.app-shell .calendar-event.birthday .calendar-compact-meta>b{filter:drop-shadow(0 1px 1px #0005);transform:rotate(-5deg) scale(1.12)}

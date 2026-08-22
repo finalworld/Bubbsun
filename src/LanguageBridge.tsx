@@ -60,7 +60,10 @@ export function LanguageBridge({ language }: { language: string }) {
           const current = node.getAttribute(attr);
           if (current && !originals.has(attr)) originals.set(attr, current);
           const original = originals.get(attr);
-          if (original) node.setAttribute(attr, translate(original, language));
+          if (original) {
+            const next = translate(original, language);
+            if (current !== next) node.setAttribute(attr, next);
+          }
         }
       }
       node.childNodes.forEach(process);

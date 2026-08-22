@@ -2096,7 +2096,20 @@ function ListPage({
   const [homeFixPlace,setHomeFixPlace]=useState("");
   const [homeFixPriority,setHomeFixPriority]=useState("Normal");
   const [search, setSearch] = useState("");
-  const [showDone, setShowDone] = useState(true);
+  const [showDone, setShowDone] = useState(() => {
+    try {
+      return localStorage.getItem("bubbsun-show-completed") !== "false";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("bubbsun-show-completed", String(showDone));
+    } catch {
+      // The preference is optional when storage is unavailable.
+    }
+  }, [showDone]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmDeleteItems,setConfirmDeleteItems]=useState<ListItem[]|null>(null);
   const [editing, setEditing] = useState(false);

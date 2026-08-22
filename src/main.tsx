@@ -14,18 +14,23 @@ if (legacyHosts.has(window.location.hostname)) {
   if (!isAndroid) {
     const manifest = document.createElement("link");
     manifest.rel = "manifest";
-    manifest.href = "/manifest.webmanifest?v=6";
+    manifest.href = "/manifest.webmanifest?v=801";
     document.head.appendChild(manifest);
   }
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      if (isAndroid) {
-        void navigator.serviceWorker.getRegistrations().then((registrations) =>
-          Promise.all(registrations.map((registration) => registration.unregister())),
+      void navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+        const rootScope = `${window.location.origin}/`;
+        const rootRegistrations = registrations.filter(
+          (registration) => registration.scope === rootScope,
         );
-      } else {
-        void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then((registration) => registration.update());
-      }
+        if (!rootRegistrations.length) return;
+        await Promise.all(rootRegistrations.map((registration) => registration.unregister()));
+        if (navigator.serviceWorker.controller && !sessionStorage.getItem("bubbsun-root-sw-cleared")) {
+          sessionStorage.setItem("bubbsun-root-sw-cleared", "1");
+          window.location.reload();
+        }
+      });
     });
   }
   createRoot(document.getElementById("root")!).render(<StrictMode><App /></StrictMode>);

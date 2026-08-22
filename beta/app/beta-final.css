@@ -1690,6 +1690,11 @@
 .app-shell .space-tabs-refined .group-space-tab.group-space-tab-static {
   grid-template-columns: minmax(0, 1fr) !important;
 }
+.app-shell .space-tabs-refined .group-space-tab.group-space-tab-static > .group-space-main {
+  padding-left: 48px !important;
+  padding-right: 48px !important;
+  justify-content: center !important;
+}
 .app-shell .space-tabs-refined .group-space-tab > .group-space-main,
 .app-shell .space-tabs-refined .group-space-tab > .group-space-trigger {
   background: transparent !important;

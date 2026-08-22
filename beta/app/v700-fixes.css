@@ -2771,7 +2771,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 }
 @media (max-width: 640px) {
   .app-shell .topbar.text-header-v2 .header-brand-title > .admin-online-count {
-    left: calc(100% + 8px) !important;
+    left: calc(100% + 13px) !important;
     top: -4px !important;
     width: 33px !important;
     height: 33px !important;

@@ -1250,17 +1250,18 @@
     display: none !important;
   }
 }
-@media (max-width: 700px) {
-  .app-shell .drawer .drawer-title > button:not(.drawer-invite) {
-    position: absolute !important;
-    top: 12px !important;
-    right: 12px !important;
-    bottom: auto !important;
-    left: auto !important;
-    margin: 0 !important;
-    transform: none !important;
-  }
 
+.app-shell .drawer .drawer-title > button:not(.drawer-invite) {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
   .app-shell > .content.subpage,
   .app-shell > .content.detail-page,
   .app-shell > .content.note-editor-page {

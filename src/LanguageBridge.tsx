@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { uiTranslations } from "./i18n";
 
 const sourceText = new WeakMap<Node, string>();
+const renderedText = new WeakMap<Node, string>();
 const sourceAttrs = new WeakMap<Element, Map<string, string>>();
 const norm = (value: string) => value.trim().toLocaleLowerCase("sv");
 
@@ -51,9 +52,13 @@ export function LanguageBridge({ language }: { language: string }) {
     const process = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node as Text;
-        if (!sourceText.has(text)) sourceText.set(text, text.data);
+        const lastRendered = renderedText.get(text);
+        if (!sourceText.has(text) || (lastRendered !== undefined && text.data !== lastRendered)) {
+          sourceText.set(text, text.data);
+        }
         const original = sourceText.get(text) || text.data;
         const next = translate(original, language);
+        renderedText.set(text, next);
         if (next !== text.data) text.data = next;
         return;
       }

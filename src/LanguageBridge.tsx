@@ -24,6 +24,10 @@ function translate(value: string, language: string) {
   inner = inner.replace(/(\d+)\s+(klara|completed|valmiit|erledigt|completados|terminés|completati|ukończone|voltooid)/gi, (_, n) => `${n} ${dict.Klara || "klara"}`);
   inner = inner.replace(/^kvar(\s*·)?$/i, (_, separator="") => `${dict.Kvar || "kvar"}${separator}`);
   inner = inner.replace(/^klara$/i, dict.Klara || "klara");
+  inner = inner.replace(/^(Ändrad|Skapad):\s*(.+)$/i, (_, label, rest) => {
+    const key = canonical(label);
+    return `${dict[key] || uiTranslations.en[key] || label}: ${rest}`;
+  });
   if (language === "en") {
     inner = inner.replace(/^(\d+)\s+röst(er)?(\s*·)/i, (_, n, plural, separator) => `${n} ${plural ? "votes" : "vote"}${separator}`);
     inner = inner.replace(/^completed poster$/i, "Completed items");

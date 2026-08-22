@@ -40,6 +40,14 @@ Object.assign(fr, { "Grupp": "Groupe" });
 Object.assign(it, { "Grupp": "Gruppo" });
 Object.assign(pl, { "Grupp": "Grupa" });
 Object.assign(nl, { "Grupp": "Groep" });
+Object.assign(en, { "Ändrad": "Changed", "Skapad": "Created" });
+Object.assign(fi, { "Ändrad": "Muokattu", "Skapad": "Luotu" });
+Object.assign(de, { "Ändrad": "Geändert", "Skapad": "Erstellt" });
+Object.assign(es, { "Ändrad": "Modificada", "Skapad": "Creada" });
+Object.assign(fr, { "Ändrad": "Modifiée", "Skapad": "Créée" });
+Object.assign(it, { "Ändrad": "Modificata", "Skapad": "Creata" });
+Object.assign(pl, { "Ändrad": "Zmieniona", "Skapad": "Utworzona" });
+Object.assign(nl, { "Ändrad": "Gewijzigd", "Skapad": "Aangemaakt" });
 
 Object.assign(en, {
   "Ny grupplista":"New group list", "Ny privat lista":"New private list", "Skriv listans namn":"Enter list name",

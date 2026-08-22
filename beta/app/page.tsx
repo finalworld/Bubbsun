@@ -227,7 +227,7 @@ function GroupIcon({
   return (
     <img
       className={`group-picture ${className}`}
-      src={`/assets/new-icons/groups/${normalizedGroupIcon(id)}.png`}
+      src={`${import.meta.env.BASE_URL}assets/new-icons/groups/${normalizedGroupIcon(id)}.png?v=2`}
       alt=""
     />
   );

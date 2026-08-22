@@ -1090,7 +1090,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.808 · Web Edition Beta
+            Bubbsun v0.809 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5189,8 +5189,16 @@ function AuthenticatedApp() {
       // Android may close the custom tab with popup-closed-by-user while the
       // successful Firebase session is still arriving asynchronously.
       if (code === "auth/popup-closed-by-user") {
-        await new Promise((resolve) => window.setTimeout(resolve, 1800));
-        if (auth.currentUser) return;
+        const signedIn = await new Promise<boolean>((resolve) => {
+          const deadline = Date.now() + 8000;
+          const check = () => {
+            if (auth.currentUser) resolve(true);
+            else if (Date.now() >= deadline) resolve(false);
+            else window.setTimeout(check, 250);
+          };
+          check();
+        });
+        if (signedIn) return;
       }
       setLoginError(
         code === "auth/popup-blocked"

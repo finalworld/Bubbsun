@@ -293,9 +293,9 @@
   overflow: hidden !important;
 }
 .app-shell .group-icon-picker .group-picture {
-  width: 100% !important;
-  height: 100% !important;
-  transform: scale(1.45) !important;
+  width: 94% !important;
+  height: 94% !important;
+  transform: none !important;
   transform-origin: center !important;
 }
 .app-shell .group-list > div[role="button"] {

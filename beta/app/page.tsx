@@ -35,6 +35,7 @@ import {
   UserCog,
   UserRound,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 import {
@@ -849,8 +850,7 @@ function Header({
             aria-label={tabTitle ? `Hantera ${tabTitle}` : "Hantera listan"}
             onClick={onManage}
           >
-            <span className="header-manage-dots" aria-hidden="true"><i /><i /><i /></span>
-            <span className="header-manage-label">HANTERA</span>
+            <Wrench />
           </button>
         ) : (
           <span className="header-spacer" />

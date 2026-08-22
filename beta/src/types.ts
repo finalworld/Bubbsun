@@ -87,6 +87,9 @@ export type CalendarEvent = {
   endTime?: string;
   allDay?: boolean;
   category?: string;
+  recurrenceDays?: number[];
+  recurrenceForever?: boolean;
+  recurrenceUntil?: string;
   note?: string;
   creatorId: string;
   creatorName: string;

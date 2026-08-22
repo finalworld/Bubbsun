@@ -1522,6 +1522,11 @@ function NoteEditorPage({note,onSave,onBack,onDelete,follow,creator,toolsOpen,on
   useEffect(()=>{setTitle(note.title);setText(note.text);setIcon(note.icon);setColor(note.color)},[note.id,note.title,note.text,note.icon,note.color]);
   const save=async()=>{if(!title.trim()||saving)return;setSaving(true);try{if(await onSave({...note,title:title.trim(),text,icon,color}))onBack()}finally{setSaving(false)}};
   return <section className="content note-editor-page">
+    {toolsOpen&&<div className={`list-tools-card note-editor-tools ${follow?"has-follow":""}`}>
+      <button className="note-appearance-button" onClick={()=>{setAppearanceOpen(true);onToolsOpen(false)}}><Palette/><span><strong>ÄNDRA UTSEENDE</strong><small>Välj ikon och färg</small></span><ChevronRight/></button>
+      <button className="note-log-button" onClick={()=>{setLogOpen(true);onToolsOpen(false)}}><History/><span><strong>ÄNDRINGSLOGG</strong><small>Se vem som har ändrat</small></span><ChevronRight/></button>
+      {follow&&<NoteFollowButton note={note} uid={follow.uid} groupId={follow.groupId}/>}
+    </div>}
     <article>
       <header className="note-editor-heading">
         <span className="note-editor-icon" style={{background:rgbaHex(color)}}><img src={noteIconSource(icon)} alt=""/></span>
@@ -1530,11 +1535,6 @@ function NoteEditorPage({note,onSave,onBack,onDelete,follow,creator,toolsOpen,on
           <p className="note-created" style={(creator?.color??note.creatorColor)?{"--creator-color":rgbaHex(creator?.color??note.creatorColor!)} as CSSProperties:undefined}>Skapad av <strong>{creator?.name||note.creatorName||"Bubbsun"}</strong></p>
         </div>
       </header>
-      {toolsOpen&&<div className={`list-tools-card note-editor-tools ${follow?"has-follow":""}`}>
-        <button className="note-appearance-button" onClick={()=>{setAppearanceOpen(true);onToolsOpen(false)}}><Palette/><span><strong>ÄNDRA UTSEENDE</strong><small>Välj ikon och färg</small></span><ChevronRight/></button>
-        <button className="note-log-button" onClick={()=>{setLogOpen(true);onToolsOpen(false)}}><History/><span><strong>ÄNDRINGSLOGG</strong><small>Se vem som har ändrat</small></span><ChevronRight/></button>
-        {follow&&<NoteFollowButton note={note} uid={follow.uid} groupId={follow.groupId}/>}
-      </div>}
       <label className="note-body-label" htmlFor="note-body">ANTECKNING</label>
       <textarea id="note-body" value={text} onChange={event=>setText(event.target.value)} placeholder="Skriv din anteckning här…"/>
       <div className="note-editor-actions"><button className="danger" onClick={()=>setConfirmDelete(true)}><Trash2/> TA BORT</button><span/><button className="cancel" onClick={onBack}>AVBRYT</button><button disabled={saving||!title.trim()} onClick={()=>void save()}>{saving?"SPARAR…":"SPARA"}</button></div>

@@ -1389,6 +1389,10 @@
     grid-auto-flow: row !important;
   }
   .app-shell .add-panel .autocomplete-wrap { grid-column: 1 !important; grid-row: 1 !important; }
+  .app-shell .add-panel .autocomplete-wrap > input {
+    height: 53px !important;
+    min-height: 53px !important;
+  }
   .app-shell .add-panel > div > input { grid-column: 2 !important; grid-row: 1 !important; }
   .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; }
   .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; }

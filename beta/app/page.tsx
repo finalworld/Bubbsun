@@ -1518,7 +1518,7 @@ function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships
     return()=>unsubs.forEach(unsubscribe=>unsubscribe());
   },[memberships]);
   return <div ref={root} className={`group-space-tab ${selected?"selected":""}`}>
-    <button type="button" className="group-space-main" onClick={onSelect}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
+    <button type="button" className="group-space-main" aria-label="Byt grupp" aria-expanded={open} onClick={()=>{onSelect();if(memberships.length)setOpen(value=>!value)}}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
     {!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
     {open&&<div className="group-space-menu" role="menu">{memberships.map(membership=>{const group=groups[membership.groupId],count=counts[membership.groupId]??{lists:0,notes:0};return <button type="button" role="menuitem" key={membership.groupId} className={membership.groupId===activeGroupId?"selected":""} onClick={()=>{setOpen(false);if(membership.groupId!==activeGroupId)onSwitch(membership.groupId)}}><span className="group-space-menu-icon">{group?.iconId?<GroupIcon id={group.iconId}/>:<Users/>}</span><strong>{group?.name||"Grupp"}</strong><span className="group-space-menu-counts"><span title={`${count.lists} listor`}><ListChecks/><b>{count.lists}</b></span><span title={`${count.notes} anteckningar`}><NotebookPen/><b>{count.notes}</b></span></span>{membership.groupId===activeGroupId&&<Check/>}</button>})}</div>}
   </div>

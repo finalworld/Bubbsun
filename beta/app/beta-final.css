@@ -71,7 +71,8 @@
 }
 
 /* Note icon pickers: two equal rows of four, aligned with the colour grid. */
-.app-shell .note-appearance-modal .note-icon-picker {
+.app-shell .note-appearance-modal .note-icon-picker,
+.app-shell .note-new-editor .note-icon-picker {
   display: grid !important;
   grid-template-columns: repeat(4, 71px) !important;
   gap: 10px !important;
@@ -81,7 +82,9 @@
 }
 
 .app-shell .note-appearance-modal .note-icon-picker button,
-.app-shell .note-appearance-modal .note-icon-picker button:first-child {
+.app-shell .note-appearance-modal .note-icon-picker button:first-child,
+.app-shell .note-new-editor .note-icon-picker button,
+.app-shell .note-new-editor .note-icon-picker button:first-child {
   box-sizing: border-box !important;
   width: 71px !important;
   height: 71px !important;
@@ -93,7 +96,8 @@
   overflow: hidden !important;
 }
 
-.app-shell .note-appearance-modal .note-icon-picker button img {
+.app-shell .note-appearance-modal .note-icon-picker button img,
+.app-shell .note-new-editor .note-icon-picker button img {
   display: block !important;
   width: 86% !important;
   height: 86% !important;
@@ -104,7 +108,9 @@
 }
 
 .app-shell .note-appearance-modal .note-icon-picker button.selected,
-.app-shell .note-appearance-modal .note-icon-picker button:first-child.selected {
+.app-shell .note-appearance-modal .note-icon-picker button:first-child.selected,
+.app-shell .note-new-editor .note-icon-picker button.selected,
+.app-shell .note-new-editor .note-icon-picker button:first-child.selected {
   background: var(--theme-accent) !important;
   border-color: color-mix(in srgb, var(--theme-accent) 68%, #253a28) !important;
   box-shadow: inset 0 0 0 2px color-mix(in srgb, #fff 38%, transparent) !important;
@@ -144,7 +150,8 @@
   overflow-y: auto !important;
 }
 
-.app-shell .modal-backdrop .modal.note-appearance-modal {
+.app-shell .modal-backdrop .modal.note-appearance-modal,
+.app-shell .modal-backdrop .modal.note-new-editor {
   box-sizing: border-box !important;
   width: min(380px, calc(100vw - 32px)) !important;
 }
@@ -185,14 +192,17 @@
     padding-left: 20px !important;
   }
 
-  .app-shell .note-appearance-modal .note-icon-picker {
+  .app-shell .note-appearance-modal .note-icon-picker,
+  .app-shell .note-new-editor .note-icon-picker {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     width: 100% !important;
     gap: 8px !important;
   }
 
   .app-shell .note-appearance-modal .note-icon-picker button,
-  .app-shell .note-appearance-modal .note-icon-picker button:first-child {
+  .app-shell .note-appearance-modal .note-icon-picker button:first-child,
+  .app-shell .note-new-editor .note-icon-picker button,
+  .app-shell .note-new-editor .note-icon-picker button:first-child {
     width: 100% !important;
     height: auto !important;
     min-height: 0 !important;

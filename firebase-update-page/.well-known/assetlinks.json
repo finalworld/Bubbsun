@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "se.bubbsun.app",
+      "sha256_cert_fingerprints": ["91:8B:C8:D2:86:FA:97:25:94:F6:C2:65:1E:96:32:71:89:8A:18:76:49:8B:25:21:B4:84:20:BA:27:DB:49:49"]
+    }
+  }
+]

@@ -420,6 +420,13 @@ function isAppleMobile() {
   );
 }
 
+function isAndroidMobile() {
+  return /Android/i.test(navigator.userAgent);
+}
+
+const ANDROID_APP_URL =
+  "https://github.com/finalworld/Bubbsun/releases/download/v0.702/Bubbsun-v0.702-Web-Edition.apk";
+
 function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) {
   const [installed, setInstalled] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -450,6 +457,10 @@ function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) 
   }, []);
 
   const install = async () => {
+    if (isAndroidMobile()) {
+      window.location.assign(ANDROID_APP_URL);
+      return;
+    }
     if (isInstalledApp()) {
       setInstalled(true);
       setMessage("Bubbsun är redan installerad på den här enheten.");
@@ -477,8 +488,8 @@ function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) 
     <>
       {place === "login" && (
         <div className="login-install">
-          <button onClick={() => void install()}>📲 INSTALLERA BUBBSUN</button>
-          <span>Få en egen ikon och öppna Bubbsun som en vanlig app.</span>
+          <button onClick={() => void install()}>📲 {isAndroidMobile() ? "HÄMTA ANDROID-APPEN" : "INSTALLERA BUBBSUN"}</button>
+          <span>{isAndroidMobile() ? "Hämta den riktiga Bubbsun-appen för Android." : "Få en egen ikon och öppna Bubbsun som en vanlig app."}</span>
         </div>
       )}
       {place === "banner" && (
@@ -486,12 +497,12 @@ function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) 
           <div className="install-banner-copy">
             <i aria-hidden="true">📲</i>
             <span>
-              <strong>HA BUBBSUN SOM EN APP</strong>
-              <small>Snabbare att hitta, med en egen ikon på telefonen eller datorn.</small>
+              <strong>{isAndroidMobile() ? "BUBBSUN FÖR ANDROID" : "HA BUBBSUN SOM EN APP"}</strong>
+              <small>{isAndroidMobile() ? "Hämta den riktiga Android-appen från Bubbsuns GitHub." : "Snabbare att hitta, med en egen ikon på telefonen eller datorn."}</small>
             </span>
           </div>
           <button className="install-banner-primary" onClick={() => void install()}>
-            INSTALLERA
+            {isAndroidMobile() ? "HÄMTA APPEN" : "INSTALLERA"}
           </button>
           <button
             className="install-banner-hide"
@@ -506,13 +517,12 @@ function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) 
       )}
       {place === "settings" && (
         <div className="settings-card install-card">
-          <h2>HA BUBBSUN SOM EN APP</h2>
+          <h2>{isAndroidMobile() ? "BUBBSUN FÖR ANDROID" : "HA BUBBSUN SOM EN APP"}</h2>
           <p>
-            Installera Bubbsun på telefonen eller datorn. Då får du en egen ikon
-            och kan öppna Bubbsun som en vanlig app.
+            {isAndroidMobile() ? "Hämta den riktiga Bubbsun-appen för Android. Webbversionen installeras inte längre som en extra Android-app." : "Installera Bubbsun på telefonen eller datorn. Då får du en egen ikon och kan öppna Bubbsun som en vanlig app."}
           </p>
           <button onClick={() => void install()}>
-            {installed ? "✓ BUBBSUN ÄR INSTALLERAD" : "📲 INSTALLERA BUBBSUN"}
+            {installed ? "✓ BUBBSUN ÄR INSTALLERAD" : isAndroidMobile() ? "📲 HÄMTA ANDROID-APPEN" : "📲 INSTALLERA BUBBSUN"}
           </button>
           {message && <strong>{message}</strong>}
         </div>

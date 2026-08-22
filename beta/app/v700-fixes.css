@@ -2920,7 +2920,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
     font-size: 31px !important;
   }
   .app-shell .topbar.text-header-v2 .header-brand-tagline {
-    margin-top: 2px !important;
-    font-size: 12px !important;
+    margin-top: 1px !important;
+    font-size: 14px !important;
   }
 }

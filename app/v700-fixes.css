@@ -540,7 +540,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
 }
 
-/* Final v0.807 nine-point UI pass. */
+/* Final v0.808 nine-point UI pass. */
 .app-shell .topbar.text-topbar {
   position: sticky !important;
   top: 0 !important;
@@ -923,7 +923,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   }
 }
 
-/* v0.807 banner header: the supplied artwork is the whole top surface. */
+/* v0.808 banner header: the supplied artwork is the whole top surface. */
 .banner-topbar {
   position: sticky !important;
   top: 0 !important;

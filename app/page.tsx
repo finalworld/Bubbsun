@@ -1090,7 +1090,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.807 · Web Edition
+            Bubbsun v0.808 · Web Edition
           </small>
         </div>
       </aside>
@@ -5186,6 +5186,12 @@ function AuthenticatedApp() {
     } catch (e) {
       console.error("Google sign-in failed", e);
       const code = (e as { code?: string })?.code;
+      // Android may close the custom tab with popup-closed-by-user while the
+      // successful Firebase session is still arriving asynchronously.
+      if (code === "auth/popup-closed-by-user") {
+        await new Promise((resolve) => window.setTimeout(resolve, 1800));
+        if (auth.currentUser) return;
+      }
       setLoginError(
         code === "auth/popup-blocked"
           ? "Inloggningsfönstret blockerades. Tillåt popup-fönster för Bubbsun och försök igen. (auth/popup-blocked)"

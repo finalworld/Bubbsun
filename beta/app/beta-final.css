@@ -1419,7 +1419,7 @@
 .app-shell .notes-page .space-tabs-refined .group-space-tab.selected > .group-space-trigger {
   border-left: 0 !important;
 }
-.app-shell .notes-page .space-tabs-refined .group-space-tab {
+.app-shell .space-tabs-refined .group-space-tab {
   border-radius: 13px !important;
 }
 

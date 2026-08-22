@@ -2941,4 +2941,4 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
 .app-shell .group-space-menu-icon svg,.app-shell .group-space-menu-icon .group-picture{width:32px;height:32px;object-fit:contain}
 .app-shell .group-space-menu strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px}
 .app-shell .group-space-menu>button>svg{width:20px;color:var(--theme-accent)}
-@media(max-width:640px){.app-shell .group-space-tab{grid-template-columns:minmax(0,1fr) 42px;min-height:48px}.app-shell .group-space-main{padding-left:42px}.app-shell .group-space-trigger{width:42px}.app-shell .group-space-menu{right:0}}
+@media(max-width:640px){.app-shell .group-space-tab{grid-template-columns:minmax(0,1fr) 42px;min-height:48px}.app-shell .group-space-main{justify-content:flex-start;padding:5px 6px 5px 16px}.app-shell .group-space-trigger{width:42px}.app-shell .group-space-menu{right:0}}

@@ -69,10 +69,14 @@ export function LanguageBridge({ language }: { language: string }) {
     const observer = new MutationObserver(entries => {
       if (applying) return;
       applying = true;
-      for (const entry of entries) entry.addedNodes.forEach(process);
+      for (const entry of entries) {
+        if (entry.type === "characterData") process(entry.target);
+        else if (entry.type === "attributes") process(entry.target);
+        else entry.addedNodes.forEach(process);
+      }
       applying = false;
     });
-    observer.observe(root, { childList: true, subtree: true });
+    observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["placeholder", "title", "aria-label"] });
     return () => observer.disconnect();
   }, [language]);
   return null;

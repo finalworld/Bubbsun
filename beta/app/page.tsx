@@ -1213,10 +1213,10 @@ function ListCard({
             {hasNew&&<em className="new-badge">NYTT</em>}
           </strong>
           <small className="list-counts">
+            <span className="list-count-summary">{list.items.length - done} kvar · {done} klara</span>
             <span className="list-type-mark" title={`Typ: ${type.label}`}>
               {type.icon} {type.label}
             </span>
-            <span>{list.items.length - done} kvar · {done} klara</span>
           </small>
         </span>
         <span className="card-actions">

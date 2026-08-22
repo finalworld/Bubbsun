@@ -1090,7 +1090,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.806 · Web Edition Beta
+            Bubbsun v0.807 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5188,8 +5188,10 @@ function AuthenticatedApp() {
       const code = (e as { code?: string })?.code;
       setLoginError(
         code === "auth/popup-blocked"
-          ? "Safari blockerade inloggningsfönstret. Tillåt popup-fönster för Bubbsun och försök igen."
-          : "Google-inloggningen kunde inte slutföras. Försök igen.",
+          ? "Inloggningsfönstret blockerades. Tillåt popup-fönster för Bubbsun och försök igen. (auth/popup-blocked)"
+          : code === "auth/popup-closed-by-user"
+            ? "Google-fönstret stängdes innan inloggningen blev klar. Försök igen. (auth/popup-closed-by-user)"
+            : `Google-inloggningen kunde inte slutföras. Försök igen.${code ? ` (${code})` : ""}`,
       );
     } finally {
       setBusy(false);

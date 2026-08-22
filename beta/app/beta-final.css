@@ -255,6 +255,44 @@
 
 }
 
+/* Group switcher: separate live totals for lists and notes. */
+.app-shell .space-tabs-refined .group-space-menu > button {
+  grid-template-columns: 38px minmax(0, 1fr) auto 24px !important;
+}
+.app-shell .group-space-menu-counts {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+.app-shell .group-space-menu-counts > span {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 3px !important;
+  margin: 0 !important;
+}
+.app-shell .group-space-menu-counts svg {
+  width: 15px !important;
+  height: 15px !important;
+  color: var(--theme-accent) !important;
+}
+.app-shell .group-space-menu-counts b {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 27px !important;
+  height: 27px !important;
+  padding: 0 5px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+  font: 800 12px Arial, sans-serif !important;
+}
+@media (max-width: 500px) {
+  .app-shell .group-space-menu-counts { gap: 4px !important; }
+  .app-shell .group-space-menu-counts svg { width: 13px !important; height: 13px !important; }
+  .app-shell .group-space-menu-counts b { min-width: 24px !important; height: 24px !important; }
+}
+
 /* Redigera/flytta i listverktygen är neutrala verktygskort, inte åtgärdsknappar. */
 .app-shell .list-tools-card > button.item-action-edit,
 .app-shell .list-tools-card > button.item-action-move {

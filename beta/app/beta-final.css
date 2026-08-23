@@ -1994,9 +1994,9 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 @media(max-width:700px){.app-shell .topbar .header-notification-count{right:-37px;top:-9px;width:34px;height:34px;font-size:14px}.app-shell .topbar .header-admin-online{bottom:-1px;font-size:8px}.notifications-page{padding-inline:14px!important}.notifications-heading{margin-top:4px}.notifications-heading>svg{width:44px;height:44px}.notifications-list>button{grid-template-columns:46px minmax(0,1fr) auto 18px;gap:10px;min-height:86px;padding:11px 12px;border-radius:16px}.notification-icon{width:42px;height:42px;border-radius:12px;font-size:21px}.notifications-list strong{font-size:21px}.notifications-list>button>b{padding:5px 7px;font-size:8px}}
 
 /* v0.857 – hel färgkant och optiskt centrerad notissiffra */
-.app-shell .topbar .header-notification-count>span{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:0!important;font-family:Georgia,serif!important;font-style:normal!important;font-weight:800!important;line-height:1!important;transform:translateY(-1px)!important}
+.app-shell .topbar .header-notification-count>span{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;margin:0!important;padding:0!important;font-family:system-ui,sans-serif!important;font-style:normal!important;font-weight:800!important;font-variant-numeric:tabular-nums!important;line-height:1!important;transform:rotate(-7deg)!important}
 .notifications-list>button::before{left:0;top:0;bottom:0;width:8px;border-radius:17px 0 0 17px}
-@media(max-width:700px){.app-shell .topbar .header-notification-count>span{font-size:15px!important;transform:translateY(-1px)!important}.notifications-list>button::before{border-radius:14px 0 0 14px}}
+@media(max-width:700px){.app-shell .topbar .header-notification-count>span{font-size:15px!important;transform:rotate(-7deg)!important}.notifications-list>button::before{border-radius:14px 0 0 14px}}
 
 /* v0.858 – mer luft mellan mobilens logga och notisknapp */
 @media(max-width:700px){.app-shell .topbar .header-notification-count{right:-51px!important}}

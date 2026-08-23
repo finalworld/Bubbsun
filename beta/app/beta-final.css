@@ -1997,3 +1997,6 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .topbar .header-notification-count>span{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important;padding:0!important;font-family:Georgia,serif!important;font-style:normal!important;font-weight:800!important;line-height:1!important;transform:translateY(-1px)!important}
 .notifications-list>button::before{left:0;top:0;bottom:0;width:8px;border-radius:17px 0 0 17px}
 @media(max-width:700px){.app-shell .topbar .header-notification-count>span{font-size:15px!important;transform:translateY(-1px)!important}.notifications-list>button::before{border-radius:14px 0 0 14px}}
+
+/* v0.858 – mer luft mellan mobilens logga och notisknapp */
+@media(max-width:700px){.app-shell .topbar .header-notification-count{right:-64px!important}}

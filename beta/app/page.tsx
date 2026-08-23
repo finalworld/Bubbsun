@@ -1219,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.870 · Web Edition Beta
+            Bubbsun v0.871 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -3089,7 +3089,7 @@ function GroupEditor({
 
 type CalendarRange="today"|"7"|"30"|"agenda";
 const calendarDateKey=(date:Date)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-const calendarDayLabel=(value:string)=>{const date=new Date(`${value}T12:00:00`),today=calendarDateKey(new Date()),tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);if(value===today)return"IDAG";if(value===calendarDateKey(tomorrow))return"IMORGON";return new Intl.DateTimeFormat("sv-SE",{weekday:"long",day:"numeric",month:"long"}).format(date).toLocaleUpperCase("sv-SE")};
+const calendarDayLabel=(value:string)=>{const date=new Date(`${value}T12:00:00`),now=new Date(),today=calendarDateKey(now),tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);if(value===today)return"IDAG";if(value===calendarDateKey(tomorrow))return"IMORGON";return new Intl.DateTimeFormat("sv-SE",{weekday:"long",day:"numeric",month:"long",...(date.getFullYear()!==now.getFullYear()?{year:"numeric" as const}:{})}).format(date).toLocaleUpperCase("sv-SE")};
 
 const calendarCategories=[{id:"",label:"Ingen kategori",icon:""},{id:"birthday",label:"Födelsedag",icon:"🎂"},{id:"meeting",label:"Möte",icon:"👥"},{id:"appointment",label:"Tid / besök",icon:"📍"},{id:"activity",label:"Aktivitet",icon:"⚽"},{id:"reminder",label:"Påminnelse",icon:"🔔"},{id:"work",label:"Jobb",icon:"💼"},{id:"school",label:"Skola",icon:"🎓"},{id:"travel",label:"Resa",icon:"🚗"},{id:"family",label:"Familj",icon:"🏠"},{id:"celebration",label:"Högtid / Fest",icon:"🎉"},{id:"healthcare",label:"Vård",icon:"🩺"},{id:"other",label:"Annat",icon:"✨"}];
 const calendarCategory=(id?:string)=>calendarCategories.find(value=>value.id===id)||calendarCategories[0];

@@ -1863,3 +1863,12 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .calendar-compact-meta{gap:3px!important}.calendar-compact-meta>b{font-size:11px!important}.calendar-compact-meta>time{font-size:8px!important}.calendar-compact-meta>small{font-size:8px!important}
 .calendar-compact-title{font:700 13px/1 Georgia,serif!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 @media(max-width:700px){.calendar-week>section>div{padding:5px 1px!important}.calendar-event.compact{min-height:43px!important;padding:5px 4px 5px 8px!important}.calendar-compact-title{font-size:12px!important}}
+
+/* v0.842: compact inset week cards, matching the approved spacing reference. */
+.calendar-week>section>div{padding:10px 10px!important;gap:9px!important}
+.calendar-event.compact{width:100%!important;min-height:54px!important;padding:7px 9px 8px 13px!important;gap:5px!important;border:1px solid color-mix(in srgb,var(--event-color) 34%,var(--theme-outline))!important;border-radius:9px!important;box-shadow:0 2px 6px #39251416!important}
+.calendar-event.compact::before{width:4px!important;border-radius:9px 0 0 9px!important}
+.calendar-event.compact:hover{box-shadow:0 3px 8px #39251420!important}
+.calendar-compact-meta{gap:4px!important}.calendar-compact-meta>b{font-size:11px!important}.calendar-compact-meta>time{font:800 9px/1 Arial,sans-serif!important}.calendar-compact-meta>small{font-size:9px!important}
+.calendar-compact-title{margin-left:1px!important;font:800 12px/1.08 Arial,sans-serif!important;letter-spacing:0!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+@media(max-width:700px){.calendar-week>section>div{padding:8px 7px!important;gap:8px!important}.calendar-event.compact{min-height:51px!important;padding:7px 7px 7px 11px!important}.calendar-compact-title{font-size:11px!important}}

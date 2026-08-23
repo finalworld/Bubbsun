@@ -62,7 +62,6 @@ import {
   getRedirectResult,
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithCredential,
   signInWithPopup,
   signOut,
   type User,
@@ -448,90 +447,6 @@ function GoogleMark() {
   );
 }
 
-const GOOGLE_WEB_CLIENT_ID =
-  "999127046153-ik86946iup8gukr49khobsgo22dr392e.apps.googleusercontent.com";
-
-type GoogleIdentityWindow = Window & {
-  google?: {
-    accounts: {
-      id: {
-        initialize: (options: {
-          client_id: string;
-          callback: (response: { credential?: string }) => void;
-        }) => void;
-        renderButton: (
-          parent: HTMLElement,
-          options: Record<string, string | number>,
-        ) => void;
-      };
-    };
-  };
-};
-
-function GoogleIdentityButton({
-  onCredential,
-  busy,
-}: {
-  onCredential: (credential: string) => void;
-  busy: boolean;
-}) {
-  const buttonRef = useRef<HTMLDivElement>(null);
-  const credentialHandler = useRef(onCredential);
-  credentialHandler.current = onCredential;
-
-  useEffect(() => {
-    let cancelled = false;
-    const render = () => {
-      if (cancelled || !buttonRef.current) return;
-      const google = (window as GoogleIdentityWindow).google;
-      if (!google) return;
-      google.accounts.id.initialize({
-        client_id: GOOGLE_WEB_CLIENT_ID,
-        callback: ({ credential }) => {
-          if (credential) credentialHandler.current(credential);
-        },
-      });
-      buttonRef.current.replaceChildren();
-      google.accounts.id.renderButton(buttonRef.current, {
-        type: "standard",
-        theme: "outline",
-        size: "large",
-        text: "continue_with",
-        shape: "rectangular",
-        logo_alignment: "left",
-        width: Math.min(400, buttonRef.current.clientWidth || 320),
-      });
-    };
-
-    let script = document.querySelector<HTMLScriptElement>(
-      'script[src="https://accounts.google.com/gsi/client"]',
-    );
-    if (!script) {
-      script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    script.addEventListener("load", render);
-    render();
-    return () => {
-      cancelled = true;
-      script?.removeEventListener("load", render);
-    };
-  }, []);
-
-  return (
-    <div
-      className="google-identity-login"
-      aria-busy={busy}
-      style={{ pointerEvents: busy ? "none" : "auto", opacity: busy ? 0.65 : 1 }}
-    >
-      <div ref={buttonRef} />
-    </div>
-  );
-}
-
 type BubbsunInstallPrompt = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -688,18 +603,13 @@ function InstallLauncher({ place }: { place: "login" | "banner" | "settings" }) 
 
 function LoginPage({
   onLogin,
-  onGoogleCredential,
   error,
   busy,
 }: {
   onLogin: () => void;
-  onGoogleCredential: (credential: string) => void;
   error: string;
   busy: boolean;
 }) {
-  const isAndroid =
-    /Android/i.test(navigator.userAgent) ||
-    new URLSearchParams(window.location.search).has("gisLoginTest");
   return (
     <main className="login-page">
       <div className="login-layout">
@@ -717,18 +627,9 @@ function LoginPage({
               hemma, i butiken och på språng.
             </p>
           </div>
-          {isAndroid ? (
-            <>
-              <GoogleIdentityButton onCredential={onGoogleCredential} busy={busy} />
-              <button className="google-login-compat" onClick={onLogin} disabled={busy}>
-                PROBLEM ATT LOGGA IN? PROVA KOMPATIBILITETSLÄGET
-              </button>
-            </>
-          ) : (
-            <button onClick={onLogin} disabled={busy}>
-              <GoogleMark /> {busy ? "ANSLUTER…" : "FORTSÄTT MED GOOGLE"}
-            </button>
-          )}
+          <button onClick={onLogin} disabled={busy}>
+            <GoogleMark /> {busy ? "ANSLUTER…" : "FORTSÄTT MED GOOGLE"}
+          </button>
           {error && <div className="error-box">{error}</div>}
           <InstallLauncher place="login" />
           <small>Samma Bubbsun-konto och grupper som i Android-appen.</small>
@@ -1203,7 +1104,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.827 · Web Edition Beta
+            Bubbsun v0.826 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5367,21 +5268,6 @@ function AuthenticatedApp() {
       setBusy(false);
     }
   };
-  const loginWithGoogleCredential = async (idToken: string) => {
-    setBusy(true);
-    setLoginError("");
-    try {
-      await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
-    } catch (e) {
-      console.error("Google credential sign-in failed", e);
-      const code = (e as { code?: string })?.code;
-      setLoginError(
-        `Google-inloggningen kunde inte slutföras.${code ? ` (${code})` : ""}`,
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
   const navigate = (next: Page) => {
     if (next !== page || page === "list")
       window.history.pushState(
@@ -5673,7 +5559,7 @@ function AuthenticatedApp() {
     );
   }
   if (!user)
-    return <LoginPage onLogin={login} onGoogleCredential={loginWithGoogleCredential} error={loginError} busy={busy} />;
+    return <LoginPage onLogin={login} error={loginError} busy={busy} />;
   if (!account) {
     const loadingTheme =
       themes.find((item) => item.id === themeId) || themes[0];

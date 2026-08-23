@@ -941,31 +941,6 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   box-shadow: none !important;
 }
 
-/* Android uses Google Identity Services directly, avoiding Firebase popup
-   hand-off failures inside the Trusted Web Activity. */
-.google-identity-login {
-  width: 100%;
-  min-height: 44px;
-  display: grid;
-  place-items: center;
-}
-.google-identity-login > div {
-  width: min(100%, 400px);
-  display: grid;
-  place-items: center;
-}
-.login-page .login-card > button.google-login-compat {
-  min-height: 30px;
-  margin-top: 8px;
-  padding: 4px 8px;
-  border: 0;
-  background: transparent;
-  color: #5f513f;
-  box-shadow: none;
-  font: 700 10px/1.25 Arial, sans-serif;
-  text-decoration: underline;
-}
-
 .banner-topbar .banner-art {
   position: relative;
   z-index: 1;

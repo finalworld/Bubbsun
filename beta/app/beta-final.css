@@ -1975,3 +1975,8 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   .calendar-swipe-viewport{width:calc(100% + 12px);margin-left:-6px}
   .calendar-swipe-pane{box-sizing:border-box;padding-inline:6px}
 }
+
+/* v0.855: clearer event time in the mobile detail card. */
+@media(max-width:600px){
+  .calendar-event-card-v2 .calendar-card-summary p:first-child strong{font-size:16px!important;line-height:1.2!important}
+}

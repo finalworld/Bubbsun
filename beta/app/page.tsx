@@ -1219,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.861 · Web Edition Beta
+            Bubbsun v0.862 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4975,13 +4975,14 @@ type ActivityEntry = {
   color: number;
   isPrivate: boolean;
   targetId: string;
+  isOwn: boolean;
 };
 
 function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seenAt:number;onOpen:(entry:ActivityEntry)=>void}) {
   const dateText=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
   return <section className="content subpage notifications-page">
     <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
-    {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
+    {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt&&!entry.isOwn?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
       <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":"▣"}</span>
       <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
       {entry.at>seenAt&&<b>NYTT</b>}<ChevronRight/>
@@ -5734,12 +5735,12 @@ function AuthenticatedApp() {
     const fallbackColor=account.personalColor||colorOptions[0];
     const memberName=(uid?:string)=>members.find(value=>value.uid===uid)?.displayName||account.displayName;
     const memberColor=(uid?:string)=>members.find(value=>value.uid===uid)?.color||fallbackColor;
-    const listEntries=visibleLists.filter(value=>Boolean(value.updatedAt)&&!privateMode&&value.updatedBy!==user?.uid).map(value=>({id:`list-${account.activeGroupId}-${value.id}-${value.updatedAt}`,kind:"list" as const,title:value.name,detail:`Lista · ${memberName(value.updatedBy)}`,at:value.updatedAt||0,color:memberColor(value.updatedBy),isPrivate:false,targetId:value.id}));
-    const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)&&!privateMode&&(value.history?.[0]?.uid||value.creatorId)!==user?.uid).map(value=>{const latest=value.history?.[0];return{id:`note-${account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`Anteckning · ${latest?.name||memberName(value.creatorId)}`,at:value.updatedAt||value.createdAt||0,color:memberColor(latest?.uid||value.creatorId),isPrivate:false,targetId:value.id}});
-    const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)&&!privateMode&&(value.updatedBy||value.creatorId)!==user?.uid).map(value=>({id:`calendar-${account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} Kalender · ${memberName(value.updatedBy||value.creatorId)}`,at:value.updatedAt||value.createdAt||0,color:memberColor(value.updatedBy||value.creatorId),isPrivate:false,targetId:value.id}));
+    const listEntries=visibleLists.filter(value=>Boolean(value.updatedAt)).map(value=>{const actor=value.updatedBy;return{id:`list-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt}`,kind:"list" as const,title:value.name,detail:privateMode?"Privat lista":`Lista · ${memberName(actor)}`,at:value.updatedAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
+    const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0],actor=latest?.uid||value.creatorId;return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:privateMode?"Privat anteckning":`Anteckning · ${latest?.name||memberName(actor)}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
+    const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId;return{id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} Kalender · ${privateMode?account.displayName:memberName(actor)}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     return [...listEntries,...noteEntries,...calendarEntries].sort((a,b)=>b.at-a.at).slice(0,60);
   },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,privateMode,members]);
-  const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt).length;
+  const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
   useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
   useEffect(()=>{
     if(!user||!account)return;

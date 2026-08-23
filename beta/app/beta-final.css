@@ -1969,3 +1969,9 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   .calendar-agenda-title{font-size:21px!important}
   .calendar-agenda-repeat{font-size:29px}
 }
+
+/* v0.852: visible breathing room between touch-carousel pages. */
+@media(max-width:700px){
+  .calendar-swipe-viewport{width:calc(100% + 12px);margin-left:-6px}
+  .calendar-swipe-pane{box-sizing:border-box;padding-inline:6px}
+}

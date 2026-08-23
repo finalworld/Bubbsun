@@ -2019,3 +2019,17 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .calendar-month-grid>section>div>button:not(.calendar-month-more){
   background:var(--theme-calendar-event-bg)!important;
 }
+
+/* v0.868: the private-list pin action follows the selected theme. */
+.app-shell .list-card-menu{
+  border-color:var(--theme-outline)!important;
+  background:var(--theme-paper)!important;
+}
+.app-shell .list-card-menu>button.pin-action{
+  border:1px solid color-mix(in srgb,var(--theme-outline) 68%,transparent)!important;
+  background:var(--theme-panel)!important;
+  color:var(--theme-text)!important;
+}
+.app-shell .list-card-menu>button.pin-action:hover{
+  background:color-mix(in srgb,var(--theme-accent) 15%,var(--theme-panel))!important;
+}

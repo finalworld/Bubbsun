@@ -1219,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.867 · Web Edition Beta
+            Bubbsun v0.868 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -1382,6 +1382,7 @@ function ListCard({
         <div className="list-card-menu">
           {onPin && (
             <button
+              className="pin-action"
               onClick={() => {
                 setMenuOpen(false);
                 onPin();

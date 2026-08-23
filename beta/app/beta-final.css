@@ -1906,7 +1906,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   border-top-width:1px!important;
   border-right-width:1px!important;
   border-bottom-width:1px!important;
-  background-size:14px 14px!important;
+  background-size:22px 22px!important;
 }
 @media(max-width:700px){
   .app-shell .calendar-week{touch-action:pan-y}

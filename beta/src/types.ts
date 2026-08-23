@@ -16,6 +16,17 @@ export type Account = {
   hiddenGlobalPinId?: string;
   privacyVersion: number;
   activitySeenAt?: number;
+  createdAt?: number;
+  lastActiveAt?: number;
+  visitCount?: number;
+  visitLog?: number[];
+};
+
+export type AdminUserCounts = {
+  notes: number;
+  calendarEvents: number;
+  groups: number;
+  followedLists: number;
 };
 
 export type Membership = {

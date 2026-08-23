@@ -106,6 +106,7 @@ import {
   updateProfile,
   watchAccount,
   watchAllAccounts,
+  watchAdminUserCounts,
   watchAllFollowedLists,
   watchAllLists,
   watchAllPrivateLists,
@@ -137,6 +138,7 @@ import {
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
+  AdminUserCounts,
   BubbsunList,
   BubbsunNote,
   CalendarEvent,
@@ -1219,7 +1221,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.871 · Web Edition Beta
+            Bubbsun v0.872 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4151,7 +4153,7 @@ function PrivacyPage() {
       {[
         [
           "Vad som sparas",
-          "Google-kontots unika ID, visningsnamn, vald färg, gruppmedlemskap, notisinställningar samt delade och privata listor.",
+          "Google-kontots unika ID, visningsnamn, vald färg, gruppmedlemskap, notisinställningar, de senaste 10 besökstidpunkterna samt delade och privata listor.",
         ],
         [
           "Varför informationen behövs",
@@ -4164,6 +4166,10 @@ function PrivacyPage() {
         [
           "Kontroll över data",
           "Du kan sluta följa listor, lämna grupper och logga ut. Gruppägaren ansvarar för gruppens gemensamma data.",
+        ],
+        [
+          "Administratörsstatistik",
+          "Administratörens användaröversikt visar endast antal listor, poster, anteckningar, kalenderposter, grupper och följningar samt de senaste 10 besökstidpunkterna – aldrig namn eller innehåll från dina listor och anteckningar.",
         ],
       ].map(([title, body]) => (
         <div className="info-card" key={title}>
@@ -4389,6 +4395,7 @@ function AdminPage({
   palettes,
   followedCount,
   onlineUserIds,
+  userCounts,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4397,11 +4404,13 @@ function AdminPage({
   palettes: Record<string, ThemePalette>;
   followedCount: number;
   onlineUserIds: Set<string>;
+  userCounts: Record<string,AdminUserCounts>;
 }) {
   const [tab, setTab] = useState<"members" | "reports" | "pin" | "themes">(
       "members",
     ),
-    [selected, setSelected] = useState<Account | null>(null);
+    [selected, setSelected] = useState<Account | null>(null),
+    [editing,setEditing]=useState<Account|null>(null);
   const items = lists.flatMap((list) => list.items);
   const orderedAccounts = [...accounts].sort((a, b) => {
     const onlineDifference = Number(onlineUserIds.has(b.uid)) - Number(onlineUserIds.has(a.uid));
@@ -4474,7 +4483,7 @@ function AdminPage({
       {tab === "members" && (
         <div className="admin-member-list">
           {orderedAccounts.map((person) => (
-            <button key={person.uid} onClick={() => setSelected(person)}>
+            <article key={person.uid} role="button" tabIndex={0} onClick={()=>setSelected(person)} onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelected(person)}}}>
               <i
                 style={{
                   background: rgbaHex(person.personalColor || colorOptions[0]),
@@ -4496,8 +4505,8 @@ function AdminPage({
                 </small>
                 {person.supporter && <em>♥ SUPPORTER</em>}
               </span>
-              <ChevronRight />
-            </button>
+              <button className="admin-edit-user" onClick={event=>{event.stopPropagation();setEditing(person)}}><Pencil/> REDIGERA</button>
+            </article>
           ))}
         </div>
       )}
@@ -4541,22 +4550,30 @@ function AdminPage({
         <ChevronRight />
       </a>
       {selected && (
-        <AdminUserDialog
+        <AdminUserStatsDialog
           account={selected}
           lists={lists}
+          counts={userCounts[selected.uid]}
           onClose={() => setSelected(null)}
         />
       )}
+      {editing&&<AdminUserDialog account={editing} onClose={()=>setEditing(null)}/>}
     </section>
   );
 }
+function AdminUserStatsDialog({account,lists,counts,onClose}:{account:Account;lists:BubbsunList[];counts?:AdminUserCounts;onClose:()=>void}){
+  const madeLists=lists.filter(list=>list.creatorId===account.uid),madeItems=lists.flatMap(list=>list.items).filter(item=>item.ownerId===account.uid),visits=(account.visitLog||[]).slice(0,10),dateTime=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
+  const stats=[
+    ["LISTOR",madeLists.length],["POSTER",madeItems.length],["KLARA POSTER",madeItems.filter(item=>item.completed).length],["KVARVARANDE",madeItems.filter(item=>!item.completed).length],
+    ["ANTECKNINGAR",counts?.notes||0],["KALENDERPOSTER",counts?.calendarEvents||0],["GRUPPER",counts?.groups||0],["FÖLJDA LISTOR",counts?.followedLists||0],["BESÖK",account.visitCount||visits.length],
+  ] as const;
+  return <div className="modal-backdrop"><div className="modal admin-user-stats-modal"><button className="modal-x" onClick={onClose} aria-label="Stäng"><X/></button><header><i style={{background:rgbaHex(account.personalColor||colorOptions[0])}}>{account.displayName.slice(0,1)}</i><span><small>SKRIVSKYDDAD ANVÄNDARLOGG</small><h2>{account.displayName}</h2><p>{account.globalTitle||"Medlem"}</p></span></header><div className="admin-user-counts">{stats.map(([label,value])=><section key={label}><strong>{value}</strong><span>{label}</span></section>)}</div><section className="admin-visit-log"><h3>SENASTE 10 BESÖKEN</h3>{visits.length?<ol>{visits.map((visit,index)=><li key={`${visit}-${index}`}><span>{index+1}</span><time>{dateTime(visit)}</time></li>)}</ol>:<p>Ingen sparad besökshistorik ännu. Den börjar samlas från v0.872.</p>}{account.createdAt&&<small>KONTO SKAPAT · {dateTime(account.createdAt)}</small>}</section><button className="cancel" onClick={onClose}>STÄNG</button></div></div>
+}
 function AdminUserDialog({
   account,
-  lists,
   onClose,
 }: {
   account: Account;
-  lists: BubbsunList[];
   onClose: () => void;
 }) {
   const [title, setTitle] = useState(account.globalTitle || ""),
@@ -4582,10 +4599,6 @@ function AdminUserDialog({
     account.megaSuperBoss,
     account.suspended,
   ]);
-  const madeLists = lists.filter((x) => x.creatorId === account.uid),
-    madeItems = lists
-      .flatMap((x) => x.items)
-      .filter((x) => x.ownerId === account.uid);
   const toggle = async (
     key: "supporter" | "megaSuperBoss" | "suspended",
     value: boolean,
@@ -4627,17 +4640,6 @@ function AdminUserDialog({
     <div className="modal-backdrop">
       <div className="modal admin-user-modal">
         <h2>{account.displayName}</h2>
-        <div className="member-stats">
-          <span>
-            <b>{madeLists.length}</b> listor
-          </span>
-          <span>
-            <b>{madeItems.filter((x) => !x.completed).length}</b> kvar
-          </span>
-          <span>
-            <b>{madeItems.filter((x) => x.completed).length}</b> klara
-          </span>
-        </div>
         <label>
           Unik titel
           <input
@@ -5051,6 +5053,7 @@ function AuthenticatedApp() {
     BubbsunList[]
   >([]);
   const [allAdminFollowedCount, setAllAdminFollowedCount] = useState(0);
+  const [adminUserCounts,setAdminUserCounts]=useState<Record<string,AdminUserCounts>>({});
   const [onlineCount, setOnlineCount] = useState(0);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [saveConflict, setSaveConflict] = useState(false);
@@ -5354,6 +5357,10 @@ function AuthenticatedApp() {
       b();
     };
   }, [account?.megaSuperBoss, account?.founder]);
+  useEffect(()=>{
+    if(!account?.megaSuperBoss&&!account?.founder)return;
+    return watchAdminUserCounts(setAdminUserCounts);
+  },[account?.megaSuperBoss,account?.founder]);
   useEffect(() => {
     if (!account?.megaSuperBoss && !account?.founder) return;
     return watchAllFollowedLists(
@@ -6058,6 +6065,7 @@ function AuthenticatedApp() {
           palettes={themePalettes}
           followedCount={allAdminFollowedCount}
           onlineUserIds={onlineUserIds}
+          userCounts={adminUserCounts}
         />
       )}
       <Drawer

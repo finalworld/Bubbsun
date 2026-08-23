@@ -1219,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.869 · Web Edition Beta
+            Bubbsun v0.870 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5015,7 +5015,7 @@ function AuthenticatedApp() {
   const [privateNotes,setPrivateNotes]=useState<BubbsunNote[]>([]);
   const [calendarEvents,setCalendarEvents]=useState<CalendarEvent[]>([]);
   const [privateCalendarEvents,setPrivateCalendarEvents]=useState<CalendarEvent[]>([]);
-  const [privateMode, setPrivateMode] = useState(false);
+  const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
   const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","notifications","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
@@ -5071,6 +5071,12 @@ function AuthenticatedApp() {
     const stablePage=page==="note"?"notes":page==="list"?"lists":page;
     localStorage.setItem("bubbsun-last-page",stablePage);
   },[page]);
+
+  useEffect(()=>{
+    localStorage.setItem("bubbsun-private-mode",String(privateMode));
+    const currentState=window.history.state??{};
+    window.history.replaceState({...currentState,privateMode},"");
+  },[privateMode]);
 
   useEffect(() => {
     const currentState = window.history.state ?? {};

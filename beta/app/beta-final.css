@@ -1913,4 +1913,5 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   .app-shell .calendar-event.compact .calendar-compact-meta>time{font-size:11px!important;letter-spacing:0!important}
   .app-shell .calendar-event.compact .calendar-compact-title{font-size:13px!important;line-height:1.08!important}
   .app-shell .calendar-event.compact .calendar-compact-meta>.calendar-repeat{font-size:14px!important;line-height:1!important}
+  .app-shell .calendar-editor .calendar-all-day{box-sizing:border-box!important;align-self:end!important;height:49px!important;min-height:49px!important;margin:0 0 14px!important}
 }

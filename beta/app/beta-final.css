@@ -1996,7 +1996,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 /* v0.857 – hel färgkant och optiskt centrerad notissiffra */
 .app-shell .topbar .header-notification-count>span{position:absolute!important;inset:0!important;display:grid!important;place-items:center!important;margin:0!important;padding:0!important;font-family:system-ui,sans-serif!important;font-style:normal!important;font-weight:800!important;font-variant-numeric:tabular-nums!important;line-height:1!important;transform:translate(-2px,-2px) rotate(-7deg)!important}
 .notifications-list>button::before{left:0;top:0;bottom:0;width:8px;border-radius:17px 0 0 17px}
-@media(max-width:700px){.app-shell .topbar .header-notification-count>span{font-size:15px!important;transform:translate(-2px,-2px) rotate(-7deg)!important}.notifications-list>button::before{border-radius:14px 0 0 14px}}
+@media(max-width:700px){.app-shell .topbar .header-notification-count>span{font-size:15px!important;transform:translate(-2px,1px) rotate(-7deg)!important}.notifications-list>button::before{border-radius:14px 0 0 14px}}
 
 /* v0.858 – mer luft mellan mobilens logga och notisknapp */
 @media(max-width:700px){.app-shell .topbar .header-notification-count{right:-51px!important}}

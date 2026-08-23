@@ -1962,8 +1962,8 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .calendar-agenda-title{display:block!important;font:900 20px/1.08 Georgia,serif!important;white-space:normal}
 .calendar-agenda-repeat{align-self:center;justify-self:center;font:900 24px/1 Arial,sans-serif;color:var(--event-color)}
 @media(max-width:700px){
-  .app-shell .calendar-event.agenda-card{min-height:94px;grid-template-columns:5px minmax(0,1fr) 34px;gap:12px;padding:12px 12px 12px 0}
-  .app-shell .calendar-event.agenda-card>i{margin:-12px 0}
+  .app-shell .calendar-event.agenda-card{min-height:86px;grid-template-columns:5px minmax(0,1fr) 34px;gap:10px;padding:9px 11px 9px 0;background-size:20px 20px!important}
+  .app-shell .calendar-event.agenda-card>i{margin:-9px 0}
   .calendar-agenda-meta>b{font-size:20px}
   .calendar-agenda-meta>time{font-size:13px}
   .calendar-agenda-title{font-size:21px!important}

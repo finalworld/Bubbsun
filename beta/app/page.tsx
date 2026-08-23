@@ -1220,7 +1220,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.875 · Web Edition Beta
+            Bubbsun v0.876 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4409,6 +4409,19 @@ function AdminPage({
     [selected, setSelected] = useState<Account | null>(null),
     [editing,setEditing]=useState<Account|null>(null);
   const items = lists.flatMap((list) => list.items);
+  const topThemes = themes
+    .map((theme) => {
+      const palette = { ...theme, ...palettes[theme.id] };
+      return {
+        id: theme.id,
+        name: theme.name,
+        count: accounts.filter((item) => (item.themeId || "retro") === theme.id).length,
+        accent: palette.accent,
+        paper: palette.paper,
+      };
+    })
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "sv"))
+    .slice(0, 5);
   const orderedAccounts = [...accounts].sort((a, b) => {
     const onlineDifference = Number(onlineUserIds.has(b.uid)) - Number(onlineUserIds.has(a.uid));
     return onlineDifference || a.displayName.localeCompare(b.displayName, "sv");
@@ -4445,6 +4458,22 @@ function AdminPage({
             {reports.filter((report) => report.status === "new").length}
           </strong>
         </button>
+      </div>
+      <div className="admin-theme-ranking" aria-label="De fem mest använda temana">
+        {topThemes.map((theme, index) => (
+          <article
+            key={theme.id}
+            style={{
+              "--ranking-accent": theme.accent,
+              "--ranking-paper": theme.paper,
+            } as CSSProperties}
+          >
+            <span>{index + 1}</span>
+            <i aria-hidden="true" />
+            <strong>{theme.name}</strong>
+            <small>{theme.count} användare</small>
+          </article>
+        ))}
       </div>
       <div className="admin-tabs">
         <button
@@ -5354,7 +5383,10 @@ function AuthenticatedApp() {
   },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
-  }, [themeId]);
+    if (account && account.themeId !== themeId) {
+      void savePreferences(user.uid, { themeId });
+    }
+  }, [account, themeId, user.uid]);
   useEffect(() => {
     localStorage.setItem("bubbsun-language", language);
   }, [language]);

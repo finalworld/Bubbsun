@@ -8,6 +8,7 @@ export type Account = {
   supporterTitle?: string;
   supporterGlow?: boolean;
   supporterGlowColor?: string;
+  themeId?: string;
   personalColor?: number;
   megaSuperBoss: boolean;
   founder: boolean;

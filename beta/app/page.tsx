@@ -861,7 +861,7 @@ function ActionButtonBridge(){
     const classify=()=>document.querySelectorAll<HTMLButtonElement>("button").forEach(button=>{
       const text=(button.textContent||button.getAttribute("aria-label")||"").trim().replace(/\s+/g," ").toLocaleUpperCase("sv");
       button.classList.remove("bubbsun-action-confirm","bubbsun-action-cancel","bubbsun-action-danger","bubbsun-action-neutral");
-      if(button.closest(".topbar")||button.matches(".drag-handle, .item-drag-handle, [data-dnd-handle], .list-tools-card .item-action-edit, .list-tools-card .item-action-move"))return;
+      if(button.closest(".topbar")||button.matches(".calendar-card-close, .drag-handle, .item-drag-handle, [data-dnd-handle], .list-tools-card .item-action-edit, .list-tools-card .item-action-move"))return;
       const starts=(values:string[])=>values.some(value=>text===value||text.startsWith(`${value} `));
       if(starts(["MARKERA ALLA","AVMARKERA ALLT","SELECT ALL","DESELECT ALL"]))button.classList.add("bubbsun-action-neutral");
       else if(starts(["TA BORT","LÄMNA","DELETE","REMOVE","LEAVE"]))button.classList.add("bubbsun-action-danger");
@@ -1203,7 +1203,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.832 · Web Edition Beta
+            Bubbsun v0.833 · Web Edition Beta
           </small>
         </div>
       </aside>

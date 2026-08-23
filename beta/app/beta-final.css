@@ -1755,3 +1755,17 @@ body .app-shell .modal.calendar-editor>button.calendar-editor-close{position:abs
 @media(max-width:700px){.calendar-event-card{padding:25px 16px 18px!important}.calendar-event-card>h2{margin-left:35px;margin-right:35px;font-size:28px}.calendar-card-icon{width:66px;height:66px;font-size:34px}.calendar-card-facts strong{font-size:13px}.calendar-card-edit{width:100%!important;justify-content:center!important}}
 .calendar-event-card{padding:25px 28px 24px!important;text-align:left}.calendar-card-hero{min-height:92px;margin:0 62px 20px 0;display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;gap:16px}.calendar-card-hero .calendar-card-icon{margin:0}.calendar-card-hero small{font:900 11px Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;opacity:.65}.calendar-card-hero h2{max-width:100%;margin:5px 0 0;font-size:32px;line-height:1.05;overflow-wrap:anywhere}.calendar-card-footer{margin-top:15px;display:flex;align-items:center;justify-content:space-between;gap:12px}.calendar-card-footer .calendar-card-creator{margin:0}.calendar-card-footer .calendar-card-edit{flex:0 0 auto}.app-shell .modal.calendar-event-card>button.calendar-card-close,body .app-shell .modal.calendar-event-card>button.calendar-card-close{position:absolute!important;inset:16px 16px auto auto!important;width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;margin:0!important;padding:11px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:#b45d61!important;color:#fff!important;box-shadow:0 3px 0 #6f3438,0 7px 13px #2b1b1230!important;transform:none!important;z-index:5}.app-shell .modal.calendar-event-card>button.calendar-card-close svg{width:25px!important;height:25px!important}.app-shell .modal.calendar-event-card>button.calendar-card-close:hover{filter:brightness(1.1);transform:none!important}
 @media(max-width:700px){.calendar-event-card{padding:20px 16px 17px!important}.calendar-card-hero{min-height:72px;margin:0 52px 16px 0;grid-template-columns:62px minmax(0,1fr);gap:11px}.calendar-card-hero .calendar-card-icon{width:60px;height:60px;font-size:31px}.calendar-card-hero h2{font-size:25px}.calendar-card-footer{align-items:stretch;flex-direction:column}.calendar-card-footer .calendar-card-creator{margin:0 auto}.calendar-card-footer .calendar-card-edit{width:100%!important;justify-content:center!important}.app-shell .modal.calendar-event-card>button.calendar-card-close{top:12px!important;right:12px!important;width:43px!important;height:43px!important;min-width:43px!important;min-height:43px!important;padding:9px!important}}
+
+/* Keep the calendar detail close control plain: no global action-button stitching. */
+.app-shell .modal.calendar-event-card>button.calendar-card-close,
+body .app-shell .modal.calendar-event-card>button.calendar-card-close{
+  border:1px solid #7f3e42!important;
+  background:#b45d61!important;
+  background-image:none!important;
+  box-shadow:0 3px 8px #2b1b1238!important
+}
+.app-shell .modal.calendar-event-card>button.calendar-card-close::before,
+.app-shell .modal.calendar-event-card>button.calendar-card-close::after{
+  content:none!important;
+  display:none!important
+}

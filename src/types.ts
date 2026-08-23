@@ -15,6 +15,18 @@ export type Account = {
   hiddenGlobalPinRevision?: number;
   hiddenGlobalPinId?: string;
   privacyVersion: number;
+  activitySeenAt?: number;
+  createdAt?: number;
+  lastActiveAt?: number;
+  visitCount?: number;
+  visitLog?: number[];
+};
+
+export type AdminUserCounts = {
+  notes: number;
+  calendarEvents: number;
+  groups: number;
+  followedLists: number;
 };
 
 export type Membership = {
@@ -79,9 +91,34 @@ export type BubbsunList = {
 export type NoteLogEntry={uid:string;name:string;at:number};
 export type BubbsunNote = { id:string; title:string; text:string; icon:string; color:number; order:number; creatorId:string; creatorName?:string; creatorColor?:number; createdAt?:number; updatedAt?:number; history?:NoteLogEntry[] };
 
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  date: string;
+  time?: string;
+  endTime?: string;
+  allDay?: boolean;
+  category?: string;
+  color?: number;
+  birthYear?: number;
+  recurrenceType?: "" | "weekly" | "yearly";
+  recurrenceDays?: number[];
+  recurrenceForever?: boolean;
+  recurrenceUntil?: string;
+  excludedDates?: string[];
+  note?: string;
+  linkedListIds?: string[];
+  reminderMinutes?: number;
+  creatorId: string;
+  creatorName: string;
+  createdAt: number;
+  updatedAt: number;
+  updatedBy?: string;
+};
+
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
-export type Page = "lists" | "list" | "notes" | "note" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
+export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "notifications" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };
-export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string };
+export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string; calendarEventBackground?: string };

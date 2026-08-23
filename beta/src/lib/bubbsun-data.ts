@@ -79,6 +79,7 @@ export function watchAccount(uid: string, callback: (account: Account | null) =>
       globalTitle: textValue(d.globalTitle), titleColor: numberValue(d.titleColor),
       supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, supporterGlowColor: textValue(d.supporterGlowColor, "#ffb532"), personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
       founder: d.founder === true, suspended: d.suspended === true, hiddenGlobalPinRevision: numberValue(d.hiddenGlobalPinRevision), hiddenGlobalPinId:textValue(d.hiddenGlobalPinId), privacyVersion: numberValue(d.privacyVersion),
+      activitySeenAt: numberValue((d.activitySeenAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.activitySeenAt)),
     });
   });
 }

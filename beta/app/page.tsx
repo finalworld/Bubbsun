@@ -893,6 +893,8 @@ function Header({
   glowColor,
   tabTitle,
   onlineCount,
+  notificationCount,
+  onOpenNotifications,
   onOpenAdmin,
   language,
 }: {
@@ -906,6 +908,8 @@ function Header({
   glowColor?: string;
   tabTitle?: string;
   onlineCount?: number;
+  notificationCount: number;
+  onOpenNotifications: () => void;
   onOpenAdmin?: () => void;
   language: string;
 }) {
@@ -928,6 +932,7 @@ function Header({
             >
               <Menu />
             </button>
+            {typeof onlineCount === "number" && <small className="header-admin-online" title="Online just nu">{onlineCount}</small>}
           </div>
         </div>
         <button
@@ -938,7 +943,18 @@ function Header({
         >
           <span className="header-brand-title">
             Bubbsun<span className="header-brand-suffix">.se</span>
-            {typeof onlineCount === "number" && (
+            <span
+                className="header-notification-count"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenNotifications();
+                }}
+                title="Nytt sedan ditt senaste besök"
+                aria-label={`${notificationCount} nya händelser`}
+              >
+                <span>{notificationCount}</span>
+              </span>
+            {false && typeof onlineCount === "number" && (
               <span
                 className="admin-online-count"
                 onClick={(event) => {
@@ -1203,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.855 · Web Edition Beta
+            Bubbsun v0.856 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -3079,10 +3095,11 @@ const calendarCategory=(id?:string)=>calendarCategories.find(value=>value.id===i
 type CalendarOccurrence=CalendarEvent&{occurrenceDate:string};
 const expandCalendarEvents=(events:CalendarEvent[],from:string,to:string):CalendarOccurrence[]=>events.flatMap(event=>{const days=event.recurrenceDays||[],excluded=new Set(event.excludedDates||[]);if(!days.length)return event.date>=from&&event.date<=to&&!excluded.has(event.date)?[{...event,occurrenceDate:event.date}]:[];const start=new Date(`${event.date}T12:00:00`),fromDate=new Date(`${from}T12:00:00`);if(start<fromDate)start.setTime(fromDate.getTime());const until=event.recurrenceForever||!event.recurrenceUntil?to:event.recurrenceUntil<to?event.recurrenceUntil:to,values:CalendarOccurrence[]=[];for(const cursor=new Date(start);calendarDateKey(cursor)<=until;cursor.setDate(cursor.getDate()+1)){const key=calendarDateKey(cursor);if(days.includes(cursor.getDay())&&!excluded.has(key))values.push({...event,occurrenceDate:key})}return values});
 
-function CalendarPage({events,lists,privateMode,account,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onOpenList}:{events:CalendarEvent[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>;onOpenList:(list:BubbsunList)=>void}){
+function CalendarPage({events,lists,privateMode,account,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onOpenList,openEventId,onEventOpened}:{events:CalendarEvent[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>;onOpenList:(list:BubbsunList)=>void;openEventId?:string;onEventOpened?:()=>void}){
   const [range,setRange]=useState<CalendarRange>(()=>(localStorage.getItem("bubbsun-calendar-range") as CalendarRange)||"7"),[spaceOpen,setSpaceOpen]=useState(false),[viewing,setViewing]=useState<CalendarOccurrence|null>(null),[editing,setEditing]=useState<CalendarEvent|null>(null),[createDate,setCreateDate]=useState(calendarDateKey(new Date())),[weekOffset,setWeekOffset]=useState(0),[monthOffset,setMonthOffset]=useState(0),[selectedMonthDate,setSelectedMonthDate]=useState(calendarDateKey(new Date())),[agendaLimit,setAgendaLimit]=useState(20);const agendaLoader=useRef<HTMLDivElement>(null),calendarWeekRef=useRef<HTMLDivElement>(null),calendarMonthRef=useRef<HTMLDivElement>(null),weekSwipeStart=useRef<{x:number;y:number;dragging:boolean}|null>(null),swipeSuppressUntil=useRef(0),weekAnimating=useRef(false),monthSwipeStart=useRef<{x:number;y:number;dragging:boolean}|null>(null),monthAnimating=useRef(false);
   const weekSwipeHandled={get current(){return Date.now()<swipeSuppressUntil.current}};
   useEffect(()=>localStorage.setItem("bubbsun-calendar-range",range),[range]);
+  useEffect(()=>{if(!openEventId)return;const event=events.find(value=>value.id===openEventId);if(!event)return;setViewing({...event,occurrenceDate:event.date});onEventOpened?.()},[openEventId,events,onEventOpened]);
   useEffect(()=>{setAgendaLimit(20)},[range,privateMode,account.activeGroupId]);
   useEffect(()=>{const loader=agendaLoader.current;if(range!=="agenda"||!loader)return;const observer=new IntersectionObserver(entries=>{if(entries[0]?.isIntersecting)setAgendaLimit(value=>value+20)},{rootMargin:"220px"});observer.observe(loader);return()=>observer.disconnect()},[range,agendaLimit]);
   const today=calendarDateKey(new Date()),weekStart=new Date(`${today}T12:00:00`);weekStart.setDate(weekStart.getDate()-((weekStart.getDay()+6)%7)+(weekOffset*7));const weekDates=Array.from({length:7},(_,index)=>{const date=new Date(weekStart);date.setDate(date.getDate()+index);return calendarDateKey(date)}),monthAnchor=new Date(`${today}T12:00:00`);monthAnchor.setDate(1);monthAnchor.setMonth(monthAnchor.getMonth()+monthOffset);const monthGridStart=new Date(monthAnchor);monthGridStart.setDate(monthGridStart.getDate()-((monthGridStart.getDay()+6)%7));const monthDates=Array.from({length:42},(_,index)=>{const date=new Date(monthGridStart);date.setDate(date.getDate()+index);return calendarDateKey(date)}),monthKey=`${monthAnchor.getFullYear()}-${String(monthAnchor.getMonth()+1).padStart(2,"0")}`,rangeStart=range==="7"?weekDates[0]:range==="30"?monthDates[0]:today,end=new Date(`${rangeStart}T12:00:00`);end.setDate(end.getDate()+(range==="today"?0:range==="7"?6:range==="30"?41:3650));const endKey=calendarDateKey(end);
@@ -4949,6 +4966,29 @@ function ThemeEditor({
   );
 }
 
+type ActivityEntry = {
+  id: string;
+  kind: "list" | "note" | "calendar";
+  title: string;
+  detail: string;
+  at: number;
+  color: number;
+  isPrivate: boolean;
+  targetId: string;
+};
+
+function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seenAt:number;onOpen:(entry:ActivityEntry)=>void}) {
+  const dateText=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
+  return <section className="content subpage notifications-page">
+    <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
+    {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
+      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":"▣"}</span>
+      <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
+      {entry.at>seenAt&&<b>NYTT</b>}<ChevronRight/>
+    </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar eller kalender syns det här.</span></div>}
+  </section>;
+}
+
 function AuthenticatedApp() {
   const privateListsLoadedFor = useRef("");
   const listsHistoryRef = useRef<BubbsunList[]>([]);
@@ -4969,7 +5009,7 @@ function AuthenticatedApp() {
   const [calendarEvents,setCalendarEvents]=useState<CalendarEvent[]>([]);
   const [privateCalendarEvents,setPrivateCalendarEvents]=useState<CalendarEvent[]>([]);
   const [privateMode, setPrivateMode] = useState(false);
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","notifications","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -4978,6 +5018,7 @@ function AuthenticatedApp() {
   const [adding, setAdding] = useState(false);
   const [addingNote,setAddingNote]=useState(false);
   const [addingCalendar,setAddingCalendar]=useState(false);
+  const [activityCalendarEventId,setActivityCalendarEventId]=useState("");
   const [listToolsOpen, setListToolsOpen] = useState(false);
   const [themeId, setThemeId] = useState(
     () => localStorage.getItem("bubbsun-theme") || "retro",
@@ -5687,6 +5728,19 @@ function AuthenticatedApp() {
   };
   const activeNotes=privateMode?privateNotes:notes;
   const activeCalendarEvents=privateMode?privateCalendarEvents:calendarEvents;
+  const activitySeenAt=account?.activitySeenAt??Date.now();
+  const activityEntries=useMemo<ActivityEntry[]>(()=>{
+    if(!account)return[];
+    const fallbackColor=account.personalColor||colorOptions[0];
+    const memberName=(uid?:string)=>members.find(value=>value.uid===uid)?.displayName||account.displayName;
+    const memberColor=(uid?:string)=>members.find(value=>value.uid===uid)?.color||fallbackColor;
+    const listEntries=visibleLists.filter(value=>Boolean(value.updatedAt)).map(value=>({id:`list-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt}`,kind:"list" as const,title:value.name,detail:`${privateMode?"Privat lista":`Lista · ${memberName(value.updatedBy)}`}`,at:value.updatedAt||0,color:memberColor(value.updatedBy),isPrivate:privateMode,targetId:value.id}));
+    const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0];return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`${privateMode?"Privat anteckning":`Anteckning · ${latest?.name||memberName(value.creatorId)}`}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(value.creatorId),isPrivate:privateMode,targetId:value.id}});
+    const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>({id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} Kalender · ${privateMode?account.displayName:value.creatorName||memberName(value.creatorId)}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(value.creatorId),isPrivate:privateMode,targetId:value.id}));
+    return [...listEntries,...noteEntries,...calendarEntries].sort((a,b)=>b.at-a.at).slice(0,60);
+  },[account,visibleLists,activeNotes,activeCalendarEvents,privateMode,members]);
+  const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt).length;
+  useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
   useEffect(()=>{
     if(!user||!account)return;
     const firedStorage="bubbsun-calendar-reminders-fired-v1";
@@ -5810,6 +5864,11 @@ function AuthenticatedApp() {
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" || page === "calendar" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
+        notificationCount={notificationCount}
+        onOpenNotifications={() => {
+          navigate("notifications");
+          void savePreferences(user.uid,{activitySeenAt:Date.now()});
+        }}
         onOpenAdmin={
           account.megaSuperBoss || account.founder
             ? () => navigate("admin")
@@ -5912,7 +5971,22 @@ function AuthenticatedApp() {
         onSave={persistCalendarEvent}
         onDelete={deleteCalendarEvent}
         onOpenList={list=>openList(list,privateMode)}
+        openEventId={activityCalendarEventId}
+        onEventOpened={()=>setActivityCalendarEventId("")}
       />}
+      {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={activitySeenAt} onOpen={entry=>{
+        setPrivateMode(entry.isPrivate);
+        if(entry.kind==="list"){
+          const list=(entry.isPrivate?privateLists:lists).find(value=>value.id===entry.targetId);
+          if(list)openList(list,entry.isPrivate);
+        }else if(entry.kind==="note"){
+          const note=(entry.isPrivate?privateNotes:notes).find(value=>value.id===entry.targetId);
+          if(note)openNote(note,entry.isPrivate);
+        }else{
+          setActivityCalendarEventId(entry.targetId);
+          navigate("calendar");
+        }
+      }}/>} 
       {page === "people" && (
         <PeoplePage
           account={account}

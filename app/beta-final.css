@@ -2053,3 +2053,9 @@ body .app-shell .admin-user-stats-modal>.admin-user-counts>section{box-sizing:bo
 /* v0.874: circular stitching and complete cross-space admin totals. */
 body .app-shell .modal.admin-user-stats-modal>.modal-x::after{content:""!important;position:absolute!important;inset:5px!important;border:1px dashed rgba(255,248,224,.78)!important;border-radius:50%!important;pointer-events:none!important}
 body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%!important}
+
+/* v0.880: mobile month dots keep each event color; only the whole day selects. */
+@media(max-width:700px){
+  .app-shell .calendar-month-grid>section>div>button:not(.calendar-month-more){background:var(--event-color)!important}
+  .app-shell .calendar-month-grid .calendar-month-more{width:auto!important;height:auto!important;min-height:0!important;padding:0 1px!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:8px!important;pointer-events:none!important}
+}

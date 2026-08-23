@@ -1909,6 +1909,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   background-size:14px 14px!important;
 }
 @media(max-width:700px){
+  .app-shell .calendar-week{touch-action:pan-y}
   .app-shell .calendar-event.compact .calendar-compact-meta>time{font-size:11px!important;letter-spacing:0!important}
   .app-shell .calendar-event.compact .calendar-compact-title{font-size:13px!important;line-height:1.08!important}
   .app-shell .calendar-event.compact .calendar-compact-meta>.calendar-repeat{font-size:14px!important;line-height:1!important}

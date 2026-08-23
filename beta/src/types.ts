@@ -89,6 +89,8 @@ export type CalendarEvent = {
   allDay?: boolean;
   category?: string;
   color?: number;
+  birthYear?: number;
+  recurrenceType?: "" | "weekly" | "yearly";
   recurrenceDays?: number[];
   recurrenceForever?: boolean;
   recurrenceUntil?: string;

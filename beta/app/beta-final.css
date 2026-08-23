@@ -2033,3 +2033,9 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .list-card-menu>button.pin-action:hover{
   background:color-mix(in srgb,var(--theme-accent) 15%,var(--theme-panel))!important;
 }
+
+/* v0.869: yearly birthdays with an optional birth year. */
+.calendar-birth-year>span{font:700 11px/1.35 Arial,sans-serif;color:var(--theme-accent)}
+.calendar-birthday-repeat{display:grid;gap:5px!important;background:color-mix(in srgb,#e889a9 10%,var(--theme-paper))}
+.calendar-birthday-repeat strong{font:900 13px Arial,sans-serif;color:var(--theme-text)}
+.calendar-birthday-repeat small{font:12px Arial,sans-serif;opacity:.7}

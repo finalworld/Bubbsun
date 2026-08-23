@@ -1220,7 +1220,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.877 · Web Edition Beta
+            Bubbsun v0.878 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5383,10 +5383,10 @@ function AuthenticatedApp() {
   },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
-    if (account && account.themeId !== themeId) {
+    if (user && account && account.themeId !== themeId) {
       void savePreferences(user.uid, { themeId });
     }
-  }, [account?.themeId, themeId, user.uid]);
+  }, [account?.themeId, themeId, user?.uid]);
   useEffect(() => {
     localStorage.setItem("bubbsun-language", language);
   }, [language]);

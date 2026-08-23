@@ -61,7 +61,6 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   getRedirectResult,
   GoogleAuthProvider,
-  signInWithRedirect,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
@@ -1105,7 +1104,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.827 · Web Edition Beta
+            Bubbsun v0.826 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5236,15 +5235,6 @@ function AuthenticatedApp() {
     setLoginError("");
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      // The Android app is a Trusted Web Activity. Popup authentication opens
-      // another Chrome surface, which some devices close before Firebase can
-      // return the credential to the TWA. Keep the complete Android flow in
-      // the same tab instead; getRedirectResult above completes it on return.
-      if (/Android/i.test(navigator.userAgent)) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
       // Keep the whole sign-in result on bubbsun.se. Firebase redirect sign-in
       // uses the firebaseapp.com helper domain and some Android browsers return
       // without carrying that cross-domain session back to Bubbsun. A popup or

@@ -92,6 +92,8 @@ export type CalendarEvent = {
   recurrenceForever?: boolean;
   recurrenceUntil?: string;
   note?: string;
+  linkedListIds?: string[];
+  reminderMinutes?: number;
   creatorId: string;
   creatorName: string;
   createdAt: number;

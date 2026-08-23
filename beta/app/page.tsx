@@ -107,7 +107,6 @@ import {
   watchAccount,
   watchAllAccounts,
   watchAdminUserCounts,
-  watchAllFollowedLists,
   watchAllLists,
   watchAllPrivateLists,
   watchFollowedLists,
@@ -1221,7 +1220,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.874 · Web Edition Beta
+            Bubbsun v0.875 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4393,7 +4392,6 @@ function AdminPage({
   accounts,
   reports,
   palettes,
-  followedCount,
   onlineUserIds,
   userCounts,
 }: {
@@ -4402,7 +4400,6 @@ function AdminPage({
   accounts: Account[];
   reports: Report[];
   palettes: Record<string, ThemePalette>;
-  followedCount: number;
   onlineUserIds: Set<string>;
   userCounts: Record<string,AdminUserCounts>;
 }) {
@@ -4440,11 +4437,6 @@ function AdminPage({
           <CirclePlus />
             <small>ANTAL POSTER</small>
           <strong>{items.length}</strong>
-        </div>
-        <div>
-          <Bell />
-          <small>ANTAL FÖLJNINGAR</small>
-          <strong>{followedCount}</strong>
         </div>
         <button onClick={() => setTab("reports")}>
           <span>🐞</span>
@@ -5052,7 +5044,6 @@ function AuthenticatedApp() {
   const [allAdminPrivateLists, setAllAdminPrivateLists] = useState<
     BubbsunList[]
   >([]);
-  const [allAdminFollowedCount, setAllAdminFollowedCount] = useState(0);
   const [adminUserCounts,setAdminUserCounts]=useState<Record<string,AdminUserCounts>>({});
   const [onlineCount, setOnlineCount] = useState(0);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
@@ -5361,13 +5352,6 @@ function AuthenticatedApp() {
     if(!account?.megaSuperBoss&&!account?.founder)return;
     return watchAdminUserCounts(allAccounts.map(item=>item.uid),setAdminUserCounts);
   },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
-  useEffect(() => {
-    if (!account?.megaSuperBoss && !account?.founder) return;
-    return watchAllFollowedLists(
-      allAccounts.map((item) => item.uid),
-      setAllAdminFollowedCount,
-    );
-  }, [account?.megaSuperBoss, account?.founder, allAccounts]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
   }, [themeId]);
@@ -6063,7 +6047,6 @@ function AuthenticatedApp() {
           accounts={allAccounts}
           reports={reports}
           palettes={themePalettes}
-          followedCount={allAdminFollowedCount}
           onlineUserIds={onlineUserIds}
           userCounts={adminUserCounts}
         />

@@ -1829,3 +1829,13 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .calendar-event.compact{position:relative!important;padding-left:12px!important;overflow:hidden!important;background:linear-gradient(115deg,color-mix(in srgb,var(--event-color) 28%,var(--theme-paper)),var(--theme-paper) 88%)!important;color:var(--theme-text)!important;border:1px solid color-mix(in srgb,var(--event-color) 48%,var(--theme-outline))!important}
 .calendar-event.compact::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--creator-color)}
 .calendar-event.compact time,.calendar-event.compact strong,.calendar-event.compact small{color:var(--theme-text)!important;text-shadow:none!important}
+
+/* v0.838: calmer, roomier seven-day event notes. */
+.calendar-week>section>div{padding:11px 8px!important;gap:10px!important}
+.calendar-event.compact{box-sizing:border-box!important;width:100%!important;min-height:74px!important;padding:9px 9px 10px 14px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;border:1px solid color-mix(in srgb,var(--event-color) 35%,var(--theme-outline))!important;border-radius:11px!important;background:linear-gradient(105deg,color-mix(in srgb,var(--event-color) 34%,var(--theme-paper)) 0%,color-mix(in srgb,var(--event-color) 13%,var(--theme-paper)) 48%,var(--theme-paper) 100%)!important;box-shadow:0 4px 9px #3925141c!important;transition:filter .15s ease,box-shadow .15s ease!important}
+.calendar-event.compact:hover{filter:brightness(1.025);box-shadow:0 5px 12px #39251428!important;transform:none!important}
+.calendar-event.compact::before{width:4px!important}
+.calendar-compact-meta{min-width:0;width:100%;display:flex!important;align-items:center!important;gap:5px!important;font:800 10px/1 Arial,sans-serif!important}
+.calendar-compact-meta>b{font-size:13px!important;line-height:1!important}.calendar-compact-meta>time{font-size:10px!important}.calendar-compact-meta>small{margin-left:auto!important;font-size:10px!important}
+.calendar-compact-title{display:block!important;min-width:0;font:900 14px/1.08 Arial,sans-serif!important;overflow-wrap:anywhere;text-align:left!important}
+@media(max-width:700px){.calendar-week>section>div{padding:9px 7px!important}.calendar-event.compact{min-height:68px!important;padding:8px 7px 9px 12px!important}.calendar-compact-title{font-size:13px!important}}

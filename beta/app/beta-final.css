@@ -2049,3 +2049,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x{position:absolute!importa
 body .app-shell .admin-user-stats-modal>.admin-user-counts{box-sizing:border-box!important;width:100%!important;min-width:0!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;justify-content:stretch!important;overflow:visible!important}
 body .app-shell .admin-user-stats-modal>.admin-user-counts>section{box-sizing:border-box!important;width:auto!important;min-width:0!important;margin:0!important}
 @media(max-width:700px){body .app-shell .modal-backdrop>.modal.admin-user-stats-modal{padding:22px 17px!important}body .app-shell .modal.admin-user-stats-modal>.modal-x{inset:12px 12px auto auto!important;width:43px!important;height:43px!important;min-width:43px!important;min-height:43px!important;padding:9px!important}body .app-shell .admin-user-stats-modal>.admin-user-counts{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* v0.874: circular stitching and complete cross-space admin totals. */
+body .app-shell .modal.admin-user-stats-modal>.modal-x::after{content:""!important;position:absolute!important;inset:5px!important;border:1px dashed rgba(255,248,224,.78)!important;border-radius:50%!important;pointer-events:none!important}
+body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%!important}

@@ -1221,7 +1221,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.873 · Web Edition Beta
+            Bubbsun v0.874 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4567,7 +4567,7 @@ function AdminUserStatsDialog({account,lists,counts,onClose}:{account:Account;li
     ["LISTOR",madeLists.length],["POSTER",madeItems.length],["KLARA POSTER",madeItems.filter(item=>item.completed).length],["KVARVARANDE",madeItems.filter(item=>!item.completed).length],
     ["ANTECKNINGAR",counts?.notes||0],["KALENDERPOSTER",counts?.calendarEvents||0],["GRUPPER",counts?.groups||0],["FÖLJDA LISTOR",counts?.followedLists||0],["BESÖK",account.visitCount||visits.length],
   ] as const;
-  return <div className="modal-backdrop"><div className="modal admin-user-stats-modal"><button className="modal-x" onClick={onClose} aria-label="Stäng"><X/></button><header><i style={{background:rgbaHex(account.personalColor||colorOptions[0])}}>{account.displayName.slice(0,1)}</i><span><small>SKRIVSKYDDAD ANVÄNDARLOGG</small><h2>{account.displayName}</h2><p>{account.globalTitle||"Medlem"}</p></span></header><div className="admin-user-counts">{stats.map(([label,value])=><section key={label}><strong>{value}</strong><span>{label}</span></section>)}</div><section className="admin-visit-log"><h3>SENASTE 10 BESÖKEN</h3>{visits.length?<ol>{visits.map((visit,index)=><li key={`${visit}-${index}`}><span>{index+1}</span><time>{dateTime(visit)}</time></li>)}</ol>:<p>Ingen sparad besökshistorik ännu. Den börjar samlas från v0.872.</p>}{account.createdAt&&<small>KONTO SKAPAT · {dateTime(account.createdAt)}</small>}</section><button className="cancel" onClick={onClose}>STÄNG</button></div></div>
+  return <div className="modal-backdrop"><div className="modal admin-user-stats-modal"><button className="modal-x" onClick={onClose} aria-label="Stäng"><X/></button><header><i style={{background:rgbaHex(account.personalColor||colorOptions[0])}}>{account.displayName.slice(0,1)}</i><span><small>{account.createdAt?`KONTO SKAPAT · ${dateTime(account.createdAt)}`:"KONTO SKAPAT · DATUM SAKNAS"}</small><h2>{account.displayName}</h2><p>{account.globalTitle||"Medlem"}</p></span></header><div className="admin-user-counts">{stats.map(([label,value])=><section key={label}><strong>{value}</strong><span>{label}</span></section>)}</div><section className="admin-visit-log"><h3>SENASTE 10 BESÖKEN</h3>{visits.length?<ol>{visits.map((visit,index)=><li key={`${visit}-${index}`}><span>{index+1}</span><time>{dateTime(visit)}</time></li>)}</ol>:<p>Ingen sparad besökshistorik ännu. Den börjar samlas från v0.872.</p>}</section><button className="cancel" onClick={onClose}>STÄNG</button></div></div>
 }
 function AdminUserDialog({
   account,
@@ -5359,8 +5359,8 @@ function AuthenticatedApp() {
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(()=>{
     if(!account?.megaSuperBoss&&!account?.founder)return;
-    return watchAdminUserCounts(setAdminUserCounts);
-  },[account?.megaSuperBoss,account?.founder]);
+    return watchAdminUserCounts(allAccounts.map(item=>item.uid),setAdminUserCounts);
+  },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
   useEffect(() => {
     if (!account?.megaSuperBoss && !account?.founder) return;
     return watchAllFollowedLists(

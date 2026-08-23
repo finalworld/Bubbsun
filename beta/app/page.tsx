@@ -1219,7 +1219,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.866 · Web Edition Beta
+            Bubbsun v0.867 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4895,6 +4895,7 @@ function ThemeEditor({
     headerButton: theme.headerButton || theme.accent,
     brandDecoration: theme.brandDecoration || theme.accent,
     brandSuffix: theme.brandSuffix || theme.text,
+    calendarEventBackground: theme.calendarEventBackground || theme.paper,
   });
   const [values, setValues] = useState(makeValues),
     [message, setMessage] = useState("");
@@ -4911,6 +4912,7 @@ function ThemeEditor({
       theme.headerButton,
       theme.brandDecoration,
       theme.brandSuffix,
+      theme.calendarEventBackground,
     ],
   );
   return (
@@ -4936,7 +4938,7 @@ function ThemeEditor({
       <div className="palette-fields">
         {Object.entries(values).map(([key, value]) => (
           <label key={key}>
-            {key === "brandDecoration" ? "Loggdekor" : key === "brandSuffix" ? "Loggans .se" : key}
+            {key === "brandDecoration" ? "Loggdekor" : key === "brandSuffix" ? "Loggans .se" : key === "calendarEventBackground" ? "Kalenderposternas bakgrund" : key}
             <input
               type="color"
               value={value}
@@ -5407,6 +5409,7 @@ function AuthenticatedApp() {
     "--theme-header-button": activeTheme.headerButton || activeTheme.accent,
     "--theme-brand-decoration": activeTheme.brandDecoration || activeTheme.accent,
     "--theme-brand-suffix": activeTheme.brandSuffix || activeTheme.text,
+    "--theme-calendar-event-bg": activeTheme.calendarEventBackground || activeTheme.paper,
   } as CSSProperties;
 
   useEffect(() => {

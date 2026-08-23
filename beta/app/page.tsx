@@ -1220,7 +1220,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.876 · Web Edition Beta
+            Bubbsun v0.877 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5386,7 +5386,7 @@ function AuthenticatedApp() {
     if (account && account.themeId !== themeId) {
       void savePreferences(user.uid, { themeId });
     }
-  }, [account, themeId, user.uid]);
+  }, [account?.themeId, themeId, user.uid]);
   useEffect(() => {
     localStorage.setItem("bubbsun-language", language);
   }, [language]);

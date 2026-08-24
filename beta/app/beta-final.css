@@ -2071,3 +2071,6 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* v0.889 — public badge belongs in the cookbook, not Discovery */
 .recipe-card.public:after{display:none}.recipe-card.shared:after{content:"PUBLIKT";position:absolute;right:10px;top:10px;display:block;border-radius:999px;background:var(--theme-accent);color:#fff;padding:5px 8px;font:800 10px Arial,sans-serif;letter-spacing:.08em}
+
+/* v0.890 — visual divider below recipe hero */
+.recipe-view .recipe-hero{border-bottom:4px solid var(--recipe-creator,var(--theme-accent))}

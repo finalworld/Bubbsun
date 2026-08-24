@@ -1123,20 +1123,21 @@ function Drawer({
           </button>
           {expanded && (
             <div className="group-picker">
-              {memberships.map((m) => (
-                <button
-                  className={
-                    !activePrivate && m.groupId === account.activeGroupId
-                      ? "selected"
-                      : ""
-                  }
-                  key={m.groupId}
-                  onClick={() => onGroup(m.groupId)}
-                >
-                  <GroupIcon id={groups[m.groupId]?.iconId} />
-                  {groups[m.groupId]?.name || "Grupp"}
-                </button>
-              ))}
+              {memberships.map((m) => {
+                const selected =
+                  !activePrivate && m.groupId === account.activeGroupId;
+                return (
+                  <button
+                    className={selected ? "selected" : ""}
+                    key={m.groupId}
+                    onClick={() => onGroup(m.groupId)}
+                  >
+                    <GroupIcon id={groups[m.groupId]?.iconId} />
+                    <span>{groups[m.groupId]?.name || "Grupp"}</span>
+                    {selected ? <Check /> : <ChevronRight />}
+                  </button>
+                );
+              })}
             </div>
           )}
           <nav>
@@ -6093,12 +6094,10 @@ function AuthenticatedApp() {
         activePrivate={privateMode}
         onPrivate={() => {
           setPrivateMode(true);
-          navigate(page==="calendar"?"calendar":"lists");
         }}
         onGroup={async (id) => {
           await switchGroup(user.uid, id);
           setPrivateMode(false);
-          navigate(page==="calendar"?"calendar":"lists");
         }}
         onPage={navigate}
         onLogout={() => signOut(auth)}

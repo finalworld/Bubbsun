@@ -1146,10 +1146,7 @@ function Drawer({
                       : ""
                   }
                   key={m.groupId}
-                  onClick={() => {
-                    onGroup(m.groupId);
-                    setExpanded(false);
-                  }}
+                  onClick={() => onGroup(m.groupId)}
                 >
                   <GroupIcon id={groups[m.groupId]?.iconId} />
                   <span>{groups[m.groupId]?.name || "Grupp"}</span>

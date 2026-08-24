@@ -102,6 +102,47 @@
   color: var(--theme-paper) !important;
 }
 
+/* Keep every drawer group choice compact, aligned and on a single row. */
+.app-shell .drawer .group-picker > button {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 62px !important;
+  min-height: 62px !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 22px !important;
+  grid-template-rows: 1fr !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--theme-outline) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+}
+
+.app-shell .drawer .group-picker > button > .group-picture {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  object-fit: contain !important;
+}
+
+.app-shell .drawer .group-picker > button > span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+.app-shell .drawer .group-picker > button > svg {
+  width: 21px !important;
+  height: 21px !important;
+  justify-self: end !important;
+  grid-column: 3 !important;
+}
+
 /* Gruppväljaren följer samma tydliga kortspråk som receptets undermeny. */
 .app-shell .drawer .drawer-group-submenu {
   display: grid;

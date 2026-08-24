@@ -76,7 +76,6 @@ jobs:
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
           # RK Kassa ligger i webbplatsens public/RK (med stora bokstäver).
-          mkdir -p public/RK
           mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
           # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
           cls -l public/index.html public/beta/index.html public/.htaccess

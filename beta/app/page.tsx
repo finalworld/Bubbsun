@@ -145,6 +145,7 @@ import {
   removeRecipe,
   removePrivateRecipe,
   unpublishRecipe,
+  syncRecipePublication,
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
@@ -1163,7 +1164,7 @@ function Drawer({
               <span>Recept</span>
               <ChevronDown className={recipesExpanded ? "turn" : ""} />
             </button>
-            {recipesExpanded&&<div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck nya recept</span><ChevronRight/></button></div>}
+            {recipesExpanded&&<div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck</span><ChevronRight/></button></div>}
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
@@ -1239,7 +1240,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.886 · Web Edition Beta
+            Bubbsun v0.887 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5361,6 +5362,7 @@ function AuthenticatedApp() {
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!user||!account)return;const current=privateMode?privateRecipes:recipes;for(const recipe of current)if(recipe.isPublic&&recipe.updatedBy===user.uid){const sourcePath=privateMode?`users/${user.uid}/privateRecipes/${recipe.id}`:`groups/${account.activeGroupId}/recipes/${recipe.id}`;void syncRecipePublication(sourcePath,recipe,privateMode?"private":"group",privateMode?"":account.activeGroupId).catch(error=>console.error("Kunde inte synka offentligt recept",error));}},[user,account,privateMode,privateRecipes,recipes]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(

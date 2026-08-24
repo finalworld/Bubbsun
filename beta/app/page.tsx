@@ -1238,7 +1238,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.897 · Web Edition Beta
+            Bubbsun v0.898 · Web Edition Beta
           </small>
         </div>
       </aside>

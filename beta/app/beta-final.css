@@ -2093,3 +2093,9 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* v0.897 — clean rounded recipe modal edge without the native square scrollbar */
 .recipe-view,.recipe-editor-modal{overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}
 .recipe-view::-webkit-scrollbar,.recipe-editor-modal::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* v0.898 — calmer menu rhythm with distinct section tabs */
+.app-shell .drawer nav>.drawer-recipe-submenu{border-left-color:#f0ac2d!important}
+.app-shell .drawer nav>button:nth-child(5){box-shadow:-12px 0 0 #55b7c2,0 3px 7px #6e421521!important}
+.app-shell .drawer nav>button:nth-child(6){box-shadow:-12px 0 0 #9a72c4,0 3px 7px #6e421521!important}
+.app-shell .drawer nav>button:nth-child(7){box-shadow:-12px 0 0 #df7b68,0 3px 7px #6e421521!important}

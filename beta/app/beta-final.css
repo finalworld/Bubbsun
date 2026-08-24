@@ -2528,3 +2528,32 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     font-size: 15px;
   }
 }
+
+/* Recipe ingredients use the regular theme text and a compact shared amount column. */
+.recipe-view li,
+.recipe-view li b,
+.recipe-view li > span {
+  color: var(--theme-text);
+}
+
+@media (max-width: 899px) {
+  .recipe-view ul {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 9px;
+    columns: auto;
+  }
+  .recipe-view li {
+    display: contents;
+  }
+  .recipe-view li b {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .recipe-view li > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

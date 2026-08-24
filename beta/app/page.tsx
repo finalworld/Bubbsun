@@ -5296,22 +5296,6 @@ function RecipeEditor({
             </select>
           </label>
         </div>
-        {recipe && (
-          <label className="recipe-location-input">
-            FLYTTA RECEPT TILL
-            <select
-              value={targetLocation}
-              onChange={(event) => setTargetLocation(event.target.value)}
-            >
-              <option value="private">🔒 Privat</option>
-              {memberships.map((membership) => (
-                <option key={membership.groupId} value={membership.groupId}>
-                  👥 {groups[membership.groupId]?.name || "Grupp"}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <label className="recipe-description-input">
           OM RECEPTET <small>(valfritt)</small>
           <textarea
@@ -5407,6 +5391,22 @@ function RecipeEditor({
             placeholder="Något bra att komma ihåg?"
           />
         </label>
+        {recipe && (
+          <label className="recipe-location-input">
+            FLYTTA RECEPT TILL
+            <select
+              value={targetLocation}
+              onChange={(event) => setTargetLocation(event.target.value)}
+            >
+              <option value="private">🔒 Privat</option>
+              {memberships.map((membership) => (
+                <option key={membership.groupId} value={membership.groupId}>
+                  👥 {groups[membership.groupId]?.name || "Grupp"}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="recipe-editor-actions">
           {onDelete && (
             <button

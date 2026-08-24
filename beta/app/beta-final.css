@@ -2123,3 +2123,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* v0.900 — cookbook cards use the creator's current color around the whole card */
 .recipes-page:not(.recipe-discover-page) .recipe-card{border-color:var(--recipe-creator,var(--theme-accent))}
+
+/* v0.900 — clearer recipe-card facts and a separate creator row */
+.recipe-card .recipe-card-facts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.recipe-card .recipe-card-facts>span{white-space:nowrap}.recipe-card .recipe-card-creator{display:block;margin-top:7px;font-size:13px;opacity:.7}
+@media(max-width:899px){.recipe-card .recipe-card-facts{gap:7px;font-size:11px}.recipe-card .recipe-card-creator{margin-top:5px;font-size:11px}}

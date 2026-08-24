@@ -2467,6 +2467,12 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   font: 500 17px/1.55 Arial, sans-serif;
   white-space: pre-wrap;
 }
+
+/* Preserve the author's line breaks in optional recipe notes. */
+.recipe-view aside p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 @media (max-width: 899px) {
   .recipe-description {
     margin-top: 13px;

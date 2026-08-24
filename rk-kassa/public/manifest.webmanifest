@@ -3,14 +3,14 @@
   "short_name": "RK Kassa",
   "description": "Enkel kassa för Svenska Röda Korset Upplands-Bro.",
   "lang": "sv",
-  "start_url": "/rk/",
-  "scope": "/rk/",
+  "start_url": "/RK/",
+  "scope": "/RK/",
   "display": "standalone",
   "background_color": "#fff8e8",
   "theme_color": "#c85f43",
   "icons": [
     {
-      "src": "/rk/red-cross-icon.svg",
+      "src": "/RK/red-cross-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

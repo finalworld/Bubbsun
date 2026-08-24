@@ -142,6 +142,7 @@ export type Recipe = {
   createdAt: number;
   updatedAt: number;
   updatedBy?: string;
+  likedBy?: string[];
 };
 
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };

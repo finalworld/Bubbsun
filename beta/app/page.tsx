@@ -37,6 +37,7 @@ import {
   Share2,
   Settings,
   Trash2,
+  ThumbsUp,
   UserCog,
   UserRound,
   Users,
@@ -148,6 +149,7 @@ import {
   removePrivateRecipe,
   unpublishRecipe,
   syncRecipePublication,
+  setPublicRecipeLiked,
   reconcileRecipePublications,
 } from "../src/lib/bubbsun-data";
 import type {
@@ -5060,6 +5062,19 @@ function RecipePrintButton(){
   };
   return <button className="recipe-print-button" type="button" onClick={printRecipe}><Printer/> SKRIV UT</button>
 }
+
+function RecipeLikeButton({recipe,uid}:{recipe:Recipe;uid:string}){
+  const [likedBy,setLikedBy]=useState(recipe.likedBy||[]),[busy,setBusy]=useState(false);
+  useEffect(()=>setLikedBy(recipe.likedBy||[]),[recipe.likedBy]);
+  const liked=likedBy.includes(uid);
+  const toggle=async()=>{
+    if(busy)return;
+    const previous=likedBy,next=liked?previous.filter(value=>value!==uid):[...previous,uid];
+    setLikedBy(next);setBusy(true);
+    try{await setPublicRecipeLiked(recipe,uid,!liked)}catch(error){setLikedBy(previous);console.error("Kunde inte spara gillningen",error)}finally{setBusy(false)}
+  };
+  return <button type="button" className={`recipe-like-button${liked?" liked":""}`} aria-pressed={liked} disabled={busy} onClick={()=>void toggle()}><ThumbsUp/><span>{liked?"GILLAD":"GILLA"}</span><b>{likedBy.length}</b></button>;
+}
 const recipeInstructionSteps=(instructions:string)=>instructions.trim().split(/\r?\n[ \t]*\r?\n+/).map(step=>step.trim()).filter(Boolean);
 const recipeYieldLabel=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
 const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
@@ -5514,16 +5529,17 @@ function RecipeFilterPicker({label,value,options,onChange,disabled=false}:{label
   return <div className={`recipe-filter-picker${disabled?" disabled":""}`}><button className="recipe-filter-trigger" type="button" disabled={disabled} onClick={()=>setOpen(current=>!current)}><span><small>{label}</small><strong>{selected?.label||"Välj"}</strong></span><i>{selected?.count??0}</i><ChevronDown className={open?"open":""}/></button>{open&&!disabled&&<div className="recipe-filter-menu">{options.map(option=><button type="button" className={option.value===value?"selected":""} key={option.value||"all"} onClick={()=>{onChange(option.value);setOpen(false)}}><span>{option.label}</span><b>{option.count}</b>{option.value===value&&<Check/>}</button>)}</div>}</div>;
 }
 
-function DiscoverRecipesPage({recipes}:{recipes:Recipe[]}){
+function DiscoverRecipesPage({recipes,uid}:{recipes:Recipe[];uid:string}){
   const [search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[viewing,setViewing]=useState<Recipe|undefined>(),[recipePage,setRecipePage]=useState(1);
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori först",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
   const pagedRecipes=shown.slice((recipePage-1)*recipesPerPage,recipePage*recipesPerPage);useEffect(()=>setRecipePage(1),[search,category,subcategory]);
+  useEffect(()=>{if(!viewing)return;const current=recipes.find(recipe=>recipe.id===viewing.id&&recipe.sourcePath===viewing.sourcePath);if(current&&current!==viewing)setViewing(current)},[recipes,viewing]);
   return <section className="content recipes-page recipe-discover-page">
     <header className="recipe-discover-intro"><Compass/><div><h1>UPPTÄCK NYA RECEPT</h1><p>Goda idéer som Bubbsun-användare valt att dela.</p></div></header>
     <div className="recipes-toolbar recipe-discover-toolbar"><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept eller skapare"/></label><RecipeFilterPicker label="KATEGORI" value={category} options={categoryOptions} onChange={value=>{setCategory(value);setSubcategory("")}}/><RecipeFilterPicker label="UNDERKATEGORI" value={subcategory} options={subcategoryOptions} disabled={!category} onChange={setSubcategory}/></div>
     {shown.length?<><div className="recipe-grid">{pagedRecipes.map(recipe=><button className="recipe-card public" key={`${recipe.creatorId}-${recipe.id}`} style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties} onClick={()=>setViewing(recipe)}>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}<span>🍽️ {recipeYieldLabel(recipe)}</span></em><em className="recipe-card-creator"><UserRound/><span>Skapad av <b>{recipe.creatorName}</b></span></em></span></button>)}</div><RecipePagination page={recipePage} total={shown.length} onPage={setRecipePage}/></>:<div className="recipes-empty"><span>🔎</span><h2>Inga recept hittades</h2><p>Här dyker offentliga recept upp när någon delar ett.</p></div>}
-    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<section><h3>INGREDIENSER</h3><ul>{viewing.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b> {item.name}</li>)}</ul></section><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}</article></div>}
+    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view recipe-discover-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/><RecipeLikeButton recipe={viewing} uid={uid}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<section><h3>INGREDIENSER</h3><ul>{viewing.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b> {item.name}</li>)}</ul></section><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}</article></div>}
   </section>;
 }
 
@@ -6569,7 +6585,7 @@ function AuthenticatedApp() {
         onEventOpened={()=>setActivityCalendarEventId("")}
       />}
       {page === "recipes" && <RecipesPage recipes={activeRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} members={members} creating={addingRecipe} onCreating={setAddingRecipe} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistRecipe} onDelete={deleteRecipe} onAddToList={addRecipeToList} openRecipeId={activityRecipeId} onRecipeOpened={()=>setActivityRecipeId("")}/>}
-      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes}/>}
+      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
         if(entry.kind==="list"){

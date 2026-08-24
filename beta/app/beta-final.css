@@ -2281,12 +2281,56 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-print-button:hover { background: color-mix(in srgb, var(--theme-paper) 82%, white); }
 .recipe-print-button svg { width: 21px; height: 21px; }
 .recipe-view:has(.recipe-view-tools) > h1 { margin-right: 285px; }
+.recipe-like-button {
+  position: absolute;
+  right: 0;
+  top: 59px;
+  min-width: 126px;
+  height: 43px !important;
+  padding: 0 10px !important;
+  border-color: var(--theme-accent) !important;
+  background: var(--theme-paper);
+  color: var(--theme-text);
+  font: 900 13px Arial, sans-serif !important;
+  letter-spacing: .04em;
+}
+.recipe-like-button svg { width: 20px; height: 20px; }
+.recipe-like-button b {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--theme-accent) 15%, var(--theme-paper));
+}
+.recipe-like-button:hover,
+.recipe-like-button.liked {
+  background: var(--theme-accent);
+  color: #fff;
+}
+.recipe-like-button.liked b { background: rgba(255,255,255,.22); }
+.recipe-like-button:disabled { opacity: .72; cursor: wait; }
 @media (max-width: 899px) {
   .recipe-view-tools { right: 19px; top: 240px; gap: 6px; }
   .recipe-view-tools > button,
   .recipe-view-tools > .recipe-share-button { height: 46px; padding: 0 9px; font-size: 12px; }
   .recipe-view-tools svg { width: 18px; height: 18px; }
   .recipe-view:has(.recipe-view-tools) > h1 { margin-right: 205px; }
+  .recipe-discover-view > small { padding-right: 112px; }
+  .recipe-view-tools > .recipe-like-button {
+    position: absolute !important;
+    right: 19px !important;
+    top: 238px !important;
+    width: auto !important;
+    min-width: 105px !important;
+    height: 38px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    gap: 5px;
+  }
+  .recipe-view-tools > .recipe-like-button svg { width: 17px; height: 17px; }
+  .recipe-view-tools > .recipe-like-button b { min-width: 21px; height: 21px; padding: 0 5px; }
 }
 @media print {
   @page { size: auto; margin: 14mm; }

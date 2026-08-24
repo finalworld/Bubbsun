@@ -144,6 +144,7 @@ import {
   savePrivateRecipe,
   removeRecipe,
   removePrivateRecipe,
+  unpublishRecipe,
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
@@ -1238,7 +1239,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.885 · Web Edition Beta
+            Bubbsun v0.886 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4412,6 +4413,7 @@ function AdminPage({
   palettes,
   onlineUserIds,
   userCounts,
+  publicRecipes,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4420,8 +4422,9 @@ function AdminPage({
   palettes: Record<string, ThemePalette>;
   onlineUserIds: Set<string>;
   userCounts: Record<string,AdminUserCounts>;
+  publicRecipes: Recipe[];
 }) {
-  const [tab, setTab] = useState<"members" | "reports" | "pin" | "themes">(
+  const [tab, setTab] = useState<"members" | "reports" | "recipes" | "pin" | "themes">(
       "members",
     ),
     [selected, setSelected] = useState<Account | null>(null),
@@ -4517,6 +4520,9 @@ function AdminPage({
         >
           GLOBAL PIN
         </button>
+        <button className={tab === "recipes" ? "selected" : ""} onClick={() => setTab("recipes")}>
+          OFFENTLIGA RECEPT ({publicRecipes.length})
+        </button>
         <button
           className={tab === "themes" ? "selected" : ""}
           onClick={() => setTab("themes")}
@@ -4601,6 +4607,7 @@ function AdminPage({
           onClose={() => setSelected(null)}
         />
       )}
+      {tab === "recipes" && <div className="admin-public-recipes">{publicRecipes.length?publicRecipes.map(recipe=><article key={recipe.sourcePath||`${recipe.creatorId}-${recipe.id}`}><div>{recipe.image?<img src={recipe.image} alt=""/>:<span>🍲</span>}<p><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em>Delat av {recipe.creatorName}</em></p></div><button className="danger" disabled={!recipe.sourcePath} onClick={async()=>{if(recipe.sourcePath&&window.confirm(`Ta bort ”${recipe.title}” från Upptäck? Ägarens recept finns kvar.`))await unpublishRecipe(recipe.sourcePath)}}><X/> AVPUBLICERA</button></article>):<div className="recipes-empty"><span>✓</span><h2>Inga offentliga recept</h2></div>}</div>}
       {editing&&<AdminUserDialog account={editing} onClose={()=>setEditing(null)}/>}
     </section>
   );
@@ -6141,6 +6148,7 @@ function AuthenticatedApp() {
           palettes={themePalettes}
           onlineUserIds={onlineUserIds}
           userCounts={adminUserCounts}
+          publicRecipes={publicRecipes}
         />
       )}
       <Drawer

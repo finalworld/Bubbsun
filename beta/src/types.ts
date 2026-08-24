@@ -125,6 +125,7 @@ export type Recipe = {
   category: string;
   subcategory?: string;
   isPublic?: boolean;
+  sourcePath?: string;
   image?: string;
   servings: number;
   minutes: number;

@@ -65,10 +65,12 @@ service cloud.firestore {
 
     match /{documentPath=**}/recipes/{recipeId} {
       allow read: if signedIn() && resource.data.isPublic == true;
+      allow update: if isMega() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPublic','updatedAt']);
     }
 
     match /{documentPath=**}/privateRecipes/{recipeId} {
       allow read: if signedIn() && resource.data.isPublic == true;
+      allow update: if isMega() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPublic','updatedAt']);
     }
 
     match /appConfig/public {

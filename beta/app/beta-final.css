@@ -2133,7 +2133,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* v0.900 — clearer recipe-card facts and a separate creator row */
 .recipe-card .recipe-card-facts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.recipe-card .recipe-card-facts>span{white-space:nowrap}.recipe-card .recipe-card-creator{display:flex;align-items:center;gap:6px;margin-top:9px;color:color-mix(in srgb,var(--theme-text) 62%,transparent);font:500 13px Arial,sans-serif;font-style:normal}.recipe-card .recipe-card-creator svg{flex:0 0 auto;width:16px;height:16px;color:var(--theme-accent)}.recipe-card .recipe-card-creator b{color:var(--theme-text);font-weight:800}
-@media(max-width:899px){.recipe-card .recipe-card-facts{gap:7px;font-size:11px}.recipe-card .recipe-card-creator{gap:4px;margin-top:7px;font-size:11px}.recipe-card .recipe-card-creator svg{width:14px;height:14px}}
+@media(max-width:899px){.recipe-card .recipe-card-facts{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:29px;font-size:11px}.recipe-card .recipe-card-creator{gap:4px;margin-top:7px;font-size:11px}.recipe-card .recipe-card-creator svg{width:14px;height:14px}}
 
 /* v0.900 — twenty recipes per page */
 .recipe-pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:26px 0 8px}.recipe-pagination button{width:46px;height:46px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);display:grid;place-items:center;font:800 16px Georgia,serif}.recipe-pagination button.selected{background:var(--theme-accent);color:#fff}.recipe-pagination button:disabled{opacity:.35}.recipe-pagination svg{width:21px;height:21px}

@@ -2072,3 +2072,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .public-recipe-brand{display:flex;flex-direction:column;width:max-content;margin:0 auto 24px;color:var(--theme-text);text-decoration:none;font:inherit}.public-recipe-brand strong{border-bottom:1px solid var(--theme-accent);font:700 54px/.88 Georgia,serif}.public-recipe-brand strong span{margin-left:4px;font-size:.42em;color:var(--theme-accent)}.public-recipe-brand>small{padding:4px 2px 3px;border-bottom:1px solid var(--theme-accent);font:700 19px/1 Georgia,serif}.public-recipe-brand>small b{color:var(--theme-accent)}
 .public-recipe-grid{grid-template-columns:repeat(auto-fill,minmax(245px,300px));justify-content:start;gap:18px}.public-recipe-tile>img,.public-recipe-tile>span{height:160px}.public-recipe-tile>div{padding:15px 17px 17px}.public-recipe-tile h2{font-size:26px}.public-recipe-tile p{margin:3px 0}
 @media(max-width:700px){.public-recipe-brand{margin-bottom:16px}.public-recipe-brand strong{font-size:42px}.public-recipe-brand>small{font-size:15px}.public-recipe-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.public-recipe-tile{border-left-width:7px;border-radius:17px}.public-recipe-tile>img,.public-recipe-tile>span{height:125px}.public-recipe-tile>div{padding:11px}.public-recipe-tile h2{font-size:21px}.public-recipe-tile p{font-size:12px}}
+.app-shell button.group-empty-state {
+  grid-template-columns: 42px minmax(0, 1fr) 22px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 104px !important;
+  padding: 13px !important;
+  text-align: left !important;
+  background: color-mix(in srgb, var(--theme-accent) 8%, var(--theme-paper)) !important;
+  border: 2px dashed color-mix(in srgb, var(--theme-accent) 55%, var(--theme-outline)) !important;
+}
+.app-shell button.group-empty-state > svg:first-child { width: 30px !important; height: 30px !important; color: var(--theme-accent); }
+.app-shell button.group-empty-state > span { display: grid; gap: 3px; min-width: 0; }
+.app-shell button.group-empty-state strong { font: 900 17px Georgia, serif !important; white-space: normal !important; }
+.app-shell button.group-empty-state small { font: 13px/1.35 Arial, sans-serif; opacity: .78; }
+.app-shell button.group-empty-state b { margin-top: 4px; color: var(--theme-accent); font: 900 11px Arial, sans-serif; letter-spacing: .35px; }
+.app-shell button.group-empty-state > svg:last-child { width: 20px !important; height: 20px !important; }

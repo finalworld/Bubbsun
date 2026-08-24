@@ -2138,3 +2138,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* v0.900 — twenty recipes per page */
 .recipe-pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:26px 0 8px}.recipe-pagination button{width:46px;height:46px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);display:grid;place-items:center;font:800 16px Georgia,serif}.recipe-pagination button.selected{background:var(--theme-accent);color:#fff}.recipe-pagination button:disabled{opacity:.35}.recipe-pagination svg{width:21px;height:21px}
 @media(max-width:899px){.recipe-pagination{gap:6px;margin-top:18px}.recipe-pagination button{width:42px;height:42px;border-radius:12px}}
+.app-shell button.group-empty-state {
+  grid-template-columns: 42px minmax(0, 1fr) 22px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 104px !important;
+  padding: 13px !important;
+  text-align: left !important;
+  background: color-mix(in srgb, var(--theme-accent) 8%, var(--theme-paper)) !important;
+  border: 2px dashed color-mix(in srgb, var(--theme-accent) 55%, var(--theme-outline)) !important;
+}
+.app-shell button.group-empty-state > svg:first-child { width: 30px !important; height: 30px !important; color: var(--theme-accent); }
+.app-shell button.group-empty-state > span { display: grid; gap: 3px; min-width: 0; }
+.app-shell button.group-empty-state strong { font: 900 17px Georgia, serif !important; white-space: normal !important; }
+.app-shell button.group-empty-state small { font: 13px/1.35 Arial, sans-serif; opacity: .78; }
+.app-shell button.group-empty-state b { margin-top: 4px; color: var(--theme-accent); font: 900 11px Arial, sans-serif; letter-spacing: .35px; }
+.app-shell button.group-empty-state > svg:last-child { width: 20px !important; height: 20px !important; }

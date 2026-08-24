@@ -2154,3 +2154,33 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .app-shell button.group-empty-state small { font: 13px/1.35 Arial, sans-serif; opacity: .78; }
 .app-shell button.group-empty-state b { margin-top: 4px; color: var(--theme-accent); font: 900 11px Arial, sans-serif; letter-spacing: .35px; }
 .app-shell button.group-empty-state > svg:last-child { width: 20px !important; height: 20px !important; }
+
+/* Dela recept: håll stängknappen i rutans övre högra hörn oavsett globala knappregler. */
+.app-shell .modal-backdrop > .recipe-share-modal {
+  position: relative !important;
+}
+.app-shell .modal-backdrop > .recipe-share-modal > button.recipe-share-close {
+  position: absolute !important;
+  inset: 14px 14px auto auto !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  min-height: 54px !important;
+  margin: 0 !important;
+  padding: 11px !important;
+  border-radius: 50% !important;
+  transform: none !important;
+  z-index: 20 !important;
+}
+.app-shell .modal-backdrop > .recipe-share-modal > button.recipe-share-close::before,
+.app-shell .modal-backdrop > .recipe-share-modal > button.recipe-share-close::after {
+  border-radius: 50% !important;
+}
+.app-shell .modal-backdrop > .recipe-share-modal > button.recipe-share-close > svg {
+  display: block !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 !important;
+}

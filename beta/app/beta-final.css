@@ -2107,3 +2107,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* v0.900 — blank lines create recipe steps; ordinary line breaks stay together */
 .recipe-instructions p>span{white-space:pre-line}
+
+/* v0.900 — every full-screen popup closes from its outside backdrop */
+.modal-backdrop,.recipe-modal-backdrop{cursor:pointer}
+.modal-backdrop>:first-child,.recipe-modal-backdrop>:first-child{cursor:default}

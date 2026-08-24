@@ -6253,7 +6253,30 @@ function PublicSharedListPage({code}:{code:string}) {
   </main>;
 }
 
+function GlobalBackdropDismiss() {
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => {
+      const backdrop = event.target;
+      if (!(backdrop instanceof HTMLElement) || !backdrop.matches(".modal-backdrop,.recipe-modal-backdrop")) return;
+      const modal = backdrop.querySelector<HTMLElement>(":scope > .modal,:scope > .recipe-editor-modal,:scope > .recipe-view");
+      if (!modal) return;
+      const buttons = Array.from(modal.querySelectorAll<HTMLButtonElement>("button"));
+      const closeButton = buttons.find(button =>
+        button.matches('[aria-label="Stäng"],.modal-close,.modal-x,.calendar-editor-close,.recipe-close,.cancel') ||
+        ["STÄNG", "AVBRYT", "KLAR"].includes(button.textContent?.trim().toLocaleUpperCase("sv-SE") || "")
+      );
+      if (!closeButton) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeButton.click();
+    };
+    document.addEventListener("pointerdown", dismiss, true);
+    return () => document.removeEventListener("pointerdown", dismiss, true);
+  }, []);
+  return null;
+}
+
 export default function App() {
   const match=window.location.pathname.match(/^\/list\/(?:.*-)?([a-f0-9]{10})\/?$/i);
-  return match?<PublicSharedListPage code={match[1]} />:<AuthenticatedApp />;
+  return <><GlobalBackdropDismiss/>{match?<PublicSharedListPage code={match[1]} />:<AuthenticatedApp />}</>;
 }

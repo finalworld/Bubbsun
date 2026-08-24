@@ -118,6 +118,29 @@ export type CalendarEvent = {
   updatedBy?: string;
 };
 
+export type RecipeIngredient = { id: string; amount: string; unit: string; name: string };
+export type Recipe = {
+  id: string;
+  title: string;
+  category: string;
+  subcategory?: string;
+  isPublic?: boolean;
+  sourcePath?: string;
+  image?: string;
+  servings: number;
+  minutes: number;
+  ingredients: RecipeIngredient[];
+  instructions: string;
+  note?: string;
+  linkedListId?: string;
+  creatorId: string;
+  creatorName: string;
+  creatorColor: number;
+  createdAt: number;
+  updatedAt: number;
+  updatedBy?: string;
+};
+
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
 export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "notifications" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";

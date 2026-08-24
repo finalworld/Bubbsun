@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
-import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Report, ThemePalette } from "../types";
+import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -267,6 +267,10 @@ export function watchAllAccounts(callback:(items:Account[])=>void):Unsubscribe {
     return {uid:item.id,displayName:textValue(d.displayName,textValue(d.name,"Bubbsun")),activeGroupId:textValue(d.activeGroupId),globalTitle:textValue(d.globalTitle),titleColor:numberValue(d.titleColor),supporter:d.supporter===true,supporterTitle:textValue(d.supporterTitle,"lifetime"),supporterGlow:d.supporterGlow!==false,supporterGlowColor:textValue(d.supporterGlowColor,"#ffb532"),themeId:textValue(d.themeId),personalColor:numberValue(d.personalColor,0xff2b7a78),megaSuperBoss:d.megaSuperBoss===true,founder:d.founder===true,suspended:d.suspended===true,hiddenGlobalPinRevision:numberValue(d.hiddenGlobalPinRevision),hiddenGlobalPinId:textValue(d.hiddenGlobalPinId),privacyVersion:numberValue(d.privacyVersion),createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.createdAt)),lastActiveAt:numberValue((d.lastActiveAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.lastActiveAt)),visitCount:numberValue(d.visitCount),visitLog:Array.isArray(d.visitLog)?d.visitLog.map(value=>numberValue(value)).filter(Boolean).slice(0,10):[]};
   })));
 }
+
+const parsePublicRecipe=(item:{id:string;data:()=>Record<string,unknown>}):Recipe=>{const d=item.data();return{id:item.id,title:textValue(d.title,"Namnlöst recept"),category:textValue(d.category),subcategory:textValue(d.subcategory),isPublic:d.isPublic===true,sourcePath:textValue(d.sourcePath),image:textValue(d.image),servings:Math.max(1,numberValue(d.servings,4)),minutes:Math.max(0,numberValue(d.minutes)),ingredients:Array.isArray(d.ingredients)?d.ingredients.map((raw,index)=>{const value=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{id:textValue(value.id,String(index)),amount:textValue(value.amount),unit:textValue(value.unit),name:textValue(value.name)}}).filter(value=>value.name):[],instructions:textValue(d.instructions),note:textValue(d.note),linkedListId:"",creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),creatorColor:numberValue(d.creatorColor,0xff2b7a78),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy)}};
+export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{const snapshot=await getDoc(doc(db,"publicRecipes",recipeId));return snapshot.exists()?parsePublicRecipe(snapshot):null;}
+export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snapshot=>callback(snapshot.docs.map(parsePublicRecipe)));}
 
 export function watchAdminUserCounts(userIds:string[],callback:(counts:Record<string,AdminUserCounts>)=>void):Unsubscribe {
   type CountKey=keyof AdminUserCounts;

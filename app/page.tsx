@@ -10,6 +10,7 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
+  BookOpen,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -78,6 +79,7 @@ import {
   ensureAccount,
   getGlobalPinReactions,
   getPublicListShare,
+  getPublicRecipe,
   hideGlobalPin,
   leaveGroup,
   markListSeen,
@@ -124,6 +126,7 @@ import {
   watchNotes,
   watchPrivateNotes,
   watchPrivateLists,
+  watchPublicRecipes,
   watchReports,
   watchThemePalettes,
   removeNote,
@@ -148,6 +151,7 @@ import type {
   Membership,
   Page,
   PublicListShare,
+  Recipe,
   Report,
   ThemePalette,
 } from "../src/types";
@@ -6123,6 +6127,44 @@ function AuthenticatedApp() {
   );
 }
 
+const publicRecipeUrl=(recipe:Recipe)=>`${window.location.origin}/recept/${encodeURIComponent(recipe.id)}/${recipe.title.toLocaleLowerCase("sv-SE").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept"}`;
+const publicRecipeSteps=(value:string)=>value.split(/\n\s*\n+/).map(step=>step.trim()).filter(Boolean);
+
+function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
+  useEffect(()=>{
+    if(recipe===undefined)return;
+    const title=recipe?`${recipe.title} – recept | Bubbsun`:"Publika recept | Bubbsun";
+    const description=recipe?`${recipe.title}: ${recipe.ingredients.slice(0,4).map(item=>item.name).join(", ")}. Recept av ${recipe.creatorName}.`:"Upptäck publika recept från Bubbsun.";
+    document.title=title;
+    const setMeta=(selector:string,attribute:string,value:string)=>{let element=document.head.querySelector(selector) as HTMLMetaElement|null;if(!element){element=document.createElement("meta");const match=selector.match(/\[(name|property)="([^"]+)"\]/);if(match)element.setAttribute(match[1],match[2]);document.head.appendChild(element)}element.setAttribute(attribute,value)};
+    setMeta('meta[name="description"]',"content",description);
+    setMeta('meta[name="robots"]',"content",recipe?"index,follow":"index,follow");
+    setMeta('meta[property="og:title"]',"content",title);
+    setMeta('meta[property="og:description"]',"content",description);
+    setMeta('meta[property="og:type"]',"content",recipe?"article":"website");
+    setMeta('meta[property="og:url"]',"content",recipe?publicRecipeUrl(recipe):`${window.location.origin}/recept`);
+    if(recipe?.image)setMeta('meta[property="og:image"]',"content",recipe.image);
+    let canonical=document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}canonical.href=recipe?publicRecipeUrl(recipe):`${window.location.origin}/recept`;
+    const old=document.getElementById("public-recipe-schema");old?.remove();
+    if(recipe){const script=document.createElement("script");script.id="public-recipe-schema";script.type="application/ld+json";script.text=JSON.stringify({"@context":"https://schema.org","@type":"Recipe",name:recipe.title,image:recipe.image?[recipe.image]:undefined,author:{"@type":"Person",name:recipe.creatorName},recipeYield:`${recipe.servings} portioner`,totalTime:recipe.minutes?`PT${recipe.minutes}M`:undefined,recipeIngredient:recipe.ingredients.map(item=>[item.amount,item.unit,item.name].filter(Boolean).join(" ")),recipeInstructions:publicRecipeSteps(recipe.instructions).map(text=>({"@type":"HowToStep",text}))});document.head.appendChild(script)}
+  },[recipe]);
+}
+
+function PublicRecipeShareButton({recipe}:{recipe:Recipe}){const copy=async()=>{const url=publicRecipeUrl(recipe);if(navigator.share){try{await navigator.share({title:recipe.title,text:`Recept: ${recipe.title}`,url});return}catch{}}await navigator.clipboard.writeText(url);window.alert("Länken är kopierad!")};return <button className="public-recipe-share" onClick={()=>void copy()}><Share2/> Dela recept</button>}
+
+function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeSteps(recipe.instructions);return <article className="public-recipe-card">
+  {recipe.image?<img className="public-recipe-hero" src={recipe.image} alt={recipe.title}/>:<div className="public-recipe-hero public-recipe-fallback">🍲</div>}
+  <div className="public-recipe-content"><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h1>{recipe.title}</h1>
+  <div className="public-recipe-facts"><span>🍽️ {recipe.servings} portioner</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
+  <section><h2>Ingredienser</h2><ul>{recipe.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>)}</ul></section>
+  <section><h2>Gör så här</h2><ol>{steps.map((step,index)=><li key={index}><b>{index+1}</b><span>{step}</span></li>)}</ol></section>
+  {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a><PublicRecipeShareButton recipe={recipe}/></footer></div>
+  </article>}
+
+function PublicRecipePage({recipeId}:{recipeId:string}){const [recipe,setRecipe]=useState<Recipe|null|undefined>(undefined);useEffect(()=>{void getPublicRecipe(recipeId).then(value=>setRecipe(value?.isPublic===false?null:value)).catch(()=>setRecipe(null))},[recipeId]);usePublicRecipeMetadata(recipe);if(recipe===undefined)return <main className="public-recipe-page"><div className="public-recipe-status">Laddar receptet…</div></main>;if(!recipe)return <main className="public-recipe-page"><div className="public-recipe-status"><h1>Receptet finns inte längre</h1><a href="/recept">Upptäck andra recept</a></div></main>;return <main className="public-recipe-page"><a className="public-recipe-brand" href="/">Bubbsun<span>.se</span></a><PublicRecipeArticle recipe={recipe}/></main>}
+
+function PublicRecipesIndexPage(){const [recipes,setRecipes]=useState<Recipe[]>([]);useEffect(()=>watchPublicRecipes(setRecipes),[]);usePublicRecipeMetadata(null);return <main className="public-recipes-index"><header><BookOpen/><div><small>PUBLIKA RECEPT</small><h1>Upptäck recept</h1><p>Recept som Bubbsuns användare har valt att dela.</p></div></header><div className="public-recipe-grid">{recipes.map(recipe=><a className="public-recipe-tile" href={publicRecipeUrl(recipe)} key={recipe.id}>{recipe.image?<img src={recipe.image} alt=""/>:<span>🍲</span>}<div><small>{recipe.category||"Recept"}</small><h2>{recipe.title}</h2><p>Av {recipe.creatorName}</p></div></a>)}{!recipes.length&&<p>Inga publika recept ännu.</p>}</div></main>}
+
 function PublicSharedListPage({code}:{code:string}) {
   const [share,setShare]=useState<PublicListShare|null|undefined>(undefined);
   useEffect(()=>{void getPublicListShare(code).then(setShare).catch(()=>setShare(null));},[code]);
@@ -6145,6 +6187,11 @@ function PublicSharedListPage({code}:{code:string}) {
 }
 
 export default function App() {
-  const match=window.location.pathname.match(/^\/list\/(?:.*-)?([a-f0-9]{10})\/?$/i);
-  return match?<PublicSharedListPage code={match[1]} />:<AuthenticatedApp />;
+  const listMatch=window.location.pathname.match(/^\/list\/(?:.*-)?([a-f0-9]{10})\/?$/i);
+  const recipeMatch=window.location.pathname.match(/^\/recept\/([^/]+)(?:\/[^/]*)?\/?$/i);
+  const recipeIndex=/^\/recept\/?$/i.test(window.location.pathname);
+  if(listMatch)return <PublicSharedListPage code={listMatch[1]} />;
+  if(recipeMatch)return <PublicRecipePage recipeId={decodeURIComponent(recipeMatch[1])}/>;
+  if(recipeIndex)return <PublicRecipesIndexPage/>;
+  return <AuthenticatedApp />;
 }

@@ -216,6 +216,7 @@ export function watchRecipes(groupId:string,callback:(recipes:Recipe[])=>void):U
 export function watchPrivateRecipes(uid:string,callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateRecipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
 const publicRecipeId=(sourcePath:string)=>sourcePath.replace(/\//g,"__");
 export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
+export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{const snapshot=await getDoc(doc(db,"publicRecipes",recipeId));return snapshot.exists()?parseRecipe(snapshot):null;}
 export async function syncRecipePublication(sourcePath:string,recipe:Recipe,scope:"group"|"private",groupId=""){const target=doc(db,"publicRecipes",publicRecipeId(sourcePath));if(recipe.isPublic)await setDoc(target,{...recipe,sourcePath,scope,groupId},{merge:true});else await deleteDoc(target);}
 export async function saveRecipe(groupId:string,recipe:Recipe){const sourcePath=`groups/${groupId}/recipes/${recipe.id}`;await setDoc(doc(db,sourcePath),recipe,{merge:true});await syncRecipePublication(sourcePath,recipe,"group",groupId);}
 export async function savePrivateRecipe(uid:string,recipe:Recipe){const sourcePath=`users/${uid}/privateRecipes/${recipe.id}`;await setDoc(doc(db,sourcePath),recipe,{merge:true});await syncRecipePublication(sourcePath,recipe,"private");}

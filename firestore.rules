@@ -79,7 +79,9 @@ service cloud.firestore {
     }
 
     match /publicRecipes/{recipeId} {
-      allow read: if signedIn();
+      // Only deliberately published copies live here. Recipe originals remain
+      // protected in their private/group collections.
+      allow read: if true;
       allow create, update: if isMega() || (signedIn() && request.resource.data.updatedBy == request.auth.uid && ((request.resource.data.scope == 'private' && request.resource.data.creatorId == request.auth.uid) || (request.resource.data.scope == 'group' && member(request.resource.data.groupId) && groupOpen(request.resource.data.groupId))));
       allow delete: if isMega() || (signedIn() && ((resource.data.scope == 'private' && resource.data.creatorId == request.auth.uid) || (resource.data.scope == 'group' && member(resource.data.groupId) && groupOpen(resource.data.groupId))));
     }

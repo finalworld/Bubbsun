@@ -2557,3 +2557,6 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     overflow-wrap: anywhere;
   }
 }
+/* Recipe cards use the same 2px frame as the recipe filters; keep the creator stripe stronger. */
+.recipe-card{border-width:2px;border-left-width:11px}
+@media(max-width:899px){.recipe-card{border-left-width:8px}}

@@ -2110,3 +2110,6 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* Public recipe tiles use the same 2px frame as the surrounding controls. */
+.public-recipe-tile{border-width:2px;border-left-width:12px}
+@media(max-width:700px){.public-recipe-tile{border-left-width:7px}}

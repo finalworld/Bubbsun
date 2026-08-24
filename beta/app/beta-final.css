@@ -2127,3 +2127,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* v0.900 — clearer recipe-card facts and a separate creator row */
 .recipe-card .recipe-card-facts{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.recipe-card .recipe-card-facts>span{white-space:nowrap}.recipe-card .recipe-card-creator{display:block;margin-top:7px;font-size:13px;opacity:.7}
 @media(max-width:899px){.recipe-card .recipe-card-facts{gap:7px;font-size:11px}.recipe-card .recipe-card-creator{margin-top:5px;font-size:11px}}
+
+/* v0.900 — twenty recipes per page */
+.recipe-pagination{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:26px 0 8px}.recipe-pagination button{width:46px;height:46px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);display:grid;place-items:center;font:800 16px Georgia,serif}.recipe-pagination button.selected{background:var(--theme-accent);color:#fff}.recipe-pagination button:disabled{opacity:.35}.recipe-pagination svg{width:21px;height:21px}
+@media(max-width:899px){.recipe-pagination{gap:6px;margin-top:18px}.recipe-pagination button{width:42px;height:42px;border-radius:12px}}

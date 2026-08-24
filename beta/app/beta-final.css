@@ -2089,3 +2089,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-filter-menu{position:absolute;left:0;right:0;top:calc(100% + 7px);padding:9px;border:3px solid var(--theme-outline);border-radius:20px;background:var(--theme-panel);box-shadow:0 14px 30px #2d201c35;display:grid;gap:6px;max-height:390px;overflow:auto}
 .recipe-filter-menu button{min-height:52px;border:1px solid color-mix(in srgb,var(--theme-outline) 38%,transparent);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);padding:7px 12px;display:grid;grid-template-columns:minmax(0,1fr) 34px 22px;align-items:center;gap:7px;text-align:left}.recipe-filter-menu button.selected{background:color-mix(in srgb,var(--theme-accent) 12%,var(--theme-paper));border-color:var(--theme-accent)}.recipe-filter-menu span{font:800 15px Arial,sans-serif}.recipe-filter-menu b{font:800 13px Arial,sans-serif;text-align:center}.recipe-filter-menu svg{width:19px;height:19px;color:var(--theme-accent)}
 @media(max-width:899px){.recipe-discover-toolbar{grid-template-columns:1fr}.recipe-filter-trigger{min-height:60px}.recipe-filter-menu{position:relative;top:auto;margin-top:7px;max-height:320px}}
+
+/* v0.897 — clean rounded recipe modal edge without the native square scrollbar */
+.recipe-view,.recipe-editor-modal{overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.recipe-view::-webkit-scrollbar,.recipe-editor-modal::-webkit-scrollbar{display:none;width:0;height:0}

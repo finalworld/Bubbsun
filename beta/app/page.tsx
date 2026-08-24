@@ -1238,7 +1238,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.893 · Web Edition Beta
+            Bubbsun v0.894 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5041,11 +5041,12 @@ function RecipeEditor({recipe,account,lists,onClose,onSave,onDelete}:{recipe?:Re
   return <div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="recipe-editor-modal"><button className="recipe-close" onClick={onClose}><X/></button><h2>{recipe?"REDIGERA RECEPT":"NYTT RECEPT"}</h2><label className="recipe-image-picker">{image?<img src={image} alt=""/>:<><ImagePlus/><span>LÄGG TILL BILD</span><small>Komprimeras automatiskt</small></>}<input type="file" accept="image/*" capture="environment" onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{setImage(await compressRecipeImage(file))}catch{window.alert("Bilden kunde inte läsas.")}}}/></label><label>NAMN<input autoFocus value={title} maxLength={80} onChange={event=>setTitle(event.target.value)} placeholder="Till exempel kanelbullar"/></label><div className="recipe-editor-grid"><label>KATEGORI<select value={category} onChange={event=>{setCategory(event.target.value);setSubcategory("")}}>{recipeCategories.map(value=><option key={value} value={value}>{value||"Ingen kategori"}</option>)}</select></label><label>UNDERKATEGORI<select value={subcategory} disabled={!category} onChange={event=>setSubcategory(event.target.value)}><option value="">Ingen underkategori</option>{(recipeSubcategories[category]||[]).map(value=><option key={value}>{value}</option>)}</select></label><label>PORTIONER<input type="number" min="1" max="99" value={servings} onChange={event=>setServings(Math.max(1,Number(event.target.value)||1))}/></label><label>TID (MINUTER)<input type="number" min="0" max="9999" value={minutes||""} onChange={event=>setMinutes(Math.max(0,Number(event.target.value)||0))}/></label><label>KOPPLA INKÖPSLISTA<select value={linkedListId} onChange={event=>setLinkedListId(event.target.value)}><option value="">Ingen lista</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name}</option>)}</select></label></div><fieldset className="recipe-ingredients"><legend>INGREDIENSER</legend>{ingredients.map(item=><div key={item.id}><input value={item.amount} onChange={event=>updateIngredient(item.id,"amount",event.target.value)} placeholder="Mängd"/><input value={item.unit} onChange={event=>updateIngredient(item.id,"unit",event.target.value)} placeholder="Enhet"/><input value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} placeholder="Ingrediens"/><button type="button" aria-label="Ta bort ingrediens" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button></div>)}<button type="button" className="recipe-add-row" onClick={()=>setIngredients(current=>[...current,{id:crypto.randomUUID(),amount:"",unit:"",name:""}])}><Plus/> LÄGG TILL INGREDIENS</button></fieldset><label>GÖR SÅ HÄR<textarea value={instructions} onChange={event=>setInstructions(event.target.value)} placeholder="Ett enkelt steg per rad…"/></label><label className="recipe-public-toggle"><input type="checkbox" checked={isPublic} onChange={event=>setIsPublic(event.target.checked)}/><span><b>PUBLICERA I UPPTÄCK</b><small>Alla Bubbsun-användare kan se receptet. Originalet ligger kvar här.</small></span></label><label>ANTECKNING (VALFRITT)<textarea className="recipe-note-input" value={note} onChange={event=>setNote(event.target.value)} placeholder="Något bra att komma ihåg?"/></label><div className="recipe-editor-actions">{onDelete&&<button className="recipe-delete" onClick={async()=>{if(window.confirm("Ta bort receptet?"))await onDelete()}}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!ingredients.some(item=>item.name.trim())||!instructions.trim()} onClick={async()=>{setBusy(true);const now=Date.now();await onSave({id:recipe?.id||crypto.randomUUID(),title:title.trim(),category,subcategory,isPublic,image,servings,minutes,ingredients:ingredients.filter(item=>item.name.trim()).map(item=>({...item,amount:item.amount.trim(),unit:item.unit.trim(),name:item.name.trim()})),instructions:instructions.trim(),note:note.trim(),linkedListId,creatorId:recipe?.creatorId||account.uid,creatorName:recipe?.creatorName||account.displayName,creatorColor:recipe?.creatorColor||account.personalColor||colorOptions[0],createdAt:recipe?.createdAt||now,updatedAt:now,updatedBy:account.uid});setBusy(false)}}>{busy?"SPARAR…":recipe?"SPARA":"SKAPA"}</button></div></section></div>;
 }
 
-function RecipesPage({recipes,lists,privateMode,account,memberships,groups,members,onMode,onSwitchGroup,onSave,onDelete,onAddToList}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>}){
+function RecipesPage({recipes,lists,privateMode,account,memberships,groups,members,onMode,onSwitchGroup,onSave,onDelete,onAddToList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
   const [creating,setCreating]=useState(false),[editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[search,setSearch]=useState(""),[category,setCategory]=useState(""),[spaceOpen,setSpaceOpen]=useState(false);const activeGroup=groups[account.activeGroupId];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!search.trim()||recipe.title.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
   const creatorColor=(recipe:Recipe)=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===recipe.creatorId)?.color??recipe.creatorColor??account.personalColor??colorOptions[0]);
   const linkedViewingList=viewing?.linkedListId?lists.find(list=>list.id===viewing.linkedListId):undefined;
+  useEffect(()=>{if(!openRecipeId)return;const recipe=recipes.find(value=>value.id===openRecipeId);if(recipe){setViewing(recipe);onRecipeOpened?.()}},[openRecipeId,recipes,onRecipeOpened]);
   return <section className="content recipes-page">
     <div className="recipe-scope-wrap">
       <button className="recipe-scope-trigger" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span><small>{privateMode?"PRIVAT":"GRUPP"}</small><strong>{privateMode?"Kokboken":activeGroup?.name||"Grupp"}</strong></span><ChevronDown className={spaceOpen?"open":""}/></button>
@@ -5065,7 +5066,7 @@ function DiscoverRecipesPage({recipes}:{recipes:Recipe[]}){
 
 type ActivityEntry = {
   id: string;
-  kind: "list" | "note" | "calendar";
+  kind: "list" | "note" | "calendar" | "recipe";
   title: string;
   detail: string;
   at: number;
@@ -5080,10 +5081,10 @@ function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seen
   return <section className="content subpage notifications-page">
     <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
     {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt&&!entry.isOwn?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
-      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":"▣"}</span>
+      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":"▣"}</span>
       <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
       {entry.at>seenAt&&!entry.isOwn&&<b>NYTT</b>}<ChevronRight/>
-    </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar eller kalender syns det här.</span></div>}
+    </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar, recept eller kalender syns det här.</span></div>}
   </section>;
 }
 
@@ -5120,6 +5121,7 @@ function AuthenticatedApp() {
   const [addingNote,setAddingNote]=useState(false);
   const [addingCalendar,setAddingCalendar]=useState(false);
   const [activityCalendarEventId,setActivityCalendarEventId]=useState("");
+  const [activityRecipeId,setActivityRecipeId]=useState("");
   const [notificationPageSeenAt,setNotificationPageSeenAt]=useState<number|null>(null);
   const [listToolsOpen, setListToolsOpen] = useState(false);
   const [themeId, setThemeId] = useState(
@@ -5851,8 +5853,9 @@ function AuthenticatedApp() {
     const listEntries=visibleLists.filter(value=>Boolean(value.updatedAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Boolean(value.createdAt&&Math.abs((value.updatedAt||0)-value.createdAt)<10000),action=created?"skapade listan":value.creatorId===user?.uid&&actor!==user?.uid?"redigerade din lista":"uppdaterade listan";return{id:`list-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt}`,kind:"list" as const,title:value.name,detail:`${actorName} ${action}`,at:value.updatedAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0],actor=latest?.uid||value.creatorId,action=(value.history?.length||0)>1?"ändrade anteckningen":"skapade anteckningen",actorName=privateMode?account.displayName:(latest?.name||memberName(actor));return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade kalenderposten":"ändrade kalenderposten";return{id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
-    return [...listEntries,...noteEntries,...calendarEntries].sort((a,b)=>b.at-a.at).slice(0,60);
-  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,privateMode,members]);
+    const recipeEntries=activeRecipes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade receptet":"ändrade receptet";return{id:`recipe-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"recipe" as const,title:value.title,detail:`🍲 ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
+    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
+  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members]);
   const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
   useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
   useEffect(()=>{
@@ -6092,7 +6095,7 @@ function AuthenticatedApp() {
         openEventId={activityCalendarEventId}
         onEventOpened={()=>setActivityCalendarEventId("")}
       />}
-      {page === "recipes" && <RecipesPage recipes={activeRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} members={members} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistRecipe} onDelete={deleteRecipe} onAddToList={addRecipeToList}/>}
+      {page === "recipes" && <RecipesPage recipes={activeRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} members={members} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistRecipe} onDelete={deleteRecipe} onAddToList={addRecipeToList} openRecipeId={activityRecipeId} onRecipeOpened={()=>setActivityRecipeId("")}/>}
       {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
@@ -6102,6 +6105,9 @@ function AuthenticatedApp() {
         }else if(entry.kind==="note"){
           const note=(entry.isPrivate?privateNotes:notes).find(value=>value.id===entry.targetId);
           if(note)openNote(note,entry.isPrivate);
+        }else if(entry.kind==="recipe"){
+          setActivityRecipeId(entry.targetId);
+          navigate("recipes");
         }else{
           setActivityCalendarEventId(entry.targetId);
           navigate("calendar");

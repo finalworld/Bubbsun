@@ -222,6 +222,7 @@ body{background:radial-gradient(circle at 20% 10%,#fffdf6 0 20%,transparent 48%)
 .menu-backdrop{position:fixed;z-index:29;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;background:#0003;cursor:default}
 
 .refund-payment .refund-swish-disabled{border-color:#aaa;background:#ddd;color:#777;cursor:not-allowed;filter:grayscale(1);opacity:.82}.refund-swish-disabled small{display:block;font-size:.72rem;margin-left:4px}
+.refund-payment{grid-template-columns:repeat(3,minmax(0,1fr))}.refund-payment .refund-bank-transfer{background:#edf1e0}.refund-payment .refund-bank-transfer.chosen{background:#f8e0d8}.refund-bank-transfer span{font-size:2rem}@media(max-width:700px){.refund-payment{grid-template-columns:repeat(2,minmax(0,1fr))}.refund-payment .refund-bank-transfer{grid-column:1/-1}}
 
 /* Pastellfärger och fingerstyrd sortering av kategorier. */
 .color-picker{display:grid;grid-template-columns:repeat(8,1fr);gap:12px}.color-picker button{height:70px;border:4px solid #766e5d;border-radius:15px;font-size:2rem;font-weight:900;color:#302d26;cursor:pointer}.color-picker button.picked{border:8px solid #8f3327;box-shadow:0 0 0 3px #fff inset}

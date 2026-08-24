@@ -143,6 +143,7 @@ import {
   getPublicRecipe,
   saveRecipe,
   savePrivateRecipe,
+  moveRecipeLocation,
   removeRecipe,
   removePrivateRecipe,
   unpublishRecipe,
@@ -5063,11 +5064,423 @@ const recipeInstructionSteps=(instructions:string)=>instructions.trim().split(/\
 const recipeYieldLabel=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
 const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
 
-function RecipeEditor({recipe,account,lists,onClose,onSave,onDelete}:{recipe?:Recipe;account:Account;lists:BubbsunList[];onClose:()=>void;onSave:(recipe:Recipe)=>Promise<void>;onDelete?:()=>Promise<void>}){
-  const [title,setTitle]=useState(recipe?.title||""),[category,setCategory]=useState(recipe?.category||""),[subcategory,setSubcategory]=useState(recipe?.subcategory||""),[isPublic,setIsPublic]=useState(recipe?.isPublic===true),[image,setImage]=useState(recipe?.image||""),[servings,setServings]=useState(recipe?.servings||4),[servingUnit,setServingUnit]=useState(recipe?.servingUnit||"portioner"),[minutes,setMinutes]=useState(recipe?.minutes||0),[ingredients,setIngredients]=useState(recipe?.ingredients||[{id:crypto.randomUUID(),amount:"",unit:"",name:""}]),[instructions,setInstructions]=useState(recipe?.instructions||""),[description,setDescription]=useState(recipe?.description||""),[note,setNote]=useState(recipe?.note||""),[linkedListId,setLinkedListId]=useState(recipe?.linkedListId||""),[busy,setBusy]=useState(false),[confirmDelete,setConfirmDelete]=useState(false);
-  const updateIngredient=(id:string,key:"amount"|"unit"|"name",value:string)=>setIngredients(current=>current.map(item=>item.id===id?{...item,[key]:value}:item));
-  const addIngredientAndFocusAmount=()=>{const id=crypto.randomUUID();setIngredients(current=>[...current,{id,amount:"",unit:"",name:""}]);window.setTimeout(()=>{const input=document.querySelector<HTMLInputElement>(`[data-ingredient-amount="${id}"]`);input?.focus();input?.select()},0)};
-  return <div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="recipe-editor-modal"><button className="recipe-close" onClick={onClose}><X/></button><h2>{recipe?"REDIGERA RECEPT":"NYTT RECEPT"}</h2><label className="recipe-image-picker">{image?<><img src={image} alt=""/><span className="recipe-image-change" aria-hidden="true"><ImagePlus/></span></>:<><ImagePlus/><span>LÄGG TILL BILD</span><small>Komprimeras automatiskt</small></>}<input type="file" accept="image/*" capture="environment" onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{setImage(await compressRecipeImage(file))}catch{window.alert("Bilden kunde inte läsas.")}}}/></label><label>NAMN<input autoFocus value={title} maxLength={80} onChange={event=>setTitle(event.target.value)} placeholder="Till exempel kanelbullar"/></label><div className="recipe-editor-grid"><label>KATEGORI<select value={category} onChange={event=>{setCategory(event.target.value);setSubcategory("")}}>{recipeCategories.map(value=><option key={value} value={value}>{value||"Ingen kategori"}</option>)}</select></label><label>UNDERKATEGORI<select value={subcategory} disabled={!category} onChange={event=>setSubcategory(event.target.value)}><option value="">Ingen underkategori</option>{(recipeSubcategories[category]||[]).map(value=><option key={value}>{value}</option>)}</select></label><label>ANTAL<input type="number" min="1" max="9999" value={servings} onChange={event=>setServings(Math.max(1,Number(event.target.value)||1))}/></label><label>ENHET<input list="recipe-serving-units" maxLength={24} value={servingUnit} onChange={event=>setServingUnit(event.target.value)} placeholder="portioner"/><datalist id="recipe-serving-units"><option value="portioner"/><option value="stycken"/><option value="kakor"/><option value="bullar"/><option value="bitar"/><option value="bröd"/><option value="muffins"/><option value="glas"/><option value="skålar"/></datalist></label><label>TID (MINUTER)<input type="number" min="0" max="9999" value={minutes||""} onChange={event=>setMinutes(Math.max(0,Number(event.target.value)||0))}/></label><label>KOPPLA INKÖPSLISTA<select value={linkedListId} onChange={event=>setLinkedListId(event.target.value)}><option value="">Ingen lista</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name}</option>)}</select></label></div><label className="recipe-description-input">OM RECEPTET <small>(valfritt)</small><textarea maxLength={700} value={description} onChange={event=>setDescription(event.target.value)} placeholder="Skriv några fina ord om receptet…"/></label><fieldset className="recipe-ingredients"><legend>INGREDIENSER</legend>{ingredients.map(item=><div key={item.id}><input data-ingredient-amount={item.id} value={item.amount} onChange={event=>updateIngredient(item.id,"amount",event.target.value)} placeholder="Mängd"/><input value={item.unit} onChange={event=>updateIngredient(item.id,"unit",event.target.value)} placeholder="Enhet"/><input value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.nativeEvent.isComposing){event.preventDefault();addIngredientAndFocusAmount()}}} placeholder="Ingrediens"/><button type="button" aria-label="Ta bort ingrediens" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button></div>)}<button type="button" className="recipe-add-row" onClick={addIngredientAndFocusAmount}><Plus/> LÄGG TILL INGREDIENS</button></fieldset><label>GÖR SÅ HÄR<textarea value={instructions} onChange={event=>setInstructions(event.target.value)} placeholder={'Skriv instruktionen här.\nFortsätt gärna på flera rader.\n\nHoppa över en rad för nästa steg.'}/></label><label className="recipe-public-toggle"><input type="checkbox" checked={isPublic} onChange={event=>setIsPublic(event.target.checked)}/><span><b>PUBLICERA I UPPTÄCK</b><small>Alla Bubbsun-användare kan se receptet. Originalet ligger kvar här.</small></span></label><label>ANTECKNING (VALFRITT)<textarea className="recipe-note-input" value={note} onChange={event=>setNote(event.target.value)} placeholder="Något bra att komma ihåg?"/></label><div className="recipe-editor-actions">{onDelete&&<button className="recipe-delete" onClick={()=>setConfirmDelete(true)}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!ingredients.some(item=>item.name.trim())||!instructions.trim()} onClick={async()=>{setBusy(true);const now=Date.now();await onSave({id:recipe?.id||crypto.randomUUID(),title:title.trim(),category,subcategory,isPublic,image,servings,servingUnit:servingUnit.trim()||"portioner",minutes,ingredients:ingredients.filter(item=>item.name.trim()).map(item=>({...item,amount:item.amount.trim(),unit:item.unit.trim(),name:item.name.trim()})),instructions:instructions.trim(),description:description.trim(),note:note.trim(),linkedListId,creatorId:recipe?.creatorId||account.uid,creatorName:recipe?.creatorName||account.displayName,creatorColor:recipe?.creatorColor||account.personalColor||colorOptions[0],createdAt:recipe?.createdAt||now,updatedAt:now,updatedBy:account.uid});setBusy(false)}}>{busy?"SPARAR…":recipe?"SPARA":"SKAPA"}</button></div></section>{confirmDelete&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setConfirmDelete(false)}}><div className="modal confirm-delete-modal"><h2>TA BORT RECEPTET?</h2><p>Receptet “{recipe?.title}” försvinner. Detta går inte att ångra.</p><div className="modal-actions"><button className="cancel" onClick={()=>setConfirmDelete(false)}>AVBRYT</button><button className="danger" onClick={async()=>{setBusy(true);await onDelete?.();setBusy(false)}} disabled={busy}>TA BORT</button></div></div></div>}</div>;
+function RecipeEditor({
+  recipe,
+  account,
+  lists,
+  memberships,
+  groups,
+  currentLocation,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  recipe?: Recipe;
+  account: Account;
+  lists: BubbsunList[];
+  memberships: Membership[];
+  groups: Record<string, Group>;
+  currentLocation: string;
+  onClose: () => void;
+  onSave: (recipe: Recipe, targetLocation: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
+}) {
+  const [title, setTitle] = useState(recipe?.title || ""),
+    [category, setCategory] = useState(recipe?.category || ""),
+    [subcategory, setSubcategory] = useState(recipe?.subcategory || ""),
+    [isPublic, setIsPublic] = useState(recipe?.isPublic === true),
+    [image, setImage] = useState(recipe?.image || ""),
+    [servings, setServings] = useState(recipe?.servings || 4),
+    [servingUnit, setServingUnit] = useState(
+      recipe?.servingUnit || "portioner",
+    ),
+    [minutes, setMinutes] = useState(recipe?.minutes || 0),
+    [ingredients, setIngredients] = useState(
+      recipe?.ingredients || [
+        { id: crypto.randomUUID(), amount: "", unit: "", name: "" },
+      ],
+    ),
+    [instructions, setInstructions] = useState(recipe?.instructions || ""),
+    [description, setDescription] = useState(recipe?.description || ""),
+    [note, setNote] = useState(recipe?.note || ""),
+    [linkedListId, setLinkedListId] = useState(recipe?.linkedListId || ""),
+    [targetLocation, setTargetLocation] = useState(currentLocation),
+    [busy, setBusy] = useState(false),
+    [confirmDelete, setConfirmDelete] = useState(false);
+  const updateIngredient = (
+    id: string,
+    key: "amount" | "unit" | "name",
+    value: string,
+  ) =>
+    setIngredients((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, [key]: value } : item,
+      ),
+    );
+  const addIngredientAndFocusAmount = () => {
+    const id = crypto.randomUUID();
+    setIngredients((current) => [
+      ...current,
+      { id, amount: "", unit: "", name: "" },
+    ]);
+    window.setTimeout(() => {
+      const input = document.querySelector<HTMLInputElement>(
+        `[data-ingredient-amount="${id}"]`,
+      );
+      input?.focus();
+      input?.select();
+    }, 0);
+  };
+  return (
+    <div
+      className="recipe-modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section className="recipe-editor-modal">
+        <button className="recipe-close" onClick={onClose}>
+          <X />
+        </button>
+        <h2>{recipe ? "REDIGERA RECEPT" : "NYTT RECEPT"}</h2>
+        <label className="recipe-image-picker">
+          {image ? (
+            <>
+              <img src={image} alt="" />
+              <span className="recipe-image-change" aria-hidden="true">
+                <ImagePlus />
+              </span>
+            </>
+          ) : (
+            <>
+              <ImagePlus />
+              <span>LÄGG TILL BILD</span>
+              <small>Komprimeras automatiskt</small>
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              try {
+                setImage(await compressRecipeImage(file));
+              } catch {
+                window.alert("Bilden kunde inte läsas.");
+              }
+            }}
+          />
+        </label>
+        <label>
+          NAMN
+          <input
+            autoFocus
+            value={title}
+            maxLength={80}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Till exempel kanelbullar"
+          />
+        </label>
+        <div className="recipe-editor-grid">
+          <label>
+            KATEGORI
+            <select
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+                setSubcategory("");
+              }}
+            >
+              {recipeCategories.map((value) => (
+                <option key={value} value={value}>
+                  {value || "Ingen kategori"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            UNDERKATEGORI
+            <select
+              value={subcategory}
+              disabled={!category}
+              onChange={(event) => setSubcategory(event.target.value)}
+            >
+              <option value="">Ingen underkategori</option>
+              {(recipeSubcategories[category] || []).map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            ANTAL
+            <input
+              type="number"
+              min="1"
+              max="9999"
+              value={servings}
+              onChange={(event) =>
+                setServings(Math.max(1, Number(event.target.value) || 1))
+              }
+            />
+          </label>
+          <label>
+            ENHET
+            <input
+              list="recipe-serving-units"
+              maxLength={24}
+              value={servingUnit}
+              onChange={(event) => setServingUnit(event.target.value)}
+              placeholder="portioner"
+            />
+            <datalist id="recipe-serving-units">
+              <option value="portioner" />
+              <option value="stycken" />
+              <option value="kakor" />
+              <option value="bullar" />
+              <option value="bitar" />
+              <option value="bröd" />
+              <option value="muffins" />
+              <option value="glas" />
+              <option value="skålar" />
+            </datalist>
+          </label>
+          <label>
+            TID (MINUTER)
+            <input
+              type="number"
+              min="0"
+              max="9999"
+              value={minutes || ""}
+              onChange={(event) =>
+                setMinutes(Math.max(0, Number(event.target.value) || 0))
+              }
+            />
+          </label>
+          <label>
+            KOPPLA INKÖPSLISTA
+            <select
+              value={linkedListId}
+              onChange={(event) => setLinkedListId(event.target.value)}
+            >
+              <option value="">Ingen lista</option>
+              {lists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {recipe && (
+          <label className="recipe-location-input">
+            FLYTTA RECEPT TILL
+            <select
+              value={targetLocation}
+              onChange={(event) => setTargetLocation(event.target.value)}
+            >
+              <option value="private">🔒 Privat</option>
+              {memberships.map((membership) => (
+                <option key={membership.groupId} value={membership.groupId}>
+                  👥 {groups[membership.groupId]?.name || "Grupp"}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="recipe-description-input">
+          OM RECEPTET <small>(valfritt)</small>
+          <textarea
+            maxLength={700}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Skriv några fina ord om receptet…"
+          />
+        </label>
+        <fieldset className="recipe-ingredients">
+          <legend>INGREDIENSER</legend>
+          {ingredients.map((item) => (
+            <div key={item.id}>
+              <input
+                data-ingredient-amount={item.id}
+                value={item.amount}
+                onChange={(event) =>
+                  updateIngredient(item.id, "amount", event.target.value)
+                }
+                placeholder="Mängd"
+              />
+              <input
+                value={item.unit}
+                onChange={(event) =>
+                  updateIngredient(item.id, "unit", event.target.value)
+                }
+                placeholder="Enhet"
+              />
+              <input
+                value={item.name}
+                onChange={(event) =>
+                  updateIngredient(item.id, "name", event.target.value)
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    addIngredientAndFocusAmount();
+                  }
+                }}
+                placeholder="Ingrediens"
+              />
+              <button
+                type="button"
+                aria-label="Ta bort ingrediens"
+                onClick={() =>
+                  setIngredients((current) =>
+                    current.filter((value) => value.id !== item.id),
+                  )
+                }
+              >
+                <X />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="recipe-add-row"
+            onClick={addIngredientAndFocusAmount}
+          >
+            <Plus /> LÄGG TILL INGREDIENS
+          </button>
+        </fieldset>
+        <label>
+          GÖR SÅ HÄR
+          <textarea
+            value={instructions}
+            onChange={(event) => setInstructions(event.target.value)}
+            placeholder={
+              "Skriv instruktionen här.\nFortsätt gärna på flera rader.\n\nHoppa över en rad för nästa steg."
+            }
+          />
+        </label>
+        <label className="recipe-public-toggle">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(event) => setIsPublic(event.target.checked)}
+          />
+          <span>
+            <b>PUBLICERA I UPPTÄCK</b>
+            <small>
+              Alla Bubbsun-användare kan se receptet. Originalet ligger kvar
+              här.
+            </small>
+          </span>
+        </label>
+        <label>
+          ANTECKNING (VALFRITT)
+          <textarea
+            className="recipe-note-input"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Något bra att komma ihåg?"
+          />
+        </label>
+        <div className="recipe-editor-actions">
+          {onDelete && (
+            <button
+              className="recipe-delete"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 /> TA BORT
+            </button>
+          )}
+          <button className="cancel" onClick={onClose}>
+            AVBRYT
+          </button>
+          <button
+            disabled={
+              busy ||
+              !title.trim() ||
+              !ingredients.some((item) => item.name.trim()) ||
+              !instructions.trim()
+            }
+            onClick={async () => {
+              setBusy(true);
+              const now = Date.now();
+              await onSave({
+                id: recipe?.id || crypto.randomUUID(),
+                title: title.trim(),
+                category,
+                subcategory,
+                isPublic,
+                image,
+                servings,
+                servingUnit: servingUnit.trim() || "portioner",
+                minutes,
+                ingredients: ingredients
+                  .filter((item) => item.name.trim())
+                  .map((item) => ({
+                    ...item,
+                    amount: item.amount.trim(),
+                    unit: item.unit.trim(),
+                    name: item.name.trim(),
+                  })),
+                instructions: instructions.trim(),
+                description: description.trim(),
+                note: note.trim(),
+                linkedListId,
+                creatorId: recipe?.creatorId || account.uid,
+                creatorName: recipe?.creatorName || account.displayName,
+                creatorColor:
+                  recipe?.creatorColor ||
+                  account.personalColor ||
+                  colorOptions[0],
+                createdAt: recipe?.createdAt || now,
+                updatedAt: now,
+                updatedBy: account.uid,
+              }, targetLocation);
+              setBusy(false);
+            }}
+          >
+            {busy ? "SPARAR…" : recipe ? "SPARA" : "SKAPA"}
+          </button>
+        </div>
+      </section>
+      {confirmDelete && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setConfirmDelete(false);
+          }}
+        >
+          <div className="modal confirm-delete-modal">
+            <h2>TA BORT RECEPTET?</h2>
+            <p>
+              Receptet “{recipe?.title}” försvinner. Detta går inte att ångra.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="cancel"
+                onClick={() => setConfirmDelete(false)}
+              >
+                AVBRYT
+              </button>
+              <button
+                className="danger"
+                onClick={async () => {
+                  setBusy(true);
+                  await onDelete?.();
+                  setBusy(false);
+                }}
+                disabled={busy}
+              >
+                TA BORT
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const recipesPerPage=20;
@@ -5076,7 +5489,7 @@ function RecipePagination({page,total,onPage}:{page:number;total:number;onPage:(
   return <nav className="recipe-pagination" aria-label="Receptsidor"><button disabled={page===1} onClick={()=>onPage(page-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,index)=>index+1).map(value=><button className={value===page?"selected":""} aria-current={value===page?"page":undefined} key={value} onClick={()=>onPage(value)}>{value}</button>)}<button disabled={page===pages} onClick={()=>onPage(page+1)}><ChevronRight/></button></nav>;
 }
 
-function RecipesPage({recipes,lists,privateMode,account,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
+function RecipesPage({recipes,lists,privateMode,account,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
   const [editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[spaceOpen,setSpaceOpen]=useState(false),[recipePage,setRecipePage]=useState(1);const activeGroup=groups[account.activeGroupId];
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori först",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
@@ -5093,7 +5506,7 @@ function RecipesPage({recipes,lists,privateMode,account,memberships,groups,membe
     <div className="recipes-toolbar recipe-cookbook-toolbar"><RecipeFilterPicker label="KATEGORI" value={category} options={categoryOptions} onChange={value=>{setCategory(value);setSubcategory("")}}/><RecipeFilterPicker label="UNDERKATEGORI" value={subcategory} options={subcategoryOptions} disabled={!category} onChange={setSubcategory}/></div>
     {shown.length?<><div className="recipe-grid">{pagedRecipes.map(recipe=><button className={`recipe-card${recipe.isPublic?" shared":""}`} key={recipe.id} style={{"--recipe-creator":rgbaHex(creatorColor(recipe))} as CSSProperties} onClick={()=>setViewing(recipe)}>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}<span>🍽️ {recipeYieldLabel(recipe)}</span></em></span></button>)}</div><RecipePagination page={recipePage} total={shown.length} onPage={setRecipePage}/></>:<div className="recipes-empty"><span>🥐</span><h2>Inga recept här ännu</h2><p>Börja med något gott. Bullar är ett stabilt förstaval.</p></div>}
     {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view" style={{"--recipe-creator":rgbaHex(creatorColor(viewing))} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/>{viewing.isPublic&&<RecipeShareControl recipe={viewing}/>}</div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<section><h3>INGREDIENSER</h3><ul>{viewing.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b> {item.name}</li>)}</ul></section><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<footer><span/><div>{linkedViewingList&&<button onClick={async()=>{await onAddToList(viewing,linkedViewingList.id);window.alert("Ingredienserna är tillagda i listan ✓")}}><ListChecks/> TILL {linkedViewingList.name.toLocaleUpperCase("sv-SE")}</button>}<button onClick={()=>{setViewing(undefined);setEditing(viewing)}}><Pencil/> REDIGERA</button></div></footer></article></div>}
-    {(creating||editing)&&<RecipeEditor recipe={editing} account={account} lists={lists} onClose={()=>{onCreating(false);setEditing(undefined)}} onSave={async recipe=>{await onSave(recipe);onCreating(false);setEditing(undefined)}} onDelete={editing?async()=>{await onDelete(editing);setEditing(undefined)}:undefined}/>}</section>;
+    {(creating||editing)&&<RecipeEditor recipe={editing} account={account} lists={lists} memberships={memberships} groups={groups} currentLocation={privateMode?"private":account.activeGroupId} onClose={()=>{onCreating(false);setEditing(undefined)}} onSave={async(recipe,targetLocation)=>{await onSave(recipe,targetLocation);onCreating(false);setEditing(undefined)}} onDelete={editing?async()=>{await onDelete(editing);setEditing(undefined)}:undefined}/>}</section>;
 }
 
 function RecipeFilterPicker({label,value,options,onChange,disabled=false}:{label:string;value:string;options:Array<{value:string;label:string;count:number}>;onChange:(value:string)=>void;disabled?:boolean}){
@@ -5946,7 +6359,7 @@ function AuthenticatedApp() {
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
   const persistCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;const complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time,endTime:event.endTime,allDay:event.allDay,category:event.category,color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays,recurrenceForever:event.recurrenceForever,recurrenceUntil:event.recurrenceUntil,excludedDates:event.excludedDates||[],note:event.note,linkedListIds:(event.linkedListIds||[]).slice(0,3),reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid};if(privateMode)await savePrivateCalendarEvent(user.uid,complete);else if(account.activeGroupId)await saveCalendarEvent(account.activeGroupId,complete);};
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;if(privateMode)await removePrivateCalendarEvent(user.uid,event.id);else if(account.activeGroupId)await removeCalendarEvent(account.activeGroupId,event.id);};
-  const persistRecipe=async(recipe:Recipe)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid};if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
+  const persistRecipe=async(recipe:Recipe,targetLocation?:string)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid},sourceLocation=privateMode?"private":account.activeGroupId,destination=targetLocation||sourceLocation;if(recipe.createdAt&&sourceLocation&&destination!==sourceLocation){await moveRecipeLocation(user.uid,{...complete,linkedListId:""},sourceLocation,destination);if(destination==="private")setPrivateMode(true);else{await switchGroup(user.uid,destination);setPrivateMode(false)}return}if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
   const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;if(privateMode)await removePrivateRecipe(user.uid,recipe.id);else if(account.activeGroupId)await removeRecipe(account.activeGroupId,recipe.id);};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};

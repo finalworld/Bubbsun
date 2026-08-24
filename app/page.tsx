@@ -6159,7 +6159,8 @@ function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
   },[recipe]);
 }
 
-function PublicRecipeShareButton({recipe}:{recipe:Recipe}){const copy=async()=>{const url=publicRecipeUrl(recipe);if(navigator.share){try{await navigator.share({title:recipe.title,text:`Recept: ${recipe.title}`,url});return}catch{}}await navigator.clipboard.writeText(url);window.alert("Länken är kopierad!")};return <button className="public-recipe-share" onClick={()=>void copy()}><Share2/> Dela recept</button>}
+function PublicRecipeShareButton({recipe}:{recipe:Recipe}){const [copied,setCopied]=useState(false);const copy=async()=>{const url=publicRecipeUrl(recipe);if(navigator.share){try{await navigator.share({title:recipe.title,text:`Recept: ${recipe.title}`,url});return}catch{}}await navigator.clipboard.writeText(url);setCopied(true);window.setTimeout(()=>setCopied(false),2200)};return <><button className="public-recipe-share" onClick={()=>void copy()}><Share2/> Dela recept</button>{copied&&<div className="public-recipe-toast" role="status"><Copy/> Länken är kopierad ✓</div>}</>}
+function PublicRecipePrintButton(){return <button className="public-recipe-print" type="button" onClick={()=>window.print()}><Printer/> Skriv ut</button>}
 
 function PublicRecipeBrand(){return <a className="public-recipe-brand" href="/"><strong>Bubbsun<span>.se</span></strong><small>LISTOR MED KARAKTÄR <b>✦</b></small></a>}
 
@@ -6169,7 +6170,7 @@ function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeS
   <div className="public-recipe-facts"><span>🍽️ {publicRecipeYield(recipe)}</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
   <section><h2>Ingredienser</h2><ul>{recipe.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>)}</ul></section>
   <section><h2>Gör så här</h2><ol>{steps.map((step,index)=><li key={index}><b>{index+1}</b><span>{step}</span></li>)}</ol></section>
-  {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a><PublicRecipeShareButton recipe={recipe}/></footer></div>
+  {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a><div className="public-recipe-actions"><PublicRecipePrintButton/><PublicRecipeShareButton recipe={recipe}/></div></footer></div>
   </article>}
 
 function PublicRecipePage({recipeId}:{recipeId:string}){const [recipe,setRecipe]=useState<Recipe|null|undefined>(undefined);useEffect(()=>{void getPublicRecipe(recipeId).then(value=>setRecipe(value?.isPublic===false?null:value)).catch(()=>setRecipe(null))},[recipeId]);usePublicRecipeMetadata(recipe);if(recipe===undefined)return <main className="public-recipe-page"><div className="public-recipe-status">Laddar receptet…</div></main>;if(!recipe)return <main className="public-recipe-page"><div className="public-recipe-status"><h1>Receptet finns inte längre</h1><a href="/recept">Upptäck andra recept</a></div></main>;return <main className="public-recipe-page"><PublicRecipeBrand/><PublicRecipeArticle recipe={recipe}/></main>}

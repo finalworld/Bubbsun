@@ -2586,6 +2586,17 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   }
 }
 
+/* Discovery desktop: let search breathe on its own row. */
+@media (min-width: 900px) {
+  .recipe-discover-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .recipe-discover-toolbar > label {
+    grid-column: 1 / -1;
+  }
+}
+
 /* Recipe ingredients: give the ingredient name useful space on phones. */
 @media (max-width: 899px) {
   .recipe-ingredients > div {

@@ -83,6 +83,7 @@ export type BubbsunList = {
   doneExpanded: boolean;
   order: number;
   pinned?: boolean;
+  createdAt?: number;
   updatedBy?: string;
   updatedAt?: number;
   revision?: number;

@@ -124,7 +124,7 @@ export function watchLists(groupId: string, callback: (lists: BubbsunList[]) => 
   const listQuery = query(collection(db, "groups", groupId, "lists"), orderBy("order", "asc"));
   return onSnapshot(listQuery, snap => callback(snap.docs.map((item, index) => {
     const d = item.data();
-    return { id: item.id, name: textValue(d.name, "Lista"), icon: textValue(d.icon, "list_cart"), iconColor: (d.iconColor as number | string | undefined) ?? 0xff2b7a78, listType:textValue(d.listType,"other"),packPeople:Array.isArray(d.packPeople)?d.packPeople.filter((x):x is string=>typeof x==="string"):[], creatorId: textValue(d.creatorId), sortMode: textValue(d.sortMode, "custom"), doneFirst: d.doneFirst === true, doneExpanded: d.doneExpanded === true, order: numberValue(d.order, index), updatedBy:textValue(d.updatedBy), updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.()), revision:numberValue(d.revision), items: Array.isArray(d.items) ? d.items.map(parseItem) : [] };
+    return { id: item.id, name: textValue(d.name, "Lista"), icon: textValue(d.icon, "list_cart"), iconColor: (d.iconColor as number | string | undefined) ?? 0xff2b7a78, listType:textValue(d.listType,"other"),packPeople:Array.isArray(d.packPeople)?d.packPeople.filter((x):x is string=>typeof x==="string"):[], creatorId: textValue(d.creatorId), sortMode: textValue(d.sortMode, "custom"), doneFirst: d.doneFirst === true, doneExpanded: d.doneExpanded === true, order: numberValue(d.order, index), createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.createdAt)), updatedBy:textValue(d.updatedBy), updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.()), revision:numberValue(d.revision), items: Array.isArray(d.items) ? d.items.map(parseItem) : [] };
   })));
 }
 
@@ -185,13 +185,13 @@ export async function switchGroup(uid: string, groupId: string) {
 
 export async function saveList(groupId: string, list: BubbsunList, actorId: string) {
   const ref=doc(db,"groups",groupId,"lists",list.id);
-  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(ref,{name:list.name.slice(0,60),icon:list.icon,iconColor:list.iconColor,listType:list.listType||"other",packPeople:list.packPeople||[],creatorId:list.creatorId||actorId,sortMode:list.sortMode,doneFirst:list.doneFirst,doneExpanded:list.doneExpanded,order:list.order,items:listItemsForStorage(list.items),revision:increment(1),...(list.createdAt?{createdAt:list.createdAt}:{}),updatedBy:actorId,updatedAt:serverTimestamp()},{merge:true});
   return (list.revision||0)+1;
 }
 
 export async function createList(groupId: string, name: string, actorId: string, order: number, listType = "other") {
   const ref = doc(collection(db, "groups", groupId, "lists"));
-  const list: BubbsunList = { id: ref.id, name: name.trim().slice(0, 60), icon: "list_cart", iconColor: 0xff2b7a78, listType, creatorId: actorId, sortMode: "custom", doneFirst: false, doneExpanded: false, order, items: [] };
+  const list: BubbsunList = { id: ref.id, name: name.trim().slice(0, 60), icon: "list_cart", iconColor: 0xff2b7a78, listType, creatorId: actorId, createdAt:Date.now(), sortMode: "custom", doneFirst: false, doneExpanded: false, order, items: [] };
   await saveList(groupId, list, actorId);
   return list;
 }

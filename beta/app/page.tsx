@@ -147,6 +147,7 @@ import {
   removePrivateRecipe,
   unpublishRecipe,
   syncRecipePublication,
+  reconcileRecipePublications,
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
@@ -5336,6 +5337,7 @@ function AuthenticatedApp() {
   useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady]);
+  useEffect(()=>{if(user&&databaseReady)void reconcileRecipePublications(user.uid).catch(error=>console.error("Kunde inte städa offentliga recept",error))},[user,databaseReady]);
   useEffect(
     () =>
       user && databaseReady ? watchAccount(user.uid, setAccount) : undefined,

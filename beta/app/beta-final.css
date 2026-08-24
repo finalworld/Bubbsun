@@ -2686,3 +2686,56 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* Recipe cards use the same 2px frame as the recipe filters; keep the creator stripe stronger. */
 .recipe-card{border-width:2px;border-left-width:11px}
 @media(max-width:899px){.recipe-card{border-left-width:8px}}
+
+/* Keep the print chooser balanced and pin its close control to the corner. */
+.app-shell .recipe-print-choice-backdrop {
+  display: grid !important;
+  place-items: center !important;
+}
+.app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal {
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: min(590px, calc(100vw - 28px)) !important;
+  max-width: 590px !important;
+  margin: 0 auto !important;
+  padding: 34px 30px 30px !important;
+  text-align: center !important;
+}
+.app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal > .recipe-print-choice-close {
+  position: absolute !important;
+  inset: 16px 16px auto auto !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 54px !important;
+  height: 54px !important;
+  min-width: 54px !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  border-radius: 50% !important;
+  transform: none !important;
+  z-index: 10 !important;
+}
+.app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal > .recipe-print-choice-icon {
+  display: block !important;
+  margin: 0 auto !important;
+}
+.app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal > .recipe-print-choice-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  justify-content: stretch !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  gap: 14px !important;
+}
+.app-shell .recipe-print-choice-backdrop .recipe-print-choice-actions > button {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+@media (max-width: 600px) {
+  .app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal {
+    padding: 28px 18px 22px !important;
+  }
+  .app-shell .recipe-print-choice-backdrop .recipe-print-choice-modal > .recipe-print-choice-actions {
+    grid-template-columns: 1fr !important;
+  }
+}

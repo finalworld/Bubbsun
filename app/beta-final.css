@@ -2105,3 +2105,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .app-shell button.group-empty-state small { font: 13px/1.35 Arial, sans-serif; opacity: .78; }
 .app-shell button.group-empty-state b { margin-top: 4px; color: var(--theme-accent); font: 900 11px Arial, sans-serif; letter-spacing: .35px; }
 .app-shell button.group-empty-state > svg:last-child { width: 20px !important; height: 20px !important; }
+/* Preserve author-entered line breaks in notes on public /recept/ pages. */
+.public-recipe-content aside p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -26,6 +26,7 @@ export type Account = {
 export type AdminUserCounts = {
   notes: number;
   calendarEvents: number;
+  recipes: number;
   groups: number;
   followedLists: number;
 };

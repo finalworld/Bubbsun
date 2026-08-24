@@ -1238,7 +1238,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.892 · Web Edition Beta
+            Bubbsun v0.893 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -4430,6 +4430,7 @@ function AdminPage({
     [editing,setEditing]=useState<Account|null>(null),
     [memberSort,setMemberSort]=useState<"login"|"registered"|"active"|"content">("login");
   const items = lists.flatMap((list) => list.items);
+  const recipeCount = Object.values(userCounts).reduce((total, counts) => total + counts.recipes, 0);
   const topThemes = themes
     .map((theme) => {
       const palette = { ...theme, ...palettes[theme.id] };
@@ -4445,7 +4446,7 @@ function AdminPage({
     .slice(0, 5);
   const contentCount=(person:Account)=>{
     const counts=userCounts[person.uid];
-    return lists.filter(list=>list.creatorId===person.uid).length+items.filter(item=>item.ownerId===person.uid).length+(counts?.notes||0)+(counts?.calendarEvents||0);
+    return lists.filter(list=>list.creatorId===person.uid).length+items.filter(item=>item.ownerId===person.uid).length+(counts?.notes||0)+(counts?.calendarEvents||0)+(counts?.recipes||0);
   };
   const orderedAccounts = [...accounts].sort((a, b) => {
     const difference=memberSort==="registered"?(b.createdAt||0)-(a.createdAt||0):memberSort==="active"?(b.visitCount||0)-(a.visitCount||0):memberSort==="content"?contentCount(b)-contentCount(a):(b.lastActiveAt||0)-(a.lastActiveAt||0);
@@ -4482,6 +4483,11 @@ function AdminPage({
           <strong>
             {reports.filter((report) => report.status === "new").length}
           </strong>
+        </button>
+        <button onClick={() => setTab("recipes")}>
+          <BookOpen />
+          <small>ANTAL RECEPT</small>
+          <strong>{recipeCount}</strong>
         </button>
       </div>
       <div className="admin-theme-ranking" aria-label="De fem mest använda temana">
@@ -4615,7 +4621,7 @@ function AdminUserStatsDialog({account,lists,counts,onClose}:{account:Account;li
   const madeLists=lists.filter(list=>list.creatorId===account.uid),madeItems=lists.flatMap(list=>list.items).filter(item=>item.ownerId===account.uid),visits=(account.visitLog||[]).slice(0,10),dateTime=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
   const stats=[
     ["LISTOR",madeLists.length],["POSTER",madeItems.length],["KLARA POSTER",madeItems.filter(item=>item.completed).length],["KVARVARANDE",madeItems.filter(item=>!item.completed).length],
-    ["ANTECKNINGAR",counts?.notes||0],["KALENDERPOSTER",counts?.calendarEvents||0],["GRUPPER",counts?.groups||0],["FÖLJDA LISTOR",counts?.followedLists||0],["BESÖK",account.visitCount||visits.length],
+    ["ANTECKNINGAR",counts?.notes||0],["KALENDERPOSTER",counts?.calendarEvents||0],["RECEPT",counts?.recipes||0],["GRUPPER",counts?.groups||0],["FÖLJDA LISTOR",counts?.followedLists||0],["BESÖK",account.visitCount||visits.length],
   ] as const;
   return <div className="modal-backdrop"><div className="modal admin-user-stats-modal"><button className="modal-x" onClick={onClose} aria-label="Stäng"><X/></button><header><i style={{background:rgbaHex(account.personalColor||colorOptions[0])}}>{account.displayName.slice(0,1)}</i><span><small>{account.createdAt?`KONTO SKAPAT · ${dateTime(account.createdAt)}`:"KONTO SKAPAT · DATUM SAKNAS"}</small><h2>{account.displayName}</h2><p>{account.globalTitle||"Medlem"}</p></span></header><div className="admin-user-counts">{stats.map(([label,value])=><section key={label}><strong>{value}</strong><span>{label}</span></section>)}</div><section className="admin-visit-log"><h3>SENASTE 10 BESÖKEN</h3>{visits.length?<ol>{visits.map((visit,index)=><li key={`${visit}-${index}`}><span>{index+1}</span><time>{dateTime(visit)}</time></li>)}</ol>:<p>Ingen sparad besökshistorik ännu. Den börjar samlas från v0.872.</p>}</section><button className="cancel" onClick={onClose}>STÄNG</button></div></div>
 }

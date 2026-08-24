@@ -5858,8 +5858,7 @@ function AuthenticatedApp() {
   }, [account?.activeGroupId, privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode]);
-  useEffect(()=>{if(!user||!account)return;const current=privateMode?privateRecipes:recipes;for(const recipe of current)if(recipe.isPublic&&recipe.updatedBy===user.uid){const sourcePath=privateMode?`users/${user.uid}/privateRecipes/${recipe.id}`:`groups/${account.activeGroupId}/recipes/${recipe.id}`;void syncRecipePublication(sourcePath,recipe,privateMode?"private":"group",privateMode?"":account.activeGroupId).catch(error=>console.error("Kunde inte synka offentligt recept",error));}},[user,account,privateMode,privateRecipes,recipes]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}const groupId=account.activeGroupId;setRecipes([]);return watchRecipes(groupId,setRecipes);},[account?.activeGroupId,privateMode]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(

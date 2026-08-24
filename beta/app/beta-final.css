@@ -2780,3 +2780,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     grid-template-columns: 1fr !important;
   }
 }
+
+/* The modal clips the outer corner; the hero must not add a second pale curve there. */
+.recipe-view .recipe-hero {
+  border-top-left-radius: 0;
+}

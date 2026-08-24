@@ -2442,3 +2442,35 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     white-space: nowrap;
   }
 }
+
+/* Optional recipe introduction, shown between creator and ingredients. */
+.recipe-description-input {
+  display: grid;
+  gap: 7px;
+}
+.recipe-description-input small {
+  font: inherit;
+  font-weight: 500;
+  text-transform: lowercase;
+  opacity: .68;
+}
+.recipe-description-input textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+.recipe-description {
+  margin: 16px 0 4px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--theme-outline) 48%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--theme-panel) 38%, transparent);
+  font: 500 17px/1.55 Arial, sans-serif;
+  white-space: pre-wrap;
+}
+@media (max-width: 899px) {
+  .recipe-description {
+    margin-top: 13px;
+    padding: 13px 14px;
+    font-size: 15px;
+  }
+}

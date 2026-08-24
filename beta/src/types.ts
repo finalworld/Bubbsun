@@ -133,6 +133,7 @@ export type Recipe = {
   minutes: number;
   ingredients: RecipeIngredient[];
   instructions: string;
+  description?: string;
   note?: string;
   linkedListId?: string;
   creatorId: string;

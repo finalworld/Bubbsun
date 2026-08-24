@@ -132,7 +132,9 @@ export type Recipe = {
   minutes: number;
   ingredients: RecipeIngredient[];
   instructions: string;
+  description?: string;
   note?: string;
+  likedBy?: string[];
   linkedListId?: string;
   creatorId: string;
   creatorName: string;

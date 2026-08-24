@@ -35,6 +35,7 @@ import {
   Share2,
   Settings,
   Trash2,
+  ThumbsUp,
   UserCog,
   UserRound,
   Users,
@@ -6159,18 +6160,19 @@ function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
   },[recipe]);
 }
 
-function PublicRecipeShareButton({recipe}:{recipe:Recipe}){const [copied,setCopied]=useState(false);const copy=async()=>{const url=publicRecipeUrl(recipe);if(navigator.share){try{await navigator.share({title:recipe.title,text:`Recept: ${recipe.title}`,url});return}catch{}}await navigator.clipboard.writeText(url);setCopied(true);window.setTimeout(()=>setCopied(false),2200)};return <><button className="public-recipe-share" onClick={()=>void copy()}><Share2/> Dela recept</button>{copied&&<div className="public-recipe-toast" role="status"><Copy/> Länken är kopierad ✓</div>}</>}
-function PublicRecipePrintButton(){return <button className="public-recipe-print" type="button" onClick={()=>window.print()}><Printer/> Skriv ut</button>}
+function PublicRecipeShareButton({recipe}:{recipe:Recipe}){const [copied,setCopied]=useState(false);const copy=async()=>{const url=publicRecipeUrl(recipe);if(navigator.share){try{await navigator.share({title:recipe.title,text:`Recept: ${recipe.title}`,url});return}catch{}}await navigator.clipboard.writeText(url);setCopied(true);window.setTimeout(()=>setCopied(false),2200)};return <><button className="public-recipe-share public-recipe-icon-button" aria-label="Dela recept" title="Dela recept" onClick={()=>void copy()}><Share2/></button>{copied&&<div className="public-recipe-toast" role="status"><Copy/> Länken är kopierad ✓</div>}</>}
+function PublicRecipePrintButton(){return <button className="public-recipe-print public-recipe-icon-button" aria-label="Skriv ut recept" title="Skriv ut recept" type="button" onClick={()=>window.print()}><Printer/></button>}
 
 function PublicRecipeBrand(){return <a className="public-recipe-brand" href="/"><strong>Bubbsun<span>.se</span></strong><small>LISTOR MED KARAKTÄR <b>✦</b></small></a>}
 
 function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeSteps(recipe.instructions);return <article className="public-recipe-card">
   {recipe.image?<img className="public-recipe-hero" src={recipe.image} alt={recipe.title}/>:<div className="public-recipe-hero public-recipe-fallback">🍲</div>}
-  <div className="public-recipe-content"><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h1>{recipe.title}</h1>
+  <div className="public-recipe-content"><div className="public-recipe-heading"><div><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h1>{recipe.title}</h1></div><div className="public-recipe-tools"><div className="public-recipe-actions"><PublicRecipePrintButton/><PublicRecipeShareButton recipe={recipe}/></div><span className="public-recipe-like-count" aria-label={`${recipe.likedBy?.length||0} gillningar`}><ThumbsUp/><span>GILLNINGAR</span><b>{recipe.likedBy?.length||0}</b></span></div></div>
   <div className="public-recipe-facts"><span>🍽️ {publicRecipeYield(recipe)}</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
+  {recipe.description&&<section className="public-recipe-description"><h2>Om receptet</h2><p>{recipe.description}</p></section>}
   <section><h2>Ingredienser</h2><ul>{recipe.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>)}</ul></section>
   <section><h2>Gör så här</h2><ol>{steps.map((step,index)=><li key={index}><b>{index+1}</b><span>{step}</span></li>)}</ol></section>
-  {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a><div className="public-recipe-actions"><PublicRecipePrintButton/><PublicRecipeShareButton recipe={recipe}/></div></footer></div>
+  {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a></footer></div>
   </article>}
 
 function PublicRecipePage({recipeId}:{recipeId:string}){const [recipe,setRecipe]=useState<Recipe|null|undefined>(undefined);useEffect(()=>{void getPublicRecipe(recipeId).then(value=>setRecipe(value?.isPublic===false?null:value)).catch(()=>setRecipe(null))},[recipeId]);usePublicRecipeMetadata(recipe);if(recipe===undefined)return <main className="public-recipe-page"><div className="public-recipe-status">Laddar receptet…</div></main>;if(!recipe)return <main className="public-recipe-page"><div className="public-recipe-status"><h1>Receptet finns inte längre</h1><a href="/recept">Upptäck andra recept</a></div></main>;return <main className="public-recipe-page"><PublicRecipeBrand/><PublicRecipeArticle recipe={recipe}/></main>}

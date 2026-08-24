@@ -80,9 +80,6 @@ jobs:
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.
           put -O public/rk rk-kassa/dist/index.html
-          # public/rk och public/RK har kontrollerats som två skilda mappar.
-          # Den gamla versal-mappen behövs inte längre.
-          rm -r public/RK
           # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
           cls -l public/index.html public/beta/index.html public/.htaccess
           cat public/.htaccess

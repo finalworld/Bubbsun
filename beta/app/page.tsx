@@ -1064,7 +1064,6 @@ function Drawer({
   onInvite: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [recipesExpanded, setRecipesExpanded] = useState(false);
   const activeGroup = groups[account.activeGroupId];
   const activeMembership = memberships.find(
     (x) => x.groupId === account.activeGroupId,
@@ -1159,12 +1158,11 @@ function Drawer({
               <span>Kalender</span>
               <ChevronRight />
             </button>
-            <button onClick={() => setRecipesExpanded(value=>!value)}>
+            <button className="drawer-recipe-heading" type="button" tabIndex={-1} aria-disabled="true">
               <BookOpen />
               <span>Recept</span>
-              <ChevronDown className={recipesExpanded ? "turn" : ""} />
             </button>
-            {recipesExpanded&&<div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck</span><ChevronRight/></button></div>}
+            <div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck</span><ChevronRight/></button></div>
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
@@ -1240,7 +1238,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.891 · Web Edition Beta
+            Bubbsun v0.892 · Web Edition Beta
           </small>
         </div>
       </aside>

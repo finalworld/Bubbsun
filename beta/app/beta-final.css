@@ -2411,6 +2411,23 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 }
 .recipe-like-button.liked b { background: rgba(255,255,255,.22); }
 .recipe-like-button:disabled { opacity: .72; cursor: wait; }
+.public-recipe-like-count {
+  height: 52px;
+  padding: 0 13px;
+  border: 2px solid var(--theme-outline);
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--theme-paper);
+  color: var(--theme-text);
+  font: 900 12px Arial, sans-serif;
+  letter-spacing: .035em;
+  white-space: nowrap;
+}
+.public-recipe-like-count svg { width: 20px; height: 20px; color: var(--theme-accent); }
+.public-recipe-like-count b { min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; background: color-mix(in srgb, var(--theme-accent) 15%, var(--theme-paper)); }
 @media (max-width: 899px) {
   .recipe-view-tools { right: 19px; top: 240px; gap: 6px; }
   .recipe-view-tools > button,
@@ -2432,6 +2449,9 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   }
   .recipe-view-tools > .recipe-like-button svg { width: 17px; height: 17px; }
   .recipe-view-tools > .recipe-like-button b { min-width: 21px; height: 21px; padding: 0 5px; }
+  .public-recipe-like-count { height: 46px; padding: 0 9px; font-size: 10px; gap: 5px; }
+  .public-recipe-like-count svg { width: 17px; height: 17px; }
+  .public-recipe-like-count b { min-width: 21px; height: 21px; padding: 0 5px; }
   .recipe-view-tools > .recipe-create-list-control > .recipe-create-list-trigger { height: 46px; padding: 0 8px; font-size: 11px; }
   .recipe-create-list-menu { position: fixed; left: 18px; right: 18px; top: auto; bottom: 22px; width: auto; max-height: 55vh; overflow: auto; }
 }

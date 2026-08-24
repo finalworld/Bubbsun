@@ -218,7 +218,16 @@ const publicRecipeId=(sourcePath:string)=>sourcePath.replace(/\//g,"__");
 const publicRecipeKey=(recipe:Recipe)=>recipe.sourcePath||`${recipe.creatorId}:${recipe.id}`;
 const uniquePublicRecipes=(recipes:Recipe[])=>Array.from(recipes.reduce((values,recipe)=>{const key=publicRecipeKey(recipe);const current=values.get(key);if(!current||(recipe.updatedAt||0)>(current.updatedAt||0))values.set(key,recipe);return values},new Map<string,Recipe>()).values()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
 export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snap=>callback(uniquePublicRecipes(snap.docs.map(parseRecipe).filter(recipe=>recipe.isPublic))));}
-export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{const direct=await getDoc(doc(db,"publicRecipes",recipeId));if(direct.exists())return parseRecipe(direct);const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId),limit(1)));return matches.empty?null:parseRecipe(matches.docs[0]);}
+export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{
+  const [direct,matches]=await Promise.all([
+    getDoc(doc(db,"publicRecipes",recipeId)),
+    getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId))),
+  ]);
+  const documents=[...(direct.exists()?[direct]:[]),...matches.docs]
+    .filter((value,index,values)=>values.findIndex(candidate=>candidate.ref.path===value.ref.path)===index);
+  const recipes=documents.map(parseRecipe).filter(recipe=>recipe.isPublic);
+  return recipes.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;
+}
 export async function setPublicRecipeLiked(recipe:Recipe,uid:string,liked:boolean){
   let target=recipe.sourcePath?doc(db,"publicRecipes",publicRecipeId(recipe.sourcePath)):undefined;
   if(!target){const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipe.id),limit(1)));if(matches.empty)throw new Error("Receptet finns inte längre");target=matches.docs[0].ref;}

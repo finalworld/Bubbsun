@@ -75,11 +75,13 @@ jobs:
           put -O public dist/.htaccess
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
-          # RK Kassa ligger i webbplatsens public/RK (med stora bokstäver).
-          mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/RK/
-          # Ersätt alltid RK:s startsida. Annars kan den gamla filen peka på
+          # RK Kassa ligger i webbplatsens public/rk.
+          mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.
-          put -O public/RK rk-kassa/dist/index.html
+          put -O public/rk rk-kassa/dist/index.html
+          # Visa exakt båda mapparna i publiceringsloggen före städning.
+          cls -ld public/rk public/RK
           # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
           cls -l public/index.html public/beta/index.html public/.htaccess
           cat public/.htaccess

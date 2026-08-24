@@ -2074,3 +2074,6 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* v0.890 — visual divider below recipe hero */
 .recipe-view .recipe-hero{border-bottom:4px solid var(--recipe-creator,var(--theme-accent))}
+
+/* v0.891 — themed recipe scrollbars */
+.recipe-view,.recipe-editor-modal{scrollbar-width:thin;scrollbar-color:var(--theme-accent) color-mix(in srgb,var(--theme-panel) 65%,transparent)}.recipe-view::-webkit-scrollbar,.recipe-editor-modal::-webkit-scrollbar{width:12px}.recipe-view::-webkit-scrollbar-track,.recipe-editor-modal::-webkit-scrollbar-track{margin:16px 0;background:color-mix(in srgb,var(--theme-panel) 65%,transparent);border-radius:999px}.recipe-view::-webkit-scrollbar-thumb,.recipe-editor-modal::-webkit-scrollbar-thumb{min-height:54px;background:var(--theme-accent);border:3px solid var(--theme-paper);border-radius:999px}.recipe-view::-webkit-scrollbar-thumb:hover,.recipe-editor-modal::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--theme-accent) 82%,white)}

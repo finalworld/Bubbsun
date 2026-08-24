@@ -2361,3 +2361,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-editor-grid > label:nth-child(5) { grid-area: time; }
   .recipe-editor-grid > label:nth-child(6) { grid-area: list; }
 }
+
+/* Discovery mobile: search above two equal recipe filters. */
+@media (max-width: 899px) {
+  .recipe-discover-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .recipe-discover-toolbar > label {
+    grid-column: 1 / -1;
+  }
+  .recipe-discover-toolbar .recipe-filter-trigger {
+    padding-left: 11px;
+    grid-template-columns: minmax(0, 1fr) 30px 20px;
+    gap: 5px;
+  }
+}

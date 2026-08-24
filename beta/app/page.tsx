@@ -1137,7 +1137,7 @@ function Drawer({
             <ChevronDown className={expanded ? "turn" : ""} />
           </button>
           {expanded && (
-            <div className="group-picker">
+            <div className="group-picker drawer-group-submenu">
               {memberships.map((m) => (
                 <button
                   className={
@@ -1146,10 +1146,18 @@ function Drawer({
                       : ""
                   }
                   key={m.groupId}
-                  onClick={() => onGroup(m.groupId)}
+                  onClick={() => {
+                    onGroup(m.groupId);
+                    setExpanded(false);
+                  }}
                 >
                   <GroupIcon id={groups[m.groupId]?.iconId} />
-                  {groups[m.groupId]?.name || "Grupp"}
+                  <span>{groups[m.groupId]?.name || "Grupp"}</span>
+                  {!activePrivate && m.groupId === account.activeGroupId ? (
+                    <Check />
+                  ) : (
+                    <ChevronRight />
+                  )}
                 </button>
               ))}
             </div>
@@ -6755,12 +6763,10 @@ function AuthenticatedApp() {
         activePrivate={privateMode}
         onPrivate={() => {
           setPrivateMode(true);
-          navigate(page==="calendar"?"calendar":"lists");
         }}
         onGroup={async (id) => {
           await switchGroup(user.uid, id);
           setPrivateMode(false);
-          navigate(page==="calendar"?"calendar":"lists");
         }}
         onPage={navigate}
         onLogout={() => signOut(auth)}

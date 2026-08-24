@@ -102,6 +102,67 @@
   color: var(--theme-paper) !important;
 }
 
+/* Gruppväljaren följer samma tydliga kortspråk som receptets undermeny. */
+.app-shell .drawer .drawer-group-submenu {
+  display: grid;
+  gap: 7px;
+  margin: -7px 0 13px 24px;
+  padding: 0 0 0 12px;
+  border: 0;
+  border-left: 4px solid var(--theme-accent) !important;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.app-shell .drawer .drawer-group-submenu button {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border: 1px solid var(--theme-outline);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--theme-paper) 88%, var(--theme-accent)) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 3px 7px #6e421521;
+  text-align: left;
+}
+
+.app-shell .drawer .drawer-group-submenu button.selected {
+  border-color: var(--theme-accent);
+  background: color-mix(in srgb, var(--theme-paper) 80%, var(--theme-accent)) !important;
+  color: var(--theme-text) !important;
+}
+
+.app-shell .drawer .drawer-group-submenu button > span {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font: 700 18px/1.15 Georgia, serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .drawer .drawer-group-submenu button .group-picture {
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain;
+}
+
+.app-shell .drawer .drawer-group-submenu button > svg:last-child {
+  width: 20px;
+  height: 20px;
+  justify-self: end;
+  color: var(--theme-accent);
+}
+
+@media (max-width: 899px) {
+  .app-shell .drawer .drawer-group-submenu {
+    margin-left: 14px;
+  }
+}
+
 .app-shell .drawer-footer {
   background: color-mix(in srgb, var(--theme-panel) 92%, transparent) !important;
   color: var(--theme-text) !important;

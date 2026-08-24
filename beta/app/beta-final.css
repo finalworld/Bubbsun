@@ -2345,3 +2345,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     overflow: visible !important;
   }
 }
+
+/* Recipe editor: balanced two-row desktop layout. */
+@media (min-width: 900px) {
+  .recipe-editor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "category subcategory list"
+      "amount unit time";
+  }
+  .recipe-editor-grid > label:nth-child(1) { grid-area: category; }
+  .recipe-editor-grid > label:nth-child(2) { grid-area: subcategory; }
+  .recipe-editor-grid > label:nth-child(3) { grid-area: amount; }
+  .recipe-editor-grid > label:nth-child(4) { grid-area: unit; }
+  .recipe-editor-grid > label:nth-child(5) { grid-area: time; }
+  .recipe-editor-grid > label:nth-child(6) { grid-area: list; }
+}

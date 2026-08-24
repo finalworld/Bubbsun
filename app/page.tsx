@@ -1220,7 +1220,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.881 · Web Edition
+            Bubbsun v0.882 · Web Edition
           </small>
         </div>
       </aside>
@@ -4407,11 +4407,23 @@ function AdminPage({
       "members",
     ),
     [selected, setSelected] = useState<Account | null>(null),
-    [editing,setEditing]=useState<Account|null>(null);
+    [editing,setEditing]=useState<Account|null>(null),
+    [memberSort,setMemberSort]=useState<"login"|"registered"|"active"|"content">("login");
   const items = lists.flatMap((list) => list.items);
+  const topThemes = themes
+    .map((theme) => {
+      const palette = { ...theme, ...palettes[theme.id] };
+      return {id:theme.id,name:theme.name,count:accounts.filter((item)=>(item.themeId||"retro")===theme.id).length,accent:palette.accent,paper:palette.paper};
+    })
+    .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,"sv"))
+    .slice(0,5);
+  const contentCount=(person:Account)=>{
+    const counts=userCounts[person.uid];
+    return lists.filter(list=>list.creatorId===person.uid).length+items.filter(item=>item.ownerId===person.uid).length+(counts?.notes||0)+(counts?.calendarEvents||0);
+  };
   const orderedAccounts = [...accounts].sort((a, b) => {
-    const onlineDifference = Number(onlineUserIds.has(b.uid)) - Number(onlineUserIds.has(a.uid));
-    return onlineDifference || a.displayName.localeCompare(b.displayName, "sv");
+    const difference=memberSort==="registered"?(b.createdAt||0)-(a.createdAt||0):memberSort==="active"?(b.visitCount||0)-(a.visitCount||0):memberSort==="content"?contentCount(b)-contentCount(a):(b.lastActiveAt||0)-(a.lastActiveAt||0);
+    return difference||a.displayName.localeCompare(b.displayName,"sv");
   });
   return (
     <section className="content subpage admin-page">
@@ -4446,6 +4458,9 @@ function AdminPage({
           </strong>
         </button>
       </div>
+      <div className="admin-theme-ranking" aria-label="De fem mest använda temana">
+        {topThemes.map((theme,index)=><article key={theme.id} style={{"--ranking-accent":theme.accent,"--ranking-paper":theme.paper} as CSSProperties}><span>{index+1}</span><i aria-hidden="true"/><strong>{theme.name}</strong><small>{theme.count} användare</small></article>)}
+      </div>
       <div className="admin-tabs">
         <button
           className={tab === "members" ? "selected" : ""}
@@ -4473,7 +4488,7 @@ function AdminPage({
         </button>
       </div>
       {tab === "members" && (
-        <div className="admin-member-list">
+        <><div className="admin-member-sort"><strong>SORTERA MEDLEMMAR</strong><select value={memberSort} onChange={event=>setMemberSort(event.target.value as typeof memberSort)}><option value="login">Senast inloggad</option><option value="registered">Senast registrerad</option><option value="active">Mest aktiv</option><option value="content">Flest saker</option></select></div><div className="admin-member-list">
           {orderedAccounts.map((person) => (
             <article key={person.uid} role="button" tabIndex={0} onClick={()=>setSelected(person)} onKeyDown={event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();setSelected(person)}}}>
               <i
@@ -4500,7 +4515,7 @@ function AdminPage({
               <button className="admin-edit-user" onClick={event=>{event.stopPropagation();setEditing(person)}}><Pencil/> REDIGERA</button>
             </article>
           ))}
-        </div>
+        </div></>
       )}
       {tab === "reports" && (
         <div className="report-list">
@@ -5355,7 +5370,8 @@ function AuthenticatedApp() {
   },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
-  }, [themeId]);
+    if (user && account && account.themeId !== themeId) void savePreferences(user.uid,{themeId});
+  }, [account?.themeId,themeId,user?.uid]);
   useEffect(() => {
     localStorage.setItem("bubbsun-language", language);
   }, [language]);

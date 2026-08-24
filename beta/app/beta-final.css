@@ -2251,3 +2251,83 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   from { opacity: 0; transform: translate(-50%, 10px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* v0.900 — print clean recipes from cookbook, discovery and public links */
+.recipe-view-tools {
+  position: absolute;
+  z-index: 3;
+  right: 42px;
+  top: 326px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.recipe-view-tools > button,
+.recipe-view-tools > .recipe-share-button {
+  height: 52px;
+  border: 2px solid var(--theme-outline);
+  border-radius: 14px;
+  padding: 0 16px;
+  font: 800 16px Georgia, serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.recipe-print-button {
+  background: var(--theme-paper);
+  color: var(--theme-text);
+}
+.recipe-print-button:hover { background: color-mix(in srgb, var(--theme-paper) 82%, white); }
+.recipe-print-button svg { width: 21px; height: 21px; }
+.recipe-view:has(.recipe-view-tools) > h1 { margin-right: 285px; }
+@media (max-width: 899px) {
+  .recipe-view-tools { right: 19px; top: 240px; gap: 6px; }
+  .recipe-view-tools > button,
+  .recipe-view-tools > .recipe-share-button { height: 46px; padding: 0 9px; font-size: 12px; }
+  .recipe-view-tools svg { width: 18px; height: 18px; }
+  .recipe-view:has(.recipe-view-tools) > h1 { margin-right: 205px; }
+}
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  .recipe-view,
+  .recipe-view * { visibility: visible !important; }
+  .recipe-view {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #21150f !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .recipe-view .recipe-close,
+  .recipe-view .recipe-view-tools,
+  .recipe-view footer { display: none !important; }
+  .recipe-view .recipe-hero {
+    width: 100% !important;
+    height: 210px !important;
+    margin: 0 0 18px !important;
+    border-radius: 0 !important;
+    object-fit: cover;
+  }
+  .recipe-view > h1 { margin-right: 0 !important; font-size: 36px !important; }
+  .recipe-view section,
+  .recipe-view aside { break-inside: avoid; }
+  .recipe-modal-backdrop {
+    position: static !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+}

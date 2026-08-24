@@ -63,6 +63,14 @@ service cloud.firestore {
       allow read: if isMega();
     }
 
+    match /{documentPath=**}/recipes/{recipeId} {
+      allow read: if signedIn() && resource.data.isPublic == true;
+    }
+
+    match /{documentPath=**}/privateRecipes/{recipeId} {
+      allow read: if signedIn() && resource.data.isPublic == true;
+    }
+
     match /appConfig/public {
       allow read: if signedIn();
       allow write: if isMega();

@@ -2377,3 +2377,31 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     gap: 5px;
   }
 }
+
+/* Recipe ingredients: give the ingredient name useful space on phones. */
+@media (max-width: 899px) {
+  .recipe-ingredients > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 48px;
+    grid-template-areas:
+      "amount unit remove"
+      "name name remove";
+    gap: 7px;
+    align-items: stretch;
+    margin-bottom: 10px;
+  }
+  .recipe-ingredients > div > input:nth-child(1) { grid-area: amount; }
+  .recipe-ingredients > div > input:nth-child(2) { grid-area: unit; }
+  .recipe-ingredients > div > input:nth-child(3) {
+    grid-area: name;
+    min-width: 0;
+    font-size: 16px;
+  }
+  .recipe-ingredients > div > button {
+    grid-area: remove;
+    min-width: 48px;
+    border: 2px solid var(--theme-outline);
+    border-radius: 13px;
+    background: #bd5a58;
+    color: #fff;
+  }
+}

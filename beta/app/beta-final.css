@@ -2184,3 +2184,40 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   height: 28px !important;
   margin: 0 !important;
 }
+
+/* Existing recipe photos remain an obvious, clickable image picker. */
+.recipe-image-picker {
+  position: relative;
+}
+.recipe-image-picker .recipe-image-change {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  width: 43px;
+  height: 43px;
+  margin: 0;
+  border: 2px solid var(--theme-outline);
+  border-radius: 50%;
+  background: var(--theme-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 3px 9px #0005;
+}
+.recipe-image-picker .recipe-image-change::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed currentColor;
+  border-radius: 50%;
+  opacity: .8;
+}
+.recipe-image-picker .recipe-image-change svg {
+  position: relative;
+  z-index: 1;
+  width: 23px;
+  height: 23px;
+}
+.recipe-image-picker:hover .recipe-image-change {
+  filter: brightness(1.12);
+}

@@ -2405,3 +2405,40 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     color: #fff;
   }
 }
+
+/* Mobile recipe view: actions get their own row and facts stay compact. */
+@media (max-width: 899px) {
+  .recipe-view:has(.recipe-view-tools) > h1 {
+    margin-right: 0 !important;
+  }
+  .recipe-view .recipe-view-tools {
+    position: static !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+    margin: 12px 0 14px;
+  }
+  .recipe-view .recipe-view-tools > button {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .recipe-view .recipe-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+  .recipe-view .recipe-facts span {
+    min-width: 0;
+    padding: 9px 6px;
+    font-size: 13px;
+    text-align: center;
+    white-space: nowrap;
+  }
+}

@@ -9,6 +9,7 @@ import {
 import {
   BarChart3,
   Bell,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,
@@ -18,6 +19,7 @@ import {
   Copy,
   Home,
   History,
+  ImagePlus,
   ListChecks,
   LockKeyhole,
   GripVertical,
@@ -134,6 +136,12 @@ import {
   savePrivateCalendarEvent,
   removeCalendarEvent,
   removePrivateCalendarEvent,
+  watchRecipes,
+  watchPrivateRecipes,
+  saveRecipe,
+  savePrivateRecipe,
+  removeRecipe,
+  removePrivateRecipe,
 } from "../src/lib/bubbsun-data";
 import type {
   Account,
@@ -148,6 +156,7 @@ import type {
   Membership,
   Page,
   PublicListShare,
+  Recipe,
   Report,
   ThemePalette,
 } from "../src/types";
@@ -1145,6 +1154,11 @@ function Drawer({
               <span>Kalender</span>
               <ChevronRight />
             </button>
+            <button onClick={() => onPage("recipes")}>
+              <BookOpen />
+              <span>Recept</span>
+              <ChevronRight />
+            </button>
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
@@ -1220,7 +1234,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.883 · Web Edition Beta
+            Bubbsun v0.884 · Web Edition Beta
           </small>
         </div>
       </aside>
@@ -5000,6 +5014,21 @@ function ThemeEditor({
   );
 }
 
+const recipeCategories=["","Frukost","Lunch","Middag","Bakning","Efterrätt","Mellanmål","Dryck"];
+const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
+
+function RecipeEditor({recipe,account,lists,onClose,onSave,onDelete}:{recipe?:Recipe;account:Account;lists:BubbsunList[];onClose:()=>void;onSave:(recipe:Recipe)=>Promise<void>;onDelete?:()=>Promise<void>}){
+  const [title,setTitle]=useState(recipe?.title||""),[category,setCategory]=useState(recipe?.category||""),[image,setImage]=useState(recipe?.image||""),[servings,setServings]=useState(recipe?.servings||4),[minutes,setMinutes]=useState(recipe?.minutes||0),[ingredients,setIngredients]=useState(recipe?.ingredients||[{id:crypto.randomUUID(),amount:"",unit:"",name:""}]),[instructions,setInstructions]=useState(recipe?.instructions||""),[note,setNote]=useState(recipe?.note||""),[linkedListId,setLinkedListId]=useState(recipe?.linkedListId||""),[busy,setBusy]=useState(false);
+  const updateIngredient=(id:string,key:"amount"|"unit"|"name",value:string)=>setIngredients(current=>current.map(item=>item.id===id?{...item,[key]:value}:item));
+  return <div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="recipe-editor-modal"><button className="recipe-close" onClick={onClose}><X/></button><h2>{recipe?"REDIGERA RECEPT":"NYTT RECEPT"}</h2><label className="recipe-image-picker">{image?<img src={image} alt=""/>:<><ImagePlus/><span>LÄGG TILL BILD</span><small>Komprimeras automatiskt</small></>}<input type="file" accept="image/*" capture="environment" onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{setImage(await compressRecipeImage(file))}catch{window.alert("Bilden kunde inte läsas.")}}}/></label><label>NAMN<input autoFocus value={title} maxLength={80} onChange={event=>setTitle(event.target.value)} placeholder="Till exempel kanelbullar"/></label><div className="recipe-editor-grid"><label>KATEGORI<select value={category} onChange={event=>setCategory(event.target.value)}>{recipeCategories.map(value=><option key={value} value={value}>{value||"Ingen kategori"}</option>)}</select></label><label>PORTIONER<input type="number" min="1" max="99" value={servings} onChange={event=>setServings(Math.max(1,Number(event.target.value)||1))}/></label><label>TID (MINUTER)<input type="number" min="0" max="9999" value={minutes||""} onChange={event=>setMinutes(Math.max(0,Number(event.target.value)||0))}/></label><label>KOPPLA INKÖPSLISTA<select value={linkedListId} onChange={event=>setLinkedListId(event.target.value)}><option value="">Ingen lista</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name}</option>)}</select></label></div><fieldset className="recipe-ingredients"><legend>INGREDIENSER</legend>{ingredients.map(item=><div key={item.id}><input value={item.amount} onChange={event=>updateIngredient(item.id,"amount",event.target.value)} placeholder="Mängd"/><input value={item.unit} onChange={event=>updateIngredient(item.id,"unit",event.target.value)} placeholder="Enhet"/><input value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} placeholder="Ingrediens"/><button type="button" aria-label="Ta bort ingrediens" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button></div>)}<button type="button" className="recipe-add-row" onClick={()=>setIngredients(current=>[...current,{id:crypto.randomUUID(),amount:"",unit:"",name:""}])}><Plus/> LÄGG TILL INGREDIENS</button></fieldset><label>GÖR SÅ HÄR<textarea value={instructions} onChange={event=>setInstructions(event.target.value)} placeholder="Ett enkelt steg per rad…"/></label><label>ANTECKNING (VALFRITT)<textarea className="recipe-note-input" value={note} onChange={event=>setNote(event.target.value)} placeholder="Något bra att komma ihåg?"/></label><div className="recipe-editor-actions">{onDelete&&<button className="recipe-delete" onClick={async()=>{if(window.confirm("Ta bort receptet?"))await onDelete()}}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!ingredients.some(item=>item.name.trim())||!instructions.trim()} onClick={async()=>{setBusy(true);const now=Date.now();await onSave({id:recipe?.id||crypto.randomUUID(),title:title.trim(),category,image,servings,minutes,ingredients:ingredients.filter(item=>item.name.trim()).map(item=>({...item,amount:item.amount.trim(),unit:item.unit.trim(),name:item.name.trim()})),instructions:instructions.trim(),note:note.trim(),linkedListId,creatorId:recipe?.creatorId||account.uid,creatorName:recipe?.creatorName||account.displayName,creatorColor:recipe?.creatorColor||account.personalColor||colorOptions[0],createdAt:recipe?.createdAt||now,updatedAt:now,updatedBy:account.uid});setBusy(false)}}>{busy?"SPARAR…":recipe?"SPARA":"SKAPA"}</button></div></section></div>;
+}
+
+function RecipesPage({recipes,lists,privateMode,account,memberships,groups,onMode,onSwitchGroup,onSave,onDelete,onAddToList}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>}){
+  const [creating,setCreating]=useState(false),[editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[search,setSearch]=useState(""),[category,setCategory]=useState("");const activeGroup=groups[account.activeGroupId];
+  const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!search.trim()||recipe.title.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
+  return <section className="content recipes-page"><div className="recipe-space-row"><button className={privateMode?"selected":""} onClick={()=>onMode(true)}><LockKeyhole/><span><small>PRIVAT</small><strong>Mina recept</strong></span></button><div className="recipe-group-picker"><GroupIcon id={activeGroup?.iconId}/><select value={privateMode?"":account.activeGroupId} onChange={event=>{if(!event.target.value)onMode(true);else void onSwitchGroup(event.target.value)}}><option value="">Privat</option>{memberships.map(item=><option key={item.groupId} value={item.groupId}>{groups[item.groupId]?.name||"Grupp"}</option>)}</select></div></div><div className="recipes-toolbar"><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept"/></label><select value={category} onChange={event=>setCategory(event.target.value)}><option value="">Alla kategorier</option>{recipeCategories.filter(Boolean).map(value=><option key={value}>{value}</option>)}</select><button onClick={()=>setCreating(true)}><Plus/> NYTT RECEPT</button></div>{shown.length?<div className="recipe-grid">{shown.map(recipe=><button className="recipe-card" key={recipe.id} style={{"--recipe-creator":rgbaHex(recipe.creatorColor)} as CSSProperties} onClick={()=>setViewing(recipe)}>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipe.category||"RECEPT"}</small><strong>{recipe.title}</strong><em>{recipe.minutes?`${recipe.minutes} min · `:""}{recipe.servings} portioner</em></span></button>)}</div>:<div className="recipes-empty"><span>🥐</span><h2>Inga recept här ännu</h2><p>Börja med något gott. Bullar är ett stabilt förstaval.</p><button onClick={()=>setCreating(true)}>SKAPA RECEPT</button></div>}{viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view"><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{viewing.category||"RECEPT"}</small><h1>{viewing.title}</h1><div className="recipe-facts"><span>🍽️ {viewing.servings} portioner</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><section><h3>INGREDIENSER</h3><ul>{viewing.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b> {item.name}</li>)}</ul></section><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{viewing.instructions.split(/\n+/).map((line,index)=><p key={index}><b>{index+1}</b><span>{line}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<footer><small>Skapad av {viewing.creatorName}</small><div>{lists.length>0&&<select value={viewing.linkedListId||""} onChange={event=>setViewing({...viewing,linkedListId:event.target.value})}><option value="">Välj inköpslista</option>{lists.map(list=><option key={list.id} value={list.id}>{list.name}</option>)}</select>}<button disabled={!viewing.linkedListId} onClick={async()=>{if(viewing.linkedListId){await onAddToList(viewing,viewing.linkedListId);window.alert("Ingredienserna är tillagda i listan ✓")}}}><ListChecks/> TILL INKÖPSLISTA</button><button onClick={()=>{setViewing(undefined);setEditing(viewing)}}><Pencil/> REDIGERA</button></div></footer></article></div>}{(creating||editing)&&<RecipeEditor recipe={editing} account={account} lists={lists} onClose={()=>{setCreating(false);setEditing(undefined)}} onSave={async recipe=>{await onSave(recipe);setCreating(false);setEditing(undefined)}} onDelete={editing?async()=>{await onDelete(editing);setEditing(undefined)}:undefined}/>}</section>;
+}
+
 type ActivityEntry = {
   id: string;
   kind: "list" | "note" | "calendar";
@@ -5043,8 +5072,10 @@ function AuthenticatedApp() {
   const [privateNotes,setPrivateNotes]=useState<BubbsunNote[]>([]);
   const [calendarEvents,setCalendarEvents]=useState<CalendarEvent[]>([]);
   const [privateCalendarEvents,setPrivateCalendarEvents]=useState<CalendarEvent[]>([]);
+  const [recipes,setRecipes]=useState<Recipe[]>([]);
+  const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","notifications","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","recipes","notifications","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -5231,6 +5262,7 @@ function AuthenticatedApp() {
   );
   useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
+  useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
   useEffect(
     () =>
       user && databaseReady ? watchAccount(user.uid, setAccount) : undefined,
@@ -5307,6 +5339,7 @@ function AuthenticatedApp() {
   }, [account?.activeGroupId, privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(
@@ -5771,6 +5804,7 @@ function AuthenticatedApp() {
   };
   const activeNotes=privateMode?privateNotes:notes;
   const activeCalendarEvents=privateMode?privateCalendarEvents:calendarEvents;
+  const activeRecipes=privateMode?privateRecipes:recipes;
   const activitySeenAt=account?.activitySeenAt??Date.now();
   const activityEntries=useMemo<ActivityEntry[]>(()=>{
     if(!account)return[];
@@ -5812,6 +5846,9 @@ function AuthenticatedApp() {
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
   const persistCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;const complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time,endTime:event.endTime,allDay:event.allDay,category:event.category,color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays,recurrenceForever:event.recurrenceForever,recurrenceUntil:event.recurrenceUntil,excludedDates:event.excludedDates||[],note:event.note,linkedListIds:(event.linkedListIds||[]).slice(0,3),reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid};if(privateMode)await savePrivateCalendarEvent(user.uid,complete);else if(account.activeGroupId)await saveCalendarEvent(account.activeGroupId,complete);};
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;if(privateMode)await removePrivateCalendarEvent(user.uid,event.id);else if(account.activeGroupId)await removeCalendarEvent(account.activeGroupId,event.id);};
+  const persistRecipe=async(recipe:Recipe)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid};if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
+  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;if(privateMode)await removePrivateRecipe(user.uid,recipe.id);else if(account.activeGroupId)await removeRecipe(account.activeGroupId,recipe.id);};
+  const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};
   const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
   const createNote=async(note:BubbsunNote)=>{if(!user||!account)return;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor,history:[entry],order:activeNotes.length};try{if(privateMode){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>[...current,complete]);}else if(account.activeGroupId){await saveNote(account.activeGroupId,complete);setNotes(current=>[...current,complete]);}else return;setAddingNote(false);openNote(complete,privateMode);}catch(error){console.error("Could not create note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");}};
@@ -5900,9 +5937,9 @@ function AuthenticatedApp() {
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
         glowColor={account.supporterGlowColor}
-        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : undefined}
+        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "recipes" ? "Recept" : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
-        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":"lists")}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="recipes"?"recipes":"lists")}
         onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" || page === "calendar" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
@@ -6018,6 +6055,7 @@ function AuthenticatedApp() {
         openEventId={activityCalendarEventId}
         onEventOpened={()=>setActivityCalendarEventId("")}
       />}
+      {page === "recipes" && <RecipesPage recipes={activeRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistRecipe} onDelete={deleteRecipe} onAddToList={addRecipeToList}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
         if(entry.kind==="list"){

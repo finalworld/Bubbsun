@@ -6136,6 +6136,7 @@ function AuthenticatedApp() {
 }
 
 const publicRecipeUrl=(recipe:Recipe)=>`${window.location.origin}/recept/${encodeURIComponent(recipe.id)}/${recipe.title.toLocaleLowerCase("sv-SE").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept"}`;
+const publicRecipeYield=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
 const publicRecipeSteps=(value:string)=>value.split(/\n\s*\n+/).map(step=>step.trim()).filter(Boolean);
 
 function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
@@ -6154,7 +6155,7 @@ function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
     if(recipe?.image)setMeta('meta[property="og:image"]',"content",recipe.image);
     let canonical=document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}canonical.href=recipe?publicRecipeUrl(recipe):`${window.location.origin}/recept`;
     const old=document.getElementById("public-recipe-schema");old?.remove();
-    if(recipe){const script=document.createElement("script");script.id="public-recipe-schema";script.type="application/ld+json";script.text=JSON.stringify({"@context":"https://schema.org","@type":"Recipe",name:recipe.title,image:recipe.image?[recipe.image]:undefined,author:{"@type":"Person",name:recipe.creatorName},recipeYield:`${recipe.servings} portioner`,totalTime:recipe.minutes?`PT${recipe.minutes}M`:undefined,recipeIngredient:recipe.ingredients.map(item=>[item.amount,item.unit,item.name].filter(Boolean).join(" ")),recipeInstructions:publicRecipeSteps(recipe.instructions).map(text=>({"@type":"HowToStep",text}))});document.head.appendChild(script)}
+    if(recipe){const script=document.createElement("script");script.id="public-recipe-schema";script.type="application/ld+json";script.text=JSON.stringify({"@context":"https://schema.org","@type":"Recipe",name:recipe.title,image:recipe.image?[recipe.image]:undefined,author:{"@type":"Person",name:recipe.creatorName},recipeYield:`${publicRecipeYield(recipe)}`,totalTime:recipe.minutes?`PT${recipe.minutes}M`:undefined,recipeIngredient:recipe.ingredients.map(item=>[item.amount,item.unit,item.name].filter(Boolean).join(" ")),recipeInstructions:publicRecipeSteps(recipe.instructions).map(text=>({"@type":"HowToStep",text}))});document.head.appendChild(script)}
   },[recipe]);
 }
 
@@ -6165,7 +6166,7 @@ function PublicRecipeBrand(){return <a className="public-recipe-brand" href="/">
 function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeSteps(recipe.instructions);return <article className="public-recipe-card">
   {recipe.image?<img className="public-recipe-hero" src={recipe.image} alt={recipe.title}/>:<div className="public-recipe-hero public-recipe-fallback">🍲</div>}
   <div className="public-recipe-content"><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h1>{recipe.title}</h1>
-  <div className="public-recipe-facts"><span>🍽️ {recipe.servings} portioner</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
+  <div className="public-recipe-facts"><span>🍽️ {publicRecipeYield(recipe)}</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
   <section><h2>Ingredienser</h2><ul>{recipe.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>)}</ul></section>
   <section><h2>Gör så här</h2><ol>{steps.map((step,index)=><li key={index}><b>{index+1}</b><span>{step}</span></li>)}</ol></section>
   {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a><PublicRecipeShareButton recipe={recipe}/></footer></div>
@@ -6173,7 +6174,7 @@ function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeS
 
 function PublicRecipePage({recipeId}:{recipeId:string}){const [recipe,setRecipe]=useState<Recipe|null|undefined>(undefined);useEffect(()=>{void getPublicRecipe(recipeId).then(value=>setRecipe(value?.isPublic===false?null:value)).catch(()=>setRecipe(null))},[recipeId]);usePublicRecipeMetadata(recipe);if(recipe===undefined)return <main className="public-recipe-page"><div className="public-recipe-status">Laddar receptet…</div></main>;if(!recipe)return <main className="public-recipe-page"><div className="public-recipe-status"><h1>Receptet finns inte längre</h1><a href="/recept">Upptäck andra recept</a></div></main>;return <main className="public-recipe-page"><PublicRecipeBrand/><PublicRecipeArticle recipe={recipe}/></main>}
 
-function PublicRecipesIndexPage(){const [recipes,setRecipes]=useState<Recipe[]>([]);useEffect(()=>watchPublicRecipes(setRecipes),[]);usePublicRecipeMetadata(null);return <main className="public-recipes-index"><PublicRecipeBrand/><header><BookOpen/><div><small>PUBLIKA RECEPT</small><h1>Upptäck recept</h1><p>Recept som Bubbsuns användare har valt att dela.</p></div></header><div className="public-recipe-grid">{recipes.map(recipe=><a className="public-recipe-tile" href={publicRecipeUrl(recipe)} key={recipe.id}>{recipe.image?<img src={recipe.image} alt=""/>:<span>🍲</span>}<div><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h2>{recipe.title}</h2><p>{recipe.minutes>0&&<>⏱️ {recipe.minutes} min · </>}🍽️ {recipe.servings} portioner</p><p>Av {recipe.creatorName}</p></div></a>)}{!recipes.length&&<p>Inga publika recept ännu.</p>}</div></main>}
+function PublicRecipesIndexPage(){const [recipes,setRecipes]=useState<Recipe[]>([]);useEffect(()=>watchPublicRecipes(setRecipes),[]);usePublicRecipeMetadata(null);return <main className="public-recipes-index"><PublicRecipeBrand/><header><BookOpen/><div><small>PUBLIKA RECEPT</small><h1>Upptäck recept</h1><p>Recept som Bubbsuns användare har valt att dela.</p></div></header><div className="public-recipe-grid">{recipes.map(recipe=><a className="public-recipe-tile" href={publicRecipeUrl(recipe)} key={recipe.id}>{recipe.image?<img src={recipe.image} alt=""/>:<span>🍲</span>}<div><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h2>{recipe.title}</h2><p>{recipe.minutes>0&&<>⏱️ {recipe.minutes} min · </>}🍽️ {publicRecipeYield(recipe)}</p><p>Av {recipe.creatorName}</p></div></a>)}{!recipes.length&&<p>Inga publika recept ännu.</p>}</div></main>}
 
 function PublicSharedListPage({code}:{code:string}) {
   const [share,setShare]=useState<PublicListShare|null|undefined>(undefined);

@@ -129,6 +129,7 @@ export type Recipe = {
   sourcePath?: string;
   image?: string;
   servings: number;
+  servingUnit?: string;
   minutes: number;
   ingredients: RecipeIngredient[];
   instructions: string;

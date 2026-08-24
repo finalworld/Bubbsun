@@ -2221,3 +2221,33 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-image-picker:hover .recipe-image-change {
   filter: brightness(1.12);
 }
+
+.recipe-copy-toast {
+  position: fixed;
+  z-index: 5000;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100vw - 32px);
+  padding: 13px 18px;
+  border: 2px solid var(--theme-outline);
+  border-radius: 16px;
+  background: var(--theme-accent);
+  color: #fff;
+  box-shadow: 0 7px 22px #0005;
+  font: 800 15px Arial, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: recipe-toast-in .2s ease-out;
+}
+.recipe-copy-toast svg {
+  width: 20px;
+  height: 20px;
+}
+@keyframes recipe-toast-in {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}

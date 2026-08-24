@@ -2099,3 +2099,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .app-shell .drawer nav>button:nth-child(5){box-shadow:-12px 0 0 #55b7c2,0 3px 7px #6e421521!important}
 .app-shell .drawer nav>button:nth-child(6){box-shadow:-12px 0 0 #9a72c4,0 3px 7px #6e421521!important}
 .app-shell .drawer nav>button:nth-child(7){box-shadow:-12px 0 0 #df7b68,0 3px 7px #6e421521!important}
+
+/* v0.899 — Discovery filters in the Cookbook too */
+.recipe-cookbook-toolbar{grid-template-columns:minmax(250px,1fr) minmax(190px,250px) minmax(190px,250px) auto}
+.recipe-cookbook-toolbar>button{min-height:58px;white-space:nowrap}
+@media(max-width:899px){.recipe-cookbook-toolbar{grid-template-columns:1fr}.recipe-cookbook-toolbar>button{width:100%}}

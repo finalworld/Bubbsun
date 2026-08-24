@@ -2289,14 +2289,14 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-view:has(.recipe-view-tools) > h1 { margin-right: 205px; }
 }
 @media print {
-  @page { margin: 14mm; }
-  body { background: #fff !important; }
+  @page { size: auto; margin: 14mm; }
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
   body * { visibility: hidden !important; }
   .recipe-view,
   .recipe-view * { visibility: visible !important; }
+  .topbar, .app-sidebar, .floating-avatar { display: none !important; }
   .recipe-view {
-    position: absolute !important;
-    inset: 0 auto auto 0 !important;
+    position: static !important;
     width: 100% !important;
     max-width: none !important;
     max-height: none !important;
@@ -2311,6 +2311,17 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .recipe-view::before {
+    content: "Bubbsun.se\A LISTOR MED KARAKTÄR  ✦";
+    display: block;
+    visibility: visible !important;
+    white-space: pre;
+    margin: 0 0 14px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid #597c5d;
+    color: #2d1b12;
+    font: 700 27px/1 Georgia, serif;
+  }
   .recipe-view .recipe-close,
   .recipe-view .recipe-view-tools,
   .recipe-view footer { display: none !important; }
@@ -2322,10 +2333,13 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     object-fit: cover;
   }
   .recipe-view > h1 { margin-right: 0 !important; font-size: 36px !important; }
-  .recipe-view section,
-  .recipe-view aside { break-inside: avoid; }
+  .recipe-view li,
+  .recipe-view .recipe-instructions p,
+  .recipe-view aside { break-inside: avoid; page-break-inside: avoid; }
   .recipe-modal-backdrop {
     position: static !important;
+    display: block !important;
+    height: auto !important;
     padding: 0 !important;
     background: #fff !important;
     overflow: visible !important;

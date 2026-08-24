@@ -2076,16 +2076,18 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 @media(max-width:700px){.public-recipe-brand{margin-bottom:16px}.public-recipe-brand strong{font-size:42px}.public-recipe-brand>small{font-size:15px}.public-recipe-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.public-recipe-tile{border-left-width:7px;border-radius:17px}.public-recipe-tile>img,.public-recipe-tile>span{height:125px}.public-recipe-tile>div{padding:11px}.public-recipe-tile h2{font-size:21px}.public-recipe-tile p{font-size:12px}.public-recipe-card-creator{gap:4px!important;font-size:10px!important}.public-recipe-card-creator svg{width:13px;height:13px}.public-recipe-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.public-recipe-print,.public-recipe-share{justify-content:center}}
 
 @media print{
-  @page{margin:14mm}
-  body{background:#fff!important}
+  @page{size:auto;margin:14mm}
+  html,body{height:auto!important;overflow:visible!important;background:#fff!important}
   body *{visibility:hidden!important}
   .public-recipe-page,.public-recipe-page *{visibility:visible!important}
-  .public-recipe-page{position:absolute!important;inset:0!important;width:100%!important;min-height:0!important;padding:0!important;background:#fff!important}
-  .public-recipe-brand,.public-recipe-content footer{display:none!important}
+  .topbar,.app-sidebar,.floating-avatar{display:none!important}
+  .public-recipe-page{position:static!important;width:100%!important;min-height:0!important;height:auto!important;overflow:visible!important;padding:0!important;background:#fff!important}
+  .public-recipe-brand{display:flex!important;margin:0 0 14px!important}.public-recipe-brand strong{font-size:30px!important}.public-recipe-brand>small{font-size:12px!important}
+  .public-recipe-content footer{display:none!important}
   .public-recipe-card{max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important;color:#21150f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .public-recipe-hero{height:210px!important}
   .public-recipe-content{padding:24px 0 0!important}
-  .public-recipe-content section,.public-recipe-content aside{break-inside:avoid}
+  .public-recipe-content li,.public-recipe-content aside{break-inside:avoid;page-break-inside:avoid}
 }
 .app-shell button.group-empty-state {
   grid-template-columns: 42px minmax(0, 1fr) 22px !important;

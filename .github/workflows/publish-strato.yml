@@ -75,7 +75,12 @@ jobs:
           put -O public dist/.htaccess
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
-          mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          # rk.bubbsun.se är i Strato kopplad direkt till SFTP-mappen RK,
+          # inte till public/rk. Publicera därför kassans filer där.
+          mkdir -p RK
+          mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ RK/
+          chmod 755 RK
+          chmod 644 RK/index.html
           # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
           cls -l public/index.html public/beta/index.html public/.htaccess
           cat public/.htaccess

@@ -5099,19 +5099,22 @@ function mergePublicRecipeLikes(recipes:Recipe[],publicRecipes:Recipe[]){
 }
 
 function RecipeCreateListControl({recipe,memberships,groups,onCreate}:{recipe:Recipe;memberships:Membership[];groups:Record<string,Group>;onCreate:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
-  const [open,setOpen]=useState(false),[busyTarget,setBusyTarget]=useState(""),[created,setCreated]=useState(false),[error,setError]=useState("");
+  const [open,setOpen]=useState(false),[busyTarget,setBusyTarget]=useState(""),[created,setCreated]=useState(false),[error,setError]=useState(""),[pendingTarget,setPendingTarget]=useState("");
   const choose=async(targetLocation:string)=>{
     if(busyTarget)return;
     setBusyTarget(targetLocation);setError("");
     try{
       await onCreate(recipe,targetLocation);
-      setOpen(false);setCreated(true);
+      setOpen(false);setPendingTarget("");setCreated(true);
       window.setTimeout(()=>setCreated(false),2200);
     }catch(reason){console.error("Kunde inte skapa receptlistan",reason);setError("Kunde inte skapa listan. Försök igen.")}finally{setBusyTarget("")}
   };
+  const requestCreate=(targetLocation:string)=>{setOpen(false);setError("");setPendingTarget(targetLocation)};
+  const pendingTargetName=pendingTarget==="private"?"Privat":groups[pendingTarget]?.name||"gruppen";
   return <div className="recipe-create-list-control">
     <button type="button" className={`recipe-create-list-trigger${created?" created":""}`} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ListChecks/><span>{created?"SKAPAD ✓":"SKAPA LISTA"}</span><ChevronDown className={open?"open":""}/></button>
-    {open&&<div className="recipe-create-list-menu"><small>SKAPA INKÖPSLISTA I</small><button type="button" disabled={Boolean(busyTarget)} onClick={()=>void choose("private")}><LockKeyhole/><span><b>Privat</b><em>Bara för dig</em></span>{busyTarget==="private"&&<LoaderCircle className="spin"/>}</button>{memberships.map(item=>{const group=groups[item.groupId];return <button type="button" disabled={Boolean(busyTarget)} key={item.groupId} onClick={()=>void choose(item.groupId)}><GroupIcon id={group?.iconId}/><span><b>{group?.name||"Grupp"}</b><em>Delas med gruppen</em></span>{busyTarget===item.groupId&&<LoaderCircle className="spin"/>}</button>})}{error&&<p className="recipe-create-list-error">{error}</p>}</div>}
+    {open&&<div className="recipe-create-list-menu"><small>SKAPA INKÖPSLISTA I</small><button type="button" disabled={Boolean(busyTarget)} onClick={()=>requestCreate("private")}><LockKeyhole/><span><b>Privat</b><em>Bara för dig</em></span></button>{memberships.map(item=>{const group=groups[item.groupId];return <button type="button" disabled={Boolean(busyTarget)} key={item.groupId} onClick={()=>requestCreate(item.groupId)}><GroupIcon id={group?.iconId}/><span><b>{group?.name||"Grupp"}</b><em>Delas med gruppen</em></span></button>})}{error&&<p className="recipe-create-list-error">{error}</p>}</div>}
+    {pendingTarget&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busyTarget)setPendingTarget("")}}><div className="modal confirm-delete-modal"><h2>SKAPA INKÖPSLISTA?</h2><p>En ny lista med namnet “{recipe.title}” och receptets ingredienser skapas i <b>{pendingTargetName}</b>.</p>{error&&<p className="recipe-create-list-error">{error}</p>}<div className="modal-actions"><button className="cancel" disabled={Boolean(busyTarget)} onClick={()=>setPendingTarget("")}>AVBRYT</button><button disabled={Boolean(busyTarget)} onClick={()=>void choose(pendingTarget)}>{busyTarget?<><LoaderCircle className="spin"/> SKAPAR…</>:"SKAPA"}</button></div></div></div>}
   </div>;
 }
 const recipeInstructionSteps=(instructions:string)=>instructions.trim().split(/\r?\n[ \t]*\r?\n+/).map(step=>step.trim()).filter(Boolean);

@@ -25,6 +25,13 @@ function translate(value: string, language: string) {
   inner = inner.replace(/(\d+)\s+(klara|completed|valmiit|erledigt|completados|terminés|completati|ukończone|voltooid)/gi, (_, n) => `${n} ${dict.Klara || "klara"}`);
   inner = inner.replace(/^kvar(\s*·)?$/i, (_, separator="") => `${dict.Kvar || "kvar"}${separator}`);
   inner = inner.replace(/^klara$/i, dict.Klara || "klara");
+  inner = inner.replace(/^(\d+)\s+(minuter|minutes|minuuttia|Minuten|minutos|minutes|minuti|minut|minuten)$/i, (_, n) => `${n} ${dict.Minuter || uiTranslations.en.Minuter || "minutes"}`);
+  inner = inner.replace(/^(\d+)\s+(portioner|servings|annosta|Portionen|porciones|portions|porzioni|porcji|porties)$/i, (_, n) => `${n} ${dict.Portioner || uiTranslations.en.Portioner || "servings"}`);
+  inner = inner.replace(/^(Skriv till|Message|Kirjoita käyttäjälle|Nachricht an|Escribir a|Écrire à|Scrivi a|Napisz do|Schrijf naar)\s+(.+)$/i, (_, label, name) => {
+    const key = canonical(label);
+    return `${dict[key] || uiTranslations.en[key] || label} ${name}`;
+  });
+  inner = inner.replace(/^(\d+)\s+(nya meddelanden|new messages|uutta viestiä|neue Nachrichten|mensajes nuevos|nouveaux messages|nuovi messaggi|nowych wiadomości|nieuwe berichten)$/i, (_, n) => `${n} ${dict["nya meddelanden"] || uiTranslations.en["nya meddelanden"] || "new messages"}`);
   inner = inner.replace(/^(Ändrad|Skapad):\s*(.+)$/i, (_, label, rest) => {
     const key = canonical(label);
     return `${dict[key] || uiTranslations.en[key] || label}: ${rest}`;

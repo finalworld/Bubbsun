@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
-import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
+import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, DirectChat, DirectMessage, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -227,6 +227,23 @@ export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{
     .filter((value,index,values)=>values.findIndex(candidate=>candidate.ref.path===value.ref.path)===index);
   const recipes=documents.map(parseRecipe).filter(recipe=>recipe.isPublic);
   return recipes.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;
+}
+
+const chatTime=(value:unknown)=>numberValue((value as {toMillis?:()=>number}|undefined)?.toMillis?.(),numberValue(value));
+export function directChatId(a:string,b:string){return [a,b].sort().join("__")}
+export function watchDirectChats(uid:string,callback:(items:DirectChat[])=>void):Unsubscribe{
+  return onSnapshot(query(collection(db,"directChats"),where("participantIds","array-contains",uid)),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,participantIds:Array.isArray(d.participantIds)?d.participantIds.filter((x):x is string=>typeof x==="string"):[],participantNames:(d.participantNames||{}) as Record<string,string>,participantColors:(d.participantColors||{}) as Record<string,number>,lastMessage:textValue(d.lastMessage),lastMessageAt:chatTime(d.lastMessageAt),lastSenderId:textValue(d.lastSenderId),readAt:(d.readAt||{}) as Record<string,number>}}).sort((a,b)=>b.lastMessageAt-a.lastMessageAt)));
+}
+export function watchDirectMessages(chatId:string,callback:(items:DirectMessage[])=>void):Unsubscribe{
+  return onSnapshot(query(collection(db,"directChats",chatId,"messages"),orderBy("createdAt","asc")),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,senderId:textValue(d.senderId),text:textValue(d.text),createdAt:chatTime(d.createdAt)}})));
+}
+export async function sendDirectMessage(sender:{uid:string;name:string;color:number},recipient:{uid:string;name:string;color:number},text:string){
+  const clean=text.trim().slice(0,2000);if(!clean||sender.uid===recipient.uid)throw new Error("Ogiltig mottagare");const id=directChatId(sender.uid,recipient.uid),now=Date.now(),chatRef=doc(db,"directChats",id),messageRef=doc(collection(db,"directChats",id,"messages"));const batch=writeBatch(db);batch.set(chatRef,{participantIds:[sender.uid,recipient.uid].sort(),participantNames:{[sender.uid]:sender.name,[recipient.uid]:recipient.name},participantColors:{[sender.uid]:sender.color,[recipient.uid]:recipient.color},lastMessage:clean,lastMessageAt:now,lastSenderId:sender.uid,readAt:{[sender.uid]:now}},{merge:true});batch.set(messageRef,{senderId:sender.uid,text:clean,createdAt:now});await batch.commit();return id;
+}
+export async function markDirectChatRead(chatId:string,uid:string){await updateDoc(doc(db,"directChats",chatId),{[`readAt.${uid}`]:Date.now()})}
+
+export function watchKnownOnlineUserIds(uids:string[],callback:(ids:Set<string>)=>void):Unsubscribe{
+  if(!uids.length){callback(new Set());return()=>{}}const seen=new Map<string,number>();const emit=()=>callback(new Set([...seen].filter(([,at])=>at>=Date.now()-5*60*1000).map(([uid])=>uid)));const unsubs=uids.map(uid=>onSnapshot(doc(db,"presence",uid),snap=>{seen.set(uid,chatTime(snap.data()?.lastSeenAt));emit()}));const timer=window.setInterval(emit,30000);return()=>{window.clearInterval(timer);unsubs.forEach(fn=>fn())};
 }
 export async function setPublicRecipeLiked(recipe:Recipe,uid:string,liked:boolean){
   let target=recipe.sourcePath?doc(db,"publicRecipes",publicRecipeId(recipe.sourcePath)):undefined;

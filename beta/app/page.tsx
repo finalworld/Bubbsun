@@ -28,6 +28,7 @@ import {
   GripVertical,
   LogOut,
   Menu,
+  MessageCircle,
   MoveRight,
   NotebookPen,
   Palette,
@@ -128,6 +129,11 @@ import {
   watchMemberships,
   watchOnlineCount,
   watchOnlineUserIds,
+  watchKnownOnlineUserIds,
+  watchDirectChats,
+  watchDirectMessages,
+  sendDirectMessage,
+  markDirectChatRead,
   watchNotes,
   watchPrivateNotes,
   watchPrivateLists,
@@ -161,6 +167,8 @@ import type {
   BubbsunList,
   BubbsunNote,
   CalendarEvent,
+  DirectChat,
+  DirectMessage,
   GlobalPin,
   Group,
   JoinRequest,
@@ -916,6 +924,7 @@ function Header({
   tabTitle,
   onlineCount,
   notificationCount,
+  chatUnreadCount,
   onOpenNotifications,
   onOpenAdmin,
   language,
@@ -931,6 +940,7 @@ function Header({
   tabTitle?: string;
   onlineCount?: number;
   notificationCount: number;
+  chatUnreadCount: number;
   onOpenNotifications: () => void;
   onOpenAdmin?: () => void;
   language: string;
@@ -954,6 +964,7 @@ function Header({
             >
               <Menu />
             </button>
+            {chatUnreadCount>0&&<b className="menu-chat-badge">{chatUnreadCount>99?"99+":chatUnreadCount}</b>}
             {typeof onlineCount === "number" && <small className="header-admin-online" title="Online just nu">{onlineCount}</small>}
           </div>
         </div>
@@ -1057,6 +1068,8 @@ function Drawer({
   onPage,
   onLogout,
   onInvite,
+  unreadChats,
+  onChat,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1070,6 +1083,8 @@ function Drawer({
   onPage: (page: Page) => void;
   onLogout: () => void;
   onInvite: () => void;
+  unreadChats: number;
+  onChat: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const activeGroup = groups[account.activeGroupId];
@@ -1095,6 +1110,7 @@ function Drawer({
           <button aria-label="Stäng meny" onClick={onClose}>
             <X />
           </button>
+          <button className="drawer-chat" aria-label={`${unreadChats} nya meddelanden`} onClick={onChat}><MessageCircle/>{unreadChats>0&&<b>{unreadChats>99?"99+":unreadChats}</b>}</button>
         </div>
         <div className="drawer-scroll">
           <button
@@ -3213,6 +3229,7 @@ function PeoplePage({
   groups,
   language,
   onSelectGroup,
+  onlineUserIds,
 }: {
   account: Account;
   group?: Group;
@@ -3221,6 +3238,7 @@ function PeoplePage({
   groups: Record<string, Group>;
   language: string;
   onSelectGroup: (groupId: string) => void;
+  onlineUserIds: Set<string>;
 }) {
   const [groupDialog, setGroupDialog] = useState<"" | "create" | "join">("");
   const [groupMessage, setGroupMessage] = useState("");
@@ -3317,6 +3335,7 @@ function PeoplePage({
                 {m.uid === account.uid ? " (du)" : ""}
               </strong>
               <small>{m.role}</small>
+              {m.uid!==account.uid&&<em className={onlineUserIds.has(m.uid)?"person-online":"person-offline"}>{onlineUserIds.has(m.uid)?"ONLINE":"OFFLINE"}</em>}
             </span>
             {account.supporter && m.uid === account.uid ? <b>♥</b> : null}
             {isBoss && m.uid !== account.uid && <UserCog />}
@@ -5623,7 +5642,7 @@ function RecipePagination({page,total,onPage}:{page:number;total:number;onPage:(
   return <nav className="recipe-pagination" aria-label="Receptsidor"><button disabled={page===1} onClick={()=>onPage(page-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,index)=>index+1).map(value=><button className={value===page?"selected":""} aria-current={value===page?"page":undefined} key={value} onClick={()=>onPage(value)}>{value}</button>)}<button disabled={page===pages} onClick={()=>onPage(page+1)}><ChevronRight/></button></nav>;
 }
 
-function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
+function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,onMessageCreator,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onMessageCreator:(recipe:Recipe)=>void;openRecipeId?:string;onRecipeOpened?:()=>void}){
   const [editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[spaceOpen,setSpaceOpen]=useState(false),[recipePage,setRecipePage]=useState(1);const activeGroup=groups[account.activeGroupId];
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
@@ -5640,7 +5659,7 @@ function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,m
     </div></div>
     <div className="recipes-toolbar recipe-cookbook-toolbar"><RecipeFilterPicker label="KATEGORI" value={category} options={categoryOptions} onChange={value=>{setCategory(value);setSubcategory("")}}/><RecipeFilterPicker label="UNDERKATEGORI" value={subcategory} options={subcategoryOptions} disabled={!category} onChange={setSubcategory}/></div>
     {shown.length?<><div className="recipe-grid">{pagedRecipes.map(recipe=><button className={`recipe-card${recipe.isPublic?" shared":""}`} key={recipe.id} style={{"--recipe-creator":rgbaHex(creatorColor(recipe))} as CSSProperties} onClick={()=>setViewing(recipe)}><RecipeLikeCount recipe={recipe}/>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}<span>🍽️ {recipeYieldLabel(recipe)}</span></em></span></button>)}</div><RecipePagination page={recipePage} total={shown.length} onPage={setRecipePage}/></>:<div className="recipes-empty"><span>🥐</span><h2>Inga recept här ännu</h2><p>Börja med något gott. Bullar är ett stabilt förstaval.</p></div>}
-    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view" style={{"--recipe-creator":rgbaHex(creatorColor(viewing))} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/>{viewing.isPublic&&<RecipeShareControl recipe={viewing}/>}<RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/>{viewing.isPublic&&<RecipeLikeButton recipe={viewing} uid={uid}/>}</div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/><footer><span/><div>{linkedViewingList&&<button onClick={async()=>{await onAddToList(viewing,linkedViewingList.id);window.alert("Ingredienserna är tillagda i listan ✓")}}><ListChecks/> TILL {linkedViewingList.name.toLocaleUpperCase("sv-SE")}</button>}<button onClick={()=>{setViewing(undefined);setEditing(viewing)}}><Pencil/> REDIGERA</button></div></footer></article></div>}
+    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view" style={{"--recipe-creator":rgbaHex(creatorColor(viewing))} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/>{viewing.isPublic&&<RecipeShareControl recipe={viewing}/>}<RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/>{viewing.isPublic&&<RecipeLikeButton recipe={viewing} uid={uid}/>}</div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}{viewing.creatorId!==uid&&<button className="recipe-message-creator" onClick={()=>onMessageCreator(viewing)} aria-label={`Skriv till ${viewing.creatorName}`}><MessageCircle/></button>}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/><footer><span/><div>{linkedViewingList&&<button onClick={async()=>{await onAddToList(viewing,linkedViewingList.id);window.alert("Ingredienserna är tillagda i listan ✓")}}><ListChecks/> TILL {linkedViewingList.name.toLocaleUpperCase("sv-SE")}</button>}<button onClick={()=>{setViewing(undefined);setEditing(viewing)}}><Pencil/> REDIGERA</button></div></footer></article></div>}
     {(creating||editing)&&<RecipeEditor recipe={editing} account={account} lists={lists} memberships={memberships} groups={groups} currentLocation={privateMode?"private":account.activeGroupId} onClose={()=>{onCreating(false);setEditing(undefined)}} onSave={async(recipe,targetLocation)=>{await onSave(recipe,targetLocation);onCreating(false);setEditing(undefined)}} onDelete={editing?async()=>{await onDelete(editing);setEditing(undefined)}:undefined}/>}</section>;
 }
 
@@ -5659,7 +5678,7 @@ function RecipeSortPicker({value,onChange}:{value:string;onChange:(value:string)
   return <div ref={pickerRef} className="recipe-filter-picker recipe-sort-picker"><button className="recipe-sort-trigger" type="button" aria-label={`Sortera recept: ${selected.label}`} title={`Sortera: ${selected.label}`} aria-expanded={open} onClick={()=>setOpen(current=>!current)}><ArrowUpDown/></button>{open&&<div className="recipe-filter-menu">{options.map(option=><button type="button" className={option.value===value?"selected":""} key={option.value} onClick={()=>{onChange(option.value);setOpen(false)}}><span>{option.label}</span>{option.value===value&&<Check/>}</button>)}</div>}</div>;
 }
 
-function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientList,onSaveCopy}:{recipes:Recipe[];uid:string;memberships:Membership[];groups:Record<string,Group>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onSaveCopy:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
+function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientList,onSaveCopy,onMessageCreator}:{recipes:Recipe[];uid:string;memberships:Membership[];groups:Record<string,Group>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onSaveCopy:(recipe:Recipe,targetLocation:string)=>Promise<void>;onMessageCreator:(recipe:Recipe)=>void}){
   const [search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[sortMode,setSortMode]=useState("liked"),[viewing,setViewing]=useState<Recipe|undefined>(),[recipePage,setRecipePage]=useState(1);
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE")))).sort((a,b)=>sortMode==="newest"?(b.createdAt||0)-(a.createdAt||0):sortMode==="oldest"?(a.createdAt||0)-(b.createdAt||0):sortMode==="alpha"?a.title.localeCompare(b.title,"sv-SE"):(b.likedBy?.length||0)-(a.likedBy?.length||0)||(b.createdAt||0)-(a.createdAt||0));
@@ -5669,8 +5688,28 @@ function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientL
     <header className="recipe-discover-intro"><Compass/><div><h1>UPPTÄCK NYA RECEPT</h1><p>Goda idéer som Bubbsun-användare valt att dela.</p></div></header>
     <div className="recipes-toolbar recipe-discover-toolbar"><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept eller skapare"/></label><RecipeFilterPicker label="KATEGORI" value={category} options={categoryOptions} onChange={value=>{setCategory(value);setSubcategory("")}}/><RecipeFilterPicker label="UNDERKATEGORI" value={subcategory} options={subcategoryOptions} disabled={!category} onChange={setSubcategory}/><RecipeSortPicker value={sortMode} onChange={setSortMode}/></div>
     {shown.length?<><div className="recipe-grid">{pagedRecipes.map(recipe=><button className="recipe-card public" key={`${recipe.creatorId}-${recipe.id}`} style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties} onClick={()=>setViewing(recipe)}><RecipeLikeCount recipe={recipe}/>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}<span>🍽️ {recipeYieldLabel(recipe)}</span></em><em className="recipe-card-creator"><UserRound/><span>Skapad av <b>{recipe.creatorName}</b></span></em></span></button>)}</div><RecipePagination page={recipePage} total={shown.length} onPage={setRecipePage}/></>:<div className="recipes-empty"><span>🔎</span><h2>Inga recept hittades</h2><p>Här dyker offentliga recept upp när någon delar ett.</p></div>}
-    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view recipe-discover-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/><RecipeSaveCopyControl recipe={viewing} memberships={memberships} groups={groups} onSave={onSaveCopy}/><RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/><RecipeLikeButton recipe={viewing} uid={uid}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/></article></div>}
+    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view recipe-discover-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/><RecipeSaveCopyControl recipe={viewing} memberships={memberships} groups={groups} onSave={onSaveCopy}/><RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/><RecipeLikeButton recipe={viewing} uid={uid}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}{viewing.creatorId!==uid&&<button className="recipe-message-creator" onClick={()=>onMessageCreator(viewing)} aria-label={`Skriv till ${viewing.creatorName}`}><MessageCircle/></button>}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/></article></div>}
   </section>;
+}
+
+type ChatPeer={uid:string;name:string;color:number};
+function ChatWindow({account,peer,onClose}:{account:Account;peer:ChatPeer;onClose:()=>void}){
+  const chatId=[account.uid,peer.uid].sort().join("__"),[messages,setMessages]=useState<DirectMessage[]>([]),[text,setText]=useState(""),[busy,setBusy]=useState(false),bottom=useRef<HTMLDivElement|null>(null);
+  useEffect(()=>watchDirectMessages(chatId,setMessages),[chatId]);
+  useEffect(()=>{void markDirectChatRead(chatId,account.uid).catch(()=>{});bottom.current?.scrollIntoView({behavior:"smooth"})},[chatId,account.uid,messages.length]);
+  const send=async()=>{if(!text.trim()||busy)return;const value=text;setText("");setBusy(true);try{await sendDirectMessage({uid:account.uid,name:account.displayName,color:account.personalColor??colorOptions[0]},peer,value)}catch(error){setText(value);window.alert("Meddelandet kunde inte skickas.");console.error(error)}finally{setBusy(false)}};
+  return <div className="modal-backdrop chat-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="chat-window"><header><i style={{background:rgbaHex(peer.color)}}>{peer.name.slice(0,1).toUpperCase()}</i><div><small>CHATT MED</small><strong>{peer.name}</strong></div><button onClick={onClose} aria-label="Stäng"><X/></button></header><div className="chat-messages">{messages.length?messages.map(message=><div key={message.id} className={message.senderId===account.uid?"mine":"theirs"}><p>{message.text}</p><time>{new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit"}).format(new Date(message.createdAt))}</time></div>):<p className="chat-empty">Skriv första meddelandet 👋</p>}<div ref={bottom}/></div><form onSubmit={e=>{e.preventDefault();void send()}}><textarea autoFocus value={text} maxLength={2000} onChange={e=>setText(e.target.value)} placeholder="Skriv ett meddelande…" onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();void send()}}}/><button disabled={busy||!text.trim()}>SKICKA</button></form></section></div>;
+}
+
+function NewChatDialog({account,memberships,groups,onOpen,onClose}:{account:Account;memberships:Membership[];groups:Record<string,Group>;onOpen:(peer:ChatPeer)=>void;onClose:()=>void}){
+  const [groupId,setGroupId]=useState(memberships[0]?.groupId||""),[people,setPeople]=useState<Membership[]>([]);
+  useEffect(()=>groupId?watchGroupMembers(groupId,setPeople):undefined,[groupId]);
+  return <div className="modal-backdrop chat-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="new-chat-dialog"><button className="chat-dialog-close" onClick={onClose}><X/></button><MessageCircle/><h2>NYTT MEDDELANDE</h2><div className="new-chat-pickers"><label>MIN GRUPP<select value={groupId} onChange={e=>setGroupId(e.target.value)}>{memberships.map(m=><option key={m.groupId} value={m.groupId}>{groups[m.groupId]?.name||"Grupp"}</option>)}</select></label><div><small>PERSON I GRUPPEN</small>{people.filter(p=>p.uid!==account.uid).map(person=><button key={person.uid} onClick={()=>onOpen({uid:person.uid,name:person.displayName,color:person.color})}><i style={{background:rgbaHex(person.color)}}>{person.displayName.slice(0,1)}</i><span>{person.displayName}</span><ChevronRight/></button>)}{people.filter(p=>p.uid!==account.uid).length===0&&<p>Ingen annan att skriva till i den här gruppen.</p>}</div></div></section></div>;
+}
+
+function ChatPage({account,chats,memberships,groups,onOpen}:{account:Account;chats:DirectChat[];memberships:Membership[];groups:Record<string,Group>;onOpen:(peer:ChatPeer)=>void}){
+  const [creating,setCreating]=useState(false),dateText=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
+  return <section className="content subpage chat-page"><div className="content-heading chat-heading"><MessageCircle/><div><h1>MEDDELANDEN</h1><p>Dina privata chattar</p></div>{memberships.length>0&&<button className="theme-button" onClick={()=>setCreating(true)} aria-label="Nytt meddelande"><Plus/></button>}</div>{chats.length?<div className="chat-card-list">{chats.map(chat=>{const peerId=chat.participantIds.find(id=>id!==account.uid)||"",unread=chat.lastSenderId!==account.uid&&chat.lastMessageAt>(chat.readAt?.[account.uid]||0),peer={uid:peerId,name:chat.participantNames?.[peerId]||"Bubbsun-användare",color:chat.participantColors?.[peerId]??colorOptions[0]};return <button key={chat.id} className={unread?"unread":""} onClick={()=>onOpen(peer)}><i style={{background:rgbaHex(peer.color)}}>{peer.name.slice(0,1).toUpperCase()}</i><span><strong>{peer.name}</strong><p>{chat.lastMessage}</p><time>{dateText(chat.lastMessageAt)}</time></span>{unread&&<b>NYTT</b>}<ChevronRight/></button>})}</div>:<div className="chat-page-empty"><MessageCircle/><h2>Inga meddelanden ännu</h2><p>{memberships.length?"Tryck på plus för att starta en chatt.":"Du kan fortfarande skriva till en receptskapare från ett recept."}</p></div>}{creating&&<NewChatDialog account={account} memberships={memberships} groups={groups} onClose={()=>setCreating(false)} onOpen={peer=>{setCreating(false);onOpen(peer)}}/>}</section>;
 }
 
 type ActivityEntry = {
@@ -5722,7 +5761,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","recipes","recipe-discover","notifications","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","recipes","recipe-discover","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -5762,6 +5801,9 @@ function AuthenticatedApp() {
   const [adminUserCounts,setAdminUserCounts]=useState<Record<string,AdminUserCounts>>({});
   const [onlineCount, setOnlineCount] = useState(0);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [groupOnlineUserIds,setGroupOnlineUserIds]=useState<Set<string>>(new Set());
+  const [directChats,setDirectChats]=useState<DirectChat[]>([]);
+  const [chatPeer,setChatPeer]=useState<ChatPeer|null>(null);
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
   const previousPageRef = useRef<Page>(page);
@@ -5910,6 +5952,8 @@ function AuthenticatedApp() {
       }),
     [],
   );
+  useEffect(()=>user&&databaseReady?watchDirectChats(user.uid,setDirectChats):undefined,[user,databaseReady]);
+  useEffect(()=>watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds),[members]);
   useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
@@ -6645,6 +6689,7 @@ function AuthenticatedApp() {
         mode={page === "lists" || page === "notes" || page === "calendar" || page === "recipes" ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
         notificationCount={notificationCount}
+        chatUnreadCount={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
         onOpenNotifications={() => {
           setNotificationPageSeenAt(activitySeenAt);
           navigate("notifications");
@@ -6772,10 +6817,12 @@ function AuthenticatedApp() {
         onDelete={deleteRecipe}
         onAddToList={addRecipeToList}
         onCreateIngredientList={createRecipeIngredientList}
+        onMessageCreator={recipe=>setChatPeer({uid:recipe.creatorId,name:recipe.creatorName,color:recipe.creatorColor??colorOptions[0]})}
         openRecipeId={activityRecipeId}
         onRecipeOpened={()=>setActivityRecipeId("")}
       />}
-      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy}/>}
+      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy} onMessageCreator={recipe=>setChatPeer({uid:recipe.creatorId,name:recipe.creatorName,color:recipe.creatorColor??colorOptions[0]})}/>}
+      {page === "chat"&&<ChatPage account={account} chats={directChats} memberships={memberships} groups={groups} onOpen={setChatPeer}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
         if(entry.kind==="list"){
@@ -6800,6 +6847,7 @@ function AuthenticatedApp() {
           memberships={memberships}
           groups={groups}
           language={language}
+          onlineUserIds={groupOnlineUserIds}
           onSelectGroup={async id=>{if(id===account.activeGroupId)return;await switchGroup(user.uid,id);setPrivateMode(false)}}
         />
       )}
@@ -6870,7 +6918,10 @@ function AuthenticatedApp() {
         onPage={navigate}
         onLogout={() => signOut(auth)}
         onInvite={() => void inviteFriend()}
+        unreadChats={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
+        onChat={()=>{setMenuOpen(false);navigate("chat")}}
       />
+      {chatPeer&&chatPeer.uid!==user.uid&&<ChatWindow account={account} peer={chatPeer} onClose={()=>setChatPeer(null)}/>}
       {saveConflict && (
         <div className="modal-backdrop">
           <div className="modal conflict-modal">

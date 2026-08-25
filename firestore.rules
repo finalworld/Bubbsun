@@ -102,12 +102,24 @@ service cloud.firestore {
     }
 
     match /presence/{uid} {
-      allow read: if isMega();
+      allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid && request.resource.data.uid == uid;
       allow update: if signedIn() && request.auth.uid == uid
         && request.resource.data.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'lastSeenAt']);
       allow delete: if isMega();
+    }
+
+    match /directChats/{chatId} {
+      allow read: if signedIn() && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow create: if signedIn() && request.resource.data.participantIds is list && request.resource.data.participantIds.size() == 2 && request.resource.data.participantIds.hasAny([request.auth.uid]) && request.resource.data.participantIds[0] != request.resource.data.participantIds[1];
+      allow update: if signedIn() && resource.data.participantIds.hasAny([request.auth.uid]) && request.resource.data.participantIds == resource.data.participantIds;
+      allow delete: if false;
+      match /messages/{messageId} {
+        allow read: if signedIn() && get(/databases/$(database)/documents/directChats/$(chatId)).data.participantIds.hasAny([request.auth.uid]);
+        allow create: if signedIn() && request.resource.data.senderId == request.auth.uid && getAfter(/databases/$(database)/documents/directChats/$(chatId)).data.participantIds.hasAny([request.auth.uid]);
+        allow update, delete: if false;
+      }
     }
 
     match /users/{uid} {

@@ -3196,3 +3196,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   border-color:var(--theme-outline)!important;
   background:var(--theme-paper)!important;
 }
+
+/* The cookbook group picker must float above category filters and cards. */
+.recipe-cookbook-primary { z-index:200!important; }
+.recipe-cookbook-primary .recipe-scope-wrap { z-index:201!important; }
+.recipe-cookbook-primary .recipe-scope-menu { z-index:202!important; }

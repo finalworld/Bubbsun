@@ -25,6 +25,53 @@
 .new-chat-dialog{position:relative;padding:28px}.chat-dialog-close{position:absolute;right:16px;top:16px;background:none;border:0;color:inherit}.new-chat-dialog>svg{color:var(--theme-accent);width:38px;height:38px}.new-chat-dialog h2{font:800 29px Georgia}.new-chat-pickers{display:grid;grid-template-columns:minmax(170px,.8fr) 1.2fr;gap:16px}.new-chat-pickers label,.new-chat-pickers>div{display:grid;align-content:start;gap:8px}.new-chat-pickers small,.new-chat-pickers label{font:800 11px Arial;letter-spacing:.1em;color:var(--theme-accent)}.new-chat-pickers select{margin-top:8px;padding:13px;border:2px solid var(--theme-outline);border-radius:14px;background:#fffaf0;font:700 16px Georgia}.new-chat-pickers>div>button{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;text-align:left;border:1px solid color-mix(in srgb,var(--theme-outline) 45%,transparent);background:#fffaf0;border-radius:14px;padding:9px;color:#25170d}.new-chat-pickers i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal}.people-list em.person-online,.people-list em.person-offline{font:800 10px Arial;letter-spacing:.05em}.people-list em.person-online{color:#27854a}.people-list em.person-offline{opacity:.45}
 @media(max-width:600px){.new-chat-pickers{grid-template-columns:1fr}.chat-card-list>button{grid-template-columns:46px 1fr auto;padding:13px}.chat-card-list i{width:44px;height:44px}.chat-card-list>button>b{grid-column:3;grid-row:1}.chat-card-list>button>svg{display:none}.chat-window form{grid-template-columns:1fr}.chat-window form button{height:45px}.drawer-title .drawer-chat{right:20px;bottom:8px}}
 
+/* Keep chat below the close button, in the hero image's lower-right corner. */
+.app-shell .drawer .drawer-title > .drawer-chat {
+  top:auto!important;
+  right:16px!important;
+  bottom:12px!important;
+  left:auto!important;
+}
+
+/* Desktop recipe actions: primary choices stacked, light icon row below. */
+@media (min-width:900px) {
+  .recipe-view .recipe-view-tools {
+    position:relative;
+    inset:auto;
+    width:270px;
+    margin:-58px 0 16px auto;
+    display:grid;
+    grid-template-columns:repeat(3,44px);
+    justify-content:end;
+    align-items:center;
+    gap:8px;
+  }
+  .recipe-view .recipe-view-tools > .recipe-save-copy-control { order:1;grid-column:1/-1; }
+  .recipe-view .recipe-view-tools > .recipe-create-list-control:not(.recipe-save-copy-control) { order:2;grid-column:1/-1; }
+  .recipe-view .recipe-view-tools > .recipe-print-button { order:3;grid-column:1; }
+  .recipe-view .recipe-view-tools > .recipe-share-button { order:4;grid-column:2; }
+  .recipe-view .recipe-view-tools > .recipe-like-button { order:5;grid-column:3; }
+  .recipe-view .recipe-view-tools > .recipe-create-list-control > .recipe-create-list-trigger { width:100%; }
+  .recipe-view .recipe-view-tools > .recipe-icon-action,
+  .recipe-view .recipe-view-tools > .recipe-like-button {
+    position:static!important;
+    inset:auto!important;
+    width:44px!important;
+    min-width:44px!important;
+    height:40px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:var(--theme-accent)!important;
+    box-shadow:none!important;
+  }
+  .recipe-view .recipe-view-tools > .recipe-like-button b { display:none; }
+  .recipe-view .recipe-view-tools > .recipe-icon-action svg,
+  .recipe-view .recipe-view-tools > .recipe-like-button svg { width:25px;height:25px; }
+  .recipe-view:has(.recipe-view-tools) > h1 { margin-right:315px; }
+}
+
 /* Theme the illustrated drawer while preserving its hero and colored tabs. */
 .app-shell .drawer {
   background: var(--theme-panel) !important;

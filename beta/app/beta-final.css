@@ -3027,6 +3027,35 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 }
 .chat-window header button svg { width:31px;height:31px; }
 
+/* Mobile chat fills the visible viewport; only the message history scrolls. */
+@media (max-width:600px) {
+  .chat-backdrop:has(.chat-window) {
+    padding:0!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .chat-window {
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    border:0!important;
+    border-radius:0!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+  }
+  .chat-window header {
+    padding-top:max(14px,env(safe-area-inset-top))!important;
+  }
+  .chat-window .chat-messages {
+    min-height:0;
+    overscroll-behavior:contain;
+  }
+  .chat-window form {
+    padding-bottom:max(14px,env(safe-area-inset-bottom))!important;
+    background:var(--theme-paper);
+  }
+}
+
 /* Attach unread badge to the hamburger itself, not the header divider. */
 .app-shell .topbar .header-menu-slot > .menu-chat-badge {
   left:32px;

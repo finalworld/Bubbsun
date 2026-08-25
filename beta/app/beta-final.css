@@ -2984,10 +2984,10 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-scale span {
   min-height: 38px;
   padding: 7px 12px;
-  border: 2px solid var(--theme-border, #ad8364);
+  border: 2px solid var(--theme-outline);
   border-radius: 12px;
-  background: var(--theme-card-bg, #fff8eb);
-  color: var(--theme-text, #2d170b);
+  background: var(--theme-panel);
+  color: var(--theme-text);
   font: inherit;
   font-weight: 800;
   line-height: 1;
@@ -2996,8 +2996,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-scale button { cursor: pointer; }
 .recipe-scale button:hover { filter: brightness(1.06); }
 .recipe-scale .recipe-scale-reset {
-  background: var(--theme-accent, #5d7f5f);
-  color: #fff;
+  background: var(--theme-accent);
+  color: var(--theme-paper);
 }
 @media (max-width: 899px) {
   .recipe-ingredient-heading {

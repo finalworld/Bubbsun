@@ -5641,6 +5641,8 @@ function AuthenticatedApp() {
   const privateListsHistoryRef = useRef<BubbsunList[]>([]);
   const notesHistoryRef = useRef<BubbsunNote[]>([]);
   const privateNotesHistoryRef = useRef<BubbsunNote[]>([]);
+  const listOverviewScrollRef = useRef(0);
+  const restoreListOverviewScrollRef = useRef(false);
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -5700,6 +5702,7 @@ function AuthenticatedApp() {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
+  const previousPageRef = useRef<Page>(page);
 
   useEffect(() => {
     listsHistoryRef.current = lists;
@@ -6018,10 +6021,21 @@ function AuthenticatedApp() {
   }, [language]);
   useEffect(() => {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    const previousPage = previousPageRef.current;
+    const shouldRestoreListOverview =
+      page === "lists" &&
+      previousPage === "list" &&
+      restoreListOverviewScrollRef.current;
+    const targetTop = shouldRestoreListOverview
+      ? listOverviewScrollRef.current
+      : 0;
+    previousPageRef.current = page;
+    if (previousPage === "list" && page !== "list")
+      restoreListOverviewScrollRef.current = false;
+    window.scrollTo({ top: targetTop, left: 0, behavior: "auto" });
     const first = requestAnimationFrame(() =>
       requestAnimationFrame(() =>
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" }),
+        window.scrollTo({ top: targetTop, left: 0, behavior: "auto" }),
       ),
     );
     return () => cancelAnimationFrame(first);
@@ -6150,6 +6164,8 @@ function AuthenticatedApp() {
     return()=>window.removeEventListener("bubbsun:navigate",handleNavigate);
   });
   const openList = (list: BubbsunList, isPrivate: boolean) => {
+    restoreListOverviewScrollRef.current = page === "lists";
+    if (page === "lists") listOverviewScrollRef.current = window.scrollY;
     if(!isPrivate&&user&&account?.activeGroupId){
       const key=`${account.activeGroupId}_${list.id}`;
       setSelectedUnreadAfter(listReadAt.get(key)??NEW_BADGE_EPOCH);

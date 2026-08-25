@@ -3216,3 +3216,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .app-shell .drawer nav .drawer-recipe-submenu > button > svg {
   color:var(--theme-text)!important;
 }
+
+/* Mobile-only photo import in the new recipe editor. */
+.recipe-import-row{display:flex;align-items:stretch;gap:12px}
+.recipe-photo-import{display:none}
+.recipe-import-message{margin:10px 0 2px;padding:10px 13px;border:1px solid var(--theme-outline);border-radius:12px;background:var(--theme-panel);color:var(--theme-text);font:700 13px/1.35 system-ui,sans-serif}
+.recipe-import-message.busy{color:var(--theme-accent)}
+@media(max-width:899px){
+  .recipe-import-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .recipe-import-row .recipe-image-picker{width:100%!important;height:122px}
+  .recipe-photo-import{box-sizing:border-box;min-width:0;height:122px;border:2px dashed var(--theme-outline);border-radius:22px;background:var(--theme-paper);color:var(--theme-text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center;cursor:pointer}
+  .recipe-photo-import.busy{opacity:.75;pointer-events:none}
+  .recipe-photo-import svg{width:38px;height:38px;color:var(--theme-accent)}
+  .recipe-photo-import span{font:900 13px/1.1 system-ui,sans-serif}
+  .recipe-photo-import small{font:700 10px/1.2 system-ui,sans-serif;opacity:.7}
+  .recipe-photo-import input{display:none}
+}

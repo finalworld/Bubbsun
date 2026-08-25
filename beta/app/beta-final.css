@@ -3072,3 +3072,64 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   bottom:12px!important;
   left:auto!important;
 }
+
+/* Mobile recipe tools: two calm rows, with likes floating in the white corner. */
+@media (max-width:899px) {
+  .recipe-view .recipe-view-tools {
+    position:static!important;
+    display:grid!important;
+    grid-template-columns:54px minmax(0,1fr)!important;
+    grid-auto-rows:48px;
+    gap:8px 10px!important;
+    margin:12px 0 14px!important;
+  }
+  .recipe-view .recipe-view-tools > .recipe-print-button { grid-column:1;grid-row:1; }
+  .recipe-view .recipe-view-tools > .recipe-share-button { grid-column:1;grid-row:2; }
+  .recipe-discover-view .recipe-view-tools > .recipe-save-copy-control { grid-column:2;grid-row:1; }
+  .recipe-discover-view .recipe-view-tools > .recipe-create-list-control:not(.recipe-save-copy-control) { grid-column:2;grid-row:2; }
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-create-list-control { grid-column:2;grid-row:1; }
+  .recipe-view .recipe-view-tools > .recipe-create-list-control,
+  .recipe-view .recipe-view-tools > .recipe-create-list-control > .recipe-create-list-trigger { width:100%;min-width:0;height:48px; }
+  .recipe-view .recipe-view-tools > .recipe-icon-action {
+    width:54px!important;
+    min-width:54px!important;
+    height:48px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:var(--theme-accent)!important;
+    box-shadow:none!important;
+  }
+  .recipe-view .recipe-view-tools > .recipe-icon-action svg { width:29px;height:29px; }
+  .recipe-view .recipe-view-tools > .recipe-like-button {
+    position:absolute!important;
+    top:238px!important;
+    right:19px!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    width:auto!important;
+    min-width:56px!important;
+    height:42px!important;
+    padding:0 5px!important;
+    display:flex!important;
+    gap:3px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:var(--theme-accent)!important;
+    box-shadow:none!important;
+    z-index:4;
+  }
+  .recipe-view .recipe-view-tools > .recipe-like-button svg { width:27px;height:27px; }
+  .recipe-view .recipe-view-tools > .recipe-like-button b {
+    display:grid;
+    min-width:22px;
+    height:22px;
+    padding:0 4px;
+    color:var(--theme-text);
+    background:color-mix(in srgb,var(--theme-accent) 13%,var(--theme-paper));
+  }
+  .recipe-view .recipe-view-tools > .recipe-icon-action:active,
+  .recipe-view .recipe-view-tools > .recipe-like-button:active { transform:scale(.9); }
+}

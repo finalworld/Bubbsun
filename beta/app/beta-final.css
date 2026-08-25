@@ -3009,3 +3009,20 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-scale span { flex: 1; }
   .recipe-scale .recipe-scale-reset { flex: 0 0 auto; }
 }
+
+/* Larger, touch-friendly close button in direct chats. */
+.chat-window header button {
+  margin-left:auto;
+  width:58px;
+  height:58px;
+  min-width:58px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:#b85b62;
+  color:#fff;
+  border:2px solid var(--theme-outline);
+  box-shadow:0 4px 8px #0002;
+}
+.chat-window header button svg { width:31px;height:31px; }

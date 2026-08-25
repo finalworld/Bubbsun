@@ -3169,3 +3169,30 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-view .recipe-view-tools > .recipe-icon-action:active,
   .recipe-view .recipe-view-tools > .recipe-like-button:active { transform:scale(.9); }
 }
+
+/* Narrow phones and enlarged Android text: keep the category on one useful line. */
+.recipe-view > small {
+  display:block;
+  width:min(100%,calc(100% - 74px));
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  line-height:1.2;
+}
+
+/* Every recipe action follows the active theme palette. */
+.recipe-view .recipe-close,
+.recipe-view .recipe-create-list-trigger {
+  border-color:var(--theme-outline)!important;
+  background:var(--theme-accent)!important;
+  color:var(--theme-paper)!important;
+}
+.recipe-view .recipe-icon-action,
+.recipe-view .recipe-like-button,
+.recipe-view .recipe-message-creator {
+  color:var(--theme-accent)!important;
+}
+.recipe-view .recipe-message-creator {
+  border-color:var(--theme-outline)!important;
+  background:var(--theme-paper)!important;
+}

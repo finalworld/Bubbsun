@@ -63,6 +63,12 @@ service cloud.firestore {
       allow read: if isMega();
     }
 
+    // Global admin total for private-message statistics. Regular users still
+    // only read messages through the participant-protected directChats rule.
+    match /{documentPath=**}/messages/{messageId} {
+      allow read: if isMega();
+    }
+
     match /{documentPath=**}/recipes/{recipeId} {
       allow read: if signedIn() && resource.data.isPublic == true;
       allow update: if isMega() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isPublic','updatedAt']);

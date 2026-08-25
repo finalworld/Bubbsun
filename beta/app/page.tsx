@@ -132,6 +132,7 @@ import {
   watchKnownOnlineUserIds,
   watchDirectChats,
   watchDirectMessages,
+  watchTotalDirectMessageCount,
   ensureDirectChat,
   sendDirectMessage,
   markDirectChatRead,
@@ -4461,6 +4462,7 @@ function AdminPage({
   onlineUserIds,
   userCounts,
   publicRecipes,
+  messageCount,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4470,6 +4472,7 @@ function AdminPage({
   onlineUserIds: Set<string>;
   userCounts: Record<string,AdminUserCounts>;
   publicRecipes: Recipe[];
+  messageCount: number;
 }) {
   const [tab, setTab] = useState<"members" | "reports" | "recipes" | "pin" | "themes">(
       "members",
@@ -4537,6 +4540,11 @@ function AdminPage({
           <small>ANTAL RECEPT</small>
           <strong>{recipeCount}</strong>
         </button>
+        <div>
+          <MessageCircle />
+          <small>SKICKADE MEDDELANDEN</small>
+          <strong>{messageCount}</strong>
+        </div>
       </div>
       <div className="admin-theme-ranking" aria-label="De fem mest använda temana">
         {topThemes.map((theme, index) => (
@@ -5824,6 +5832,7 @@ function AuthenticatedApp() {
     BubbsunList[]
   >([]);
   const [adminUserCounts,setAdminUserCounts]=useState<Record<string,AdminUserCounts>>({});
+  const [adminMessageCount,setAdminMessageCount]=useState(0);
   const [onlineCount, setOnlineCount] = useState(0);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [groupOnlineUserIds,setGroupOnlineUserIds]=useState<Set<string>>(new Set());
@@ -6141,6 +6150,10 @@ function AuthenticatedApp() {
     if(!account?.megaSuperBoss&&!account?.founder)return;
     return watchAdminUserCounts(allAccounts.map(item=>item.uid),setAdminUserCounts);
   },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
+  useEffect(()=>{
+    if(!account?.megaSuperBoss&&!account?.founder)return;
+    return watchTotalDirectMessageCount(setAdminMessageCount);
+  },[account?.megaSuperBoss,account?.founder]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
     if (user && account && account.themeId !== themeId) {
@@ -6924,6 +6937,7 @@ function AuthenticatedApp() {
           onlineUserIds={onlineUserIds}
           userCounts={adminUserCounts}
           publicRecipes={publicRecipes}
+          messageCount={adminMessageCount}
         />
       )}
       <Drawer

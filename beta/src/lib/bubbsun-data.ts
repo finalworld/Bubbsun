@@ -238,6 +238,9 @@ export function watchDirectChats(uid:string,callback:(items:DirectChat[])=>void)
 export function watchDirectMessages(chatId:string,callback:(items:DirectMessage[])=>void):Unsubscribe{
   return onSnapshot(query(collection(db,"directChats",chatId,"messages"),orderBy("createdAt","asc")),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,senderId:textValue(d.senderId),text:textValue(d.text),createdAt:chatTime(d.createdAt)}})));
 }
+export function watchTotalDirectMessageCount(callback:(count:number)=>void):Unsubscribe{
+  return onSnapshot(collectionGroup(db,"messages"),snapshot=>callback(snapshot.size));
+}
 export async function sendDirectMessage(sender:{uid:string;name:string;color:number},recipient:{uid:string;name:string;color:number},text:string){
   const clean=text.trim().slice(0,2000);if(!clean||sender.uid===recipient.uid)throw new Error("Ogiltig mottagare");const id=directChatId(sender.uid,recipient.uid),now=Date.now(),chatRef=doc(db,"directChats",id),messageRef=doc(collection(db,"directChats",id,"messages"));const batch=writeBatch(db);batch.set(chatRef,{participantIds:[sender.uid,recipient.uid].sort(),participantNames:{[sender.uid]:sender.name,[recipient.uid]:recipient.name},participantColors:{[sender.uid]:sender.color,[recipient.uid]:recipient.color},lastMessage:clean,lastMessageAt:now,lastSenderId:sender.uid,readAt:{[sender.uid]:now}},{merge:true});batch.set(messageRef,{senderId:sender.uid,text:clean,createdAt:now});await batch.commit();return id;
 }

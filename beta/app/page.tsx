@@ -5104,24 +5104,30 @@ function mergePublicRecipeLikes(recipes:Recipe[],publicRecipes:Recipe[]){
   });
 }
 
-function RecipeCreateListControl({recipe,memberships,groups,onCreate}:{recipe:Recipe;memberships:Membership[];groups:Record<string,Group>;onCreate:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
-  const [open,setOpen]=useState(false),[busyTarget,setBusyTarget]=useState(""),[created,setCreated]=useState(false),[error,setError]=useState(""),[pendingTarget,setPendingTarget]=useState("");
+function RecipeCreateListControl({recipe,memberships,groups,onCreate}:{recipe:Recipe;memberships:Membership[];groups:Record<string,Group>;onCreate:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>}){
+  const [open,setOpen]=useState(false),[busyTarget,setBusyTarget]=useState(""),[created,setCreated]=useState(false),[error,setError]=useState(""),[pendingTarget,setPendingTarget]=useState(""),[selectedIngredientIds,setSelectedIngredientIds]=useState<string[]>([]);
   const choose=async(targetLocation:string)=>{
     if(busyTarget)return;
     setBusyTarget(targetLocation);setError("");
     try{
-      await onCreate(recipe,targetLocation);
+      await onCreate(recipe,targetLocation,selectedIngredientIds);
       setOpen(false);setPendingTarget("");setCreated(true);
       window.setTimeout(()=>setCreated(false),2200);
     }catch(reason){console.error("Kunde inte skapa receptlistan",reason);setError("Kunde inte skapa listan. Försök igen.")}finally{setBusyTarget("")}
   };
-  const requestCreate=(targetLocation:string)=>{setOpen(false);setError("");setPendingTarget(targetLocation)};
+  const requestCreate=(targetLocation:string)=>{setOpen(false);setError("");setSelectedIngredientIds(recipe.ingredients.map(item=>item.id));setPendingTarget(targetLocation)};
   const pendingTargetName=pendingTarget==="private"?"Privat":groups[pendingTarget]?.name||"gruppen";
   return <div className="recipe-create-list-control">
     <button type="button" className={`recipe-create-list-trigger${created?" created":""}`} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ListChecks/><span>{created?"SKAPAD ✓":"SKAPA LISTA"}</span><ChevronDown className={open?"open":""}/></button>
     {open&&<div className="recipe-create-list-menu"><small>SKAPA INKÖPSLISTA I</small><button type="button" disabled={Boolean(busyTarget)} onClick={()=>requestCreate("private")}><LockKeyhole/><span><b>Privat</b><em>Bara för dig</em></span></button>{memberships.map(item=>{const group=groups[item.groupId];return <button type="button" disabled={Boolean(busyTarget)} key={item.groupId} onClick={()=>requestCreate(item.groupId)}><GroupIcon id={group?.iconId}/><span><b>{group?.name||"Grupp"}</b><em>Delas med gruppen</em></span></button>})}{error&&<p className="recipe-create-list-error">{error}</p>}</div>}
-    {pendingTarget&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busyTarget)setPendingTarget("")}}><div className="modal confirm-delete-modal"><h2>SKAPA INKÖPSLISTA?</h2><p>En ny lista med namnet “{recipe.title}” och receptets ingredienser skapas i <b>{pendingTargetName}</b>.</p>{error&&<p className="recipe-create-list-error">{error}</p>}<div className="modal-actions"><button className="cancel" disabled={Boolean(busyTarget)} onClick={()=>setPendingTarget("")}>AVBRYT</button><button disabled={Boolean(busyTarget)} onClick={()=>void choose(pendingTarget)}>{busyTarget?<><LoaderCircle className="spin"/> SKAPAR…</>:"SKAPA"}</button></div></div></div>}
+    {pendingTarget&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busyTarget)setPendingTarget("")}}><div className="modal confirm-delete-modal recipe-pantry-modal"><h2>VAD BEHÖVER DU KÖPA?</h2><p>Bocka ur sådant du redan har hemma. Listan “{recipe.title}” skapas i <b>{pendingTargetName}</b>.</p><div className="recipe-pantry-list">{recipe.ingredients.map(item=><label key={item.id}><input type="checkbox" checked={selectedIngredientIds.includes(item.id)} onChange={event=>setSelectedIngredientIds(current=>event.target.checked?[...current,item.id]:current.filter(id=>id!==item.id))}/><span><b>{item.name}</b><small>{[item.amount,item.unit].filter(Boolean).join(" ")||"Valfri mängd"}</small></span></label>)}</div>{error&&<p className="recipe-create-list-error">{error}</p>}<div className="modal-actions"><button className="cancel" disabled={Boolean(busyTarget)} onClick={()=>setPendingTarget("")}>AVBRYT</button><button disabled={Boolean(busyTarget)||selectedIngredientIds.length===0} onClick={()=>void choose(pendingTarget)}>{busyTarget?<><LoaderCircle className="spin"/> SKAPAR…</>:"SKAPA LISTA"}</button></div></div></div>}
   </div>;
+}
+
+function RecipeSaveCopyControl({recipe,memberships,groups,onSave}:{recipe:Recipe;memberships:Membership[];groups:Record<string,Group>;onSave:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
+  const [open,setOpen]=useState(false),[busy,setBusy]=useState(""),[saved,setSaved]=useState(false),[error,setError]=useState("");
+  const save=async(targetLocation:string)=>{if(busy)return;setBusy(targetLocation);setError("");try{await onSave(recipe,targetLocation);setOpen(false);setSaved(true);window.setTimeout(()=>setSaved(false),2200)}catch(reason){console.error("Kunde inte spara receptkopian",reason);setError("Kunde inte spara receptet. Försök igen.")}finally{setBusy("")}};
+  return <div className="recipe-create-list-control recipe-save-copy-control"><button type="button" className={`recipe-create-list-trigger${saved?" created":""}`} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><BookOpen/><span>{saved?"SPARAT ✓":"SPARA I KOKBOK"}</span><ChevronDown className={open?"open":""}/></button>{open&&<div className="recipe-create-list-menu"><small>SPARA RECEPTKOPIA I</small><button type="button" disabled={Boolean(busy)} onClick={()=>void save("private")}><LockKeyhole/><span><b>Privat</b><em>Bara för dig</em></span></button>{memberships.map(item=>{const group=groups[item.groupId];return <button type="button" disabled={Boolean(busy)} key={item.groupId} onClick={()=>void save(item.groupId)}><GroupIcon id={group?.iconId}/><span><b>{group?.name||"Grupp"}</b><em>Delas med gruppen</em></span></button>})}{error&&<p className="recipe-create-list-error">{error}</p>}</div>}</div>;
 }
 const recipeInstructionSteps=(instructions:string)=>instructions.trim().split(/\r?\n[ \t]*\r?\n+/).map(step=>step.trim()).filter(Boolean);
 const recipeYieldLabel=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
@@ -5174,10 +5180,14 @@ function RecipeEditor({
   onSave: (recipe: Recipe, targetLocation: string) => Promise<void>;
   onDelete?: () => Promise<void>;
 }) {
+  const publicationLocked =
+    recipe?.publicationLocked === true || Boolean(recipe?.copiedFromRecipeId);
   const [title, setTitle] = useState(recipe?.title || ""),
     [category, setCategory] = useState(recipe?.category || ""),
     [subcategory, setSubcategory] = useState(recipe?.subcategory || ""),
-    [isPublic, setIsPublic] = useState(recipe?.isPublic === true),
+    [isPublic, setIsPublic] = useState(
+      recipe?.isPublic === true && !publicationLocked,
+    ),
     [image, setImage] = useState(recipe?.image || ""),
     [servings, setServings] = useState(recipe?.servings || 4),
     [servingUnit, setServingUnit] = useState(
@@ -5445,7 +5455,18 @@ function RecipeEditor({
             }
           />
         </label>
-        <label className="recipe-public-toggle">
+        {publicationLocked ? (
+          <div className="recipe-publication-locked">
+            <LockKeyhole />
+            <span>
+              <b>KOPIERAT RECEPT</b>
+              <small>
+                Kopian kan sparas privat eller i en grupp, men kan inte
+                publiceras i Upptäck.
+              </small>
+            </span>
+          </div>
+        ) : <label className="recipe-public-toggle">
           <input
             type="checkbox"
             checked={isPublic}
@@ -5458,7 +5479,7 @@ function RecipeEditor({
               här.
             </small>
           </span>
-        </label>
+        </label>}
         <label>
           ANTECKNING (VALFRITT)
           <textarea
@@ -5511,7 +5532,9 @@ function RecipeEditor({
                 title: title.trim(),
                 category,
                 subcategory,
-                isPublic,
+                isPublic: publicationLocked ? false : isPublic,
+                copiedFromRecipeId: recipe?.copiedFromRecipeId,
+                publicationLocked: publicationLocked || undefined,
                 image,
                 servings,
                 servingUnit: servingUnit.trim() || "portioner",
@@ -5590,7 +5613,7 @@ function RecipePagination({page,total,onPage}:{page:number;total:number;onPage:(
   return <nav className="recipe-pagination" aria-label="Receptsidor"><button disabled={page===1} onClick={()=>onPage(page-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,index)=>index+1).map(value=><button className={value===page?"selected":""} aria-current={value===page?"page":undefined} key={value} onClick={()=>onPage(value)}>{value}</button>)}<button disabled={page===pages} onClick={()=>onPage(page+1)}><ChevronRight/></button></nav>;
 }
 
-function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string)=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
+function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;openRecipeId?:string;onRecipeOpened?:()=>void}){
   const [editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[spaceOpen,setSpaceOpen]=useState(false),[recipePage,setRecipePage]=useState(1);const activeGroup=groups[account.activeGroupId];
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori först",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
@@ -5621,7 +5644,7 @@ function RecipeSortPicker({value,onChange}:{value:string;onChange:(value:string)
   return <div className="recipe-filter-picker recipe-sort-picker"><button className="recipe-filter-trigger" type="button" onClick={()=>setOpen(current=>!current)}><span><small>SORTERA</small><strong>{selected.label}</strong></span><i className="recipe-sort-symbol"><ArrowUpDown/></i><ChevronDown className={open?"open":""}/></button>{open&&<div className="recipe-filter-menu">{options.map(option=><button type="button" className={option.value===value?"selected":""} key={option.value} onClick={()=>{onChange(option.value);setOpen(false)}}><span>{option.label}</span>{option.value===value&&<Check/>}</button>)}</div>}</div>;
 }
 
-function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientList}:{recipes:Recipe[];uid:string;memberships:Membership[];groups:Record<string,Group>;onCreateIngredientList:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
+function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientList,onSaveCopy}:{recipes:Recipe[];uid:string;memberships:Membership[];groups:Record<string,Group>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onSaveCopy:(recipe:Recipe,targetLocation:string)=>Promise<void>}){
   const [search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[sortMode,setSortMode]=useState("liked"),[viewing,setViewing]=useState<Recipe|undefined>(),[recipePage,setRecipePage]=useState(1);
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori först",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE")))).sort((a,b)=>sortMode==="newest"?(b.createdAt||0)-(a.createdAt||0):sortMode==="oldest"?(a.createdAt||0)-(b.createdAt||0):sortMode==="alpha"?a.title.localeCompare(b.title,"sv-SE"):(b.likedBy?.length||0)-(a.likedBy?.length||0)||(b.createdAt||0)-(a.createdAt||0));
@@ -5631,7 +5654,7 @@ function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientL
     <header className="recipe-discover-intro"><Compass/><div><h1>UPPTÄCK NYA RECEPT</h1><p>Goda idéer som Bubbsun-användare valt att dela.</p></div></header>
     <div className="recipes-toolbar recipe-discover-toolbar"><label><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept eller skapare"/></label><RecipeFilterPicker label="KATEGORI" value={category} options={categoryOptions} onChange={value=>{setCategory(value);setSubcategory("")}}/><RecipeFilterPicker label="UNDERKATEGORI" value={subcategory} options={subcategoryOptions} disabled={!category} onChange={setSubcategory}/><RecipeSortPicker value={sortMode} onChange={setSortMode}/></div>
     {shown.length?<><div className="recipe-grid">{pagedRecipes.map(recipe=><button className="recipe-card public" key={`${recipe.creatorId}-${recipe.id}`} style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties} onClick={()=>setViewing(recipe)}><RecipeLikeCount recipe={recipe}/>{recipe.image?<img src={recipe.image} alt=""/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}<span>🍽️ {recipeYieldLabel(recipe)}</span></em><em className="recipe-card-creator"><UserRound/><span>Skapad av <b>{recipe.creatorName}</b></span></em></span></button>)}</div><RecipePagination page={recipePage} total={shown.length} onPage={setRecipePage}/></>:<div className="recipes-empty"><span>🔎</span><h2>Inga recept hittades</h2><p>Här dyker offentliga recept upp när någon delar ett.</p></div>}
-    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view recipe-discover-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/><RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/><RecipeLikeButton recipe={viewing} uid={uid}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/></article></div>}
+    {viewing&&<div className="recipe-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setViewing(undefined)}}><article className="recipe-view recipe-discover-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}><button className="recipe-close" onClick={()=>setViewing(undefined)}><X/></button>{viewing.image?<img className="recipe-hero" src={viewing.image} alt=""/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(viewing)}</small><h1>{viewing.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={viewing}/><RecipeSaveCopyControl recipe={viewing} memberships={memberships} groups={groups} onSave={onSaveCopy}/><RecipeCreateListControl recipe={viewing} memberships={memberships} groups={groups} onCreate={onCreateIngredientList}/><RecipeLikeButton recipe={viewing} uid={uid}/></div><div className="recipe-facts"><span>🍽️ {recipeYieldLabel(viewing)}</span>{viewing.minutes>0&&<span>⏱️ {viewing.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {viewing.creatorName}</div>{viewing.description&&<div className="recipe-description">{viewing.description}</div>}<RecipeIngredients recipe={viewing}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(viewing.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{viewing.note&&<aside><b>ANTECKNING</b><p>{viewing.note}</p></aside>}<RecipeSourceLink recipe={viewing}/></article></div>}
   </section>;
 }
 
@@ -6486,10 +6509,11 @@ function AuthenticatedApp() {
   const persistRecipe=async(recipe:Recipe,targetLocation?:string)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid},sourceLocation=privateMode?"private":account.activeGroupId,destination=targetLocation||sourceLocation;if(recipe.createdAt&&sourceLocation&&destination!==sourceLocation){await moveRecipeLocation(user.uid,{...complete,linkedListId:""},sourceLocation,destination);if(destination==="private")setPrivateMode(true);else{await switchGroup(user.uid,destination);setPrivateMode(false)}return}if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
   const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;if(privateMode)await removePrivateRecipe(user.uid,recipe.id);else if(account.activeGroupId)await removeRecipe(account.activeGroupId,recipe.id);};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
-  const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string)=>{
+  const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>{
     if(!user)return;
     const createdAt=Date.now();
-    const items:ListItem[]=recipe.ingredients.filter(ingredient=>ingredient.name.trim()).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name.trim(),quantity:[ingredient.amount.trim(),ingredient.unit.trim()].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));
+    const selected=new Set(ingredientIds);
+    const items:ListItem[]=recipe.ingredients.filter(ingredient=>ingredient.name.trim()&&selected.has(ingredient.id)).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name.trim(),quantity:[ingredient.amount.trim(),ingredient.unit.trim()].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));
     const name=recipe.title.trim().slice(0,60)||"Recept";
     if(targetLocation==="private"){
       const list:BubbsunList={id:crypto.randomUUID(),name,icon:"list_cart",iconColor:0xff2b7a78,listType:"shopping",creatorId:user.uid,createdAt,sortMode:"custom",doneFirst:false,doneExpanded:false,order:privateLists.length,items};
@@ -6501,6 +6525,14 @@ function AuthenticatedApp() {
     const list={...created,items};
     await saveList(targetLocation,list,user.uid);
     if(account?.activeGroupId===targetLocation)setLists(current=>current.some(item=>item.id===list.id)?current:[...current,list]);
+  };
+  const savePublicRecipeCopy=async(recipe:Recipe,targetLocation:string)=>{
+    if(!user||!account)return;
+    const now=Date.now();
+    const copied:Recipe={...recipe,id:crypto.randomUUID(),isPublic:false,linkedListId:"",likedBy:[],copiedFromRecipeId:recipe.copiedFromRecipeId||recipe.id,publicationLocked:true,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor||recipe.creatorColor,createdAt:now,updatedAt:now,updatedBy:user.uid};
+    delete copied.sourcePath;
+    if(targetLocation==="private")await savePrivateRecipe(user.uid,copied);
+    else await saveRecipe(targetLocation,copied);
   };
   const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};
   const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
@@ -6728,7 +6760,7 @@ function AuthenticatedApp() {
         openRecipeId={activityRecipeId}
         onRecipeOpened={()=>setActivityRecipeId("")}
       />}
-      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList}/>}
+      {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
         if(entry.kind==="list"){

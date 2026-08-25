@@ -127,6 +127,8 @@ export type Recipe = {
   subcategory?: string;
   isPublic?: boolean;
   sourcePath?: string;
+  copiedFromRecipeId?: string;
+  publicationLocked?: boolean;
   image?: string;
   servings: number;
   servingUnit?: string;

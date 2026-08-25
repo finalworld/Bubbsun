@@ -2583,6 +2583,40 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* Discovery mobile: search above two equal recipe filters. */
 @media (max-width: 899px) {
+  /* Cookbook uses the same compact filters and floating menu width as Discover. */
+  .recipe-cookbook-toolbar .recipe-filter-trigger {
+    box-sizing:border-box;
+    min-height:64px;
+    height:64px;
+    padding:7px 9px 7px 12px;
+    grid-template-columns:minmax(0,1fr) 29px 18px;
+    gap:4px;
+  }
+  .recipe-cookbook-toolbar .recipe-filter-trigger strong {
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    font-size:15px;
+    line-height:1.05;
+  }
+  .recipe-cookbook-toolbar .recipe-filter-trigger i { width:29px;height:29px;font-size:12px; }
+  .recipe-cookbook-toolbar .recipe-filter-trigger svg { width:18px;height:18px; }
+  .recipe-cookbook-toolbar .recipe-filter-menu {
+    position:absolute!important;
+    inset:calc(100% + 8px) auto auto 0!important;
+    width:min(300px,calc(100vw - 36px))!important;
+    max-height:min(420px,55vh)!important;
+    margin:0!important;
+    overflow:auto;
+    z-index:120!important;
+    box-shadow:0 14px 30px #0004;
+  }
+  .recipe-cookbook-toolbar > .recipe-filter-picker:nth-of-type(2) .recipe-filter-menu {
+    left:auto!important;
+    right:0!important;
+  }
+  .recipe-cookbook-toolbar .recipe-filter-menu > button { min-height:54px;padding:10px 12px; }
+  .recipe-cookbook-toolbar .recipe-filter-menu > button span { white-space:normal;overflow-wrap:anywhere; }
   .recipe-discover-toolbar {
     grid-template-columns:repeat(5,minmax(0,1fr)) 58px;
     gap: 8px;

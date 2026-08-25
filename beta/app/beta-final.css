@@ -3027,6 +3027,13 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 }
 .chat-window header button svg { width:31px;height:31px; }
 
+/* Attach unread badge to the hamburger itself, not the header divider. */
+.app-shell .topbar .header-menu-slot > .menu-chat-badge {
+  left:32px;
+  right:auto;
+  top:-5px;
+}
+
 /* Final desktop recipe alignment: facts directly below title, tools at right. */
 @media (min-width:900px) {
   .recipe-view .recipe-view-tools {

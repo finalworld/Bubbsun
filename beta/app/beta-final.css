@@ -3036,7 +3036,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
     margin:0;
   }
   .recipe-view:has(.recipe-view-tools) > .recipe-creator-line {
-    margin-bottom:112px;
+    margin-bottom:28px;
   }
   .recipe-view .recipe-view-tools > .recipe-like-button {
     width:58px!important;

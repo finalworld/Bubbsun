@@ -132,6 +132,7 @@ import {
   watchKnownOnlineUserIds,
   watchDirectChats,
   watchDirectMessages,
+  ensureDirectChat,
   sendDirectMessage,
   markDirectChatRead,
   watchNotes,
@@ -5695,7 +5696,7 @@ function DiscoverRecipesPage({recipes,uid,memberships,groups,onCreateIngredientL
 type ChatPeer={uid:string;name:string;color:number};
 function ChatWindow({account,peer,onClose}:{account:Account;peer:ChatPeer;onClose:()=>void}){
   const chatId=[account.uid,peer.uid].sort().join("__"),[messages,setMessages]=useState<DirectMessage[]>([]),[text,setText]=useState(""),[busy,setBusy]=useState(false),bottom=useRef<HTMLDivElement|null>(null);
-  useEffect(()=>watchDirectMessages(chatId,setMessages),[chatId]);
+  useEffect(()=>{let unsubscribe:(()=>void)|undefined,cancelled=false;void ensureDirectChat({uid:account.uid,name:account.displayName,color:account.personalColor??colorOptions[0]},peer).then(()=>{if(!cancelled)unsubscribe=watchDirectMessages(chatId,setMessages)}).catch(error=>console.error("Kunde inte öppna chatten",error));return()=>{cancelled=true;unsubscribe?.()}},[chatId,account.uid,account.displayName,account.personalColor,peer]);
   useEffect(()=>{void markDirectChatRead(chatId,account.uid).catch(()=>{});bottom.current?.scrollIntoView({behavior:"smooth"})},[chatId,account.uid,messages.length]);
   const send=async()=>{if(!text.trim()||busy)return;const value=text;setText("");setBusy(true);try{await sendDirectMessage({uid:account.uid,name:account.displayName,color:account.personalColor??colorOptions[0]},peer,value)}catch(error){setText(value);window.alert("Meddelandet kunde inte skickas.");console.error(error)}finally{setBusy(false)}};
   return <div className="modal-backdrop chat-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="chat-window"><header><i style={{background:rgbaHex(peer.color)}}>{peer.name.slice(0,1).toUpperCase()}</i><div><small>CHATT MED</small><strong>{peer.name}</strong></div><button onClick={onClose} aria-label="Stäng"><X/></button></header><div className="chat-messages">{messages.length?messages.map(message=><div key={message.id} className={message.senderId===account.uid?"mine":"theirs"}><p>{message.text}</p><time>{new Intl.DateTimeFormat("sv-SE",{hour:"2-digit",minute:"2-digit"}).format(new Date(message.createdAt))}</time></div>):<p className="chat-empty">Skriv första meddelandet 👋</p>}<div ref={bottom}/></div><form onSubmit={e=>{e.preventDefault();void send()}}><textarea autoFocus value={text} maxLength={2000} onChange={e=>setText(e.target.value)} placeholder="Skriv ett meddelande…" onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();void send()}}}/><button disabled={busy||!text.trim()}>SKICKA</button></form></section></div>;

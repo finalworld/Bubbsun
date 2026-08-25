@@ -231,6 +231,7 @@ export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{
 
 const chatTime=(value:unknown)=>numberValue((value as {toMillis?:()=>number}|undefined)?.toMillis?.(),numberValue(value));
 export function directChatId(a:string,b:string){return [a,b].sort().join("__")}
+export async function ensureDirectChat(a:{uid:string;name:string;color:number},b:{uid:string;name:string;color:number}){if(a.uid===b.uid)throw new Error("Ogiltig mottagare");await setDoc(doc(db,"directChats",directChatId(a.uid,b.uid)),{participantIds:[a.uid,b.uid].sort(),participantNames:{[a.uid]:a.name,[b.uid]:b.name},participantColors:{[a.uid]:a.color,[b.uid]:b.color},lastMessage:"",lastMessageAt:0,lastSenderId:"",readAt:{}},{merge:true})}
 export function watchDirectChats(uid:string,callback:(items:DirectChat[])=>void):Unsubscribe{
   return onSnapshot(query(collection(db,"directChats"),where("participantIds","array-contains",uid)),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,participantIds:Array.isArray(d.participantIds)?d.participantIds.filter((x):x is string=>typeof x==="string"):[],participantNames:(d.participantNames||{}) as Record<string,string>,participantColors:(d.participantColors||{}) as Record<string,number>,lastMessage:textValue(d.lastMessage),lastMessageAt:chatTime(d.lastMessageAt),lastSenderId:textValue(d.lastSenderId),readAt:(d.readAt||{}) as Record<string,number>}}).sort((a,b)=>b.lastMessageAt-a.lastMessageAt)));
 }

@@ -5179,13 +5179,15 @@ function RecipeSaveCopyControl({recipe,memberships,groups,onSave}:{recipe:Recipe
 const recipeInstructionSteps=(instructions:string)=>instructions.trim().split(/\r?\n[ \t]*\r?\n+/).map(step=>step.trim()).filter(Boolean);
 const recipeYieldLabel=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
 
-const recipeFractions:Record<string,number>={"¼":.25,"½":.5,"¾":.75,"⅓":1/3,"⅔":2/3,"⅛":.125,"⅜":.375,"⅝":.625,"⅞":.875};
+const recipeFractions:Record<string,number>={"¼":.25,"½":.5,"¾":.75,"⅐":1/7,"⅑":1/9,"⅒":.1,"⅓":1/3,"⅔":2/3,"⅕":.2,"⅖":.4,"⅗":.6,"⅘":.8,"⅙":1/6,"⅚":5/6,"⅛":.125,"⅜":.375,"⅝":.625,"⅞":.875};
 function parseRecipeAmount(value:string){
-  const text=value.trim().replace(",",".");
+  const text=value.trim().replace(",",".").replace(/⁄/g,"/");
   if(!text)return undefined;
-  const mixed=text.match(/^(\d+)\s+([¼½¾⅓⅔⅛⅜⅝⅞])$/);
+  const mixed=text.match(/^(\d+)\s*([¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])$/);
   if(mixed)return Number(mixed[1])+recipeFractions[mixed[2]];
   if(text in recipeFractions)return recipeFractions[text];
+  const mixedFraction=text.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+  if(mixedFraction&&Number(mixedFraction[3]))return Number(mixedFraction[1])+Number(mixedFraction[2])/Number(mixedFraction[3]);
   const fraction=text.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
   if(fraction&&Number(fraction[2]))return Number(fraction[1])/Number(fraction[2]);
   return /^\d+(?:\.\d+)?$/.test(text)?Number(text):undefined;

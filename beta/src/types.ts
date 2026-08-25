@@ -134,6 +134,7 @@ export type Recipe = {
   ingredients: RecipeIngredient[];
   instructions: string;
   description?: string;
+  sourceUrl?: string;
   note?: string;
   linkedListId?: string;
   creatorId: string;

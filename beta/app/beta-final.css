@@ -3026,3 +3026,49 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   box-shadow:0 4px 8px #0002;
 }
 .chat-window header button svg { width:31px;height:31px; }
+
+/* Final desktop recipe alignment: facts directly below title, tools at right. */
+@media (min-width:900px) {
+  .recipe-view .recipe-view-tools {
+    position:absolute;
+    right:42px;
+    top:326px;
+    margin:0;
+  }
+  .recipe-view:has(.recipe-view-tools) > .recipe-creator-line {
+    margin-bottom:112px;
+  }
+  .recipe-view .recipe-view-tools > .recipe-like-button {
+    width:58px!important;
+    min-width:58px!important;
+    display:flex;
+    gap:4px;
+  }
+  .recipe-view .recipe-view-tools > .recipe-like-button b {
+    display:grid;
+    min-width:20px;
+    height:20px;
+    padding:0 4px;
+    background:color-mix(in srgb,var(--theme-accent) 14%,var(--theme-paper));
+    color:var(--theme-text);
+  }
+  .recipe-view .recipe-view-tools > .recipe-icon-action,
+  .recipe-view .recipe-view-tools > .recipe-like-button {
+    transition:transform .16s ease,color .16s ease,filter .16s ease;
+    cursor:pointer;
+  }
+  .recipe-view .recipe-view-tools > .recipe-icon-action:hover,
+  .recipe-view .recipe-view-tools > .recipe-like-button:hover {
+    transform:translateY(-3px) scale(1.1);
+    color:color-mix(in srgb,var(--theme-accent) 72%,#ff8f3d)!important;
+    filter:drop-shadow(0 4px 3px #2d170b3d);
+  }
+}
+
+/* Override the legacy rule that positions every drawer-title button as X. */
+.app-shell .drawer .drawer-title > button.drawer-chat:not(.drawer-invite) {
+  top:auto!important;
+  right:16px!important;
+  bottom:12px!important;
+  left:auto!important;
+}

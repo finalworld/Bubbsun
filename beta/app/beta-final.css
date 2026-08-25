@@ -3118,16 +3118,22 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-view .recipe-view-tools {
     position:static!important;
     display:grid!important;
-    grid-template-columns:54px minmax(0,1fr)!important;
+    grid-template-columns:48px 48px minmax(0,1fr)!important;
     grid-auto-rows:48px;
     gap:8px 10px!important;
     margin:12px 0 14px!important;
   }
-  .recipe-view .recipe-view-tools > .recipe-print-button { grid-column:1;grid-row:1; }
-  .recipe-view .recipe-view-tools > .recipe-share-button { grid-column:1;grid-row:2; }
-  .recipe-discover-view .recipe-view-tools > .recipe-save-copy-control { grid-column:2;grid-row:1; }
-  .recipe-discover-view .recipe-view-tools > .recipe-create-list-control:not(.recipe-save-copy-control) { grid-column:2;grid-row:2; }
-  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-create-list-control { grid-column:2;grid-row:1; }
+  .recipe-view .recipe-view-tools > .recipe-print-button { grid-column:1; }
+  .recipe-view .recipe-view-tools > .recipe-share-button { grid-column:2; }
+  .recipe-discover-view .recipe-view-tools > .recipe-save-copy-control { grid-column:1/-1;grid-row:1; }
+  .recipe-discover-view .recipe-view-tools > .recipe-print-button { grid-row:2; }
+  .recipe-discover-view .recipe-view-tools > .recipe-share-button { grid-row:2; }
+  .recipe-discover-view .recipe-view-tools > .recipe-create-list-control:not(.recipe-save-copy-control) { grid-column:3;grid-row:2; }
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-print-button,
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-share-button,
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-create-list-control { grid-row:1; }
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools > .recipe-create-list-control { grid-column:3; }
+  .recipe-view:not(.recipe-discover-view) .recipe-view-tools:not(:has(>.recipe-share-button)) > .recipe-create-list-control { grid-column:2/4; }
   .recipe-view .recipe-view-tools > .recipe-create-list-control,
   .recipe-view .recipe-view-tools > .recipe-create-list-control > .recipe-create-list-trigger { width:100%;min-width:0;height:48px; }
   .recipe-view .recipe-view-tools > .recipe-icon-action {
@@ -3144,7 +3150,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-view .recipe-view-tools > .recipe-icon-action svg { width:29px;height:29px; }
   .recipe-view .recipe-view-tools > .recipe-like-button {
     position:absolute!important;
-    top:238px!important;
+    top:202px!important;
     right:19px!important;
     grid-column:auto!important;
     grid-row:auto!important;
@@ -3200,8 +3206,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 @media(max-width:380px){
   .recipe-view{width:calc(100vw - 8px)!important;max-width:calc(100vw - 8px)!important;padding-inline:14px!important;border-left-width:8px!important}
   .recipe-view .recipe-hero{width:calc(100% + 28px)!important;margin-inline:-14px!important}
-  .recipe-view .recipe-view-tools{grid-template-columns:46px minmax(0,1fr)!important;gap:7px!important}
-  .recipe-view .recipe-view-tools>.recipe-icon-action{width:46px!important;min-width:46px!important}
+  .recipe-view .recipe-view-tools{grid-template-columns:44px 44px minmax(0,1fr)!important;gap:7px!important}
+  .recipe-view .recipe-view-tools>.recipe-icon-action{width:44px!important;min-width:44px!important}
   .recipe-view>h1{font-size:clamp(26px,8.2vw,31px)!important}
 }
 

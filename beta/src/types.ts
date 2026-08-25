@@ -142,6 +142,7 @@ export type Recipe = {
   sourceUrl?: string;
   note?: string;
   linkedListId?: string;
+  linkedRecipeIds?: string[];
   creatorId: string;
   creatorName: string;
   creatorColor: number;

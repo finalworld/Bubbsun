@@ -116,4 +116,13 @@ Object.assign(nl,{"Frukost":"Ontbijt","Lunch":"Lunch","Middag":"Avondeten","Bakn
 
 Object.assign(en,{"Fota recept":"Scan recipe","Fyller i ett utkast":"Creates a draft","Läser…":"Reading…","Läser bilden…":"Reading the image…","Klart! Kontrollera särskilt mängderna innan du sparar.":"Done! Check the quantities carefully before saving.","Kunde inte läsa receptet. Prova en rakare och ljusare bild.":"Could not read the recipe. Try a straighter, brighter photo."});
 
+Object.assign(en,{"Passar bra med":"Goes well with","Välj recept…":"Choose recipe…","Koppla recept":"Link recipe","De kopplade recepten visas längst ner på receptsidan.":"Linked recipes are shown at the bottom of the recipe page."});
+Object.assign(fi,{"Passar bra med":"Sopii hyvin yhteen","Välj recept…":"Valitse resepti…","Koppla recept":"Yhdistä resepti","De kopplade recepten visas längst ner på receptsidan.":"Yhdistetyt reseptit näkyvät reseptisivun alareunassa."});
+Object.assign(de,{"Passar bra med":"Passt gut zu","Välj recept…":"Rezept auswählen…","Koppla recept":"Rezept verknüpfen","De kopplade recepten visas längst ner på receptsidan.":"Verknüpfte Rezepte erscheinen unten auf der Rezeptseite."});
+Object.assign(es,{"Passar bra med":"Combina bien con","Välj recept…":"Elegir receta…","Koppla recept":"Vincular receta","De kopplade recepten visas längst ner på receptsidan.":"Las recetas vinculadas aparecen al final de la página."});
+Object.assign(fr,{"Passar bra med":"S'accorde bien avec","Välj recept…":"Choisir une recette…","Koppla recept":"Associer la recette","De kopplade recepten visas längst ner på receptsidan.":"Les recettes associées apparaissent en bas de la page."});
+Object.assign(it,{"Passar bra med":"Si abbina bene a","Välj recept…":"Scegli ricetta…","Koppla recept":"Collega ricetta","De kopplade recepten visas längst ner på receptsidan.":"Le ricette collegate appaiono in fondo alla pagina."});
+Object.assign(pl,{"Passar bra med":"Pasuje do","Välj recept…":"Wybierz przepis…","Koppla recept":"Połącz przepis","De kopplade recepten visas längst ner på receptsidan.":"Połączone przepisy są widoczne na dole strony."});
+Object.assign(nl,{"Passar bra med":"Past goed bij","Välj recept…":"Kies recept…","Koppla recept":"Recept koppelen","De kopplade recepten visas längst ner på receptsidan.":"Gekoppelde recepten staan onderaan de receptpagina."});
+
 export const uiTranslations: Record<string, TranslationMap> = { en, fi, de, es, fr, it, pl, nl, tlh: en };

@@ -118,7 +118,7 @@ export type CalendarEvent = {
   updatedBy?: string;
 };
 
-export type RecipeIngredient = { id: string; amount: string; unit: string; name: string };
+export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };
 export type Recipe = {
   id: string;
   title: string;

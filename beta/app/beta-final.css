@@ -2843,3 +2843,48 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-view .recipe-hero {
   border-top-left-radius: 0;
 }
+
+/* Portionsskalning: kompakt, tydlig och utan att störa receptets läsflöde. */
+.recipe-ingredient-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.recipe-ingredient-heading h3 { margin: 0; }
+.recipe-scale {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: Arial, sans-serif;
+}
+.recipe-scale button,
+.recipe-scale span {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 2px solid var(--theme-border, #ad8364);
+  border-radius: 12px;
+  background: var(--theme-card-bg, #fff8eb);
+  color: var(--theme-text, #2d170b);
+  font: inherit;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+}
+.recipe-scale button { cursor: pointer; }
+.recipe-scale button:hover { filter: brightness(1.06); }
+.recipe-scale .recipe-scale-reset {
+  background: var(--theme-accent, #5d7f5f);
+  color: #fff;
+}
+@media (max-width: 899px) {
+  .recipe-ingredient-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 16px;
+  }
+  .recipe-scale { width: 100%; gap: 5px; }
+  .recipe-scale span { flex: 1; }
+  .recipe-scale .recipe-scale-reset { flex: 0 0 auto; }
+}

@@ -6154,6 +6154,10 @@ function AuthenticatedApp() {
 const publicRecipeUrl=(recipe:Recipe)=>`${window.location.origin}/recept/${encodeURIComponent(recipe.id)}/${recipe.title.toLocaleLowerCase("sv-SE").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept"}`;
 const publicRecipeYield=(recipe:Recipe)=>`${recipe.servings} ${(recipe.servingUnit||"portioner").trim()||"portioner"}`;
 const publicRecipeSteps=(value:string)=>value.split(/\n\s*\n+/).map(step=>step.trim()).filter(Boolean);
+const publicRecipeFractions:Record<string,number>={"¼":.25,"½":.5,"¾":.75,"⅓":1/3,"⅔":2/3,"⅛":.125,"⅜":.375,"⅝":.625,"⅞":.875};
+function parsePublicRecipeAmount(value:string){const normalized=value.trim().replace(",",".");const mixed=normalized.match(/^(\d+)\s*([¼½¾⅓⅔⅛⅜⅝⅞])$/);if(mixed)return Number(mixed[1])+(publicRecipeFractions[mixed[2]]??0);const fraction=normalized.match(/^(\d+)\s*\/\s*(\d+)$/);if(fraction&&Number(fraction[2]))return Number(fraction[1])/Number(fraction[2]);return /^\d+(?:\.\d+)?$/.test(normalized)?Number(normalized):undefined}
+function formatPublicRecipeAmount(value:number){const rounded=Math.round(value*100)/100;if(Number.isInteger(rounded))return String(rounded);return String(rounded).replace(".",",")}
+function PublicRecipeIngredients({recipe}:{recipe:Recipe}){const [factor,setFactor]=useState(1);useEffect(()=>setFactor(1),[recipe.id]);return <section><div className="recipe-ingredient-heading"><h2>Ingredienser</h2><div className="recipe-scale" aria-label="Skala recept"><button type="button" onClick={()=>setFactor(current=>Math.max(.25,Math.round((current-.25)*100)/100))} aria-label="Minska receptet">−</button><span>{factor===1?"Original":`${formatPublicRecipeAmount(factor)}×`}</span><button type="button" onClick={()=>setFactor(current=>Math.min(8,Math.round((current+.25)*100)/100))} aria-label="Öka receptet">+</button>{factor!==1&&<button className="recipe-scale-reset" type="button" onClick={()=>setFactor(1)}>Återställ</button>}</div></div><ul>{recipe.ingredients.map(item=>{const amount=parsePublicRecipeAmount(item.amount);return <li key={item.id}><b>{[amount===undefined?item.amount:formatPublicRecipeAmount(amount*factor),item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>})}</ul></section>}
 
 function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
   useEffect(()=>{
@@ -6185,7 +6189,7 @@ function PublicRecipeArticle({recipe}:{recipe:Recipe}){const steps=publicRecipeS
   <div className="public-recipe-content"><div className="public-recipe-heading"><div><small>{[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"Recept"}</small><h1>{recipe.title}</h1></div><div className="public-recipe-tools"><div className="public-recipe-actions"><PublicRecipePrintButton/><PublicRecipeShareButton recipe={recipe}/></div><span className="public-recipe-like-count" aria-label={`${recipe.likedBy?.length||0} gillningar`}><ThumbsUp/><span>GILLNINGAR</span><b>{recipe.likedBy?.length||0}</b></span></div></div>
   <div className="public-recipe-facts"><span>🍽️ {publicRecipeYield(recipe)}</span>{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><p className="public-recipe-author">Skapad av <strong>{recipe.creatorName}</strong></p>
   {recipe.description&&<section className="public-recipe-description"><h2>Om receptet</h2><p>{recipe.description}</p></section>}
-  <section><h2>Ingredienser</h2><ul>{recipe.ingredients.map(item=><li key={item.id}><b>{[item.amount,item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>)}</ul></section>
+  <PublicRecipeIngredients recipe={recipe}/>
   <section><h2>Gör så här</h2><ol>{steps.map((step,index)=><li key={index}><b>{index+1}</b><span>{step}</span></li>)}</ol></section>
   {recipe.note&&<aside><b>Anteckning</b><p>{recipe.note}</p></aside>}<footer><a href="/recept">← Upptäck fler recept</a></footer></div>
   </article>}

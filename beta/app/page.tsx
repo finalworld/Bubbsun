@@ -5210,6 +5210,7 @@ function RecipeEditor({
     [linkedListId, setLinkedListId] = useState(recipe?.linkedListId || ""),
     [targetLocation, setTargetLocation] = useState(currentLocation),
     [busy, setBusy] = useState(false),
+    [saveError, setSaveError] = useState(""),
     [confirmDelete, setConfirmDelete] = useState(false);
   const updateIngredient = (
     id: string,
@@ -5510,6 +5511,7 @@ function RecipeEditor({
           </label>
         )}
         <div className="recipe-editor-actions">
+          {saveError&&<p className="recipe-save-error" role="alert">{saveError}</p>}
           {onDelete && (
             <button
               className="recipe-delete"
@@ -5529,16 +5531,17 @@ function RecipeEditor({
               !instructions.trim()
             }
             onClick={async () => {
-              setBusy(true);
-              const now = Date.now();
-              await onSave({
+              setBusy(true);setSaveError("");
+              try{
+                const now = Date.now();
+                await onSave({
                 id: recipe?.id || crypto.randomUUID(),
                 title: title.trim(),
                 category,
                 subcategory,
                 isPublic: publicationLocked ? false : isPublic,
-                copiedFromRecipeId: recipe?.copiedFromRecipeId,
-                publicationLocked: publicationLocked || undefined,
+                ...(recipe?.copiedFromRecipeId?{copiedFromRecipeId:recipe.copiedFromRecipeId}:{}),
+                ...(publicationLocked?{publicationLocked:true}:{}),
                 image,
                 servings,
                 servingUnit: servingUnit.trim() || "portioner",
@@ -5565,8 +5568,11 @@ function RecipeEditor({
                 createdAt: recipe?.createdAt || now,
                 updatedAt: now,
                 updatedBy: account.uid,
-              }, targetLocation);
-              setBusy(false);
+                }, targetLocation);
+              }catch(error){
+                console.error("Kunde inte spara receptet",error);
+                setSaveError("Receptet kunde inte sparas. Försök igen.");
+              }finally{setBusy(false)}
             }}
           >
             {busy ? "SPARAR…" : recipe ? "SPARA" : "SKAPA"}

@@ -2352,6 +2352,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   pointer-events: none;
   animation: recipe-toast-in .2s ease-out;
 }
+.recipe-save-error{flex:1 0 100%;margin:0;padding:10px 12px;border:2px solid #a94e50;border-radius:12px;background:#fff0ee;color:#8b3033;font:800 13px/1.3 Arial,sans-serif}.recipe-editor-actions:has(.recipe-save-error){flex-wrap:wrap}@media(max-width:899px){.recipe-save-error{grid-column:1/-1}}
 .recipe-copy-toast svg {
   width: 20px;
   height: 20px;

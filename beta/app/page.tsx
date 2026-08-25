@@ -914,11 +914,11 @@ function isAndroidMobile() {
 function UnsavedModalGuard(){
   useEffect(()=>{
     const dirty=new WeakSet<Element>();
-    const modalFor=(target:EventTarget|null)=>(target instanceof Element?target.closest(".modal-backdrop"):null);
+    const modalFor=(target:EventTarget|null)=>(target instanceof Element?target.closest(".modal-backdrop,.recipe-modal-backdrop"):null);
     const mark=(event:Event)=>{const modal=modalFor(event.target);if(modal)dirty.add(modal)};
     const markButton=(event:MouseEvent)=>{const button=event.target instanceof Element?event.target.closest("button"):null,modal=modalFor(button);if(!button||!modal)return;const label=(button.textContent||button.getAttribute("aria-label")||"").trim().toLocaleLowerCase("sv-SE");if(button.classList.contains("modal-close")||button.classList.contains("recipe-close")||/^(spara|skapa|skicka|avbryt|stäng|ta bort|radera)/.test(label)){dirty.delete(modal);return}dirty.add(modal)};
     const clearOnSubmit=(event:SubmitEvent)=>{const modal=modalFor(event.target);if(modal)dirty.delete(modal)};
-    const protect=(event:PointerEvent)=>{const modal=modalFor(event.target);if(!modal||event.target!==modal||!dirty.has(modal))return;event.preventDefault();event.stopPropagation();window.alert("Du har osparade ändringar. Använd Spara eller Avbryt innan du stänger fönstret.")};
+    const protect=(event:PointerEvent)=>{const modal=modalFor(event.target);if(!modal||event.target!==modal||!dirty.has(modal))return;if(modal.classList.contains("chat-backdrop")&&!modal.querySelector<HTMLTextAreaElement>("textarea")?.value.trim()){dirty.delete(modal);return}event.preventDefault();event.stopPropagation()};
     document.addEventListener("input",mark,true);document.addEventListener("change",mark,true);document.addEventListener("click",markButton,true);document.addEventListener("submit",clearOnSubmit,true);document.addEventListener("pointerdown",protect,true);
     return()=>{document.removeEventListener("input",mark,true);document.removeEventListener("change",mark,true);document.removeEventListener("click",markButton,true);document.removeEventListener("submit",clearOnSubmit,true);document.removeEventListener("pointerdown",protect,true)};
   },[]);

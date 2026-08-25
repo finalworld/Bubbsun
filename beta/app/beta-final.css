@@ -3150,7 +3150,7 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .recipe-view .recipe-view-tools > .recipe-icon-action svg { width:29px;height:29px; }
   .recipe-view .recipe-view-tools > .recipe-like-button {
     position:absolute!important;
-    top:202px!important;
+    top:232px!important;
     right:19px!important;
     grid-column:auto!important;
     grid-row:auto!important;

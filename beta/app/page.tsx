@@ -13,7 +13,6 @@ import {
   BookOpen,
   Compass,
   CalendarDays,
-  Camera,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -5245,25 +5244,6 @@ function RecipeRelated({recipe,recipes,onOpen}:{recipe:Recipe;recipes:Recipe[];o
 }
 const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
 
-type ImportedRecipeDraft={title:string;category:string;servings?:number;servingUnit?:string;minutes?:number;ingredients:Recipe["ingredients"];instructions:string};
-const recipeUnitPattern="dl|cl|ml|l|kg|g|msk|tsk|krm|st|stycken|nypa|knippe|burk|förpackning|pkt";
-function parseImportedRecipeText(raw:string):ImportedRecipeDraft{
-  const lines=raw.replace(/\r/g,"").split("\n").map(line=>line.replace(/[•·]/g," ").replace(/\s+/g," ").trim()).filter(Boolean),ingredientHeading=/^(ingredienser?|du behöver|innehåll)\b/i,instructionHeading=/^(gör så här|tillagning|instruktioner?|beredning|så här gör du)\b/i;
-  const ingredientIndex=lines.findIndex(line=>ingredientHeading.test(line)),instructionIndex=lines.findIndex(line=>instructionHeading.test(line));
-  const metadata=/\b(portioner?|pers(?:oner)?|min(?:uter)?|timm?(?:ar)?|°c|grader)\b/i;
-  const titleCandidates=lines.slice(0,ingredientIndex>=0?ingredientIndex:Math.min(lines.length,6)).filter(line=>!metadata.test(line)&&line.length>2&&line.length<90);
-  const title=titleCandidates.sort((a,b)=>b.length-a.length)[0]||"Importerat recept";
-  const full=lines.join(" "),servingMatch=full.match(/(\d+)\s*(portioner?|pers(?:oner)?|bitar|stycken)/i),hourMatch=full.match(/(\d+(?:[,.]\d+)?)\s*timm?(?:ar)?/i),minuteMatch=full.match(/(\d+)\s*min(?:uter)?/i);
-  const ingredientSourceLines=ingredientIndex>=0?lines.slice(ingredientIndex+1,instructionIndex>ingredientIndex?instructionIndex:undefined):lines.filter(line=>new RegExp(`(?:^|\\s)(?:\\d+[\\d ,.\\/¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞–-]*|[¼½¾⅓⅔⅛⅜⅝⅞])\\s*(?:${recipeUnitPattern})\\b`,`i`).test(line));
-  const nextIngredient=new RegExp(`\\s+(?=(?:\\d+[\\d ,.\\/¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞–-]*|[¼½¾⅓⅔⅛⅜⅝⅞])\\s*(?:${recipeUnitPattern})\\b)`,`i`),ingredientLines=ingredientSourceLines.flatMap(line=>line.split(nextIngredient).map(part=>part.trim()).filter(Boolean));
-  const amountUnit=new RegExp(`^((?:\\d+[\\d ,.\\/¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞–-]*|[¼½¾⅓⅔⅛⅜⅝⅞]))?\\s*(${recipeUnitPattern})?\\s+(.+)$`,`i`);
-  const ingredients=ingredientLines.map(line=>{const match=line.match(amountUnit);if(!match)return{id:crypto.randomUUID(),amount:"",unit:"",name:line};return{id:crypto.randomUUID(),amount:(match[1]||"").trim(),unit:(match[2]||"").trim(),name:(match[3]||"").replace(/^[-–]\s*/,"").trim()}}).filter(item=>item.name&&!instructionHeading.test(item.name));
-  const instructionLines=instructionIndex>=0?lines.slice(instructionIndex+1):lines.slice(Math.max(ingredientIndex+1,0)+ingredientSourceLines.length);
-  const instructions=instructionLines.map(line=>line.replace(/^\d+[.)]\s*/,"")).filter(line=>!ingredientHeading.test(line)).join("\n\n");
-  const category=/kaka|bulle|bröd|tårta|paj|mjöl|bak/i.test(full)?"Bakning":/dessert|glass|pudding|choklad/i.test(full)?"Efterrätt":/frukost|gröt|müsli|ägg/i.test(full)?"Frukost":"";
-  return{title,category,servings:servingMatch?Number(servingMatch[1]):undefined,servingUnit:servingMatch?.[2],minutes:Math.round((hourMatch?Number(hourMatch[1].replace(",","."))*60:0)+(minuteMatch?Number(minuteMatch[1]):0))||undefined,ingredients,instructions};
-}
-
 function RecipeEditor({
   recipe,
   availableRecipes,
@@ -5315,9 +5295,6 @@ function RecipeEditor({
     [linkedRecipeChoice, setLinkedRecipeChoice] = useState(""),
     [targetLocation, setTargetLocation] = useState(currentLocation),
     [busy, setBusy] = useState(false),
-    [importBusy,setImportBusy]=useState(false),
-    [importProgress,setImportProgress]=useState(0),
-    [importMessage,setImportMessage]=useState(""),
     [saveError, setSaveError] = useState(""),
     [confirmDelete, setConfirmDelete] = useState(false);
   const updateIngredient = (
@@ -5344,18 +5321,6 @@ function RecipeEditor({
       input?.select();
     }, 0);
   };
-  const importRecipePhoto=async(file:File)=>{
-    setImportBusy(true);setImportProgress(0);setImportMessage("Läser bilden…");
-    try{
-      const ocrModule=await import("tesseract.js"),recognize=ocrModule.recognize||ocrModule.default.recognize;
-      const result=await recognize(file,"swe+eng",{logger:event=>{if(event.status==="recognizing text"){const progress=Math.round((event.progress||0)*100);setImportProgress(progress);setImportMessage(`Läser receptet… ${progress}%`)}}});
-      const draft=parseImportedRecipeText(result.data.text||"");
-      if(!draft.ingredients.length&&!draft.instructions)throw new Error("Ingen recepttext hittades");
-      setTitle(draft.title);if(draft.category)setCategory(draft.category);if(draft.servings)setServings(draft.servings);if(draft.servingUnit)setServingUnit(draft.servingUnit);if(draft.minutes)setMinutes(draft.minutes);if(draft.ingredients.length)setIngredients(draft.ingredients);if(draft.instructions)setInstructions(draft.instructions);
-      setImportMessage("Klart! Kontrollera särskilt mängderna innan du sparar.");
-    }catch(error){console.error("Kunde inte läsa receptbilden",error);setImportMessage("Kunde inte läsa receptet. Prova en rakare och ljusare bild.")}
-    finally{setImportBusy(false)}
-  };
   return (
     <div
       className="recipe-modal-backdrop"
@@ -5368,7 +5333,7 @@ function RecipeEditor({
           <X />
         </button>
         <h2>{recipe ? "REDIGERA RECEPT" : "NYTT RECEPT"}</h2>
-        <div className="recipe-import-row"><label className="recipe-image-picker">
+        <label className="recipe-image-picker">
           {image ? (
             <>
               <img src={image} alt="" />
@@ -5398,8 +5363,6 @@ function RecipeEditor({
             }}
           />
         </label>
-        {!recipe&&<label className={`recipe-photo-import${importBusy?" busy":""}`}><Camera/><span>{importBusy?"LÄSER…":"FOTA RECEPT"}</span><small>{importBusy?`${importProgress}%`:"Fyller i ett utkast"}</small><input type="file" accept="image/*" capture="environment" disabled={importBusy} onChange={event=>{const file=event.target.files?.[0];event.currentTarget.value="";if(file)void importRecipePhoto(file)}}/></label>}</div>
-        {importMessage&&<p className={`recipe-import-message${importBusy?" busy":""}`} role="status">{importMessage}</p>}
         <label>
           NAMN
           <input

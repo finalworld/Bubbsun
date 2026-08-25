@@ -114,8 +114,6 @@ Object.assign(it,{"Frukost":"Colazione","Lunch":"Pranzo","Middag":"Cena","Baknin
 Object.assign(pl,{"Frukost":"Śniadanie","Lunch":"Lunch","Middag":"Obiad","Bakning":"Wypieki","Efterrätt":"Deser","Mellanmål":"Przekąska","Dryck":"Napoje"});
 Object.assign(nl,{"Frukost":"Ontbijt","Lunch":"Lunch","Middag":"Avondeten","Bakning":"Bakken","Efterrätt":"Dessert","Mellanmål":"Tussendoortje","Dryck":"Dranken"});
 
-Object.assign(en,{"Fota recept":"Scan recipe","Fyller i ett utkast":"Creates a draft","Läser…":"Reading…","Läser bilden…":"Reading the image…","Klart! Kontrollera särskilt mängderna innan du sparar.":"Done! Check the quantities carefully before saving.","Kunde inte läsa receptet. Prova en rakare och ljusare bild.":"Could not read the recipe. Try a straighter, brighter photo."});
-
 Object.assign(en,{"Passar bra med":"Goes well with","Välj recept…":"Choose recipe…","Koppla recept":"Link recipe","De kopplade recepten visas längst ner på receptsidan.":"Linked recipes are shown at the bottom of the recipe page."});
 Object.assign(fi,{"Passar bra med":"Sopii hyvin yhteen","Välj recept…":"Valitse resepti…","Koppla recept":"Yhdistä resepti","De kopplade recepten visas längst ner på receptsidan.":"Yhdistetyt reseptit näkyvät reseptisivun alareunassa."});
 Object.assign(de,{"Passar bra med":"Passt gut zu","Välj recept…":"Rezept auswählen…","Koppla recept":"Rezept verknüpfen","De kopplade recepten visas längst ner på receptsidan.":"Verknüpfte Rezepte erscheinen unten auf der Rezeptseite."});

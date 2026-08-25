@@ -122,5 +122,7 @@ Object.assign(fr,{"Passar bra med":"S'accorde bien avec","Välj recept…":"Choi
 Object.assign(it,{"Passar bra med":"Si abbina bene a","Välj recept…":"Scegli ricetta…","Koppla recept":"Collega ricetta","De kopplade recepten visas längst ner på receptsidan.":"Le ricette collegate appaiono in fondo alla pagina."});
 Object.assign(pl,{"Passar bra med":"Pasuje do","Välj recept…":"Wybierz przepis…","Koppla recept":"Połącz przepis","De kopplade recepten visas längst ner på receptsidan.":"Połączone przepisy są widoczne na dole strony."});
 Object.assign(nl,{"Passar bra med":"Past goed bij","Välj recept…":"Kies recept…","Koppla recept":"Recept koppelen","De kopplade recepten visas längst ner på receptsidan.":"Gekoppelde recepten staan onderaan de receptpagina."});
+Object.assign(en,{"Lägg till delrubrik":"Add section heading","Rubrik, till exempel COLESLAW":"Heading, for example COLESLAW"});
+Object.assign(fi,{"Lägg till delrubrik":"Lisää väliotsikko"});Object.assign(de,{"Lägg till delrubrik":"Zwischenüberschrift hinzufügen"});Object.assign(es,{"Lägg till delrubrik":"Añadir subtítulo"});Object.assign(fr,{"Lägg till delrubrik":"Ajouter un sous-titre"});Object.assign(it,{"Lägg till delrubrik":"Aggiungi sottotitolo"});Object.assign(pl,{"Lägg till delrubrik":"Dodaj nagłówek sekcji"});Object.assign(nl,{"Lägg till delrubrik":"Tussenkop toevoegen"});
 
 export const uiTranslations: Record<string, TranslationMap> = { en, fi, de, es, fr, it, pl, nl, tlh: en };

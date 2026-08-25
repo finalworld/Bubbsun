@@ -5191,12 +5191,12 @@ function RecipeCreateListControl({recipe,memberships,groups,onCreate}:{recipe:Re
       window.setTimeout(()=>setCreated(false),2200);
     }catch(reason){console.error("Kunde inte skapa receptlistan",reason);setError("Kunde inte skapa listan. Försök igen.")}finally{setBusyTarget("")}
   };
-  const requestCreate=(targetLocation:string)=>{setOpen(false);setError("");setSelectedIngredientIds(recipe.ingredients.map(item=>item.id));setPendingTarget(targetLocation)};
+  const requestCreate=(targetLocation:string)=>{setOpen(false);setError("");setSelectedIngredientIds(recipe.ingredients.filter(item=>!item.isHeading).map(item=>item.id));setPendingTarget(targetLocation)};
   const pendingTargetName=pendingTarget==="private"?"Privat":groups[pendingTarget]?.name||"gruppen";
   return <div className="recipe-create-list-control" ref={controlRef}>
     <button type="button" className={`recipe-create-list-trigger${created?" created":""}`} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ListChecks/><span>{created?"SKAPAD ✓":"SKAPA LISTA"}</span><ChevronDown className={open?"open":""}/></button>
     {open&&<div className="recipe-create-list-menu"><small>SKAPA INKÖPSLISTA I</small><button type="button" disabled={Boolean(busyTarget)} onClick={()=>requestCreate("private")}><LockKeyhole/><span><b>Privat</b><em>Bara för dig</em></span></button>{memberships.map(item=>{const group=groups[item.groupId];return <button type="button" disabled={Boolean(busyTarget)} key={item.groupId} onClick={()=>requestCreate(item.groupId)}><GroupIcon id={group?.iconId}/><span><b>{group?.name||"Grupp"}</b><em>Delas med gruppen</em></span></button>})}{error&&<p className="recipe-create-list-error">{error}</p>}</div>}
-    {pendingTarget&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busyTarget)setPendingTarget("")}}><div className="modal confirm-delete-modal recipe-pantry-modal"><h2>VAD BEHÖVER DU KÖPA?</h2><p>Bocka ur sådant du redan har hemma. Listan “{recipe.title}” skapas i <b>{pendingTargetName}</b>.</p><div className="recipe-pantry-list">{recipe.ingredients.map(item=><label key={item.id}><input type="checkbox" checked={selectedIngredientIds.includes(item.id)} onChange={event=>setSelectedIngredientIds(current=>event.target.checked?[...current,item.id]:current.filter(id=>id!==item.id))}/><span><b>{item.name}</b><small>{[item.amount,item.unit].filter(Boolean).join(" ")||"Valfri mängd"}</small></span></label>)}</div>{error&&<p className="recipe-create-list-error">{error}</p>}<div className="modal-actions"><button className="cancel" disabled={Boolean(busyTarget)} onClick={()=>setPendingTarget("")}>AVBRYT</button><button disabled={Boolean(busyTarget)||selectedIngredientIds.length===0} onClick={()=>void choose(pendingTarget)}>{busyTarget?<><LoaderCircle className="spin"/> SKAPAR…</>:"SKAPA LISTA"}</button></div></div></div>}
+    {pendingTarget&&<div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget&&!busyTarget)setPendingTarget("")}}><div className="modal confirm-delete-modal recipe-pantry-modal"><h2>VAD BEHÖVER DU KÖPA?</h2><p>Bocka ur sådant du redan har hemma. Listan “{recipe.title}” skapas i <b>{pendingTargetName}</b>.</p><div className="recipe-pantry-list">{recipe.ingredients.filter(item=>!item.isHeading).map(item=><label key={item.id}><input type="checkbox" checked={selectedIngredientIds.includes(item.id)} onChange={event=>setSelectedIngredientIds(current=>event.target.checked?[...current,item.id]:current.filter(id=>id!==item.id))}/><span><b>{item.name}</b><small>{[item.amount,item.unit].filter(Boolean).join(" ")||"Valfri mängd"}</small></span></label>)}</div>{error&&<p className="recipe-create-list-error">{error}</p>}<div className="modal-actions"><button className="cancel" disabled={Boolean(busyTarget)} onClick={()=>setPendingTarget("")}>AVBRYT</button><button disabled={Boolean(busyTarget)||selectedIngredientIds.length===0} onClick={()=>void choose(pendingTarget)}>{busyTarget?<><LoaderCircle className="spin"/> SKAPAR…</>:"SKAPA LISTA"}</button></div></div></div>}
   </div>;
 }
 
@@ -5230,9 +5230,10 @@ function formatRecipeAmount(value:number){
 function RecipeIngredients({recipe}:{recipe:Recipe}){
   const [factor,setFactor]=useState(1);
   useEffect(()=>setFactor(1),[recipe.id]);
+  const groups=recipe.ingredients.reduce<Array<{title:string;items:Recipe["ingredients"]}>>((result,item)=>{if(item.isHeading){result.push({title:item.name,items:[]})}else{if(!result.length)result.push({title:"",items:[]});result[result.length-1].items.push(item)}return result},[]).filter(group=>group.items.length);
   return <section className="recipe-ingredients-section">
     <div className="recipe-ingredient-heading"><h3>INGREDIENSER</h3><div className="recipe-scale" aria-label="Skala recept"><button type="button" onClick={()=>setFactor(current=>Math.max(.25,Math.round((current-.25)*100)/100))} aria-label="Minska receptet">−</button><span>{factor===1?"Original":`${formatRecipeAmount(factor)}×`}</span><button type="button" onClick={()=>setFactor(current=>Math.min(8,Math.round((current+.25)*100)/100))} aria-label="Öka receptet">+</button>{factor!==1&&<button className="recipe-scale-reset" type="button" onClick={()=>setFactor(1)}>Återställ</button>}</div></div>
-    <ul>{recipe.ingredients.map(item=>{const amount=parseRecipeAmount(item.amount);return <li key={item.id}><b>{[amount===undefined?item.amount:formatRecipeAmount(amount*factor),item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>})}</ul>
+    <div className={`recipe-ingredient-groups${groups.length===1&&!groups[0].title?" single":""}`}>{groups.map((group,index)=><div className="recipe-ingredient-group" key={`${group.title}-${index}`}>{group.title&&<h4>{group.title}</h4>}<ul>{group.items.map(item=>{const amount=parseRecipeAmount(item.amount);return <li key={item.id}><b>{[amount===undefined?item.amount:formatRecipeAmount(amount*factor),item.unit].filter(Boolean).join(" ")}</b><span>{item.name}</span></li>})}</ul></div>)}</div>
   </section>
 }
 const normalizeRecipeSourceUrl=(value:string)=>{const trimmed=value.trim();if(!trimmed)return "";const candidate=/^https?:\/\//i.test(trimmed)?trimmed:`https://${trimmed}`;try{const parsed=new URL(candidate);return parsed.protocol==="http:"||parsed.protocol==="https:"?parsed.toString():""}catch{return ""}};
@@ -5320,6 +5321,11 @@ function RecipeEditor({
       input?.focus();
       input?.select();
     }, 0);
+  };
+  const addIngredientHeading = () => {
+    const id=crypto.randomUUID();
+    setIngredients(current=>[...current,{id,amount:"",unit:"",name:"",isHeading:true}]);
+    window.setTimeout(()=>document.querySelector<HTMLInputElement>(`[data-ingredient-heading="${id}"]`)?.focus(),0);
   };
   return (
     <div
@@ -5484,8 +5490,12 @@ function RecipeEditor({
         </label>
         <fieldset className="recipe-ingredients">
           <legend>INGREDIENSER</legend>
-          {ingredients.map((item) => (
-            <div key={item.id}>
+          {ingredients.map((item) => item.isHeading?(
+            <div className="recipe-ingredient-heading-row" key={item.id}>
+              <input data-ingredient-heading={item.id} value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} placeholder="Rubrik, till exempel COLESLAW"/>
+              <button type="button" aria-label="Ta bort delrubrik" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button>
+            </div>
+          ):(<div key={item.id}>
               <input
                 data-ingredient-amount={item.id}
                 value={item.amount}
@@ -5527,13 +5537,13 @@ function RecipeEditor({
               </button>
             </div>
           ))}
-          <button
+          <div className="recipe-ingredient-add-actions"><button
             type="button"
             className="recipe-add-row"
             onClick={addIngredientAndFocusAmount}
           >
             <Plus /> LÄGG TILL INGREDIENS
-          </button>
+          </button><button type="button" className="recipe-add-row" onClick={addIngredientHeading}><Plus/> LÄGG TILL DELRUBRIK</button></div>
         </fieldset>
         <fieldset className="recipe-related-editor">
           <legend>PASSAR BRA MED <small>(valfritt)</small></legend>
@@ -5618,7 +5628,7 @@ function RecipeEditor({
             disabled={
               busy ||
               !title.trim() ||
-              !ingredients.some((item) => item.name.trim()) ||
+              !ingredients.some((item) => !item.isHeading&&item.name.trim()) ||
               !instructions.trim()
             }
             onClick={async () => {
@@ -5641,8 +5651,8 @@ function RecipeEditor({
                   .filter((item) => item.name.trim())
                   .map((item) => ({
                     ...item,
-                    amount: item.amount.trim(),
-                    unit: item.unit.trim(),
+                    amount: item.isHeading?"":item.amount.trim(),
+                    unit: item.isHeading?"":item.unit.trim(),
                     name: item.name.trim(),
                   })),
                 instructions: instructions.trim(),
@@ -6654,12 +6664,12 @@ function AuthenticatedApp() {
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;if(privateMode)await removePrivateCalendarEvent(user.uid,event.id);else if(account.activeGroupId)await removeCalendarEvent(account.activeGroupId,event.id);};
   const persistRecipe=async(recipe:Recipe,targetLocation?:string)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid},sourceLocation=privateMode?"private":account.activeGroupId,destination=targetLocation||sourceLocation;if(recipe.createdAt&&sourceLocation&&destination!==sourceLocation){await moveRecipeLocation(user.uid,{...complete,linkedListId:""},sourceLocation,destination);if(destination==="private")setPrivateMode(true);else{await switchGroup(user.uid,destination);setPrivateMode(false)}return}if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
   const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;if(privateMode)await removePrivateRecipe(user.uid,recipe.id);else if(account.activeGroupId)await removeRecipe(account.activeGroupId,recipe.id);};
-  const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
+  const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>{
     if(!user)return;
     const createdAt=Date.now();
     const selected=new Set(ingredientIds);
-    const items:ListItem[]=recipe.ingredients.filter(ingredient=>ingredient.name.trim()&&selected.has(ingredient.id)).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name.trim(),quantity:[ingredient.amount.trim(),ingredient.unit.trim()].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));
+    const items:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading&&ingredient.name.trim()&&selected.has(ingredient.id)).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name.trim(),quantity:[ingredient.amount.trim(),ingredient.unit.trim()].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));
     const name=recipe.title.trim().slice(0,60)||"Recept";
     if(targetLocation==="private"){
       const list:BubbsunList={id:crypto.randomUUID(),name,icon:"list_cart",iconColor:0xff2b7a78,listType:"shopping",creatorId:user.uid,createdAt,sortMode:"custom",doneFirst:false,doneExpanded:false,order:privateLists.length,items};
@@ -7049,7 +7059,7 @@ function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
     const setMeta=(selector:string,attribute:string,value:string)=>{let node=document.head.querySelector<HTMLMetaElement>(selector);if(!node){node=document.createElement("meta");const match=selector.match(/\[(name|property)="([^"]+)"\]/);if(match)node.setAttribute(match[1],match[2]);document.head.appendChild(node)}node.setAttribute(attribute,value)};
     setMeta('meta[name="description"]',"content",description);setMeta('meta[name="robots"]',"content",recipe?"index,follow":"noindex,follow");setMeta('meta[property="og:title"]',"content",title);setMeta('meta[property="og:description"]',"content",description);setMeta('meta[property="og:type"]',"content","article");if(recipe?.image)setMeta('meta[property="og:image"]',"content",recipe.image);
     let canonical=document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical)}canonical.href=window.location.href.split(/[?#]/)[0];
-    if(recipe){const script=document.createElement("script");script.id="public-recipe-jsonld";script.type="application/ld+json";script.text=JSON.stringify({"@context":"https://schema.org","@type":"Recipe",name:recipe.title,image:recipe.image?[recipe.image]:undefined,author:{"@type":"Person",name:recipe.creatorName},recipeCategory:recipe.category,recipeCuisine:recipe.subcategory,recipeYield:`${recipeYieldLabel(recipe)}`,totalTime:recipe.minutes?`PT${recipe.minutes}M`:undefined,recipeIngredient:recipe.ingredients.map(item=>[[item.amount,item.unit].filter(Boolean).join(" "),item.name].filter(Boolean).join(" ")),recipeInstructions:recipeInstructionSteps(recipe.instructions).map(text=>({"@type":"HowToStep",text}))});document.getElementById(script.id)?.remove();document.head.appendChild(script)}
+    if(recipe){const script=document.createElement("script");script.id="public-recipe-jsonld";script.type="application/ld+json";script.text=JSON.stringify({"@context":"https://schema.org","@type":"Recipe",name:recipe.title,image:recipe.image?[recipe.image]:undefined,author:{"@type":"Person",name:recipe.creatorName},recipeCategory:recipe.category,recipeCuisine:recipe.subcategory,recipeYield:`${recipeYieldLabel(recipe)}`,totalTime:recipe.minutes?`PT${recipe.minutes}M`:undefined,recipeIngredient:recipe.ingredients.filter(item=>!item.isHeading).map(item=>[[item.amount,item.unit].filter(Boolean).join(" "),item.name].filter(Boolean).join(" ")),recipeInstructions:recipeInstructionSteps(recipe.instructions).map(text=>({"@type":"HowToStep",text}))});document.getElementById(script.id)?.remove();document.head.appendChild(script)}
   },[recipe]);
 }
 

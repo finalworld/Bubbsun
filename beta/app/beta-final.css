@@ -1,5 +1,9 @@
 /* Beta final corrections — loaded last on purpose. */
 
+/* Keep Android's accessibility/font settings from unpredictably inflating the
+   web layout a second time. Browser zoom still works normally. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
 /* Group icon: use the actual group art, but keep it small and calm. */
 .space-tabs-refined > button > img,
 .space-tabs-refined > button > .group-icon,
@@ -3173,11 +3177,32 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* Narrow phones and enlarged Android text: keep the category on one useful line. */
 .recipe-view > small {
   display:block;
-  width:min(100%,calc(100% - 74px));
+  box-sizing:border-box;
+  width:100%;
+  max-width:100%;
+  padding-right:76px!important;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
   line-height:1.2;
+}
+
+@media(max-width:899px){
+  .recipe-modal-backdrop{box-sizing:border-box;max-width:100vw;overflow-x:hidden!important}
+  .recipe-view{box-sizing:border-box;width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px)!important;overflow-x:hidden!important}
+  .recipe-view>h1{max-width:100%;margin-right:0!important;font-size:clamp(28px,8.4vw,36px)!important;line-height:1.02!important;letter-spacing:-.025em;overflow-wrap:anywhere;word-break:normal;hyphens:auto}
+  .recipe-view>small{font-size:clamp(11px,3.3vw,13px)!important;letter-spacing:.1em!important}
+  .recipe-view .recipe-create-list-trigger{box-sizing:border-box;max-width:100%;padding-inline:10px!important;font-size:clamp(11px,3.4vw,14px)!important;overflow:hidden}
+  .recipe-view .recipe-create-list-trigger>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .recipe-view .recipe-facts span{overflow:hidden;text-overflow:ellipsis}
+  .recipe-view .recipe-creator-line{min-width:0;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+  .recipe-view{width:calc(100vw - 8px)!important;max-width:calc(100vw - 8px)!important;padding-inline:14px!important;border-left-width:8px!important}
+  .recipe-view .recipe-hero{width:calc(100% + 28px)!important;margin-inline:-14px!important}
+  .recipe-view .recipe-view-tools{grid-template-columns:46px minmax(0,1fr)!important;gap:7px!important}
+  .recipe-view .recipe-view-tools>.recipe-icon-action{width:46px!important;min-width:46px!important}
+  .recipe-view>h1{font-size:clamp(26px,8.2vw,31px)!important}
 }
 
 /* Every recipe action follows the active theme palette. */

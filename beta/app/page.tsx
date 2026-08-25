@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
@@ -1757,6 +1758,36 @@ function NoteAppearancePicker({icon,color,onIcon,onColor}:{icon:string;color:num
 function NoteEditorPage({note,onSave,onBack,onDelete,follow,creator,toolsOpen,onToolsOpen}:{note:BubbsunNote;onSave:(note:BubbsunNote)=>Promise<boolean>;onBack:()=>void;onDelete:()=>void;follow?:{uid:string;groupId:string};creator?:{name:string;color:number};toolsOpen:boolean;onToolsOpen:(open:boolean)=>void}){
   const [title,setTitle]=useState(note.title),[text,setText]=useState(note.text),[icon,setIcon]=useState(note.icon),[color,setColor]=useState(note.color),[logOpen,setLogOpen]=useState(false),[appearanceOpen,setAppearanceOpen]=useState(false),[confirmDelete,setConfirmDelete]=useState(false),[saving,setSaving]=useState(false);
   useEffect(()=>{setTitle(note.title);setText(note.text);setIcon(note.icon);setColor(note.color)},[note.id,note.title,note.text,note.icon,note.color]);
+  const handleTab=(event:ReactKeyboardEvent<HTMLTextAreaElement>)=>{
+    if(event.key!=="Tab")return;
+    event.preventDefault();
+    const field=event.currentTarget,start=field.selectionStart,end=field.selectionEnd;
+    if(start===end){
+      if(event.shiftKey){
+        const lineStart=text.lastIndexOf("\n",start-1)+1,before=text.slice(lineStart,start),match=before.match(/^(?:\t| {1,4})/);
+        if(!match)return;
+        const next=text.slice(0,lineStart)+text.slice(lineStart+match[0].length);
+        setText(next);
+        requestAnimationFrame(()=>field.setSelectionRange(Math.max(lineStart,start-match[0].length),Math.max(lineStart,end-match[0].length)));
+        return;
+      }
+      setText(text.slice(0,start)+"\t"+text.slice(end));
+      requestAnimationFrame(()=>field.setSelectionRange(start+1,start+1));
+      return;
+    }
+    const blockStart=text.lastIndexOf("\n",start-1)+1,nextBreak=text.indexOf("\n",end),blockEnd=nextBreak<0?text.length:nextBreak;
+    const lines=text.slice(blockStart,blockEnd).split("\n");
+    let firstChange=0,totalChange=0;
+    const changed=lines.map((line,index)=>{
+      if(!event.shiftKey){firstChange=index===0?1:firstChange;totalChange+=1;return "\t"+line}
+      const match=line.match(/^(?:\t| {1,4})/),removed=match?.[0].length??0;
+      if(index===0)firstChange=-removed;
+      totalChange-=removed;
+      return line.slice(removed);
+    }).join("\n");
+    setText(text.slice(0,blockStart)+changed+text.slice(blockEnd));
+    requestAnimationFrame(()=>field.setSelectionRange(Math.max(blockStart,start+firstChange),Math.max(blockStart,end+totalChange)));
+  };
   const save=async()=>{if(!title.trim()||saving)return;setSaving(true);try{if(await onSave({...note,title:title.trim(),text,icon,color}))onBack()}finally{setSaving(false)}};
   return <section className="content note-editor-page">
     {toolsOpen&&<div className={`list-tools-card note-editor-tools ${follow?"has-follow":""}`}>
@@ -1773,7 +1804,7 @@ function NoteEditorPage({note,onSave,onBack,onDelete,follow,creator,toolsOpen,on
         </div>
       </header>
       <label className="note-body-label" htmlFor="note-body">ANTECKNING</label>
-      <textarea id="note-body" value={text} onChange={event=>setText(event.target.value)} placeholder="Skriv din anteckning här…"/>
+      <textarea id="note-body" value={text} onChange={event=>setText(event.target.value)} onKeyDown={handleTab} placeholder="Skriv din anteckning här…"/>
       <div className="note-editor-actions"><button className="danger" onClick={()=>setConfirmDelete(true)}><Trash2/> TA BORT</button><span/><button className="cancel" onClick={onBack}>AVBRYT</button><button disabled={saving||!title.trim()} onClick={()=>void save()}>{saving?"SPARAR…":"SPARA"}</button></div>
     </article>
     {appearanceOpen&&<div className="modal-backdrop"><div className="modal note-appearance-modal"><div className="note-log-head"><h2>ÄNDRA UTSEENDE</h2><button className="modal-close" onClick={()=>setAppearanceOpen(false)} aria-label="Stäng"><X/></button></div><NoteAppearancePicker icon={icon} color={color} onIcon={setIcon} onColor={setColor}/><div className="modal-actions"><button className="cancel" onClick={()=>setAppearanceOpen(false)}>KLAR</button></div></div></div>}

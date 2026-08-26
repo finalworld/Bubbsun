@@ -2227,6 +2227,31 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .notifications-list>button{overflow:hidden}
 .notifications-list>button::before{left:0!important;top:0!important;bottom:0!important;width:7px!important;border-radius:18px 0 0 18px!important}
 @media(max-width:700px){.notifications-list>button::before{border-radius:14px 0 0 14px!important}}
+
+/* v0.901 – samlade notiser i menyn och adminstatus i datorns toppfält. */
+.app-shell .drawer .drawer-title>.drawer-notifications{
+  position:absolute!important;right:18px!important;top:55px!important;bottom:auto!important;left:auto!important;
+  display:grid!important;place-items:center!important;width:42px!important;height:42px!important;padding:0!important;
+  border:1px solid color-mix(in srgb,#a83f49 78%,var(--theme-outline))!important;border-radius:50%!important;
+  background:#bd5962!important;color:#fff!important;box-shadow:0 4px 8px #32100d38!important;transform:rotate(7deg)!important;z-index:4!important;
+}
+.app-shell .drawer .drawer-title>.drawer-notifications::after{content:"";position:absolute;inset:4px;border:1px dashed #fffbd2;border-radius:50%;opacity:.85}
+.app-shell .drawer .drawer-title>.drawer-notifications svg{width:19px;height:19px;opacity:.9}
+.app-shell .drawer .drawer-title>.drawer-notifications span{position:absolute;right:-5px;top:-5px;z-index:2;display:grid;place-items:center;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#d9283f;color:#fff;font:800 10px/1 system-ui,sans-serif;transform:rotate(-7deg)}
+.app-shell .topbar .header-menu-slot>.menu-chat-badge{bottom:auto!important}
+.app-shell .topbar .header-admin-online{display:none!important}
+.app-shell .topbar .header-brand-title>.header-notification-count{display:none!important}
+.app-shell .topbar .header-admin-stats{display:none}
+@media(min-width:900px){
+  .app-shell .topbar .topbar-inner{position:relative!important}
+  .app-shell .topbar .header-admin-stats{position:absolute;right:76px;top:50%;transform:translateY(-50%);z-index:6;display:flex;align-items:center;padding:7px 9px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 4px 9px #2d170b35}
+  .app-shell .topbar .header-admin-stats button{display:flex;align-items:center;gap:7px;min-width:62px;height:38px;padding:0 8px;border:0;background:transparent;color:inherit;cursor:pointer}
+  .app-shell .topbar .header-admin-stats button:hover{filter:brightness(1.16);transform:translateY(-1px)}
+  .app-shell .topbar .header-admin-stats svg{width:25px;height:25px}
+  .app-shell .topbar .header-admin-stats b{display:grid;place-items:center;min-width:31px;height:31px;padding:0 6px;border-radius:7px;background:color-mix(in srgb,var(--theme-text) 22%,transparent);font:800 20px/1 Georgia,serif}
+  .app-shell .topbar .header-admin-stats i{width:1px;height:34px;margin:0 4px;background:color-mix(in srgb,var(--theme-paper) 45%,transparent)}
+}
+@media(max-width:600px){.app-shell .drawer .drawer-title>.drawer-notifications{right:18px!important;top:49px!important;width:38px!important;height:38px!important}}
 /* v0.867: calendar cards have a dedicated admin-controlled theme background. */
 .app-shell .calendar-event.compact{
   background-color:var(--theme-calendar-event-bg)!important;

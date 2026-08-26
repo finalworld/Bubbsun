@@ -20,6 +20,7 @@ import {
   CirclePlus,
   Copy,
   ExternalLink,
+  Flag,
   Home,
   History,
   ImagePlus,
@@ -941,10 +942,11 @@ function Header({
   glowColor,
   tabTitle,
   onlineCount,
+  reportCount,
   notificationCount,
   chatUnreadCount,
-  onOpenNotifications,
   onOpenAdmin,
+  onOpenReports,
   language,
 }: {
   onMenu: () => void;
@@ -957,10 +959,11 @@ function Header({
   glowColor?: string;
   tabTitle?: string;
   onlineCount?: number;
+  reportCount?: number;
   notificationCount: number;
   chatUnreadCount: number;
-  onOpenNotifications: () => void;
   onOpenAdmin?: () => void;
+  onOpenReports?: () => void;
   language: string;
 }) {
   const [scrolled, setScrolled] = useState(false);
@@ -982,8 +985,7 @@ function Header({
             >
               <Menu />
             </button>
-            {chatUnreadCount>0&&<b className="menu-chat-badge">{chatUnreadCount>99?"99+":chatUnreadCount}</b>}
-            {typeof onlineCount === "number" && <small className="header-admin-online" title="Online just nu">{onlineCount}</small>}
+            {notificationCount+chatUnreadCount>0&&<b className="menu-chat-badge">{notificationCount+chatUnreadCount>99?"99+":notificationCount+chatUnreadCount}</b>}
           </div>
         </div>
         <button
@@ -994,29 +996,6 @@ function Header({
         >
           <span className="header-brand-title">
             Bubbsun<span className="header-brand-suffix">.se</span>
-            <span
-                className="header-notification-count"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenNotifications();
-                }}
-                title="Nytt sedan ditt senaste besök"
-                aria-label={`${notificationCount} nya händelser`}
-              >
-                <span>{notificationCount}</span>
-              </span>
-            {false && typeof onlineCount === "number" && (
-              <span
-                className="admin-online-count"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenAdmin?.();
-                }}
-                title="Online just nu"
-              >
-                <span className="online-count-number">{onlineCount}</span>
-              </span>
-            )}
           </span>
           <span className="header-brand-tagline">
             {(
@@ -1049,6 +1028,11 @@ function Header({
             </small>
           )}
         </button>
+        {typeof onlineCount === "number" && typeof reportCount === "number" && <div className="header-admin-stats">
+          <button type="button" onClick={onOpenAdmin} title="Visa användare som är online" aria-label={`${onlineCount} online`}><Users/><b>{onlineCount}</b></button>
+          <i aria-hidden="true"/>
+          <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
+        </div>}
         {mode === "add" ? (
           <button
             className="theme-button header-add"
@@ -1088,6 +1072,8 @@ function Drawer({
   onInvite,
   unreadChats,
   onChat,
+  notificationCount,
+  onNotifications,
 }: {
   open: boolean;
   onClose: () => void;
@@ -1103,6 +1089,8 @@ function Drawer({
   onInvite: () => void;
   unreadChats: number;
   onChat: () => void;
+  notificationCount: number;
+  onNotifications: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const activeGroup = groups[account.activeGroupId];
@@ -1128,6 +1116,7 @@ function Drawer({
           <button aria-label="Stäng meny" onClick={onClose}>
             <X />
           </button>
+          <button className="drawer-notifications" aria-label={`${notificationCount} nya händelser`} title="Notiser" onClick={onNotifications}><Bell/><span>{notificationCount}</span></button>
           <button className="drawer-chat" aria-label={`${unreadChats} nya meddelanden`} onClick={onChat}><MessageCircle/>{unreadChats>0&&<b>{unreadChats>99?"99+":unreadChats}</b>}</button>
         </div>
         <div className="drawer-scroll">
@@ -4494,6 +4483,7 @@ function AdminPage({
   userCounts,
   publicRecipes,
   messageCount,
+  initialTab,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4504,13 +4494,15 @@ function AdminPage({
   userCounts: Record<string,AdminUserCounts>;
   publicRecipes: Recipe[];
   messageCount: number;
+  initialTab: "members" | "reports";
 }) {
   const [tab, setTab] = useState<"members" | "reports" | "recipes" | "pin" | "themes">(
-      "members",
+      initialTab,
     ),
     [selected, setSelected] = useState<Account | null>(null),
     [editing,setEditing]=useState<Account|null>(null),
     [memberSort,setMemberSort]=useState<"login"|"registered"|"active"|"content">("login");
+  useEffect(()=>setTab(initialTab),[initialTab]);
   const items = lists.flatMap((list) => list.items);
   const recipeCount = Object.values(userCounts).reduce((total, counts) => total + counts.recipes, 0);
   const topThemes = themes
@@ -5877,6 +5869,7 @@ function AuthenticatedApp() {
   const notifiedVersions = useRef<Record<string, number>>({});
   const [allAccounts, setAllAccounts] = useState<Account[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  const [adminStartTab,setAdminStartTab]=useState<"members"|"reports">("members");
   const [themePalettes, setThemePalettes] = useState<
     Record<string, ThemePalette>
   >({});
@@ -6780,18 +6773,15 @@ function AuthenticatedApp() {
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" || page === "calendar" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
+        reportCount={account.megaSuperBoss || account.founder ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
         chatUnreadCount={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
-        onOpenNotifications={() => {
-          setNotificationPageSeenAt(activitySeenAt);
-          navigate("notifications");
-          void savePreferences(user.uid,{activitySeenAt:Date.now()});
-        }}
         onOpenAdmin={
           account.megaSuperBoss || account.founder
-            ? () => navigate("admin")
+            ? () => {setAdminStartTab("members");navigate("admin")}
             : undefined
         }
+        onOpenReports={account.megaSuperBoss || account.founder?()=>{setAdminStartTab("reports");navigate("admin")}:undefined}
         language={language}
       />
       {page === "lists" && (
@@ -6991,6 +6981,7 @@ function AuthenticatedApp() {
           userCounts={adminUserCounts}
           publicRecipes={publicRecipes}
           messageCount={adminMessageCount}
+          initialTab={adminStartTab}
         />
       )}
       <Drawer
@@ -7013,6 +7004,8 @@ function AuthenticatedApp() {
         onInvite={() => void inviteFriend()}
         unreadChats={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
         onChat={()=>{setMenuOpen(false);navigate("chat")}}
+        notificationCount={notificationCount}
+        onNotifications={()=>{setMenuOpen(false);setNotificationPageSeenAt(activitySeenAt);navigate("notifications");void savePreferences(user.uid,{activitySeenAt:Date.now()})}}
       />
       {chatPeer&&chatPeer.uid!==user.uid&&<ChatWindow account={account} peer={chatPeer} language={language} onClose={()=>setChatPeer(null)}/>}
       {saveConflict && (

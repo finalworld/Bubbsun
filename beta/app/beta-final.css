@@ -2244,7 +2244,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .topbar .header-admin-stats{display:none}
 @media(min-width:900px){
   .app-shell .topbar .topbar-inner{position:relative!important}
-  .app-shell .topbar .header-admin-stats{position:absolute;right:76px;top:50%;transform:translateY(-50%);z-index:6;display:flex;align-items:center;padding:7px 9px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 4px 9px #2d170b35}
+  .app-shell .topbar .header-admin-stats{position:absolute;right:clamp(190px,20vw,420px);top:50%;transform:translateY(-50%);z-index:6;display:flex;align-items:center;padding:7px 9px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 4px 9px #2d170b35}
   .app-shell .topbar .header-admin-stats button{display:flex;align-items:center;gap:7px;min-width:62px;height:38px;padding:0 8px;border:0;background:transparent;color:inherit;cursor:pointer}
   .app-shell .topbar .header-admin-stats button:hover{filter:brightness(1.16);transform:translateY(-1px)}
   .app-shell .topbar .header-admin-stats svg{width:25px;height:25px}

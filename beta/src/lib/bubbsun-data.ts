@@ -273,9 +273,9 @@ const recipeLocationPath=(uid:string,location:string,id:string)=>location==="pri
 export async function syncRecipeLocations(uid:string,recipe:Recipe,previousLocations:string[],nextLocations:string[]){
   const previous=[...new Set(previousLocations.filter(Boolean))],locations=[...new Set(nextLocations.filter(Boolean))];
   if(!locations.length)throw new Error("Receptet måste finnas på minst en plats");
-  for(const location of previous.filter(value=>!locations.includes(value))){const sourcePath=recipeLocationPath(uid,location,recipe.id);await deleteDoc(doc(db,sourcePath));await removeRecipePublications(sourcePath,recipe.id)}
   const shared={...recipe,locations};
   for(const location of locations){if(location==="private")await savePrivateRecipe(uid,shared);else await saveRecipe(location,shared)}
+  await Promise.all(previous.filter(value=>!locations.includes(value)).map(location=>deleteDoc(doc(db,recipeLocationPath(uid,location,recipe.id)))));
 }
 export async function removeRecipeEverywhere(uid:string,recipe:Recipe,fallbackLocation:string){
   const locations=[...new Set((recipe.locations?.length?recipe.locations:[fallbackLocation]).filter(Boolean))];

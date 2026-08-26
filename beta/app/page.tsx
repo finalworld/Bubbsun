@@ -26,6 +26,7 @@ import {
   ListChecks,
   LockKeyhole,
   LoaderCircle,
+  GripHorizontal,
   GripVertical,
   LogOut,
   Menu,
@@ -5304,7 +5305,8 @@ function RecipeEditor({
     [targetLocation, setTargetLocation] = useState(currentLocation),
     [busy, setBusy] = useState(false),
     [saveError, setSaveError] = useState(""),
-    [confirmDelete, setConfirmDelete] = useState(false);
+    [confirmDelete, setConfirmDelete] = useState(false),
+    [draggedIngredientId, setDraggedIngredientId] = useState("");
   const updateIngredient = (
     id: string,
     key: "amount" | "unit" | "name",
@@ -5334,6 +5336,35 @@ function RecipeEditor({
     setIngredients(current=>[...current,{id,amount:"",unit:"",name:"",isHeading:true}]);
     window.setTimeout(()=>document.querySelector<HTMLInputElement>(`[data-ingredient-heading="${id}"]`)?.focus(),0);
   };
+  const moveIngredient = (targetId: string) => {
+    if (!draggedIngredientId || draggedIngredientId === targetId) return;
+    setIngredients((current) => {
+      const sourceIndex = current.findIndex((item) => item.id === draggedIngredientId);
+      const targetIndex = current.findIndex((item) => item.id === targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return current;
+      const next = [...current];
+      const [moved] = next.splice(sourceIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  };
+  const ingredientDragHandle = (id: string) => (
+    <button
+      type="button"
+      className="recipe-ingredient-drag"
+      draggable
+      aria-label="Flytta raden"
+      title="Dra för att flytta"
+      onDragStart={(event) => {
+        setDraggedIngredientId(id);
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", id);
+      }}
+      onDragEnd={() => setDraggedIngredientId("")}
+    >
+      <GripHorizontal />
+    </button>
+  );
   return (
     <div
       className="recipe-modal-backdrop"
@@ -5498,11 +5529,12 @@ function RecipeEditor({
         <fieldset className="recipe-ingredients">
           <legend>INGREDIENSER</legend>
           {ingredients.map((item) => item.isHeading?(
-            <div className="recipe-ingredient-heading-row" key={item.id}>
+            <div className={`recipe-ingredient-heading-row${draggedIngredientId===item.id?" dragging":""}`} key={item.id} onDragOver={event=>{if(draggedIngredientId){event.preventDefault();event.dataTransfer.dropEffect="move"}}} onDrop={event=>{event.preventDefault();moveIngredient(item.id);setDraggedIngredientId("")}}>
               <input data-ingredient-heading={item.id} value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} placeholder="Rubrik, till exempel COLESLAW"/>
               <button type="button" aria-label="Ta bort delrubrik" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button>
+              {ingredientDragHandle(item.id)}
             </div>
-          ):(<div key={item.id}>
+          ):(<div key={item.id} className={draggedIngredientId===item.id?"dragging":""} onDragOver={event=>{if(draggedIngredientId){event.preventDefault();event.dataTransfer.dropEffect="move"}}} onDrop={event=>{event.preventDefault();moveIngredient(item.id);setDraggedIngredientId("")}}>
               <input
                 data-ingredient-amount={item.id}
                 value={item.amount}
@@ -5542,6 +5574,7 @@ function RecipeEditor({
               >
                 <X />
               </button>
+              {ingredientDragHandle(item.id)}
             </div>
           ))}
           <div className="recipe-ingredient-add-actions"><button

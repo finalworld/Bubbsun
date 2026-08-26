@@ -5102,7 +5102,17 @@ function ThemeEditor({
   );
 }
 
-const recipeSubcategories:Record<string,string[]>={Frukost:["Gröt & müsli","Smörgåsar","Ägg","Brunch","Annat"],Lunch:["Snabbt & enkelt","Sallad","Soppa","Matlåda","Annat"],Middag:["Husmanskost","Asiatiskt","Italienskt","Mexikanskt","Vegetariskt","Fisk & skaldjur","Grillat","Annat"],Bakning:["Bullar","Bröd","Kakor","Tårta","Paj","Annat"],Efterrätt:["Glass","Choklad","Frukt & bär","Pudding & kräm","Annat"],Mellanmål:["Smoothie","Smörgås","Barnvänligt","Annat"],Dryck:["Varm dryck","Kall dryck","Drink","Annat"]};
+const recipeSubcategories: Record<string, string[]> = {
+  Frukost: ["Gröt & müsli", "Smörgåsar", "Ägg", "Pannkakor & våfflor", "Yoghurt & bowls", "Smoothies", "Brunch", "Helgfrukost", "Barnvänligt", "Annat"],
+  Förrätt: ["Smårätter", "Soppor", "Sallader", "Plockmat", "Bröd & crostini", "Fisk & skaldjur", "Vegetariskt", "Chark", "Annat"],
+  Lunch: ["Snabbt & enkelt", "Sallad", "Soppa", "Matlåda", "Smörgås & wrap", "Pasta & nudlar", "Paj", "Vegetariskt", "Restmat", "Annat"],
+  Middag: ["Husmanskost", "Asiatiskt", "Italienskt", "Mexikanskt", "Medelhav", "Mellanöstern", "Indiskt", "Amerikanskt", "Vegetariskt", "Veganskt", "Fisk & skaldjur", "Kyckling", "Kött", "Färs", "Pasta & nudlar", "Grytor", "Soppor", "Grillat", "Ugnsrätter", "Annat"],
+  Tillbehör: ["Inläggningar & picklat", "Såser", "Dressing", "Röror & dip", "Sallader", "Potatis", "Ris & gryn", "Bröd", "Grönsaker", "Sylt & chutney", "Kryddor & smaksättare", "Annat"],
+  Bakning: ["Bullar", "Bröd", "Frallor", "Kakor", "Småkakor", "Tårtor", "Muffins & cupcakes", "Paj", "Bakelser", "Kladdkakor & brownies", "Deg & grundrecept", "Glutenfritt", "Annat"],
+  Efterrätt: ["Glass", "Choklad", "Frukt & bär", "Pudding & kräm", "Mousse", "Paj", "Tårta", "Småkakor", "Godis & konfekt", "Snabb dessert", "Annat"],
+  Mellanmål: ["Smoothie", "Smörgås", "Frukt & bär", "Yoghurt & bowls", "Bars & energibollar", "Snacks & tilltugg", "Barnvänligt", "Efter träning", "Annat"],
+  Dryck: ["Kaffe", "Te", "Varm dryck", "Kall dryck", "Juice", "Smoothie", "Läsk & lemonad", "Drink med alkohol", "Alkoholfri drink", "Annat"],
+};
 const recipeCategories=["",...Object.keys(recipeSubcategories)];
 const recipeCategoryLabel=(recipe:Recipe)=>[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"RECEPT";
 const recipeSlug=(title:string)=>title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sv-SE").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept";

@@ -6599,6 +6599,8 @@ function AuthenticatedApp() {
     return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
   },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members]);
   const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
+  const chatUnreadCount=directChats.filter(chat=>chat.lastSenderId!==user?.uid&&chat.lastMessageAt>(chat.readAt?.[user?.uid||""]||0)).length;
+  useEffect(()=>{const unread=notificationCount+chatUnreadCount;document.title=`${unread>0?`(${unread}) `:""}Bubbsun – listor med karaktär`;return()=>{document.title="Bubbsun – listor med karaktär"}},[notificationCount,chatUnreadCount]);
   useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
   useEffect(()=>{
     if(!user||!account)return;
@@ -6754,7 +6756,7 @@ function AuthenticatedApp() {
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
         reportCount={account.megaSuperBoss || account.founder ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
-        chatUnreadCount={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
+        chatUnreadCount={chatUnreadCount}
         onOpenAdmin={
           account.megaSuperBoss || account.founder
             ? () => {setAdminStartTab("members");navigate("admin")}
@@ -6981,7 +6983,7 @@ function AuthenticatedApp() {
         onPage={navigate}
         onLogout={() => signOut(auth)}
         onInvite={() => void inviteFriend()}
-        unreadChats={directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).length}
+        unreadChats={chatUnreadCount}
         onChat={()=>{setMenuOpen(false);navigate("chat")}}
         notificationCount={notificationCount}
         onNotifications={()=>{setMenuOpen(false);setNotificationPageSeenAt(activitySeenAt);navigate("notifications");void savePreferences(user.uid,{activitySeenAt:Date.now()})}}

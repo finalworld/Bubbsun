@@ -2294,6 +2294,10 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .recipe-scope-menu .recipe-scope-end>svg{width:23px!important;height:23px!important;color:var(--theme-accent)}
 
 @media(min-width:701px){.app-shell .topbar .header-menu-slot>.menu-chat-badge{left:48px!important;right:auto!important}}
+
+/* Gothic artwork must cover wide desktop viewports instead of ending at 900px. */
+.app-shell.theme-gothic{background-size:cover!important}
+body:has(.app-shell.theme-gothic){background-size:cover!important}
 }
 /* v0.867: calendar cards have a dedicated admin-controlled theme background. */
 .app-shell .calendar-event.compact{

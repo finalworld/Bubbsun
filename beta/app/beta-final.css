@@ -1923,7 +1923,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   }
   .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child {
     position: absolute !important;
-    top: 10px !important;
+    top: 4px !important;
     right: 12px !important;
     width: 38px !important;
     min-width: 38px !important;
@@ -1932,6 +1932,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     outline: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button::after {
+    content: none !important;
+    display: none !important;
   }
   .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child.active {
     color: var(--theme-accent) !important;

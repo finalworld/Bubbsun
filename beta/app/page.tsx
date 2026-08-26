@@ -5516,16 +5516,6 @@ function RecipeEditor({
             placeholder="Skriv några fina ord om receptet…"
           />
         </label>
-        <label className="recipe-source-input">
-          LÄNK TILL ORIGINALRECEPT <small>(valfritt)</small>
-          <input
-            type="url"
-            inputMode="url"
-            value={sourceUrl}
-            onChange={(event) => setSourceUrl(event.target.value)}
-            placeholder="https://…"
-          />
-        </label>
         <fieldset className="recipe-ingredients">
           <legend>INGREDIENSER</legend>
           {ingredients.map((item) => item.isHeading?(
@@ -5633,6 +5623,16 @@ function RecipeEditor({
             value={note}
             onChange={(event) => setNote(event.target.value)}
             placeholder="Något bra att komma ihåg?"
+          />
+        </label>
+        <label className="recipe-source-input">
+          LÄNK TILL ORIGINALRECEPT <small>(valfritt)</small>
+          <input
+            type="url"
+            inputMode="url"
+            value={sourceUrl}
+            onChange={(event) => setSourceUrl(event.target.value)}
+            placeholder="https://…"
           />
         </label>
         {recipe && (

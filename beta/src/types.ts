@@ -120,6 +120,7 @@ export type CalendarEvent = {
   createdAt: number;
   updatedAt: number;
   updatedBy?: string;
+  locations?: string[];
 };
 
 export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };

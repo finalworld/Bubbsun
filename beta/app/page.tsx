@@ -323,14 +323,16 @@ const themes = [
     id: "light",
     name: "Ljus retro",
     icon: "theme_light.png",
-    bg: "#fffaf0",
-    paper: "#ffffff",
-    panel: "#f3e7cd",
-    text: "#3a2a20",
-    accent: "#a9782f",
-    outline: "#c5a477",
-    header: "#f7ecd5",
-    headerButton: "#8c744e",
+    bg: "#fbf7ef",
+    paper: "#fffaf3",
+    panel: "#f5eee2",
+    text: "#392d24",
+    accent: "#6f8748",
+    outline: "#d8c5a8",
+    header: "#fbf7ef",
+    headerButton: "#6f8748",
+    brandDecoration: "#b86a42",
+    brandSuffix: "#b86a42",
   },
   {
     id: "ocean",
@@ -469,7 +471,11 @@ const themes = [
 const usableThemePalette = (
   themeId: string,
   palette?: ThemePalette,
-) => themeId === "ocean" && palette?.paletteVersion !== 2 ? undefined : palette;
+) => {
+  if (themeId === "ocean" && (palette?.paletteVersion || 0) < 2) return undefined;
+  if (themeId === "light" && (palette?.paletteVersion || 0) < 3) return undefined;
+  return palette;
+};
 const rgbaHex = (value: number) =>
   `#${(value >>> 0).toString(16).padStart(8, "0").slice(-6)}`;
 const loadPrivate = (uid: string): BubbsunList[] => {
@@ -5076,7 +5082,11 @@ function ThemeEditor({
       <button
         onClick={async () => {
           try {
-            await saveThemePalette({ id: theme.id, ...values, paletteVersion: 2 });
+            await saveThemePalette({
+              id: theme.id,
+              ...values,
+              paletteVersion: theme.id === "light" ? 3 : 2,
+            });
             setMessage("Temat är sparat för alla ✓");
           } catch (error) {
             setMessage(

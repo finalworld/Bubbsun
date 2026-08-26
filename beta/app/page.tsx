@@ -156,9 +156,8 @@ import {
   getPublicRecipe,
   saveRecipe,
   savePrivateRecipe,
-  moveRecipeLocation,
-  removeRecipe,
-  removePrivateRecipe,
+  syncRecipeLocations,
+  removeRecipeEverywhere,
   unpublishRecipe,
   syncRecipePublication,
   setPublicRecipeLiked,
@@ -5290,7 +5289,7 @@ function RecipeEditor({
   groups: Record<string, Group>;
   currentLocation: string;
   onClose: () => void;
-  onSave: (recipe: Recipe, targetLocation: string) => Promise<void>;
+  onSave: (recipe: Recipe, targetLocations: string[]) => Promise<void>;
   onDelete?: () => Promise<void>;
 }) {
   const publicationLocked =
@@ -5319,14 +5318,14 @@ function RecipeEditor({
     [linkedListId, setLinkedListId] = useState(recipe?.linkedListId || ""),
     [linkedRecipeIds, setLinkedRecipeIds] = useState(recipe?.linkedRecipeIds || []),
     [linkedRecipeChoice, setLinkedRecipeChoice] = useState(""),
-    [targetLocation, setTargetLocation] = useState(currentLocation),
+    [targetLocations, setTargetLocations] = useState<string[]>(recipe?.locations?.length?recipe.locations:[currentLocation]),
     [busy, setBusy] = useState(false),
     [saveError, setSaveError] = useState(""),
     [confirmDelete, setConfirmDelete] = useState(false);
   const ingredientSensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:6}}));
   const initialEditorState=useRef("");
   const ingredientOrderDirty=useRef(false);
-  const editorState=JSON.stringify({title,category,subcategory,isPublic,image,servings,servingUnit,minutes,ingredients,instructions,description,sourceUrl,note,linkedListId,linkedRecipeIds,targetLocation});
+  const editorState=JSON.stringify({title,category,subcategory,isPublic,image,servings,servingUnit,minutes,ingredients,instructions,description,sourceUrl,note,linkedListId,linkedRecipeIds,targetLocations});
   if(!initialEditorState.current)initialEditorState.current=editorState;
   const editorDirty=initialEditorState.current!==editorState;
   const updateIngredient = (
@@ -5581,22 +5580,13 @@ function RecipeEditor({
             placeholder="https://…"
           />
         </label>
-        {recipe && (
-          <label className="recipe-location-input">
-            FLYTTA RECEPT TILL
-            <select
-              value={targetLocation}
-              onChange={(event) => setTargetLocation(event.target.value)}
-            >
-              <option value="private">🔒 Privat</option>
-              {memberships.map((membership) => (
-                <option key={membership.groupId} value={membership.groupId}>
-                  👥 {groups[membership.groupId]?.name || "Grupp"}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        <fieldset className="recipe-location-picker">
+          <legend>VISA RECEPTET I</legend>
+          <p>Samma recept kan visas på flera platser. Ändringar synkas överallt.</p>
+          <div>
+            {[{id:"private",name:"Privat",icon:"🔒"},...memberships.map(membership=>({id:membership.groupId,name:groups[membership.groupId]?.name||"Grupp",icon:"👥"}))].map(location=><label key={location.id}><input type="checkbox" checked={targetLocations.includes(location.id)} onChange={event=>setTargetLocations(current=>event.target.checked?[...new Set([...current,location.id])]:current.length>1?current.filter(value=>value!==location.id):current)}/><span>{location.icon}</span><strong>{location.name}</strong></label>)}
+          </div>
+        </fieldset>
         <div className="recipe-editor-actions">
           {saveError&&<p className="recipe-save-error" role="alert">{saveError}</p>}
           {onDelete && (
@@ -5650,6 +5640,7 @@ function RecipeEditor({
                 note: note.trim(),
                 linkedListId,
                 linkedRecipeIds,
+                locations:targetLocations,
                 creatorId: recipe?.creatorId || account.uid,
                 creatorName: recipe?.creatorName || account.displayName,
                 creatorColor:
@@ -5659,7 +5650,7 @@ function RecipeEditor({
                 createdAt: recipe?.createdAt || now,
                 updatedAt: now,
                 updatedBy: account.uid,
-                }, targetLocation);
+                }, targetLocations);
               }catch(error){
                 console.error("Kunde inte spara receptet",error);
                 setSaveError("Receptet kunde inte sparas. Försök igen.");
@@ -5728,7 +5719,7 @@ function RecipePagination({page,total,onPage}:{page:number;total:number;onPage:(
   return <nav className="recipe-pagination" aria-label="Receptsidor"><button disabled={page===1} onClick={()=>onPage(page-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,index)=>index+1).map(value=><button className={value===page?"selected":""} aria-current={value===page?"page":undefined} key={value} onClick={()=>onPage(value)}>{value}</button>)}<button disabled={page===pages} onClick={()=>onPage(page+1)}><ChevronRight/></button></nav>;
 }
 
-function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,onMessageCreator,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocation?:string)=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onMessageCreator:(recipe:Recipe)=>void;openRecipeId?:string;onRecipeOpened?:()=>void}){
+function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,members,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onAddToList,onCreateIngredientList,onMessageCreator,openRecipeId,onRecipeOpened}:{recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;uid:string;memberships:Membership[];groups:Record<string,Group>;members:Membership[];creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>Promise<void>;onSave:(recipe:Recipe,targetLocations:string[])=>Promise<void>;onDelete:(recipe:Recipe)=>Promise<void>;onAddToList:(recipe:Recipe,listId:string)=>Promise<void>;onCreateIngredientList:(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>Promise<void>;onMessageCreator:(recipe:Recipe)=>void;openRecipeId?:string;onRecipeOpened?:()=>void}){
   const [editing,setEditing]=useState<Recipe|undefined>(),[viewing,setViewing]=useState<Recipe|undefined>(),[confirmViewingDelete,setConfirmViewingDelete]=useState<Recipe|undefined>(),[deletingViewing,setDeletingViewing]=useState(false),[search,setSearch]=useState(""),[category,setCategory]=useState(""),[subcategory,setSubcategory]=useState(""),[spaceOpen,setSpaceOpen]=useState(false),[recipePage,setRecipePage]=useState(1);const activeGroup=groups[account.activeGroupId];
   const categoryOptions=[{value:"",label:"Alla kategorier",count:recipes.length},...recipeCategories.filter(Boolean).map(value=>({value,label:value,count:recipes.filter(recipe=>recipe.category===value).length}))],categoryRecipes=category?recipes.filter(recipe=>recipe.category===category):recipes,availableSubcategories=category?Array.from(new Set([...(recipeSubcategories[category]||[]),...categoryRecipes.map(recipe=>recipe.subcategory||"").filter(Boolean)])):[],subcategoryOptions=[{value:"",label:category?"Alla underkategorier":"Välj kategori",count:categoryRecipes.length},...availableSubcategories.map(value=>({value,label:value,count:categoryRecipes.filter(recipe=>recipe.subcategory===value).length}))];
   const shown=recipes.filter(recipe=>(!category||recipe.category===category)&&(!subcategory||recipe.subcategory===subcategory)&&(!search.trim()||`${recipe.title} ${recipe.creatorName} ${recipe.category} ${recipe.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))));
@@ -6666,8 +6657,8 @@ function AuthenticatedApp() {
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
   const persistCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;const complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time,endTime:event.endTime,allDay:event.allDay,category:event.category,color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays,recurrenceForever:event.recurrenceForever,recurrenceUntil:event.recurrenceUntil,excludedDates:event.excludedDates||[],note:event.note,linkedListIds:(event.linkedListIds||[]).slice(0,3),reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid};if(privateMode)await savePrivateCalendarEvent(user.uid,complete);else if(account.activeGroupId)await saveCalendarEvent(account.activeGroupId,complete);};
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;if(privateMode)await removePrivateCalendarEvent(user.uid,event.id);else if(account.activeGroupId)await removeCalendarEvent(account.activeGroupId,event.id);};
-  const persistRecipe=async(recipe:Recipe,targetLocation?:string)=>{if(!user||!account)return;const complete={...recipe,updatedAt:Date.now(),updatedBy:user.uid},sourceLocation=privateMode?"private":account.activeGroupId,destination=targetLocation||sourceLocation;if(recipe.createdAt&&sourceLocation&&destination!==sourceLocation){await moveRecipeLocation(user.uid,{...complete,linkedListId:""},sourceLocation,destination);if(destination==="private")setPrivateMode(true);else{await switchGroup(user.uid,destination);setPrivateMode(false)}return}if(privateMode)await savePrivateRecipe(user.uid,complete);else if(account.activeGroupId)await saveRecipe(account.activeGroupId,complete);};
-  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;if(privateMode)await removePrivateRecipe(user.uid,recipe.id);else if(account.activeGroupId)await removeRecipe(account.activeGroupId,recipe.id);};
+  const persistRecipe=async(recipe:Recipe,targetLocations:string[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,previousLocations=recipe.locations?.length?recipe.locations:[sourceLocation],locations=targetLocations.length?targetLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previousLocations,locations)};
+  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId)};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>{
     if(!user)return;
@@ -6689,7 +6680,7 @@ function AuthenticatedApp() {
   const savePublicRecipeCopy=async(recipe:Recipe,targetLocation:string)=>{
     if(!user||!account)return;
     const now=Date.now();
-    const copied:Recipe={...recipe,id:crypto.randomUUID(),isPublic:false,linkedListId:"",likedBy:[],copiedFromRecipeId:recipe.copiedFromRecipeId||recipe.id,originalCreatorId:recipe.originalCreatorId||recipe.creatorId,originalCreatorName:recipe.originalCreatorName||recipe.creatorName,originalCreatorColor:recipe.originalCreatorColor??recipe.creatorColor,publicationLocked:true,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor||recipe.creatorColor,createdAt:now,updatedAt:now,updatedBy:user.uid};
+    const copied:Recipe={...recipe,id:crypto.randomUUID(),locations:[targetLocation],isPublic:false,linkedListId:"",likedBy:[],copiedFromRecipeId:recipe.copiedFromRecipeId||recipe.id,originalCreatorId:recipe.originalCreatorId||recipe.creatorId,originalCreatorName:recipe.originalCreatorName||recipe.creatorName,originalCreatorColor:recipe.originalCreatorColor??recipe.creatorColor,publicationLocked:true,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor||recipe.creatorColor,createdAt:now,updatedAt:now,updatedBy:user.uid};
     delete copied.sourcePath;
     if(targetLocation==="private")await savePrivateRecipe(user.uid,copied);
     else await saveRecipe(targetLocation,copied);

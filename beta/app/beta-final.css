@@ -3314,6 +3314,22 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .app-shell .recipe-ingredients > .recipe-ingredient-row > .recipe-ingredient-remove { grid-area: remove !important; }
 }
 
+.app-shell .recipe-location-picker {
+  margin: 18px 0 !important;
+  padding: 15px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 20px !important;
+}
+.app-shell .recipe-location-picker legend { padding: 0 8px !important; font: 900 15px Arial,sans-serif !important; }
+.app-shell .recipe-location-picker > p { margin: 0 0 12px !important; font: 14px/1.4 Arial,sans-serif !important; opacity: .72; }
+.app-shell .recipe-location-picker > div { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 9px !important; }
+.app-shell .recipe-location-picker label { min-height: 55px !important; display: grid !important; grid-template-columns: 26px 30px minmax(0,1fr) !important; align-items: center !important; gap: 8px !important; padding: 9px 12px !important; border: 2px solid var(--theme-outline) !important; border-radius: 14px !important; background: var(--theme-paper) !important; cursor: pointer !important; }
+.app-shell .recipe-location-picker label:has(input:checked) { background: color-mix(in srgb,var(--theme-accent) 14%,var(--theme-paper)) !important; border-color: var(--theme-accent) !important; }
+.app-shell .recipe-location-picker input { width: 22px !important; height: 22px !important; margin: 0 !important; padding: 0 !important; }
+.app-shell .recipe-location-picker label > span { font-size: 21px !important; }
+.app-shell .recipe-location-picker label > strong { min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font: 800 16px Arial,sans-serif !important; }
+@media(max-width:599px){.app-shell .recipe-location-picker>div{grid-template-columns:1fr!important}}
+
 @media(max-width:899px){
   .recipe-modal-backdrop{box-sizing:border-box;max-width:100vw;overflow-x:hidden!important}
   .recipe-view{box-sizing:border-box;width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px)!important;overflow-x:hidden!important}

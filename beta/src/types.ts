@@ -130,6 +130,7 @@ export type Recipe = {
   subcategory?: string;
   isPublic?: boolean;
   sourcePath?: string;
+  locations?: string[];
   copiedFromRecipeId?: string;
   originalCreatorId?: string;
   originalCreatorName?: string;

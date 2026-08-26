@@ -466,6 +466,10 @@ const themes = [
     supporter: true,
   },
 ];
+const usableThemePalette = (
+  themeId: string,
+  palette?: ThemePalette,
+) => themeId === "ocean" && palette?.paletteVersion !== 2 ? undefined : palette;
 const rgbaHex = (value: number) =>
   `#${(value >>> 0).toString(16).padStart(8, "0").slice(-6)}`;
 const loadPrivate = (uid: string): BubbsunList[] => {
@@ -4515,7 +4519,7 @@ function AdminPage({
   const recipeCount = Object.values(userCounts).reduce((total, counts) => total + counts.recipes, 0);
   const topThemes = themes
     .map((theme) => {
-      const palette = { ...theme, ...palettes[theme.id] };
+      const palette = { ...theme, ...usableThemePalette(theme.id, palettes[theme.id]) };
       return {
         id: theme.id,
         name: theme.name,
@@ -4648,7 +4652,7 @@ function AdminPage({
           {themes.map((theme) => (
             <ThemeEditor
               key={theme.id}
-              theme={{ ...theme, ...palettes[theme.id] }}
+              theme={{ ...theme, ...usableThemePalette(theme.id, palettes[theme.id]) }}
             />
           ))}
         </div>
@@ -5072,7 +5076,7 @@ function ThemeEditor({
       <button
         onClick={async () => {
           try {
-            await saveThemePalette({ id: theme.id, ...values });
+            await saveThemePalette({ id: theme.id, ...values, paletteVersion: 2 });
             setMessage("Temat är sparat för alla ✓");
           } catch (error) {
             setMessage(
@@ -6240,11 +6244,9 @@ function AuthenticatedApp() {
     themes.find(
       (item) => item.id === themeId && (!item.supporter || account?.supporter),
     ) || themes[0];
-  // Ocean was replaced by Dark retro. Do not let an old saved Ocean palette
-  // repaint the new theme with the former blue/green colours.
   const activeTheme = {
     ...themeBase,
-    ...(themeBase.id === "ocean" ? {} : themePalettes[themeBase.id]),
+    ...usableThemePalette(themeBase.id, themePalettes[themeBase.id]),
   };
   const themeStyle = {
     "--theme-bg": activeTheme.bg,

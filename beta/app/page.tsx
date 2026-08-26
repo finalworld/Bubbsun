@@ -334,16 +334,16 @@ const themes = [
   },
   {
     id: "ocean",
-    name: "Hav",
+    name: "Mörk retro",
     icon: "theme_ocean.png",
-    bg: "#dceff3",
-    paper: "#f7fdff",
-    panel: "#a9d5df",
-    text: "#173842",
-    accent: "#247d91",
-    outline: "#579cac",
-    header: "#86c3d1",
-    headerButton: "#176b80",
+    bg: "#10181d",
+    paper: "#182126",
+    panel: "#202a2d",
+    text: "#f1ddba",
+    accent: "#60794f",
+    outline: "#46504d",
+    header: "#111a1e",
+    headerButton: "#526946",
   },
   {
     id: "forest",
@@ -3843,6 +3843,7 @@ function SettingsPage({
                 onClick={() => onTheme(theme.id)}
               >
                 <img src={`/assets/android/${theme.icon}`} alt="" />
+                <span className="theme-choice-name">{theme.name}</span>
                 {themeId === theme.id && <Check />}
                 {theme.supporter && (
                   <b className="supporter-theme-badge">♥ SUPPORTER</b>

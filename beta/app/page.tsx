@@ -7112,6 +7112,8 @@ function GlobalBackdropDismiss() {
       if (!(backdrop instanceof HTMLElement) || !backdrop.matches(".modal-backdrop,.recipe-modal-backdrop")) return;
       const modal = backdrop.querySelector<HTMLElement>(":scope > .modal,:scope > .recipe-editor-modal,:scope > .recipe-view");
       if (!modal) return;
+      // RecipeEditor owns its backdrop rule because it must preserve unsaved form state.
+      if (modal.classList.contains("recipe-editor-modal")) return;
       const buttons = Array.from(modal.querySelectorAll<HTMLButtonElement>("button"));
       const closeButton = buttons.find(button =>
         button.matches('[aria-label="Stäng"],.modal-close,.modal-x,.calendar-editor-close,.recipe-close,.cancel') ||

@@ -5247,7 +5247,7 @@ function RecipeRelated({recipe,recipes,onOpen}:{recipe:Recipe;recipes:Recipe[];o
 }
 function RecipeCopyMark({recipe,compact=false}:{recipe:Recipe;compact?:boolean}){
   if(!recipe.copiedFromRecipeId)return null;
-  return <div className={`recipe-copy-mark${compact?" compact":""}`}><i>KOPIA</i><span>{compact?"Original av ":"Originalet är skapat av "}<b>{recipe.originalCreatorName||"Bubbsun-användare"}</b></span></div>;
+  return compact?<div className="recipe-copy-mark compact"><i>KOPIA</i></div>:<div className="recipe-copy-mark"><span>Originalet av <b>{recipe.originalCreatorName||"Bubbsun-användare"}</b></span></div>;
 }
 const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
 

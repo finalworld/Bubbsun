@@ -4494,9 +4494,9 @@ function AdminPage({
   userCounts: Record<string,AdminUserCounts>;
   publicRecipes: Recipe[];
   messageCount: number;
-  initialTab: "members" | "reports";
+  initialTab: "stats" | "members" | "reports";
 }) {
-  const [tab, setTab] = useState<"members" | "reports" | "recipes" | "pin" | "themes">(
+  const [tab, setTab] = useState<"stats" | "members" | "reports" | "recipes" | "system" | "themes">(
       initialTab,
     ),
     [selected, setSelected] = useState<Account | null>(null),
@@ -4528,14 +4528,15 @@ function AdminPage({
   });
   return (
     <section className="content subpage admin-page">
-      <div className="content-heading">
-        <span className="heading-emoji">👑</span>
-        <div>
-          <h1>MEGASUPERBOSS</h1>
-          <p>Global administration</p>
-        </div>
+      <div className="admin-tabs" role="tablist" aria-label="Administration">
+        <button className={tab === "stats" ? "selected" : ""} onClick={() => setTab("stats")}>STATS</button>
+        <button className={tab === "members" ? "selected" : ""} onClick={() => setTab("members")}>MEDLEMMAR</button>
+        <button className={tab === "themes" ? "selected" : ""} onClick={() => setTab("themes")}>TEMA</button>
+        <button className={tab === "reports" ? "selected" : ""} onClick={() => setTab("reports")}>BUGGAR & FÖRSLAG</button>
+        <button className={tab === "recipes" ? "selected" : ""} onClick={() => setTab("recipes")}>RECEPT ({publicRecipes.length})</button>
+        <button className={tab === "system" ? "selected" : ""} onClick={() => setTab("system")}>SYSTEM</button>
       </div>
-      <div className="stats-grid">
+      {tab === "stats" && <><div className="stats-grid">
         <button onClick={() => setTab("members")}>
           <Users />
           <small>ANTAL ANVÄNDARE</small>
@@ -4584,36 +4585,7 @@ function AdminPage({
             <small>{theme.count} användare</small>
           </article>
         ))}
-      </div>
-      <div className="admin-tabs">
-        <button
-          className={tab === "members" ? "selected" : ""}
-          onClick={() => setTab("members")}
-        >
-          MEDLEMMAR
-        </button>
-        <button
-          className={tab === "reports" ? "selected" : ""}
-          onClick={() => setTab("reports")}
-        >
-          BUGGAR & FÖRSLAG
-        </button>
-        <button
-          className={tab === "pin" ? "selected" : ""}
-          onClick={() => setTab("pin")}
-        >
-          GLOBAL PIN
-        </button>
-        <button className={tab === "recipes" ? "selected" : ""} onClick={() => setTab("recipes")}>
-          OFFENTLIGA RECEPT ({publicRecipes.length})
-        </button>
-        <button
-          className={tab === "themes" ? "selected" : ""}
-          onClick={() => setTab("themes")}
-        >
-          TEMAFÄRGER
-        </button>
-      </div>
+      </div></>}
       {tab === "members" && (
         <><div className="admin-member-sort"><strong>SORTERA MEDLEMMAR</strong><select value={memberSort} onChange={event=>setMemberSort(event.target.value as typeof memberSort)}><option value="login">Senast inloggad</option><option value="registered">Senast registrerad</option><option value="active">Mest aktiv</option><option value="content">Flest saker</option></select></div><div className="admin-member-list">
           {orderedAccounts.map((person) => (
@@ -4663,7 +4635,6 @@ function AdminPage({
           ))}
         </div>
       )}
-      {tab === "pin" && <GlobalPinEditor />}{" "}
       {tab === "themes" && (
         <div className="admin-themes">
           {themes.map((theme) => (
@@ -4674,7 +4645,7 @@ function AdminPage({
           ))}
         </div>
       )}
-      <a
+      {tab === "system" && <div className="admin-system-tab"><GlobalPinEditor /><a
         className="version-link"
         href="https://github.com/finalworld/Bubbsun/releases"
         target="_blank"
@@ -4682,7 +4653,7 @@ function AdminPage({
       >
         RELEASER & NEDLADDNINGAR
         <ChevronRight />
-      </a>
+      </a></div>}
       {selected && (
         <AdminUserStatsDialog
           account={selected}
@@ -5869,7 +5840,7 @@ function AuthenticatedApp() {
   const notifiedVersions = useRef<Record<string, number>>({});
   const [allAccounts, setAllAccounts] = useState<Account[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
-  const [adminStartTab,setAdminStartTab]=useState<"members"|"reports">("members");
+  const [adminStartTab,setAdminStartTab]=useState<"stats"|"members"|"reports">("stats");
   const [themePalettes, setThemePalettes] = useState<
     Record<string, ThemePalette>
   >({});

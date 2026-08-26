@@ -2264,7 +2264,16 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   .app-shell .topbar .header-admin-stats button:hover{filter:brightness(1.16);transform:translateY(-1px)}
   .app-shell .topbar .header-admin-stats svg{width:25px;height:25px}
   .app-shell .topbar .header-admin-stats b{display:grid;place-items:center;min-width:31px;height:31px;padding:0 6px;border-radius:7px;background:color-mix(in srgb,var(--theme-text) 22%,transparent);font:800 20px/1 Georgia,serif}
-  .app-shell .topbar .header-admin-stats i{width:1px;height:34px;margin:0 4px;background:color-mix(in srgb,var(--theme-paper) 45%,transparent)}
+.app-shell .topbar .header-admin-stats i{width:1px;height:34px;margin:0 4px;background:color-mix(in srgb,var(--theme-paper) 45%,transparent)}
+
+/* Admin: compact, real tab navigation */
+.admin-page>.admin-tabs{position:sticky;top:8px;z-index:12;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin:4px 0 18px;padding:7px;border:2px solid var(--theme-outline);border-radius:16px;background:color-mix(in srgb,var(--theme-paper) 94%,transparent);box-shadow:0 5px 14px #2d170b1c}
+.admin-page>.admin-tabs button{min-width:0;padding:12px 8px;border:0;border-radius:10px;background:transparent;color:var(--theme-text);font:800 clamp(11px,1.05vw,15px)/1.1 Arial,sans-serif;white-space:nowrap}
+.admin-page>.admin-tabs button:hover{background:color-mix(in srgb,var(--theme-accent) 15%,transparent)}
+.admin-page>.admin-tabs button.selected{background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 65%,transparent)}
+.admin-system-tab{display:grid;gap:18px}
+@media(max-width:800px){.admin-page>.admin-tabs{position:static;grid-template-columns:repeat(3,minmax(0,1fr))}.admin-page>.admin-tabs button{font-size:11px;padding-inline:4px}}
+@media(max-width:480px){.admin-page>.admin-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 }
 /* v0.867: calendar cards have a dedicated admin-controlled theme background. */
 .app-shell .calendar-event.compact{

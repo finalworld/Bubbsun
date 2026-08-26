@@ -1,10 +1,10 @@
 import {
-  collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, orderBy, query, serverTimestamp,
+  arrayRemove, arrayUnion, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, orderBy, query, serverTimestamp,
   setDoc, updateDoc, where, limit, writeBatch, type Unsubscribe,
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { db } from "./firebase";
-import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
+import type { Account, AdminUserCounts, BubbsunList, BubbsunNote, CalendarEvent, DirectChat, DirectMessage, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
@@ -83,7 +83,7 @@ export function watchAccount(uid: string, callback: (account: Account | null) =>
       uid, displayName: textValue(d.displayName, textValue(d.name, "Bubbsun")),
       activeGroupId: textValue(d.activeGroupId, textValue(d.groupId)),
       globalTitle: textValue(d.globalTitle), titleColor: numberValue(d.titleColor),
-      supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, supporterGlowColor: textValue(d.supporterGlowColor, "#ffb532"), themeId:textValue(d.themeId), personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
+      supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, supporterGlowColor: textValue(d.supporterGlowColor, "#ffb532"), themeId: textValue(d.themeId), personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
       founder: d.founder === true, suspended: d.suspended === true, hiddenGlobalPinRevision: numberValue(d.hiddenGlobalPinRevision), hiddenGlobalPinId:textValue(d.hiddenGlobalPinId), privacyVersion: numberValue(d.privacyVersion),
       activitySeenAt: numberValue((d.activitySeenAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.activitySeenAt)),
       createdAt: numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.createdAt)),
@@ -204,13 +204,117 @@ const parseNote=(item:{id:string;data:()=>Record<string,unknown>},index:number):
 export function watchNotes(groupId:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"notes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
 export function watchPrivateNotes(uid:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateNotes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
 
-const parseCalendarEvent=(item:{id:string;data:()=>Record<string,unknown>}):CalendarEvent=>{const d=item.data(),category=textValue(d.category,"other"),recurrenceType=textValue(d.recurrenceType);return{id:item.id,title:textValue(d.title),date:textValue(d.date),time:textValue(d.time),endTime:textValue(d.endTime),allDay:d.allDay===true,category,color:numberValue(d.color),birthYear:numberValue(d.birthYear),recurrenceType:category==="birthday"?"yearly":recurrenceType==="yearly"?"yearly":recurrenceType==="weekly"?"weekly":undefined,recurrenceDays:Array.isArray(d.recurrenceDays)?d.recurrenceDays.filter((value):value is number=>typeof value==="number"):[],recurrenceForever:category==="birthday"||d.recurrenceForever===true,recurrenceUntil:textValue(d.recurrenceUntil),excludedDates:Array.isArray(d.excludedDates)?d.excludedDates.filter((value):value is string=>typeof value==="string"):[],note:textValue(d.note),linkedListIds:Array.isArray(d.linkedListIds)?d.linkedListIds.filter((value):value is string=>typeof value==="string").slice(0,3):[],reminderMinutes:numberValue(d.reminderMinutes),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy)}};
+const parseCalendarEvent=(item:{id:string;data:()=>Record<string,unknown>}):CalendarEvent=>{const d=item.data(),category=textValue(d.category,"other"),recurrenceType=textValue(d.recurrenceType);return{id:item.id,title:textValue(d.title),date:textValue(d.date),time:textValue(d.time),endTime:textValue(d.endTime),allDay:d.allDay===true,category,mealType:textValue(d.mealType),color:numberValue(d.color),birthYear:numberValue(d.birthYear),recurrenceType:category==="birthday"?"yearly":recurrenceType==="yearly"?"yearly":recurrenceType==="weekly"?"weekly":undefined,recurrenceDays:Array.isArray(d.recurrenceDays)?d.recurrenceDays.filter((value):value is number=>typeof value==="number"):[],recurrenceForever:category==="birthday"||d.recurrenceForever===true,recurrenceUntil:textValue(d.recurrenceUntil),excludedDates:Array.isArray(d.excludedDates)?d.excludedDates.filter((value):value is string=>typeof value==="string"):[],note:textValue(d.note),linkedListIds:Array.isArray(d.linkedListIds)?d.linkedListIds.filter((value):value is string=>typeof value==="string"):[],linkedRecipeIds:Array.isArray(d.linkedRecipeIds)?d.linkedRecipeIds.filter((value):value is string=>typeof value==="string"):[],reminderMinutes:numberValue(d.reminderMinutes),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy)}};
 export function watchCalendarEvents(groupId:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"calendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
 export function watchPrivateCalendarEvents(uid:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateCalendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
 export async function saveCalendarEvent(groupId:string,event:CalendarEvent){await setDoc(doc(db,"groups",groupId,"calendarEvents",event.id),event,{merge:true});}
 export async function savePrivateCalendarEvent(uid:string,event:CalendarEvent){await setDoc(doc(db,"users",uid,"privateCalendarEvents",event.id),event,{merge:true});}
 export async function removeCalendarEvent(groupId:string,eventId:string){await deleteDoc(doc(db,"groups",groupId,"calendarEvents",eventId));}
 export async function removePrivateCalendarEvent(uid:string,eventId:string){await deleteDoc(doc(db,"users",uid,"privateCalendarEvents",eventId));}
+export async function syncCalendarEventLocations(uid:string,event:CalendarEvent,previousLocations:string[],targetLocations:string[]){
+  const previous=new Set(previousLocations),targets=new Set(targetLocations);
+  await Promise.all([...targets].map(location=>location==="private"?savePrivateCalendarEvent(uid,event):saveCalendarEvent(location,event)));
+  await Promise.all([...previous].filter(location=>!targets.has(location)).map(location=>location==="private"?removePrivateCalendarEvent(uid,event.id):removeCalendarEvent(location,event.id)));
+}
+export async function removeCalendarEventEverywhere(uid:string,event:CalendarEvent,fallbackLocation:string){
+  const locations=event.locations?.length?event.locations:[fallbackLocation];
+  await Promise.all(locations.map(location=>location==="private"?removePrivateCalendarEvent(uid,event.id):removeCalendarEvent(location,event.id)));
+}
+const parseRecipe=(item:{id:string;data:()=>Record<string,unknown>;ref?:{path:string}}):Recipe=>{const d=item.data();return{id:textValue(d.id,item.id),title:textValue(d.title,"Namnlöst recept"),category:textValue(d.category),subcategory:textValue(d.subcategory),isPublic:d.isPublic===true,sourcePath:textValue(d.sourcePath,item.ref?.path),locations:Array.isArray(d.locations)?d.locations.filter((value):value is string=>typeof value==="string"&&Boolean(value)):undefined,copiedFromRecipeId:textValue(d.copiedFromRecipeId),originalCreatorId:textValue(d.originalCreatorId),originalCreatorName:textValue(d.originalCreatorName),...(d.originalCreatorColor!==undefined?{originalCreatorColor:numberValue(d.originalCreatorColor)}:{}),publicationLocked:d.publicationLocked===true,sourceUrl:textValue(d.sourceUrl),image:textValue(d.image),servings:Math.max(0,numberValue(d.servings,4)),servingUnit:textValue(d.servingUnit,"portioner"),minutes:Math.max(0,numberValue(d.minutes)),ingredients:Array.isArray(d.ingredients)?d.ingredients.map((raw,index)=>{const value=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{id:textValue(value.id,String(index)),amount:textValue(value.amount),unit:textValue(value.unit),name:textValue(value.name),...(value.isHeading===true?{isHeading:true}:{})}}).filter(value=>value.name):[],instructions:textValue(d.instructions),description:textValue(d.description),note:textValue(d.note),linkedListId:textValue(d.linkedListId),linkedRecipeIds:Array.isArray(d.linkedRecipeIds)?d.linkedRecipeIds.filter((value):value is string=>typeof value==="string"):[],dietaryTags:Array.isArray(d.dietaryTags)?d.dietaryTags.filter((value):value is string=>typeof value==="string"):[],creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),creatorColor:numberValue(d.creatorColor,0xff2b7a78),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy),...(Array.isArray(d.likedBy)?{likedBy:d.likedBy.filter((value):value is string=>typeof value==="string")}:{})}};
+export function watchRecipes(groupId:string,callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"recipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
+export function watchPrivateRecipes(uid:string,callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateRecipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
+const publicRecipeId=(sourcePath:string)=>sourcePath.replace(/\//g,"__");
+const publicRecipeKey=(recipe:Recipe)=>recipe.sourcePath||`${recipe.creatorId}:${recipe.id}`;
+const uniquePublicRecipes=(recipes:Recipe[])=>Array.from(recipes.reduce((values,recipe)=>{const key=publicRecipeKey(recipe);const current=values.get(key);if(!current||(recipe.updatedAt||0)>(current.updatedAt||0))values.set(key,recipe);return values},new Map<string,Recipe>()).values()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snap=>callback(uniquePublicRecipes(snap.docs.map(parseRecipe).filter(recipe=>recipe.isPublic))));}
+export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{
+  const [direct,matches]=await Promise.all([
+    getDoc(doc(db,"publicRecipes",recipeId)),
+    getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId))),
+  ]);
+  const documents=[...(direct.exists()?[direct]:[]),...matches.docs]
+    .filter((value,index,values)=>values.findIndex(candidate=>candidate.ref.path===value.ref.path)===index);
+  const recipes=documents.map(parseRecipe).filter(recipe=>recipe.isPublic);
+  return recipes.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||null;
+}
+
+const chatTime=(value:unknown)=>numberValue((value as {toMillis?:()=>number}|undefined)?.toMillis?.(),numberValue(value));
+export function directChatId(a:string,b:string){return [a,b].sort().join("__")}
+export async function ensureDirectChat(a:{uid:string;name:string;color:number},b:{uid:string;name:string;color:number}){if(a.uid===b.uid)throw new Error("Ogiltig mottagare");const id=directChatId(a.uid,b.uid),ref=doc(db,"directChats",id),existing=await getDoc(ref);if(existing.exists()){if(!textValue(existing.data().lastMessage)){const history=await getDocs(query(collection(db,"directChats",id,"messages"),orderBy("createdAt","asc"))),latest=history.docs.at(-1);if(latest){const message=latest.data();await updateDoc(ref,{lastMessage:textValue(message.text),lastMessageAt:chatTime(message.createdAt),lastSenderId:textValue(message.senderId)})}}return}await setDoc(ref,{participantIds:[a.uid,b.uid].sort(),participantNames:{[a.uid]:a.name,[b.uid]:b.name},participantColors:{[a.uid]:a.color,[b.uid]:b.color},lastMessage:"",lastMessageAt:Date.now(),lastSenderId:"",readAt:{}})}
+export function watchDirectChats(uid:string,callback:(items:DirectChat[])=>void):Unsubscribe{
+  return onSnapshot(query(collection(db,"directChats"),where("participantIds","array-contains",uid)),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,participantIds:Array.isArray(d.participantIds)?d.participantIds.filter((x):x is string=>typeof x==="string"):[],participantNames:(d.participantNames||{}) as Record<string,string>,participantColors:(d.participantColors||{}) as Record<string,number>,lastMessage:textValue(d.lastMessage),lastMessageAt:chatTime(d.lastMessageAt),lastSenderId:textValue(d.lastSenderId),readAt:(d.readAt||{}) as Record<string,number>}}).sort((a,b)=>b.lastMessageAt-a.lastMessageAt)));
+}
+export function watchDirectMessages(chatId:string,callback:(items:DirectMessage[])=>void):Unsubscribe{
+  return onSnapshot(query(collection(db,"directChats",chatId,"messages"),orderBy("createdAt","asc")),snap=>callback(snap.docs.map(item=>{const d=item.data();return {id:item.id,senderId:textValue(d.senderId),text:textValue(d.text),createdAt:chatTime(d.createdAt)}})));
+}
+export function watchTotalDirectMessageCount(callback:(count:number)=>void):Unsubscribe{
+  return onSnapshot(collectionGroup(db,"messages"),snapshot=>callback(snapshot.size));
+}
+export async function sendDirectMessage(sender:{uid:string;name:string;color:number},recipient:{uid:string;name:string;color:number},text:string){
+  const clean=text.trim().slice(0,2000);if(!clean||sender.uid===recipient.uid)throw new Error("Ogiltig mottagare");const id=directChatId(sender.uid,recipient.uid),now=Date.now(),chatRef=doc(db,"directChats",id),messageRef=doc(collection(db,"directChats",id,"messages"));const batch=writeBatch(db);batch.set(chatRef,{participantIds:[sender.uid,recipient.uid].sort(),participantNames:{[sender.uid]:sender.name,[recipient.uid]:recipient.name},participantColors:{[sender.uid]:sender.color,[recipient.uid]:recipient.color},lastMessage:clean,lastMessageAt:now,lastSenderId:sender.uid,readAt:{[sender.uid]:now}},{merge:true});batch.set(messageRef,{senderId:sender.uid,text:clean,createdAt:now});await batch.commit();return id;
+}
+export async function markDirectChatRead(chatId:string,uid:string){await updateDoc(doc(db,"directChats",chatId),{[`readAt.${uid}`]:Date.now()})}
+
+export function watchKnownOnlineUserIds(uids:string[],callback:(ids:Set<string>)=>void):Unsubscribe{
+  if(!uids.length){callback(new Set());return()=>{}}const seen=new Map<string,number>();const emit=()=>callback(new Set([...seen].filter(([,at])=>at>=Date.now()-5*60*1000).map(([uid])=>uid)));const unsubs=uids.map(uid=>onSnapshot(doc(db,"presence",uid),snap=>{seen.set(uid,chatTime(snap.data()?.lastSeenAt));emit()}));const timer=window.setInterval(emit,30000);return()=>{window.clearInterval(timer);unsubs.forEach(fn=>fn())};
+}
+export async function setPublicRecipeLiked(recipe:Recipe,uid:string,liked:boolean){
+  let target:ReturnType<typeof doc>|undefined;
+  if(recipe.sourcePath){
+    const expected=doc(db,"publicRecipes",publicRecipeId(recipe.sourcePath));
+    const direct=await getDoc(expected);
+    if(direct.exists())target=expected;
+    else{
+      const bySource=await getDocs(query(collection(db,"publicRecipes"),where("sourcePath","==",recipe.sourcePath),limit(1)));
+      if(!bySource.empty)target=bySource.docs[0].ref;
+    }
+  }
+  if(!target){
+    const direct=doc(db,"publicRecipes",recipe.id),snapshot=await getDoc(direct);
+    if(snapshot.exists())target=direct;
+  }
+  if(!target){const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipe.id),limit(1)));if(matches.empty)throw new Error("Receptet finns inte längre");target=matches.docs[0].ref;}
+  await updateDoc(target,{likedBy:liked?arrayUnion(uid):arrayRemove(uid)});
+}
+async function removeRecipePublications(sourcePath:string,recipeId:string){const targetId=publicRecipeId(sourcePath),target=doc(db,"publicRecipes",targetId),[direct,bySource,byRecipe]=await Promise.all([getDoc(target),getDocs(query(collection(db,"publicRecipes"),where("sourcePath","==",sourcePath))),getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId)))]),refs=new Map<string,(typeof bySource.docs)[number]["ref"]>();if(direct.exists())refs.set(targetId,target);for(const item of [...bySource.docs,...byRecipe.docs])refs.set(item.id,item.ref);await Promise.all([...refs.values()].map(ref=>deleteDoc(ref)));}
+const enforceRecipePublicationPolicy=(recipe:Recipe):Recipe=>recipe.publicationLocked===true||Boolean(recipe.copiedFromRecipeId)?{...recipe,isPublic:false,publicationLocked:true}:recipe;
+export async function syncRecipePublication(sourcePath:string,recipe:Recipe,scope:"group"|"private",groupId=""){const safeRecipe=enforceRecipePublicationPolicy(recipe),targetId=publicRecipeId(sourcePath),target=doc(db,"publicRecipes",targetId);if(safeRecipe.isPublic){await setDoc(target,{...safeRecipe,sourcePath,scope,groupId},{merge:true});const duplicates=await getDocs(query(collection(db,"publicRecipes"),where("id","==",safeRecipe.id)));await Promise.all(duplicates.docs.filter(item=>item.id!==targetId).map(item=>deleteDoc(item.ref)))}else await removeRecipePublications(sourcePath,safeRecipe.id);}
+export async function saveRecipe(groupId:string,recipe:Recipe){const sourcePath=`groups/${groupId}/recipes/${recipe.id}`,stored={...enforceRecipePublicationPolicy(recipe),sourcePath};await setDoc(doc(db,sourcePath),stored,{merge:true});await syncRecipePublication(sourcePath,stored,"group",groupId);}
+export async function savePrivateRecipe(uid:string,recipe:Recipe){const sourcePath=`users/${uid}/privateRecipes/${recipe.id}`,stored={...enforceRecipePublicationPolicy(recipe),sourcePath};await setDoc(doc(db,sourcePath),stored,{merge:true});await syncRecipePublication(sourcePath,stored,"private");}
+export async function moveRecipeLocation(uid:string,recipe:Recipe,fromLocation:string,toLocation:string){
+  if(fromLocation===toLocation){if(toLocation==="private")await savePrivateRecipe(uid,recipe);else await saveRecipe(toLocation,recipe);return;}
+  const fromPath=fromLocation==="private"?`users/${uid}/privateRecipes/${recipe.id}`:`groups/${fromLocation}/recipes/${recipe.id}`;
+  const toPath=toLocation==="private"?`users/${uid}/privateRecipes/${recipe.id}`:`groups/${toLocation}/recipes/${recipe.id}`;
+  const stored={...enforceRecipePublicationPolicy(recipe),sourcePath:toPath};
+  await setDoc(doc(db,toPath),stored,{merge:true});
+  await deleteDoc(doc(db,fromPath));
+  await removeRecipePublications(fromPath,recipe.id);
+  await syncRecipePublication(toPath,stored,toLocation==="private"?"private":"group",toLocation==="private"?"":toLocation);
+}
+const recipeLocationPath=(uid:string,location:string,id:string)=>location==="private"?`users/${uid}/privateRecipes/${id}`:`groups/${location}/recipes/${id}`;
+export async function syncRecipeLocations(uid:string,recipe:Recipe,previousLocations:string[],nextLocations:string[]){
+  const previous=[...new Set(previousLocations.filter(Boolean))],locations=[...new Set(nextLocations.filter(Boolean))];
+  if(!locations.length)throw new Error("Receptet måste finnas på minst en plats");
+  const shared={...recipe,locations};
+  const detail=(error:unknown)=>{const value=error as {code?:string;message?:string};return value?.code||value?.message||"okänt databasfel"};
+  for(const location of locations){
+    try{if(location==="private")await savePrivateRecipe(uid,shared);else await saveRecipe(location,shared)}
+    catch(error){throw new Error(`Spara ${location==="private"?"Privat":location}: ${detail(error)}`)}
+  }
+  for(const location of previous.filter(value=>!locations.includes(value))){
+    try{await deleteDoc(doc(db,recipeLocationPath(uid,location,recipe.id)))}
+    catch(error){throw new Error(`Ta bort gammal plats ${location}: ${detail(error)}`)}
+  }
+}
+export async function removeRecipeEverywhere(uid:string,recipe:Recipe,fallbackLocation:string){
+  const locations=[...new Set((recipe.locations?.length?recipe.locations:[fallbackLocation]).filter(Boolean))];
+  const firstPath=recipeLocationPath(uid,locations[0]||fallbackLocation,recipe.id);await removeRecipePublications(firstPath,recipe.id);
+  await Promise.all(locations.map(location=>deleteDoc(doc(db,recipeLocationPath(uid,location,recipe.id)))));
+}
+export async function removeRecipe(groupId:string,id:string){const sourcePath=`groups/${groupId}/recipes/${id}`;await removeRecipePublications(sourcePath,id);await deleteDoc(doc(db,sourcePath));}
+export async function removePrivateRecipe(uid:string,id:string){const sourcePath=`users/${uid}/privateRecipes/${id}`;await removeRecipePublications(sourcePath,id);await deleteDoc(doc(db,sourcePath));}
+export async function reconcileRecipePublications(uid:string){const published=await getDocs(query(collection(db,"publicRecipes"),where("creatorId","==",uid)));for(const item of published.docs){const data=item.data(),id=textValue(data.id,item.id),scope=textValue(data.scope),groupId=textValue(data.groupId),sourcePath=textValue(data.sourcePath,scope==="private"?`users/${uid}/privateRecipes/${id}`:scope==="group"&&groupId?`groups/${groupId}/recipes/${id}`:"");if(!sourcePath)continue;const source=await getDoc(doc(db,sourcePath)),sourceData=source.exists()?source.data():undefined;if(!sourceData||sourceData.isPublic!==true||sourceData.publicationLocked===true||Boolean(sourceData.copiedFromRecipeId)){await deleteDoc(item.ref);continue}const targetId=publicRecipeId(sourcePath);await setDoc(doc(db,"publicRecipes",targetId),{...sourceData,sourcePath,scope,groupId},{merge:true});if(item.id!==targetId)await deleteDoc(item.ref)}}
+export async function unpublishRecipe(sourcePath:string){await updateDoc(doc(db,sourcePath),{isPublic:false,updatedAt:Date.now()});await deleteDoc(doc(db,"publicRecipes",publicRecipeId(sourcePath)));}
 function notePayload(note:BubbsunNote){
   const {createdAt:_createdAt,updatedAt:_updatedAt,...values}=note;
   return {...values,title:note.title.slice(0,80),text:note.text.slice(0,20000),updatedAt:serverTimestamp(),createdAt:note.createdAt||serverTimestamp()};
@@ -268,19 +372,16 @@ export function watchAllAccounts(callback:(items:Account[])=>void):Unsubscribe {
   })));
 }
 
-const parsePublicRecipe=(item:{id:string;data:()=>Record<string,unknown>}):Recipe=>{const d=item.data();return{id:textValue(d.id,item.id),title:textValue(d.title,"Namnlöst recept"),category:textValue(d.category),subcategory:textValue(d.subcategory),isPublic:d.isPublic===true,sourcePath:textValue(d.sourcePath),sourceUrl:textValue(d.sourceUrl),image:textValue(d.image),servings:Math.max(1,numberValue(d.servings,4)),servingUnit:textValue(d.servingUnit,"portioner"),minutes:Math.max(0,numberValue(d.minutes)),ingredients:Array.isArray(d.ingredients)?d.ingredients.map((raw,index)=>{const value=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{id:textValue(value.id,String(index)),amount:textValue(value.amount),unit:textValue(value.unit),name:textValue(value.name),...(value.isHeading===true?{isHeading:true}:{})}}).filter(value=>value.name):[],instructions:textValue(d.instructions),description:textValue(d.description),note:textValue(d.note),likedBy:Array.isArray(d.likedBy)?d.likedBy.filter((value):value is string=>typeof value==="string"):[],linkedListId:"",creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),creatorColor:numberValue(d.creatorColor,0xff2b7a78),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy)}};
-export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{const direct=await getDoc(doc(db,"publicRecipes",recipeId));if(direct.exists())return parsePublicRecipe(direct);const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId),limit(1)));return matches.empty?null:parsePublicRecipe(matches.docs[0]);}
-export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snapshot=>{const recipes=snapshot.docs.map(parsePublicRecipe),unique=Array.from(recipes.reduce((values,recipe)=>{const current=values.get(recipe.id);if(!current||(recipe.updatedAt||0)>(current.updatedAt||0))values.set(recipe.id,recipe);return values},new Map<string,Recipe>()).values()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));callback(unique)});}
-
 export function watchAdminUserCounts(userIds:string[],callback:(counts:Record<string,AdminUserCounts>)=>void):Unsubscribe {
   type CountKey=keyof AdminUserCounts;
   const values=new Map<string,{uid:string;key:CountKey}[]>(),unsubs:Unsubscribe[]=[],groupUnsubs:Unsubscribe[]=[];
-  const emit=()=>{const result:Record<string,AdminUserCounts>=Object.fromEntries(userIds.map(uid=>[uid,{notes:0,calendarEvents:0,groups:0,followedLists:0}]));for(const entries of values.values())for(const entry of entries){result[entry.uid]??={notes:0,calendarEvents:0,groups:0,followedLists:0};result[entry.uid][entry.key]++}callback(result)};
+  const emit=()=>{const result:Record<string,AdminUserCounts>=Object.fromEntries(userIds.map(uid=>[uid,{notes:0,calendarEvents:0,recipes:0,groups:0,followedLists:0}]));for(const entries of values.values())for(const entry of entries){result[entry.uid]??={notes:0,calendarEvents:0,recipes:0,groups:0,followedLists:0};result[entry.uid][entry.key]++}callback(result)};
   const set=(source:string,entries:{uid:string;key:CountKey}[])=>{values.set(source,entries.filter(entry=>entry.uid));emit()};
   const noteCreator=(data:Record<string,unknown>)=>{const direct=textValue(data.creatorId);if(direct)return direct;const history=Array.isArray(data.history)?data.history:[];for(const raw of history){if(raw&&typeof raw==="object"){const uid=textValue((raw as Record<string,unknown>).uid);if(uid)return uid}}return""};
   for(const uid of userIds){
     unsubs.push(onSnapshot(collection(db,"users",uid,"privateNotes"),snap=>set(`privateNotes:${uid}`,snap.docs.map(()=>({uid,key:"notes" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"privateCalendarEvents"),snap=>set(`privateCalendar:${uid}`,snap.docs.map(()=>({uid,key:"calendarEvents" as const})))));
+    unsubs.push(onSnapshot(collection(db,"users",uid,"privateRecipes"),snap=>set(`privateRecipes:${uid}`,snap.docs.map(()=>({uid,key:"recipes" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"memberships"),snap=>set(`memberships:${uid}`,snap.docs.map(()=>({uid,key:"groups" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>set(`following:${uid}`,snap.docs.filter(item=>item.data().following===true&&item.data().kind!=="note").map(()=>({uid,key:"followedLists" as const})))));
   }
@@ -294,6 +395,10 @@ export function watchAdminUserCounts(userIds:string[],callback:(counts:Record<st
       groupUnsubs.push(onSnapshot(
         collection(group.ref,"calendarEvents"),
         snap=>set(`groupCalendar:${group.id}`,snap.docs.map(item=>({uid:textValue(item.data().creatorId),key:"calendarEvents" as const}))),
+      ));
+      groupUnsubs.push(onSnapshot(
+        collection(group.ref,"recipes"),
+        snap=>set(`groupRecipes:${group.id}`,snap.docs.map(item=>({uid:textValue(item.data().creatorId),key:"recipes" as const}))),
       ));
     }
     emit();

@@ -26,6 +26,7 @@ export type Account = {
 export type AdminUserCounts = {
   notes: number;
   calendarEvents: number;
+  recipes: number;
   groups: number;
   followedLists: number;
 };
@@ -71,6 +72,9 @@ export type ListItem = {
   taskType?: string;
 };
 
+export type DirectChat = { id:string; participantIds:string[]; participantNames:Record<string,string>; participantColors:Record<string,number>; lastMessage:string; lastMessageAt:number; lastSenderId:string; readAt:Record<string,number> };
+export type DirectMessage = { id:string; senderId:string; text:string; createdAt:number };
+
 export type BubbsunList = {
   id: string;
   name: string;
@@ -101,6 +105,7 @@ export type CalendarEvent = {
   endTime?: string;
   allDay?: boolean;
   category?: string;
+  mealType?: string;
   color?: number;
   birthYear?: number;
   recurrenceType?: "" | "weekly" | "yearly";
@@ -110,12 +115,14 @@ export type CalendarEvent = {
   excludedDates?: string[];
   note?: string;
   linkedListIds?: string[];
+  linkedRecipeIds?: string[];
   reminderMinutes?: number;
   creatorId: string;
   creatorName: string;
   createdAt: number;
   updatedAt: number;
   updatedBy?: string;
+  locations?: string[];
 };
 
 export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };
@@ -126,6 +133,7 @@ export type Recipe = {
   subcategory?: string;
   isPublic?: boolean;
   sourcePath?: string;
+  locations?: string[];
   copiedFromRecipeId?: string;
   originalCreatorId?: string;
   originalCreatorName?: string;
@@ -140,19 +148,21 @@ export type Recipe = {
   description?: string;
   sourceUrl?: string;
   note?: string;
-  likedBy?: string[];
   linkedListId?: string;
+  linkedRecipeIds?: string[];
+  dietaryTags?: string[];
   creatorId: string;
   creatorName: string;
   creatorColor: number;
   createdAt: number;
   updatedAt: number;
   updatedBy?: string;
+  likedBy?: string[];
 };
 
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
-export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "notifications" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
+export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "meal-planner" | "recipes" | "recipe-discover" | "notifications" | "chat" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };
-export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string; calendarEventBackground?: string };
+export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string; calendarEventBackground?: string; paletteVersion?: number };

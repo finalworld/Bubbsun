@@ -3225,10 +3225,10 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-copy-mark{display:flex;align-items:center;gap:10px;width:max-content;max-width:100%;margin:0 0 18px;padding:10px 15px 10px 18px;border-left:8px solid var(--recipe-original,var(--theme-accent));border-radius:4px 15px 15px 4px;background:color-mix(in srgb,var(--recipe-original,var(--theme-accent)) 13%,var(--theme-paper));color:var(--theme-text);font:700 14px Arial,sans-serif}
 .recipe-copy-mark i{display:inline-block;color:var(--recipe-original,var(--theme-accent));font:900 9px Arial,sans-serif;letter-spacing:.14em;transform:rotate(-10deg)}
 .recipe-copy-mark b{color:var(--recipe-original,var(--theme-accent))}
-.recipe-card .recipe-copy-mark.compact{position:absolute;z-index:5;right:0;bottom:0;display:grid;place-items:center;width:62px;height:34px;box-sizing:border-box;margin:0;padding:7px 4px 3px 13px;border:0;border-radius:0 0 20px 0;background:color-mix(in srgb,var(--recipe-original,var(--theme-accent)) 58%,var(--theme-paper));clip-path:polygon(24% 0,100% 0,100% 100%,0 100%);box-shadow:none;pointer-events:none}
-.recipe-card .recipe-copy-mark.compact i{color:var(--theme-text);font-size:8px;transform:rotate(-11deg)}
+.recipe-card .recipe-copy-mark.compact{position:absolute;z-index:5;right:0;bottom:0;display:grid;place-items:center;width:74px;height:54px;box-sizing:border-box;margin:0;padding:9px 0 0 20px;border:0;border-radius:0;background:color-mix(in srgb,var(--recipe-original,var(--theme-accent)) 64%,var(--theme-paper));clip-path:polygon(38% 0,100% 0,100% 100%,0 100%);box-shadow:none;pointer-events:none}
+.recipe-card .recipe-copy-mark.compact i{color:var(--theme-text);font-size:8px;letter-spacing:.12em;transform:rotate(-45deg)}
 .recipe-view footer .recipe-delete-view{border-color:#b75b59;color:#a43f3d;background:transparent!important}
-@media(max-width:899px){.recipe-copy-mark{margin-bottom:14px;padding:8px 11px 8px 14px;font-size:12px}.recipe-card .recipe-copy-mark.compact{width:54px;height:30px;padding:6px 3px 3px 11px}.recipe-view footer>div{gap:7px}.recipe-view footer .recipe-delete-view{font-size:10px}}
+@media(max-width:899px){.recipe-copy-mark{margin-bottom:14px;padding:8px 11px 8px 14px;font-size:12px}.recipe-card .recipe-copy-mark.compact{width:62px;height:46px;padding:8px 0 0 17px}.recipe-card .recipe-copy-mark.compact i{font-size:7px}.recipe-view footer>div{gap:7px}.recipe-view footer .recipe-delete-view{font-size:10px}}
 .recipe-view .recipe-icon-action,
 .recipe-view .recipe-like-button,
 .recipe-view .recipe-message-creator {

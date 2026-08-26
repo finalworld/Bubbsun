@@ -311,7 +311,7 @@ const themes = [
   {
     id: "retro",
     name: "Retro",
-    icon: "theme_retro.png",
+    icon: "theme_retro_radio.png",
     bg: "#f4ead8",
     paper: "#fff7e9",
     panel: "#e3c99d",
@@ -322,7 +322,7 @@ const themes = [
   {
     id: "light",
     name: "Ljus retro",
-    icon: "theme_light.png",
+    icon: "theme_light_radio.png",
     bg: "#fbf7ef",
     paper: "#fffaf3",
     panel: "#f5eee2",
@@ -337,7 +337,7 @@ const themes = [
   {
     id: "ocean",
     name: "Mörk retro",
-    icon: "theme_ocean.png",
+    icon: "theme_dark_retro_radio.png",
     bg: "#11191e",
     paper: "#192226",
     panel: "#20292c",

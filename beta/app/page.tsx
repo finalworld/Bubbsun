@@ -5325,6 +5325,7 @@ function RecipeEditor({
     [confirmDelete, setConfirmDelete] = useState(false);
   const ingredientSensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:6}}));
   const initialEditorState=useRef("");
+  const ingredientOrderDirty=useRef(false);
   const editorState=JSON.stringify({title,category,subcategory,isPublic,image,servings,servingUnit,minutes,ingredients,instructions,description,sourceUrl,note,linkedListId,linkedRecipeIds,targetLocation});
   if(!initialEditorState.current)initialEditorState.current=editorState;
   const editorDirty=initialEditorState.current!==editorState;
@@ -5357,12 +5358,12 @@ function RecipeEditor({
     setIngredients(current=>[...current,{id,amount:"",unit:"",name:"",isHeading:true}]);
     window.setTimeout(()=>document.querySelector<HTMLInputElement>(`[data-ingredient-heading="${id}"]`)?.focus(),0);
   };
-  const ingredientDragEnd=(event:DragEndEvent)=>{const activeId=String(event.active.id),overId=event.over?String(event.over.id):"";if(!overId||activeId===overId)return;setIngredients(current=>{const from=current.findIndex(item=>item.id===activeId),to=current.findIndex(item=>item.id===overId);return from<0||to<0?current:arrayMove(current,from,to)})};
+  const ingredientDragEnd=(event:DragEndEvent)=>{const activeId=String(event.active.id),overId=event.over?String(event.over.id):"";if(!overId||activeId===overId)return;ingredientOrderDirty.current=true;setIngredients(current=>{const from=current.findIndex(item=>item.id===activeId),to=current.findIndex(item=>item.id===overId);return from<0||to<0?current:arrayMove(current,from,to)})};
   return (
     <div
       className="recipe-modal-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !editorDirty) onClose();
+        if (event.target === event.currentTarget && !editorDirty && !ingredientOrderDirty.current) onClose();
       }}
     >
       <section className="recipe-editor-modal">

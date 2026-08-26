@@ -397,7 +397,9 @@ export default function Home() {
   const allDayKeys = useMemo(() => Array.from(new Set([...dayRecords.map((day) => day.date), ...sales.map((sale) => dayKey(new Date(sale.id)))] )).sort().reverse(), [dayRecords, sales]);
   const calcDisplayExpression = calcOp && calcStored !== null ? `${calcExpression}${calcValue === "0" ? "" : calcValue}` : calcJustEquals ? calcExpression : calcHistory.split("=")[0];
   const currentCashier = cashiers.find((cashier) => cashier.id === currentCashierId) || cashiers[0];
-  const previousSale = lastCompletedSaleId === null ? undefined : sales.find((sale) => sale.id === lastCompletedSaleId && sale.kind !== "refund");
+  // Återgå är bara en ångra-funktion för det pågående arbetspasset.
+  // Ett köp från ett tidigare pass eller en tidigare dag får aldrig dyka upp här.
+  const previousSale = !activeSessionId || lastCompletedSaleId === null ? undefined : sales.find((sale) => sale.id === lastCompletedSaleId && sale.kind !== "refund" && sale.sessionId === activeSessionId);
   const visibleProducts = products.filter((product) => !product.hidden);
 
   const statsSales = useMemo(() => {
@@ -960,6 +962,7 @@ export default function Home() {
     try { await setDoc(kassaStateRef, { days: next, activeSessionId: "", updatedAt: Date.now() }, { merge: true }); } catch { window.alert("Passet kunde inte avslutas. Försök igen."); return; }
     setDayRecords(next); localStorage.setItem("rk-kassa-days", JSON.stringify(next));
     setActiveSessionId(""); localStorage.removeItem("rk-kassa-active-session");
+    setLastCompletedSaleId(null); localStorage.removeItem("rk-kassa-last-completed-sale");
     setHistorySessionId(sessionId); setEndDayConfirm(false); setView("history");
   }
 

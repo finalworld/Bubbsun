@@ -1204,9 +1204,9 @@ function Drawer({
             </button>
             <button className="drawer-recipe-heading" type="button" tabIndex={-1} aria-disabled="true">
               <CalendarDays />
-              <span>Kalender</span>
+              <span>Planering</span>
             </button>
-            <div className="drawer-recipe-submenu drawer-calendar-submenu"><button onClick={()=>onPage("calendar")}><CalendarDays/><span>Kalender</span><ChevronRight/></button><button onClick={()=>onPage("meal-planner")}><NotebookPen/><span>Veckoplanerare</span><ChevronRight/></button></div>
+            <div className="drawer-recipe-submenu drawer-calendar-submenu"><button onClick={()=>onPage("calendar")}><CalendarDays/><span>Min kalender</span><ChevronRight/></button><button onClick={()=>onPage("meal-planner")}><NotebookPen/><span>Veckans måltider</span><ChevronRight/></button></div>
             <button className="drawer-recipe-heading" type="button" tabIndex={-1} aria-disabled="true">
               <BookOpen />
               <span>Recept</span>

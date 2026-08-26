@@ -131,6 +131,9 @@ export type Recipe = {
   isPublic?: boolean;
   sourcePath?: string;
   copiedFromRecipeId?: string;
+  originalCreatorId?: string;
+  originalCreatorName?: string;
+  originalCreatorColor?: number;
   publicationLocked?: boolean;
   image?: string;
   servings: number;

@@ -3220,6 +3220,15 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   background:var(--theme-accent)!important;
   color:var(--theme-paper)!important;
 }
+
+/* Saved discovery recipes keep a permanent, source-coloured copy label. */
+.recipe-copy-mark{display:flex;align-items:center;gap:10px;width:max-content;max-width:100%;margin:0 0 18px;padding:10px 15px 10px 18px;border-left:8px solid var(--recipe-original,var(--theme-accent));border-radius:4px 15px 15px 4px;background:color-mix(in srgb,var(--recipe-original,var(--theme-accent)) 13%,var(--theme-paper));color:var(--theme-text);font:700 14px Arial,sans-serif}
+.recipe-copy-mark i{display:inline-block;color:var(--recipe-original,var(--theme-accent));font:900 9px Arial,sans-serif;letter-spacing:.14em;transform:rotate(-10deg)}
+.recipe-copy-mark b{color:var(--recipe-original,var(--theme-accent))}
+.recipe-card .recipe-copy-mark.compact{position:absolute;z-index:5;right:0;bottom:0;max-width:calc(100% - 18px);box-sizing:border-box;margin:0;padding:7px 11px 7px 15px;border-left-width:6px;border-radius:8px 0 20px 0;background:color-mix(in srgb,var(--recipe-original,var(--theme-accent)) 18%,var(--theme-paper));font-size:11px;box-shadow:-3px -3px 9px #2d170b1c;pointer-events:none}
+.recipe-card .recipe-copy-mark.compact i{font-size:7px}.recipe-card .recipe-copy-mark.compact span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recipe-view footer .recipe-delete-view{border-color:#b75b59;color:#a43f3d;background:transparent!important}
+@media(max-width:899px){.recipe-copy-mark{margin-bottom:14px;padding:8px 11px 8px 14px;font-size:12px}.recipe-card .recipe-copy-mark.compact{font-size:9px;padding:6px 8px 6px 11px}.recipe-view footer>div{gap:7px}.recipe-view footer .recipe-delete-view{font-size:10px}}
 .recipe-view .recipe-icon-action,
 .recipe-view .recipe-like-button,
 .recipe-view .recipe-message-creator {

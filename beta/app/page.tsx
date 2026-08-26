@@ -5512,7 +5512,7 @@ function RecipeEditor({
         </label>
         <fieldset className="recipe-ingredients">
           <legend>INGREDIENSER</legend>
-          <DndContext sensors={ingredientSensors} collisionDetection={closestCenter} onDragEnd={ingredientDragEnd}><SortableContext items={ingredients.map(item=>item.id)} strategy={verticalListSortingStrategy}>{ingredients.map(item=><SortableRecipeIngredientRow key={item.id} item={item} onUpdate={updateIngredient} onRemove={id=>setIngredients(current=>current.filter(value=>value.id!==id))} onAddNext={addIngredientAndFocusAmount}/>)}</SortableContext></DndContext>
+          <DndContext sensors={ingredientSensors} collisionDetection={closestCenter} onDragStart={()=>{ingredientOrderDirty.current=true}} onDragEnd={ingredientDragEnd}><SortableContext items={ingredients.map(item=>item.id)} strategy={verticalListSortingStrategy}>{ingredients.map(item=><SortableRecipeIngredientRow key={item.id} item={item} onUpdate={updateIngredient} onRemove={id=>setIngredients(current=>current.filter(value=>value.id!==id))} onAddNext={addIngredientAndFocusAmount}/>)}</SortableContext></DndContext>
           <div className="recipe-ingredient-add-actions"><button
             type="button"
             className="recipe-add-row"

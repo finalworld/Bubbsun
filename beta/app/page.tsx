@@ -336,13 +336,13 @@ const themes = [
     id: "ocean",
     name: "Mörk retro",
     icon: "theme_ocean.png",
-    bg: "#10181d",
-    paper: "#182126",
-    panel: "#202a2d",
-    text: "#f1ddba",
+    bg: "#11191e",
+    paper: "#192226",
+    panel: "#20292c",
+    text: "#f0d9b4",
     accent: "#60794f",
-    outline: "#46504d",
-    header: "#111a1e",
+    outline: "#3d4848",
+    header: "#11191e",
     headerButton: "#526946",
   },
   {
@@ -6240,7 +6240,12 @@ function AuthenticatedApp() {
     themes.find(
       (item) => item.id === themeId && (!item.supporter || account?.supporter),
     ) || themes[0];
-  const activeTheme = { ...themeBase, ...themePalettes[themeBase.id] };
+  // Ocean was replaced by Dark retro. Do not let an old saved Ocean palette
+  // repaint the new theme with the former blue/green colours.
+  const activeTheme = {
+    ...themeBase,
+    ...(themeBase.id === "ocean" ? {} : themePalettes[themeBase.id]),
+  };
   const themeStyle = {
     "--theme-bg": activeTheme.bg,
     "--theme-paper": activeTheme.paper,

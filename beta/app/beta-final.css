@@ -2238,6 +2238,8 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .drawer .drawer-title>button:not(.drawer-invite):not(.drawer-notifications):not(.drawer-chat){position:absolute!important;right:5px!important;top:0!important;bottom:auto!important;left:auto!important}
 .app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite){position:absolute!important;right:74px!important;top:auto!important;bottom:1px!important;left:auto!important}
 .app-shell .drawer .drawer-title>button.drawer-chat:not(.drawer-invite){position:absolute!important;right:5px!important;top:auto!important;bottom:1px!important;left:auto!important}
+.app-shell .drawer .drawer-title>button:not(.drawer-invite){outline:0!important;-webkit-tap-highlight-color:transparent!important}
+.app-shell .drawer .drawer-title>button:not(.drawer-invite)::before,.app-shell .drawer .drawer-title>button:not(.drawer-invite)::after{display:none!important;content:none!important}
 .app-shell .drawer .drawer-title>button:not(.drawer-invite)>img{display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;filter:drop-shadow(0 4px 4px #2d170b55)!important}
 .app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite)::after{display:none!important}
 .app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite)>span,

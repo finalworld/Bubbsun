@@ -3509,3 +3509,4 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* Alla receptkort behåller samma innehållslinjer även vid långa kategorinamn. */
 .recipe-card>span:last-of-type>small{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;min-height:1.2em}
+.recipe-facts:empty,.recipe-card-facts:empty{display:none!important}

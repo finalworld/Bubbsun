@@ -5731,18 +5731,18 @@ function RecipeEditor({
 
 const recipesPerPage=20;
 const emptyRecipeIdeas=[
-  {icon:"🥐",text:"Croissanter gör vilken morgon som helst lite bättre."},
-  {icon:"🥞",text:"Pannkakor är alltid en bra början."},
-  {icon:"🍕",text:"Hemgjord pizza brukar rädda dagen."},
-  {icon:"🍝",text:"En riktigt god pasta går nästan alltid hem."},
-  {icon:"🍲",text:"En varm gryta är svår att säga nej till."},
-  {icon:"🥗",text:"En färgglad sallad kan vara precis vad som behövs."},
-  {icon:"🍞",text:"Doften av nybakat bröd är oslagbar."},
-  {icon:"🧁",text:"Cupcakes är små, men gör folk väldigt glada."},
-  {icon:"🍪",text:"Kakor är ett pålitligt sätt att inviga kokboken."},
-  {icon:"🥧",text:"En paj passar lika bra till vardag som till fest."},
+  {icon:"/assets/recipe-empty/croissant.webp",text:"Croissanter gör vilken morgon som helst lite bättre."},
+  {icon:"/assets/recipe-empty/pancakes.webp",text:"Pannkakor är alltid en bra början."},
+  {icon:"/assets/recipe-empty/pizza.webp",text:"Hemgjord pizza brukar rädda dagen."},
+  {icon:"/assets/recipe-empty/pasta.webp",text:"En riktigt god pasta går nästan alltid hem."},
+  {icon:"/assets/recipe-empty/stew.webp",text:"En varm gryta är svår att säga nej till."},
+  {icon:"/assets/recipe-empty/salad.webp",text:"En färgglad sallad kan vara precis vad som behövs."},
+  {icon:"/assets/recipe-empty/bread.webp",text:"Doften av nybakat bröd är oslagbar."},
+  {icon:"/assets/recipe-empty/cupcakes.webp",text:"Cupcakes är små, men gör folk väldigt glada."},
+  {icon:"/assets/recipe-empty/cookies.webp",text:"Kakor är ett pålitligt sätt att inviga kokboken."},
+  {icon:"/assets/recipe-empty/pie.webp",text:"En paj passar lika bra till vardag som till fest."},
 ] as const;
-function EmptyRecipes(){const idea=useMemo(()=>emptyRecipeIdeas[Math.floor(Math.random()*emptyRecipeIdeas.length)],[]);return <div className="recipes-empty"><span>{idea.icon}</span><h2>Inga recept här ännu</h2><p>Börja med något gott. {idea.text}</p></div>}
+function EmptyRecipes(){const idea=useMemo(()=>emptyRecipeIdeas[Math.floor(Math.random()*emptyRecipeIdeas.length)],[]);return <div className="recipes-empty"><img src={idea.icon} alt=""/><h2>Inga recept här ännu</h2><p>Börja med något gott. {idea.text}</p></div>}
 function RecipePagination({page,total,onPage}:{page:number;total:number;onPage:(page:number)=>void}){
   const pages=Math.ceil(total/recipesPerPage);if(pages<=1)return null;
   return <nav className="recipe-pagination" aria-label="Receptsidor"><button disabled={page===1} onClick={()=>onPage(page-1)}><ChevronLeft/></button>{Array.from({length:pages},(_,index)=>index+1).map(value=><button className={value===page?"selected":""} aria-current={value===page?"page":undefined} key={value} onClick={()=>onPage(value)}>{value}</button>)}<button disabled={page===pages} onClick={()=>onPage(page+1)}><ChevronRight/></button></nav>;

@@ -3254,6 +3254,14 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   line-height:1.2;
 }
 
+.app-shell .recipes-empty > img {
+  display: block !important;
+  width: clamp(118px, 18vw, 190px) !important;
+  height: clamp(118px, 18vw, 190px) !important;
+  margin: 0 auto 8px !important;
+  object-fit: contain !important;
+}
+
 @media(max-width:899px){
   .recipe-modal-backdrop{box-sizing:border-box;max-width:100vw;overflow-x:hidden!important}
   .recipe-view{box-sizing:border-box;width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px)!important;overflow-x:hidden!important}

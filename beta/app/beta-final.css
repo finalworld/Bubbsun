@@ -1895,6 +1895,61 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .add-panel-cleaning .new-item-note,
   .app-shell .add-panel-homefix .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
 }
+
+/* Mobile list add: keep name, compact quantity and confirm on one row. */
+@media (max-width: 700px) {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) {
+    position: relative !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > h2 {
+    padding-right: 46px !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > div {
+    grid-template-columns: minmax(0, 1fr) minmax(80px, .55fr) 53px !important;
+    grid-template-rows: auto auto !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .autocomplete-wrap {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > div > input {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    padding-inline: 10px !important;
+    font-size: 14px !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions {
+    display: contents !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child {
+    position: absolute !important;
+    top: 10px !important;
+    right: 12px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child.active {
+    color: var(--theme-accent) !important;
+    background: color-mix(in srgb, var(--theme-accent) 12%, transparent) !important;
+    border-radius: 50% !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:last-child {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    width: 53px !important;
+    min-width: 53px !important;
+    min-height: 53px !important;
+  }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+}
 .app-shell .global-pin-modal > button.global-pin-close {
   position: absolute !important;
   inset: 18px 18px auto auto !important;

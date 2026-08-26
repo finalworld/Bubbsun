@@ -3264,19 +3264,19 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 
 /* Desktop recipe editor: six-dot handles reorder headings and ingredients together. */
 @media (min-width: 900px) {
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-add-actions) {
+  .app-shell .recipe-ingredients > .recipe-ingredient-row {
     grid-template-columns: 34px 110px 110px minmax(0, 1fr) 48px !important;
     align-items: center !important;
   }
   .app-shell .recipe-ingredients > .recipe-ingredient-heading-row {
     grid-template-columns: 34px minmax(0, 1fr) 48px !important;
   }
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-add-actions) > .recipe-ingredient-drag {
+  .app-shell .recipe-ingredients > div > .recipe-ingredient-drag {
     grid-column: 1 !important;
     grid-row: 1 !important;
     width: 32px !important;
     min-width: 32px !important;
-    height: 48px !important;
+    height: 100% !important;
     padding: 0 !important;
     display: grid !important;
     place-items: center !important;
@@ -3290,16 +3290,28 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
   .app-shell .recipe-ingredients .recipe-ingredient-drag:active { cursor: grabbing !important; }
   .app-shell .recipe-ingredients .recipe-ingredient-drag::after { content: none !important; display: none !important; }
   .app-shell .recipe-ingredients .recipe-ingredient-drag svg { width: 25px !important; height: 25px !important; }
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-heading-row):not(.recipe-ingredient-add-actions) > input:nth-child(1) { grid-column: 2 !important; }
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-heading-row):not(.recipe-ingredient-add-actions) > input:nth-child(2) { grid-column: 3 !important; }
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-heading-row):not(.recipe-ingredient-add-actions) > input:nth-child(3) { grid-column: 4 !important; }
-  .app-shell .recipe-ingredients > div:not(.recipe-ingredient-heading-row):not(.recipe-ingredient-add-actions) > button:not(.recipe-ingredient-drag) { grid-column: 5 !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(1) { grid-column: 2 !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(2) { grid-column: 3 !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(3) { grid-column: 4 !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > .recipe-ingredient-remove { grid-column: 5 !important; }
   .app-shell .recipe-ingredients > .recipe-ingredient-heading-row > input { grid-column: 2 !important; }
-  .app-shell .recipe-ingredients > .recipe-ingredient-heading-row > button:not(.recipe-ingredient-drag) { grid-column: 3 !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-heading-row > .recipe-ingredient-remove { grid-column: 3 !important; }
+  .app-shell .recipe-ingredients > div > .recipe-ingredient-remove {
+    align-self: stretch !important;
+    width: 48px !important;
+    min-width: 48px !important;
+    height: auto !important;
+    min-height: 100% !important;
+    padding: 0 !important;
+  }
   .app-shell .recipe-ingredients > div.dragging { opacity: .45 !important; }
 }
 @media (max-width: 899px) {
   .app-shell .recipe-ingredient-drag { display: none !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(1) { grid-area: amount !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(2) { grid-area: unit !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > input:nth-of-type(3) { grid-area: name !important; }
+  .app-shell .recipe-ingredients > .recipe-ingredient-row > .recipe-ingredient-remove { grid-area: remove !important; }
 }
 
 @media(max-width:899px){

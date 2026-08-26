@@ -26,7 +26,6 @@ import {
   ListChecks,
   LockKeyhole,
   LoaderCircle,
-  GripHorizontal,
   GripVertical,
   LogOut,
   Menu,
@@ -181,6 +180,7 @@ import type {
   Page,
   PublicListShare,
   Recipe,
+  RecipeIngredient,
   Report,
   ThemePalette,
 } from "../src/types";
@@ -5253,6 +5253,23 @@ function RecipeCopyMark({recipe,compact=false}:{recipe:Recipe;compact?:boolean})
 }
 const compressRecipeImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const max=720,scale=Math.min(1,max/Math.max(image.width,image.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.68,result=canvas.toDataURL("image/webp",quality);while(result.length>120000&&quality>.35){quality-=.08;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
 
+function SortableRecipeIngredientRow({item,onUpdate,onRemove,onAddNext}:{item:RecipeIngredient;onUpdate:(id:string,key:"amount"|"unit"|"name",value:string)=>void;onRemove:(id:string)=>void;onAddNext:()=>void}) {
+  const sortable=useSortable({id:item.id});
+  const style={transform:CSS.Transform.toString(sortable.transform),transition:sortable.transition,zIndex:sortable.isDragging?4:undefined} as CSSProperties;
+  return <div ref={sortable.setNodeRef} style={style} className={`${item.isHeading?"recipe-ingredient-heading-row":"recipe-ingredient-row"}${sortable.isDragging?" dragging":""}`}>
+    <button type="button" className="recipe-ingredient-drag" aria-label="Flytta raden" title="Dra för att flytta" {...sortable.attributes} {...sortable.listeners}><GripVertical/></button>
+    {item.isHeading?<>
+      <input data-ingredient-heading={item.id} value={item.name} onChange={event=>onUpdate(item.id,"name",event.target.value)} placeholder="Rubrik, till exempel COLESLAW"/>
+      <button type="button" className="recipe-ingredient-remove" aria-label="Ta bort delrubrik" onClick={()=>onRemove(item.id)}><X/></button>
+    </>:<>
+      <input data-ingredient-amount={item.id} value={item.amount} onChange={event=>onUpdate(item.id,"amount",event.target.value)} placeholder="Mängd"/>
+      <input value={item.unit} onChange={event=>onUpdate(item.id,"unit",event.target.value)} placeholder="Enhet"/>
+      <input value={item.name} onChange={event=>onUpdate(item.id,"name",event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.nativeEvent.isComposing){event.preventDefault();onAddNext()}}} placeholder="Ingrediens"/>
+      <button type="button" className="recipe-ingredient-remove" aria-label="Ta bort ingrediens" onClick={()=>onRemove(item.id)}><X/></button>
+    </>}
+  </div>;
+}
+
 function RecipeEditor({
   recipe,
   availableRecipes,
@@ -5305,8 +5322,12 @@ function RecipeEditor({
     [targetLocation, setTargetLocation] = useState(currentLocation),
     [busy, setBusy] = useState(false),
     [saveError, setSaveError] = useState(""),
-    [confirmDelete, setConfirmDelete] = useState(false),
-    [draggedIngredientId, setDraggedIngredientId] = useState("");
+    [confirmDelete, setConfirmDelete] = useState(false);
+  const ingredientSensors=useSensors(useSensor(PointerSensor,{activationConstraint:{distance:6}}));
+  const initialEditorState=useRef("");
+  const editorState=JSON.stringify({title,category,subcategory,isPublic,image,servings,servingUnit,minutes,ingredients,instructions,description,sourceUrl,note,linkedListId,linkedRecipeIds,targetLocation});
+  if(!initialEditorState.current)initialEditorState.current=editorState;
+  const editorDirty=initialEditorState.current!==editorState;
   const updateIngredient = (
     id: string,
     key: "amount" | "unit" | "name",
@@ -5336,40 +5357,12 @@ function RecipeEditor({
     setIngredients(current=>[...current,{id,amount:"",unit:"",name:"",isHeading:true}]);
     window.setTimeout(()=>document.querySelector<HTMLInputElement>(`[data-ingredient-heading="${id}"]`)?.focus(),0);
   };
-  const moveIngredient = (targetId: string) => {
-    if (!draggedIngredientId || draggedIngredientId === targetId) return;
-    setIngredients((current) => {
-      const sourceIndex = current.findIndex((item) => item.id === draggedIngredientId);
-      const targetIndex = current.findIndex((item) => item.id === targetId);
-      if (sourceIndex < 0 || targetIndex < 0) return current;
-      const next = [...current];
-      const [moved] = next.splice(sourceIndex, 1);
-      next.splice(targetIndex, 0, moved);
-      return next;
-    });
-  };
-  const ingredientDragHandle = (id: string) => (
-    <button
-      type="button"
-      className="recipe-ingredient-drag"
-      draggable
-      aria-label="Flytta raden"
-      title="Dra för att flytta"
-      onDragStart={(event) => {
-        setDraggedIngredientId(id);
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", id);
-      }}
-      onDragEnd={() => setDraggedIngredientId("")}
-    >
-      <GripHorizontal />
-    </button>
-  );
+  const ingredientDragEnd=(event:DragEndEvent)=>{const activeId=String(event.active.id),overId=event.over?String(event.over.id):"";if(!overId||activeId===overId)return;setIngredients(current=>{const from=current.findIndex(item=>item.id===activeId),to=current.findIndex(item=>item.id===overId);return from<0||to<0?current:arrayMove(current,from,to)})};
   return (
     <div
       className="recipe-modal-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget && !editorDirty) onClose();
       }}
     >
       <section className="recipe-editor-modal">
@@ -5518,55 +5511,7 @@ function RecipeEditor({
         </label>
         <fieldset className="recipe-ingredients">
           <legend>INGREDIENSER</legend>
-          {ingredients.map((item) => item.isHeading?(
-            <div className={`recipe-ingredient-heading-row${draggedIngredientId===item.id?" dragging":""}`} key={item.id} onDragOver={event=>{if(draggedIngredientId){event.preventDefault();event.dataTransfer.dropEffect="move"}}} onDrop={event=>{event.preventDefault();moveIngredient(item.id);setDraggedIngredientId("")}}>
-              <input data-ingredient-heading={item.id} value={item.name} onChange={event=>updateIngredient(item.id,"name",event.target.value)} placeholder="Rubrik, till exempel COLESLAW"/>
-              <button type="button" aria-label="Ta bort delrubrik" onClick={()=>setIngredients(current=>current.filter(value=>value.id!==item.id))}><X/></button>
-              {ingredientDragHandle(item.id)}
-            </div>
-          ):(<div key={item.id} className={draggedIngredientId===item.id?"dragging":""} onDragOver={event=>{if(draggedIngredientId){event.preventDefault();event.dataTransfer.dropEffect="move"}}} onDrop={event=>{event.preventDefault();moveIngredient(item.id);setDraggedIngredientId("")}}>
-              <input
-                data-ingredient-amount={item.id}
-                value={item.amount}
-                onChange={(event) =>
-                  updateIngredient(item.id, "amount", event.target.value)
-                }
-                placeholder="Mängd"
-              />
-              <input
-                value={item.unit}
-                onChange={(event) =>
-                  updateIngredient(item.id, "unit", event.target.value)
-                }
-                placeholder="Enhet"
-              />
-              <input
-                value={item.name}
-                onChange={(event) =>
-                  updateIngredient(item.id, "name", event.target.value)
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.nativeEvent.isComposing) {
-                    event.preventDefault();
-                    addIngredientAndFocusAmount();
-                  }
-                }}
-                placeholder="Ingrediens"
-              />
-              <button
-                type="button"
-                aria-label="Ta bort ingrediens"
-                onClick={() =>
-                  setIngredients((current) =>
-                    current.filter((value) => value.id !== item.id),
-                  )
-                }
-              >
-                <X />
-              </button>
-              {ingredientDragHandle(item.id)}
-            </div>
-          ))}
+          <DndContext sensors={ingredientSensors} collisionDetection={closestCenter} onDragEnd={ingredientDragEnd}><SortableContext items={ingredients.map(item=>item.id)} strategy={verticalListSortingStrategy}>{ingredients.map(item=><SortableRecipeIngredientRow key={item.id} item={item} onUpdate={updateIngredient} onRemove={id=>setIngredients(current=>current.filter(value=>value.id!==id))} onAddNext={addIngredientAndFocusAmount}/>)}</SortableContext></DndContext>
           <div className="recipe-ingredient-add-actions"><button
             type="button"
             className="recipe-add-row"

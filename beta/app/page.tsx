@@ -5167,6 +5167,7 @@ function RecipeLikeButton({recipe,uid}:{recipe:Recipe;uid:string}){
 }
 
 function RecipeLikeCount({recipe}:{recipe:Recipe}){
+  if(recipe.copiedFromRecipeId)return null;
   return <span className="recipe-card-like-count" aria-label={`${recipe.likedBy?.length||0} gillningar`}><ThumbsUp/><b>{recipe.likedBy?.length||0}</b></span>;
 }
 

@@ -259,7 +259,20 @@ export function watchKnownOnlineUserIds(uids:string[],callback:(ids:Set<string>)
   if(!uids.length){callback(new Set());return()=>{}}const seen=new Map<string,number>();const emit=()=>callback(new Set([...seen].filter(([,at])=>at>=Date.now()-5*60*1000).map(([uid])=>uid)));const unsubs=uids.map(uid=>onSnapshot(doc(db,"presence",uid),snap=>{seen.set(uid,chatTime(snap.data()?.lastSeenAt));emit()}));const timer=window.setInterval(emit,30000);return()=>{window.clearInterval(timer);unsubs.forEach(fn=>fn())};
 }
 export async function setPublicRecipeLiked(recipe:Recipe,uid:string,liked:boolean){
-  let target=recipe.sourcePath?doc(db,"publicRecipes",publicRecipeId(recipe.sourcePath)):undefined;
+  let target:ReturnType<typeof doc>|undefined;
+  if(recipe.sourcePath){
+    const expected=doc(db,"publicRecipes",publicRecipeId(recipe.sourcePath));
+    const direct=await getDoc(expected);
+    if(direct.exists())target=expected;
+    else{
+      const bySource=await getDocs(query(collection(db,"publicRecipes"),where("sourcePath","==",recipe.sourcePath),limit(1)));
+      if(!bySource.empty)target=bySource.docs[0].ref;
+    }
+  }
+  if(!target){
+    const direct=doc(db,"publicRecipes",recipe.id),snapshot=await getDoc(direct);
+    if(snapshot.exists())target=direct;
+  }
   if(!target){const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipe.id),limit(1)));if(matches.empty)throw new Error("Receptet finns inte längre");target=matches.docs[0].ref;}
   await updateDoc(target,{likedBy:liked?arrayUnion(uid):arrayRemove(uid)});
 }

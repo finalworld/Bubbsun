@@ -274,8 +274,15 @@ export async function syncRecipeLocations(uid:string,recipe:Recipe,previousLocat
   const previous=[...new Set(previousLocations.filter(Boolean))],locations=[...new Set(nextLocations.filter(Boolean))];
   if(!locations.length)throw new Error("Receptet måste finnas på minst en plats");
   const shared={...recipe,locations};
-  for(const location of locations){if(location==="private")await savePrivateRecipe(uid,shared);else await saveRecipe(location,shared)}
-  await Promise.all(previous.filter(value=>!locations.includes(value)).map(location=>deleteDoc(doc(db,recipeLocationPath(uid,location,recipe.id)))));
+  const detail=(error:unknown)=>{const value=error as {code?:string;message?:string};return value?.code||value?.message||"okänt databasfel"};
+  for(const location of locations){
+    try{if(location==="private")await savePrivateRecipe(uid,shared);else await saveRecipe(location,shared)}
+    catch(error){throw new Error(`Spara ${location==="private"?"Privat":location}: ${detail(error)}`)}
+  }
+  for(const location of previous.filter(value=>!locations.includes(value))){
+    try{await deleteDoc(doc(db,recipeLocationPath(uid,location,recipe.id)))}
+    catch(error){throw new Error(`Ta bort gammal plats ${location}: ${detail(error)}`)}
+  }
 }
 export async function removeRecipeEverywhere(uid:string,recipe:Recipe,fallbackLocation:string){
   const locations=[...new Set((recipe.locations?.length?recipe.locations:[fallbackLocation]).filter(Boolean))];

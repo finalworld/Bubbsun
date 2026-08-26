@@ -5644,7 +5644,7 @@ function RecipeEditor({
                 }, targetLocations, recipe?.locations?.length?recipe.locations:[currentLocation]);
               }catch(error){
                 console.error("Kunde inte spara receptet",error);
-                setSaveError("Receptet kunde inte sparas. Försök igen.");
+                setSaveError(`Receptet kunde inte sparas: ${error instanceof Error?error.message:"okänt databasfel"}`);
               }finally{setBusy(false)}
             }}
           >

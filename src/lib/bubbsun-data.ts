@@ -383,12 +383,15 @@ export function watchAdminUserCounts(userIds:string[],callback:(counts:Record<st
     unsubs.push(onSnapshot(collection(db,"users",uid,"privateNotes"),snap=>set(`privateNotes:${uid}`,snap.docs.map(()=>({uid,key:"notes" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"privateCalendarEvents"),snap=>set(`privateCalendar:${uid}`,snap.docs.map(()=>({uid,key:"calendarEvents" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"privateRecipes"),snap=>set(`privateRecipes:${uid}`,snap.docs.map(item=>({uid,key:"recipes" as const,identity:item.id})))));
-    unsubs.push(onSnapshot(collection(db,"users",uid,"memberships"),snap=>set(`memberships:${uid}`,snap.docs.map(()=>({uid,key:"groups" as const})))));
     unsubs.push(onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>set(`following:${uid}`,snap.docs.filter(item=>item.data().following===true&&item.data().kind!=="note").map(()=>({uid,key:"followedLists" as const})))));
   }
   unsubs.push(onSnapshot(collection(db,"groups"),groups=>{
     groupUnsubs.splice(0).forEach(unsubscribe=>unsubscribe());
     for(const group of groups.docs){
+      groupUnsubs.push(onSnapshot(
+        collection(group.ref,"members"),
+        snap=>set(`groupMembers:${group.id}`,snap.docs.map(item=>({uid:item.id,key:"groups" as const}))),
+      ));
       groupUnsubs.push(onSnapshot(
         collection(group.ref,"notes"),
         snap=>set(`groupNotes:${group.id}`,snap.docs.map(item=>({uid:noteCreator(item.data()),key:"notes" as const}))),

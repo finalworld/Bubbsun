@@ -1202,11 +1202,11 @@ function Drawer({
               <span>Listor</span>
               <ChevronRight />
             </button>
-            <button onClick={() => onPage("calendar")}>
+            <button className="drawer-recipe-heading" type="button" tabIndex={-1} aria-disabled="true">
               <CalendarDays />
               <span>Kalender</span>
-              <ChevronRight />
             </button>
+            <div className="drawer-recipe-submenu drawer-calendar-submenu"><button onClick={()=>onPage("calendar")}><CalendarDays/><span>Kalender</span><ChevronRight/></button><button onClick={()=>onPage("meal-planner")}><NotebookPen/><span>Veckoplanerare</span><ChevronRight/></button></div>
             <button className="drawer-recipe-heading" type="button" tabIndex={-1} aria-disabled="true">
               <BookOpen />
               <span>Recept</span>
@@ -3240,6 +3240,22 @@ function CalendarPage({events,lists,privateMode,account,memberships,groups,membe
       onDelete={editing?async mode=>{const occurrence=editing as CalendarOccurrence;if(mode==="single"&&occurrence.occurrenceDate&&(editing.recurrenceType==="yearly"||Boolean(editing.recurrenceDays?.length))){await onSave({...editing,excludedDates:Array.from(new Set([...(editing.excludedDates||[]),occurrence.occurrenceDate])),updatedAt:Date.now()});}else await onDelete(editing);setEditing(null)}:undefined}
     />}
   </section>;
+}
+
+const mealTypes=["Frukost","Mellanmål","Lunch","Fika","Middag","Kvällsmål","Annat"];
+function MealPlannerPage({events,recipes,lists,account,creating,onCreating,onSave,onDelete}:{events:CalendarEvent[];recipes:Recipe[];lists:BubbsunList[];account:Account;creating:boolean;onCreating:(value:boolean)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>}){
+  const [weekOffset,setWeekOffset]=useState(0),[createDate,setCreateDate]=useState(calendarDateKey(new Date())),[editing,setEditing]=useState<CalendarEvent|null>(null);
+  const today=calendarDateKey(new Date()),start=new Date(`${today}T12:00:00`);start.setDate(start.getDate()-((start.getDay()+6)%7)+weekOffset*7);
+  const dates=Array.from({length:7},(_,index)=>{const date=new Date(start);date.setDate(date.getDate()+index);return calendarDateKey(date)}),thursday=new Date(start);thursday.setDate(thursday.getDate()+3);const yearStart=new Date(thursday.getFullYear(),0,1),weekNumber=Math.ceil((((thursday.getTime()-yearStart.getTime())/86400000)+yearStart.getDay()+1)/7),months=Array.from(new Set([dates[0],dates[6]].map(value=>new Intl.DateTimeFormat("sv-SE",{month:"long"}).format(new Date(`${value}T12:00:00`))))).join(" / ");
+  useEffect(()=>{if(creating){setCreateDate(today);setEditing(null)}},[creating,today]);
+  const openNew=(date:string)=>{setCreateDate(date);setEditing(null);onCreating(true)};
+  const editor=creating||editing?<MealPlannerEditor event={editing||undefined} date={editing?.date||createDate} recipes={recipes} lists={lists} account={account} onClose={()=>{setEditing(null);onCreating(false)}} onSave={async event=>{await onSave(event);setEditing(null);onCreating(false)}} onDelete={editing?async()=>{await onDelete(editing);setEditing(null);onCreating(false)}:undefined}/>:null;
+  return <section className="content meal-planner-page"><header className="meal-planner-intro"><NotebookPen/><div><h1>VECKOPLANERARE</h1><p>Planera veckans måltider och koppla dem till recept och listor.</p></div></header><nav className="calendar-week-nav meal-planner-nav"><button aria-label="Föregående vecka" onClick={()=>setWeekOffset(value=>value-1)}><ChevronLeft/></button><strong>Vecka {weekNumber} – {months}</strong><button aria-label="Nästa vecka" onClick={()=>setWeekOffset(value=>value+1)}><ChevronRight/></button></nav><div className="meal-planner-week">{dates.map(date=>{const dayEvents=events.filter(event=>event.date===date).sort((a,b)=>mealTypes.indexOf(a.mealType||"Annat")-mealTypes.indexOf(b.mealType||"Annat"));return <section className={date===today?"today":""} key={date}><header><span><strong>{new Intl.DateTimeFormat("sv-SE",{weekday:"long"}).format(new Date(`${date}T12:00:00`))}</strong><b>{new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${date}T12:00:00`))}</b></span><button onClick={()=>openNew(date)} aria-label={`Lägg till måltid ${date}`}><Plus/></button></header><div>{dayEvents.map(event=>{const linkedRecipes=(event.linkedRecipeIds||[]).map(id=>recipes.find(recipe=>recipe.id===id)).filter((recipe):recipe is Recipe=>Boolean(recipe)),linkedLists=(event.linkedListIds||[]).map(id=>lists.find(list=>list.id===id)).filter((list):list is BubbsunList=>Boolean(list));return <button className="meal-plan-card" key={event.id} onClick={()=>setEditing(event)}><small>{event.mealType||"Måltid"}</small><strong>{event.title}</strong>{linkedRecipes.length>0&&<span>🍲 {linkedRecipes.map(recipe=>recipe.title).join(" · ")}</span>}{linkedLists.length>0&&<span>🔗 {linkedLists.map(list=>list.name).join(" · ")}</span>}</button>})}{!dayEvents.length&&<button className="meal-plan-empty" onClick={()=>openNew(date)}><Plus/> Planera måltid</button>}</div></section>})}</div>{editor}</section>;
+}
+
+function MealPlannerEditor({event,date,recipes,lists,account,onClose,onSave,onDelete}:{event?:CalendarEvent;date:string;recipes:Recipe[];lists:BubbsunList[];account:Account;onClose:()=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete?:()=>Promise<void>}){
+  const [title,setTitle]=useState(event?.title||""),[mealType,setMealType]=useState(event?.mealType||"Middag"),[linkedRecipeIds,setLinkedRecipeIds]=useState(event?.linkedRecipeIds||[]),[linkedListIds,setLinkedListIds]=useState(event?.linkedListIds||[]),[note,setNote]=useState(event?.note||""),[busy,setBusy]=useState(false);const initial=useRef("");const snapshot=JSON.stringify({title,mealType,linkedRecipeIds,linkedListIds,note});if(!initial.current)initial.current=snapshot;const dirty=initial.current!==snapshot,toggle=(values:string[],id:string)=>values.includes(id)?values.filter(value=>value!==id):[...values,id];
+  return <div className="modal-backdrop meal-planner-backdrop" onMouseDown={click=>{if(click.target===click.currentTarget&&!dirty)onClose()}}><section className="modal meal-planner-editor"><button className="modal-x" onClick={onClose}><X/></button><NotebookPen/><h2>{event?"REDIGERA MÅLTID":"PLANERA MÅLTID"}</h2><label>DATUM<input type="date" value={date} readOnly/></label><label>MÅLTID<select value={mealType} onChange={change=>setMealType(change.target.value)}>{mealTypes.map(type=><option key={type}>{type}</option>)}</select></label><label>NAMN<input autoFocus value={title} maxLength={80} onChange={change=>setTitle(change.target.value)} placeholder="Till exempel tacos"/></label><fieldset><legend>KOPPLA RECEPT <small>(flera går bra)</small></legend><div className="meal-link-grid">{recipes.map(recipe=><label key={recipe.id}><input type="checkbox" checked={linkedRecipeIds.includes(recipe.id)} onChange={()=>setLinkedRecipeIds(current=>toggle(current,recipe.id))}/>{recipe.image?<img src={recipe.image} alt=""/>:<span>🍲</span>}<strong>{recipe.title}</strong></label>)}</div></fieldset><fieldset><legend>KOPPLA LISTOR <small>(flera går bra)</small></legend><div className="meal-link-grid meal-list-links">{lists.map(list=><label key={list.id}><input type="checkbox" checked={linkedListIds.includes(list.id)} onChange={()=>setLinkedListIds(current=>toggle(current,list.id))}/><span>🔗</span><strong>{list.name}</strong></label>)}</div></fieldset><label>ANTECKNING <small>(valfritt)</small><textarea value={note} onChange={change=>setNote(change.target.value)} placeholder="Något att komma ihåg?"/></label><footer>{onDelete&&<button className="danger" onClick={()=>void onDelete()}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()} onClick={async()=>{setBusy(true);try{await onSave({id:event?.id||crypto.randomUUID(),title:title.trim(),date,category:"meal-plan",mealType,note:note.trim(),linkedRecipeIds,linkedListIds,allDay:true,color:event?.color||account.personalColor||colorOptions[0],creatorId:event?.creatorId||account.uid,creatorName:event?.creatorName||account.displayName,createdAt:event?.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:account.uid})}finally{setBusy(false)}}}>{busy?"SPARAR…":event?"SPARA":"LÄGG TILL"}</button></footer></section></div>;
 }
 
 function CalendarEventCard({event,lists,members,privateMode,account,onClose,onOpenList,onEdit}:{event:CalendarOccurrence;lists:BubbsunList[];members:Membership[];privateMode:boolean;account:Account;onClose:()=>void;onOpenList:(list:BubbsunList)=>void;onEdit:()=>void}){
@@ -5860,7 +5876,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","recipes","recipe-discover","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -5869,6 +5885,7 @@ function AuthenticatedApp() {
   const [adding, setAdding] = useState(false);
   const [addingNote,setAddingNote]=useState(false);
   const [addingCalendar,setAddingCalendar]=useState(false);
+  const [addingMealPlan,setAddingMealPlan]=useState(false);
   const [addingRecipe,setAddingRecipe]=useState(false);
   const [activityCalendarEventId,setActivityCalendarEventId]=useState("");
   const [activityRecipeId,setActivityRecipeId]=useState("");
@@ -6673,7 +6690,7 @@ function AuthenticatedApp() {
     };
     void check();const timer=window.setInterval(()=>void check(),30000);return()=>window.clearInterval(timer);
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
-  const persistCalendarEvent=async(event:CalendarEvent,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time,endTime:event.endTime,allDay:event.allDay,category:event.category,color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays,recurrenceForever:event.recurrenceForever,recurrenceUntil:event.recurrenceUntil,excludedDates:event.excludedDates||[],note:event.note,linkedListIds:(event.linkedListIds||[]).slice(0,3),reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid,locations};await syncCalendarEventLocations(user.uid,complete,previous,locations)};
+  const persistCalendarEvent=async(event:CalendarEvent,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time,endTime:event.endTime,allDay:event.allDay,category:event.category,mealType:event.mealType,color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays,recurrenceForever:event.recurrenceForever,recurrenceUntil:event.recurrenceUntil,excludedDates:event.excludedDates||[],note:event.note,linkedListIds:event.linkedListIds||[],linkedRecipeIds:event.linkedRecipeIds||[],reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid,locations};await syncCalendarEventLocations(user.uid,complete,previous,locations)};
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;await removeCalendarEventEverywhere(user.uid,event,privateMode?"private":account.activeGroupId)};
   const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations)};
   const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId)};
@@ -6792,12 +6809,12 @@ function AuthenticatedApp() {
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
         glowColor={account.supporterGlowColor}
-        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "recipes" ? "Kokboken" : page === "recipe-discover" ? "Upptäck recept" : undefined}
+        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "meal-planner" ? "Veckoplanerare" : page === "recipes" ? "Kokboken" : page === "recipe-discover" ? "Upptäck recept" : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
-        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":"lists")}
-        onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "recipes" ? setAddingRecipe(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="meal-planner"?"meal-planner":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":"lists")}
+        onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
-        mode={page === "lists" || page === "notes" || page === "calendar" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
+        mode={page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
         reportCount={account.megaSuperBoss || account.founder ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
@@ -6891,7 +6908,7 @@ function AuthenticatedApp() {
       {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} activeGroupId={account.activeGroupId} memberships={memberships} groups={groups} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
       {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} creator={selectedNotePrivate?{name:account.displayName,color:account.personalColor??selectedNote.creatorColor??colorOptions[0]}:(()=>{const member=members.find(value=>value.uid===selectedNote.creatorId);return member?{name:member.displayName,color:member.color}:undefined})()} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} toolsOpen={listToolsOpen} onToolsOpen={setListToolsOpen} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
       {page === "calendar" && <CalendarPage
-        events={activeCalendarEvents}
+        events={activeCalendarEvents.filter(event=>event.category!=="meal-plan")}
         lists={visibleLists}
         privateMode={privateMode}
         account={account}
@@ -6908,6 +6925,7 @@ function AuthenticatedApp() {
         openEventId={activityCalendarEventId}
         onEventOpened={()=>setActivityCalendarEventId("")}
       />}
+      {page === "meal-planner" && <MealPlannerPage events={activeCalendarEvents.filter(event=>event.category==="meal-plan")} recipes={syncedActiveRecipes} lists={visibleLists} account={account} creating={addingMealPlan} onCreating={setAddingMealPlan} onSave={persistCalendarEvent} onDelete={deleteCalendarEvent}/>}
       {page === "recipes" && <RecipesPage
         recipes={syncedActiveRecipes}
         lists={visibleLists}
@@ -6943,8 +6961,9 @@ function AuthenticatedApp() {
           setActivityRecipeId(entry.targetId);
           navigate("recipes");
         }else{
-          setActivityCalendarEventId(entry.targetId);
-          navigate("calendar");
+          const calendarEvent=activeCalendarEvents.find(value=>value.id===entry.targetId);
+          if(calendarEvent?.category==="meal-plan")navigate("meal-planner");
+          else{setActivityCalendarEventId(entry.targetId);navigate("calendar")}
         }
       }}/>} 
       {page === "people" && (

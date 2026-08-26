@@ -3852,7 +3852,7 @@ function SettingsPage({
                 disabled={locked}
                 onClick={() => onTheme(theme.id)}
               >
-                <img src={`/assets/android/${theme.icon}`} alt="" />
+                <img src={`${import.meta.env.BASE_URL}assets/android/${theme.icon}`} alt="" />
                 <span className="theme-choice-name">{theme.name}</span>
                 {themeId === theme.id && <Check />}
                 {theme.supporter && (
@@ -5048,7 +5048,7 @@ function ThemeEditor({
   return (
     <details>
       <summary>
-        <img src={`/assets/android/${theme.icon}`} />
+        <img src={`${import.meta.env.BASE_URL}assets/android/${theme.icon}`} />
         {theme.name}
       </summary>
       <div

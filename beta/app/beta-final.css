@@ -2229,15 +2229,15 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 @media(max-width:700px){.notifications-list>button::before{border-radius:14px 0 0 14px!important}}
 
 /* v0.901 – samlade notiser i menyn och adminstatus i datorns toppfält. */
-.app-shell .drawer .drawer-title>.drawer-notifications{
-  position:absolute!important;right:18px!important;top:55px!important;bottom:auto!important;left:auto!important;
+.app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite){
+  position:absolute!important;right:16px!important;top:50%!important;bottom:auto!important;left:auto!important;
   display:grid!important;place-items:center!important;width:42px!important;height:42px!important;padding:0!important;
   border:1px solid color-mix(in srgb,#a83f49 78%,var(--theme-outline))!important;border-radius:50%!important;
-  background:#bd5962!important;color:#fff!important;box-shadow:0 4px 8px #32100d38!important;transform:rotate(7deg)!important;z-index:4!important;
+  background:#bd5962!important;color:#fff!important;box-shadow:0 4px 8px #32100d38!important;transform:translateY(-50%) rotate(7deg)!important;z-index:4!important;
 }
-.app-shell .drawer .drawer-title>.drawer-notifications::after{content:"";position:absolute;inset:4px;border:1px dashed #fffbd2;border-radius:50%;opacity:.85}
-.app-shell .drawer .drawer-title>.drawer-notifications svg{width:19px;height:19px;opacity:.9}
-.app-shell .drawer .drawer-title>.drawer-notifications span{position:absolute;right:-5px;top:-5px;z-index:2;display:grid;place-items:center;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#d9283f;color:#fff;font:800 10px/1 system-ui,sans-serif;transform:rotate(-7deg)}
+.app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite)::after{content:"";position:absolute;inset:4px;border:1px dashed #fffbd2;border-radius:50%;opacity:.85}
+.app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite) svg{width:19px;height:19px;opacity:.9}
+.app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite) span{position:absolute;right:-5px;top:-5px;z-index:2;display:grid;place-items:center;min-width:19px;height:19px;padding:0 4px;border-radius:99px;background:#d9283f;color:#fff;font:800 10px/1 system-ui,sans-serif;transform:rotate(-7deg)}
 .app-shell .topbar .header-menu-slot>.menu-chat-badge{bottom:auto!important}
 .app-shell .topbar .header-admin-online{display:none!important}
 .app-shell .topbar .header-brand-title>.header-notification-count{display:none!important}
@@ -2251,7 +2251,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
   .app-shell .topbar .header-admin-stats b{display:grid;place-items:center;min-width:31px;height:31px;padding:0 6px;border-radius:7px;background:color-mix(in srgb,var(--theme-text) 22%,transparent);font:800 20px/1 Georgia,serif}
   .app-shell .topbar .header-admin-stats i{width:1px;height:34px;margin:0 4px;background:color-mix(in srgb,var(--theme-paper) 45%,transparent)}
 }
-@media(max-width:600px){.app-shell .drawer .drawer-title>.drawer-notifications{right:18px!important;top:49px!important;width:38px!important;height:38px!important}}
+@media(max-width:600px){.app-shell .drawer .drawer-title>button.drawer-notifications:not(.drawer-invite){right:18px!important;top:50%!important;width:38px!important;height:38px!important}}
 /* v0.867: calendar cards have a dedicated admin-controlled theme background. */
 .app-shell .calendar-event.compact{
   background-color:var(--theme-calendar-event-bg)!important;

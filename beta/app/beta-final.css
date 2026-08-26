@@ -3228,7 +3228,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 .recipe-card>span:last-of-type{display:block;padding:16px 18px 18px}
 .recipe-card .recipe-copy-mark.compact{position:absolute;z-index:5;right:0;bottom:0;display:block;width:44px;height:44px;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:var(--recipe-original,var(--theme-accent));clip-path:polygon(100% 0,100% 100%,0 100%);box-shadow:none;pointer-events:none}
 .recipe-card .recipe-copy-mark.compact i{position:absolute;right:7px;bottom:15px;color:var(--theme-paper);font-size:6px;line-height:1;letter-spacing:.06em;transform:rotate(-45deg);transform-origin:center}
-.recipe-view footer .recipe-delete-view{border-color:#b75b59;color:#a43f3d;background:transparent!important}
+.app-shell .recipe-view footer button.recipe-delete-view{border-color:#8f3432!important;background:#b75b59!important;color:#fff!important;font:900 13px Georgia,serif!important;opacity:1!important;visibility:visible!important;text-indent:0!important}
+.app-shell .recipe-view footer button.recipe-delete-view svg{display:block!important;width:20px!important;height:20px!important;stroke:currentColor!important;color:inherit!important;opacity:1!important;visibility:visible!important}
 @media(max-width:899px){.recipe-copy-mark{margin-bottom:14px;padding:8px 11px 8px 14px;font-size:12px}.recipe-card>span:last-of-type{padding:11px 12px 13px}.recipe-card .recipe-copy-mark.compact{width:38px;height:38px}.recipe-card .recipe-copy-mark.compact i{right:6px;bottom:13px;font-size:5px}.recipe-view footer>div{gap:7px}.recipe-view footer .recipe-delete-view{font-size:10px}}
 .recipe-view .recipe-icon-action,
 .recipe-view .recipe-like-button,

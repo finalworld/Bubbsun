@@ -2243,8 +2243,12 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .topbar .header-brand-title>.header-notification-count{display:none!important}
 .app-shell .topbar .header-admin-stats{display:none}
 @media(min-width:900px){
-  .app-shell .topbar .topbar-inner{position:relative!important}
-  .app-shell .topbar .header-admin-stats{position:absolute;right:clamp(190px,20vw,420px);top:50%;transform:translateY(-50%);z-index:6;display:flex;align-items:center;padding:7px 9px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 4px 9px #2d170b35}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats){position:relative!important;grid-template-columns:76px max-content minmax(280px,1fr) 58px!important}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-left{grid-column:1}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-brand-v3{grid-column:2;width:max-content!important;max-width:430px!important}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-admin-stats{grid-column:3;justify-self:center}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-add,.app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-manage,.app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-spacer{grid-column:4}
+  .app-shell .topbar .header-admin-stats{position:static;right:auto;top:auto;transform:none;z-index:6;display:flex;align-items:center;padding:7px 9px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-accent);color:var(--theme-paper);box-shadow:0 4px 9px #2d170b35}
   .app-shell .topbar .header-admin-stats button{display:flex;align-items:center;gap:7px;min-width:62px;height:38px;padding:0 8px;border:0;background:transparent;color:inherit;cursor:pointer}
   .app-shell .topbar .header-admin-stats button:hover{filter:brightness(1.16);transform:translateY(-1px)}
   .app-shell .topbar .header-admin-stats svg{width:25px;height:25px}

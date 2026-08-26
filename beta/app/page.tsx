@@ -1114,10 +1114,10 @@ function Drawer({
             <img src="/assets/invite-friend-sign.png" alt="" />
           </button>
           <button aria-label="Stäng meny" onClick={onClose}>
-            <X />
+            <img src="/assets/menu-note-close.png" alt="" />
           </button>
-          <button className="drawer-notifications" aria-label={`${notificationCount} nya händelser`} title="Notiser" onClick={onNotifications}><Bell/><span>{notificationCount}</span></button>
-          <button className="drawer-chat" aria-label={`${unreadChats} nya meddelanden`} onClick={onChat}><MessageCircle/>{unreadChats>0&&<b>{unreadChats>99?"99+":unreadChats}</b>}</button>
+          <button className="drawer-notifications" aria-label={`${notificationCount} nya händelser`} title="Notiser" onClick={onNotifications}><img src="/assets/menu-note-notifications.png" alt=""/><span>{notificationCount}</span></button>
+          <button className="drawer-chat" aria-label={`${unreadChats} nya meddelanden`} onClick={onChat}><img src="/assets/menu-note-chat.png" alt=""/>{unreadChats>0&&<b>{unreadChats>99?"99+":unreadChats}</b>}</button>
         </div>
         <div className="drawer-scroll">
           <button

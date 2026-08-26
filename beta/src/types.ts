@@ -148,6 +148,7 @@ export type Recipe = {
   note?: string;
   linkedListId?: string;
   linkedRecipeIds?: string[];
+  dietaryTags?: string[];
   creatorId: string;
   creatorName: string;
   creatorColor: number;

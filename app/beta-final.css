@@ -3566,3 +3566,21 @@ html body .app-shell button.role-remove-member:hover {
   background-color:#98363f!important;
   color:#fff!important;
 }
+
+/* v0.901: slå även dynamiskt injicerade temaregler i knappens viloläge. */
+html body .app-shell.app-shell button.danger.danger,
+html body .app-shell.app-shell button.bubbsun-action-danger.bubbsun-action-danger,
+html body .app-shell.app-shell button.edit-delete-list.edit-delete-list,
+html body .app-shell.app-shell button.calendar-delete.calendar-delete,
+html body .app-shell.app-shell button.calendar-delete-all.calendar-delete-all,
+html body .app-shell.app-shell button.recipe-delete.recipe-delete,
+html body .app-shell.app-shell button.recipe-delete-view.recipe-delete-view,
+html body .app-shell.app-shell button.recipe-ingredient-remove.recipe-ingredient-remove,
+html body .app-shell.app-shell button.role-remove-member.role-remove-member {
+  border-color:#84383e!important;
+  background:#b6454d!important;
+  background-color:#b6454d!important;
+  background-image:none!important;
+  color:#fff!important;
+  box-shadow:0 3px 0 #762a31,0 5px 12px rgba(75,25,31,.28)!important;
+}

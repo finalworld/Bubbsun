@@ -2243,7 +2243,7 @@ body .app-shell .modal.calendar-event-card>button.calendar-card-close{
 .app-shell .topbar .header-brand-title>.header-notification-count{display:none!important}
 .app-shell .topbar .header-admin-stats{display:none}
 @media(min-width:900px){
-  .app-shell .topbar .topbar-inner:has(.header-admin-stats){position:relative!important;grid-template-columns:76px max-content minmax(280px,1fr) 58px!important}
+  .app-shell .topbar .topbar-inner:has(.header-admin-stats){position:relative!important;display:grid!important;grid-template-columns:76px max-content minmax(280px,1fr) 58px!important;grid-template-rows:1fr!important;align-items:center!important}
   .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-left{grid-column:1}
   .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-brand-v3{grid-column:2;width:max-content!important;max-width:430px!important}
   .app-shell .topbar .topbar-inner:has(.header-admin-stats)>.header-admin-stats{grid-column:3;justify-self:center}

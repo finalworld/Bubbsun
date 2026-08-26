@@ -303,7 +303,9 @@ service cloud.firestore {
 
       match /recipes/{recipeId} {
         allow read: if member(groupId) || isMega();
-        allow create, update, delete: if member(groupId) && groupOpen(groupId);
+        // Founder/admin must be able to move a recipe away from a frozen
+        // group as part of the multi-location recipe editor.
+        allow create, update, delete: if (member(groupId) && groupOpen(groupId)) || isMega();
       }
 
       match /activity/{eventId} {

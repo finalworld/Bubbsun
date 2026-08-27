@@ -227,17 +227,21 @@ img.avatar {
 }
 
 .calc-modal {
-  min-height: min(720px, 88vh);
+  width: min(560px, 100%);
+  height: min(760px, calc(100dvh - 20px));
+  min-height: 0;
+  max-height: calc(100dvh - 20px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 .calc-modal .calc-display {
-  min-height: 190px;
+  min-height: 132px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 18px;
+  justify-content: flex-end;
+  gap: 2px;
   overflow-x: auto;
 }
 
@@ -263,7 +267,8 @@ img.avatar {
 
 .calc-modal .calc-grid {
   flex: 1;
-  grid-auto-rows: minmax(58px, 1fr);
+  min-height: 0;
+  grid-auto-rows: minmax(48px, 1fr);
 }
 
 .calc-modal .calc-grid button {
@@ -284,6 +289,10 @@ img.avatar {
 }
 
 @media (max-width: 699px) {
+  .modal-wrap:has(.calc-modal) {
+    padding: 6px;
+  }
+
   .calc-fab {
     display: none;
   }

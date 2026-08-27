@@ -88,3 +88,9 @@
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 699px) {
+  .calc-fab {
+    display: none;
+  }
+}

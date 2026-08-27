@@ -3510,6 +3510,8 @@ body .app-shell .modal.admin-user-stats-modal>.modal-x::before{border-radius:50%
 /* Alla receptkort behåller samma innehållslinjer även vid långa kategorinamn. */
 .recipe-card>span:last-of-type>small{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;min-height:1.2em}
 .recipe-facts:empty,.recipe-card-facts:empty{display:none!important}
+.recipes-page .recipe-card>img,.recipes-page .recipe-card>.recipe-fallback{height:205px!important;min-height:205px!important;max-height:205px!important;flex:0 0 205px}.recipes-page .recipe-card-facts:empty{display:block!important;min-height:17px}
+@media(max-width:899px){.recipes-page .recipe-card>img,.recipes-page .recipe-card>.recipe-fallback{height:142px!important;min-height:142px!important;max-height:142px!important;flex-basis:142px}.recipes-page .recipe-card-facts:empty{min-height:29px}}
 
 /* Kompakt filterpanel på Upptäck. Panelen fälls ut i sidans vanliga flöde. */
 .recipes-toolbar .recipe-filter-panel-trigger{width:auto;min-width:108px;height:58px;padding:0 16px;border:2px solid var(--theme-outline);border-radius:18px;background:var(--theme-paper);color:var(--theme-accent);display:flex;align-items:center;justify-content:center;gap:8px;font:900 12px/1 Arial,sans-serif;letter-spacing:.06em}

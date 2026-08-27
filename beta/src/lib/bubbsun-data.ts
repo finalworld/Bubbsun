@@ -276,6 +276,17 @@ export async function setPublicRecipeLiked(recipe:Recipe,uid:string,liked:boolea
   if(!target){const matches=await getDocs(query(collection(db,"publicRecipes"),where("id","==",recipe.id),limit(1)));if(matches.empty)throw new Error("Receptet finns inte längre");target=matches.docs[0].ref;}
   await updateDoc(target,{likedBy:liked?arrayUnion(uid):arrayRemove(uid)});
 }
+const recipeViewKey=(recipe:Recipe)=>`${recipe.creatorId}__${recipe.id}`.replace(/\//g,"_");
+export async function recordRecipeView(recipe:Recipe,viewerUid:string){
+  if(!viewerUid||viewerUid===recipe.creatorId)return;
+  const ref=doc(db,"recipeViews",recipeViewKey(recipe),"viewers",viewerUid),existing=await getDoc(ref);
+  if(existing.exists())return;
+  await setDoc(ref,{viewerId:viewerUid,creatorId:recipe.creatorId,recipeId:recipe.id,viewedAt:serverTimestamp()});
+}
+export function watchRecipeViewCount(recipe:Recipe,creatorUid:string,callback:(count:number)=>void):Unsubscribe{
+  if(!creatorUid||creatorUid!==recipe.creatorId){callback(0);return()=>{}};
+  return onSnapshot(query(collection(db,"recipeViews",recipeViewKey(recipe),"viewers"),where("creatorId","==",creatorUid)),snapshot=>callback(snapshot.size));
+}
 async function removeRecipePublications(sourcePath:string,recipeId:string){const targetId=publicRecipeId(sourcePath),target=doc(db,"publicRecipes",targetId),[direct,bySource,byRecipe]=await Promise.all([getDoc(target),getDocs(query(collection(db,"publicRecipes"),where("sourcePath","==",sourcePath))),getDocs(query(collection(db,"publicRecipes"),where("id","==",recipeId)))]),refs=new Map<string,(typeof bySource.docs)[number]["ref"]>();if(direct.exists())refs.set(targetId,target);for(const item of [...bySource.docs,...byRecipe.docs])refs.set(item.id,item.ref);await Promise.all([...refs.values()].map(ref=>deleteDoc(ref)));}
 const enforceRecipePublicationPolicy=(recipe:Recipe):Recipe=>recipe.publicationLocked===true||Boolean(recipe.copiedFromRecipeId)?{...recipe,isPublic:false,publicationLocked:true}:recipe;
 export async function syncRecipePublication(sourcePath:string,recipe:Recipe,scope:"group"|"private",groupId=""){const safeRecipe=enforceRecipePublicationPolicy(recipe),targetId=publicRecipeId(sourcePath),target=doc(db,"publicRecipes",targetId);if(safeRecipe.isPublic){await setDoc(target,{...safeRecipe,sourcePath,scope,groupId},{merge:true});const duplicates=await getDocs(query(collection(db,"publicRecipes"),where("id","==",safeRecipe.id)));await Promise.all(duplicates.docs.filter(item=>item.id!==targetId).map(item=>deleteDoc(item.ref)))}else await removeRecipePublications(sourcePath,safeRecipe.id);}

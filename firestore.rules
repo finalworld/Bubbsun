@@ -117,6 +117,18 @@ service cloud.firestore {
       allow delete: if isMega() || (signedIn() && ((resource.data.scope == 'private' && resource.data.creatorId == request.auth.uid) || (resource.data.scope == 'group' && member(resource.data.groupId) && groupOpen(resource.data.groupId))));
     }
 
+    match /recipeViews/{recipeKey}/viewers/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.viewerId == uid
+        && request.resource.data.creatorId is string
+        && request.resource.data.recipeId is string
+        && request.resource.data.keys().hasOnly(['viewerId','creatorId','recipeId','viewedAt']);
+      allow read: if signedIn()
+        && (request.auth.uid == uid || request.auth.uid == resource.data.creatorId || isMega());
+      allow update, delete: if false;
+    }
+
     match /presence/{uid} {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid && request.resource.data.uid == uid;

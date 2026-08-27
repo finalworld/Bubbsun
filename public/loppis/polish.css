@@ -1,0 +1,34 @@
+.quick-prices {
+  margin-top: 12px;
+}
+
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.pay-icon {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+@media (max-width: 480px) {
+  .user-row {
+    align-items: flex-start;
+  }
+
+  .user-actions {
+    width: 100%;
+    padding-left: 57px;
+    justify-content: flex-start;
+  }
+}

@@ -22,7 +22,6 @@
   object-fit: contain;
   object-position: left center;
   border-radius: 12px;
-  transform: translateY(-12px);
 }
 
 @media (max-width: 480px) {

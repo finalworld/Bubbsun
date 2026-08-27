@@ -5,6 +5,13 @@
 .topbar .brand {
   min-width: 0;
   flex: 1;
+  height: 68px;
+  overflow: hidden;
+}
+
+.topbar {
+  padding-top: max(4px, env(safe-area-inset-top));
+  padding-bottom: 4px;
 }
 
 .brand-logo {
@@ -15,11 +22,12 @@
   object-fit: contain;
   object-position: left center;
   border-radius: 12px;
+  transform: translateY(-12px);
 }
 
 @media (max-width: 480px) {
   .brand-logo {
-    height: 82px;
+    height: 92px;
   }
 }
 

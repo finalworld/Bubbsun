@@ -16,9 +16,10 @@
 
 .brand-logo {
   display: block;
-  width: 100%;
+  width: calc(100% + 22px);
   max-width: 560px;
   height: 92px;
+  margin-left: -22px;
   object-fit: contain;
   object-position: left center;
   border-radius: 12px;

@@ -44,6 +44,41 @@
   background: #e2d5bd;
 }
 
+.sale-submit {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  min-height: 72px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #315f49 0%, #173f31 58%, #244f3c 100%);
+  box-shadow: 0 9px 20px rgba(24, 63, 49, 0.2);
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(1.3rem, 5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sale-submit-icon {
+  width: 30px;
+  height: 34px;
+  background: currentColor;
+  mask: url("./sale-bag.svg") center / contain no-repeat;
+  -webkit-mask: url("./sale-bag.svg") center / contain no-repeat;
+}
+
+.sale-submit-arrow {
+  justify-self: end;
+  font-family: Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.sale-submit:not(:disabled):active {
+  transform: translateY(1px) scale(0.99);
+}
+
 .quick-prices button.subtracted {
   background: #a6463f;
   color: white;

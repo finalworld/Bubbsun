@@ -65,6 +65,78 @@
   box-shadow: inset 0 0 0 1px var(--green);
 }
 
+.seller-totals {
+  margin: 0 0 15px;
+}
+
+.seller-totals h2 {
+  margin: 5px 2px 10px;
+  font: 700 1.35rem "Fraunces", serif;
+}
+
+.seller-total-list {
+  display: grid;
+  gap: 10px;
+}
+
+.seller-total-card {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.4fr) repeat(3, minmax(86px, 1fr));
+  align-items: center;
+  gap: 9px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.seller-total-card > div:not(.seller-total-person) {
+  text-align: right;
+}
+
+.seller-total-card span {
+  display: block;
+  color: #746f65;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.seller-total-card b {
+  display: block;
+  font-size: 1.08rem;
+}
+
+.seller-total-person {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.seller-total-person strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seller-grand-total b {
+  color: var(--green);
+  font-size: 1.2rem;
+}
+
+@media (max-width: 600px) {
+  .seller-total-card {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .seller-total-person {
+    grid-column: 1 / -1;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
 .seller-avatar {
   flex: 0 0 42px;
   width: 42px;

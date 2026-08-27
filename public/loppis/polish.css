@@ -413,3 +413,109 @@ img.avatar {
     background: #356c58;
   }
 }
+
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body {
+    font-size: 10pt;
+  }
+
+  .occasion {
+    display: none !important;
+  }
+
+  .print-only h1 {
+    margin: 0 0 2px;
+    font-size: 22pt;
+    line-height: 1.1;
+  }
+
+  .print-only p {
+    margin: 0 0 10px;
+    font-size: 9pt;
+  }
+
+  .summary {
+    gap: 0;
+    margin-bottom: 10px;
+    padding: 6px 0;
+    border-top: 2px solid #173f31;
+    border-bottom: 1px solid #bdb8ae;
+  }
+
+  .stat {
+    padding: 2px 8px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .stat + .stat {
+    border-left: 1px solid #d5d0c7;
+  }
+
+  .stat strong {
+    font-size: 17pt;
+  }
+
+  .seller-totals {
+    margin: 0 0 10px;
+  }
+
+  .seller-totals h2 {
+    margin: 0 0 3px;
+    font-size: 15pt;
+  }
+
+  .seller-total-list,
+  .sale-list {
+    gap: 0;
+  }
+
+  .seller-total-card {
+    padding: 5px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #d5d0c7;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .seller-total-card .seller-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .seller-total-card span {
+    font-size: 7.5pt;
+  }
+
+  .seller-total-card b {
+    font-size: 11pt;
+  }
+
+  .sale-row {
+    gap: 1px 10px;
+    padding: 6px 0;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #d5d0c7;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .sale-name {
+    font-size: 11pt;
+  }
+
+  .sale-meta {
+    font-size: 8.5pt;
+  }
+
+  .amount {
+    font-size: 13pt;
+  }
+}

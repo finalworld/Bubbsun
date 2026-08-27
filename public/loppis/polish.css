@@ -449,6 +449,125 @@ img.avatar {
   }
 }
 
+@media (min-width: 700px) {
+  .topbar {
+    padding-left: max(18px, calc((100vw - 760px) / 2));
+    padding-right: max(18px, calc((100vw - 760px) / 2));
+  }
+
+  main {
+    width: min(760px, calc(100% - 32px));
+  }
+
+  .shell {
+    padding-bottom: 132px;
+  }
+
+  .calc-fab {
+    display: none;
+  }
+
+  .bottom-nav {
+    display: flex;
+    left: 50%;
+    right: auto;
+    bottom: 18px;
+    width: min(700px, calc(100% - 32px));
+    padding: 10px 7px 12px;
+    gap: 0;
+    justify-content: stretch;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 253, 0.98);
+    border: 1px solid rgba(110, 100, 80, 0.1);
+    border-radius: 26px;
+    box-shadow: 0 10px 32px rgba(57, 49, 34, 0.17);
+  }
+
+  .bottom-nav button {
+    position: relative;
+    width: 33.333%;
+    min-width: 0;
+    padding: 5px 2px 8px;
+    border-radius: 0;
+    color: #264b3d;
+    letter-spacing: 0.08em;
+  }
+
+  .bottom-nav button + button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    bottom: 13px;
+    width: 1px;
+    background: #e8e2d8;
+  }
+
+  .bottom-nav button .nav-icon {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 6px;
+    border-radius: 50%;
+    background: #e7eee9;
+    color: #285344;
+  }
+
+  .bottom-nav button .nav-icon::before {
+    content: "";
+    width: 27px;
+    height: 27px;
+    background: currentColor;
+    mask: center / contain no-repeat;
+    -webkit-mask: center / contain no-repeat;
+  }
+
+  .nav-icon-sell::before {
+    mask-image: url("./nav-tag.svg") !important;
+    -webkit-mask-image: url("./nav-tag.svg") !important;
+  }
+
+  .nav-icon-today::before {
+    width: 30px !important;
+    height: 30px !important;
+    mask-image: url("./nav-register.svg") !important;
+    -webkit-mask-image: url("./nav-register.svg") !important;
+  }
+
+  .nav-icon-calculator::before {
+    mask-image: url("./nav-calculator.svg") !important;
+    -webkit-mask-image: url("./nav-calculator.svg") !important;
+  }
+
+  .bottom-nav button strong {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .bottom-nav button.active {
+    background: transparent;
+    color: #173f31;
+  }
+
+  .bottom-nav button.active .nav-icon {
+    background: #f6edcf;
+  }
+
+  .bottom-nav button.active::after {
+    content: "";
+    position: absolute;
+    left: 40%;
+    right: 40%;
+    bottom: -8px;
+    height: 4px;
+    border-radius: 5px;
+    background: #356c58;
+  }
+}
+
 @media print {
   @page {
     margin: 12mm;

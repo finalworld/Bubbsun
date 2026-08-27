@@ -175,6 +175,20 @@ img.avatar {
   border-color: var(--green);
 }
 
+.sale-row.expense {
+  border-color: #e3b8b2;
+  background: #fff8f6;
+}
+
+.sale-row.expense .amount {
+  color: var(--red);
+}
+
+.expense-form .primary {
+  background: var(--red);
+  box-shadow: 0 7px 0 #78312c;
+}
+
 .edit-sale-modal {
   display: grid;
   gap: 15px;

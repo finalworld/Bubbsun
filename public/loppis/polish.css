@@ -30,6 +30,82 @@
   line-height: 1;
 }
 
+.seller-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.seller-button {
+  min-width: 0;
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 17px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.seller-button.active {
+  border-color: var(--green);
+  background: var(--green2);
+  color: #244b38;
+  box-shadow: inset 0 0 0 1px var(--green);
+}
+
+.seller-avatar {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: #e9e2d5;
+  font-weight: 900;
+}
+
+img.avatar {
+  object-fit: cover;
+}
+
+.photo-label {
+  cursor: pointer;
+}
+
+.photo-label input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sale-row.editable {
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.sale-row.editable:active {
+  transform: scale(0.985);
+  border-color: var(--green);
+}
+
+.edit-sale-modal {
+  display: grid;
+  gap: 15px;
+}
+
+.delete-sale {
+  width: 100%;
+  padding: 15px;
+}
+
 .user-actions {
   display: flex;
   flex-wrap: wrap;

@@ -2,6 +2,22 @@
   margin-top: 12px;
 }
 
+.quick-prices button {
+  touch-action: manipulation;
+  user-select: none;
+  transition: transform 0.15s, background 0.15s, color 0.15s;
+}
+
+.quick-prices button.holding {
+  transform: scale(0.94);
+  background: #e2d5bd;
+}
+
+.quick-prices button.subtracted {
+  background: #a6463f;
+  color: white;
+}
+
 .segmented button {
   display: inline-flex;
   align-items: center;

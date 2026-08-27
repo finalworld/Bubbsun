@@ -2,6 +2,26 @@
   margin-top: 12px;
 }
 
+.topbar .brand {
+  min-width: 0;
+  flex: 1;
+}
+
+.brand-logo {
+  display: block;
+  width: min(430px, 100%);
+  height: 64px;
+  object-fit: contain;
+  object-position: left center;
+  border-radius: 12px;
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    height: 54px;
+  }
+}
+
 .quick-prices button {
   touch-action: none;
   user-select: none;

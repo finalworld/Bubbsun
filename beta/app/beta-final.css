@@ -3637,3 +3637,12 @@ body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button{width:1
 body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button.selected.expense{border-color:#b83e4b!important;background:#b83e4b!important;color:#fff!important}
 body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button.selected.income{border-color:#4d8058!important;background:#4d8058!important;color:#fff!important}
 @media(max-width:700px){body .app-shell .modal-backdrop>.modal.budget-editor{padding:18px!important}body .app-shell .modal-backdrop>.modal.budget-editor>button.modal-x.budget-editor-x{inset:12px 12px auto auto!important;right:12px!important;top:12px!important;width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}body .app-shell .modal-backdrop>.modal.budget-editor>header{padding-right:52px!important}}
+
+/* Mobile headers use page controls; no duplicate manage wrench. Keep the
+   seven-day add action anchored to the top of each day instead of centering
+   it against however many event cards that day contains. */
+@media(max-width:700px){
+  body .app-shell .topbar.text-header-v2 button.header-manage{display:none!important}
+  body .app-shell .calendar-page .calendar-week>section>h2{position:relative!important;box-sizing:border-box!important;align-items:center!important;justify-content:flex-start!important;padding:52px 4px 8px!important}
+  body .app-shell .calendar-page .calendar-week>section>h2>button.calendar-week-mobile-add{position:absolute!important;inset:9px auto auto 50%!important;left:50%!important;top:9px!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;transform:translateX(-50%)!important;z-index:3!important}
+}

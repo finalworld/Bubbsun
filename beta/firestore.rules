@@ -286,6 +286,16 @@ service cloud.firestore {
       allow create, update, delete: if isMega();
     }
 
+    match /games/{gameId} {
+      allow read: if signedIn();
+      allow write: if isMega();
+      match /players/{uid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn() && request.auth.uid == uid;
+        allow delete: if isMega();
+      }
+    }
+
     match /admin/{document=**} {
       allow read, write: if isMega();
     }

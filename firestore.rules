@@ -227,6 +227,11 @@ service cloud.firestore {
         allow read: if signedIn() && (request.auth.uid == uid || isMega());
         allow create, update, delete: if signedIn() && request.auth.uid == uid;
       }
+
+      match /privateBudgetEntries/{entryId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isMega());
+        allow create, update, delete: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     match /groupCodes/{code} {
@@ -328,6 +333,11 @@ service cloud.firestore {
         // Founder/admin must be able to move a recipe away from a frozen
         // group as part of the multi-location recipe editor.
         allow create, update, delete: if (member(groupId) && groupOpen(groupId)) || isMega();
+      }
+
+      match /budgetEntries/{entryId} {
+        allow read: if member(groupId) || isMega();
+        allow create, update, delete: if member(groupId) && groupOpen(groupId);
       }
 
       match /activity/{eventId} {

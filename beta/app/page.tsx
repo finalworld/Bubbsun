@@ -49,6 +49,7 @@ import {
   UserCog,
   UserRound,
   Users,
+  WalletCards,
   Wrench,
   X,
 } from "lucide-react";
@@ -155,6 +156,12 @@ import {
   removePrivateCalendarEvent,
   syncCalendarEventLocations,
   removeCalendarEventEverywhere,
+  watchBudgetEntries,
+  watchPrivateBudgetEntries,
+  saveBudgetEntry,
+  savePrivateBudgetEntry,
+  removeBudgetEntry,
+  removePrivateBudgetEntry,
   watchRecipes,
   watchPrivateRecipes,
   watchPublicRecipes,
@@ -173,6 +180,7 @@ import {
 import type {
   Account,
   AdminUserCounts,
+  BudgetEntry,
   BubbsunList,
   BubbsunNote,
   CalendarEvent,
@@ -1215,6 +1223,11 @@ function Drawer({
               <span>Recept</span>
             </button>
             <div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck</span><ChevronRight/></button></div>
+            <button onClick={() => onPage("budget")}>
+              <WalletCards />
+              <span>Budget</span>
+              <ChevronRight />
+            </button>
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
@@ -3246,6 +3259,28 @@ function CalendarPage({events,lists,privateMode,account,memberships,groups,membe
 }
 
 const mealTypes=["Frukost","Mellanmål","Lunch","Fika","Middag","Kvällsmål","Annat"];
+const budgetCategories={expense:["Mat","Boende","Transport","Barn","Nöje","Räkningar","Övrigt"],income:["Lön","Bidrag","Försäljning","Övrigt"]} as const;
+const budgetMoney=(value:number)=>new Intl.NumberFormat("sv-SE",{style:"currency",currency:"SEK",maximumFractionDigits:0}).format(value);
+function BudgetPage({entries,privateMode,account,memberships,groups,onMode,onSwitchGroup,onSave,onDelete}:{entries:BudgetEntry[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete:(entry:BudgetEntry)=>Promise<void>}){
+  const now=new Date(),[monthOffset,setMonthOffset]=useState(0),[spaceOpen,setSpaceOpen]=useState(false),[editing,setEditing]=useState<BudgetEntry|null|undefined>(undefined),[confirmDelete,setConfirmDelete]=useState<BudgetEntry|null>(null);
+  const monthDate=new Date(now.getFullYear(),now.getMonth()+monthOffset,1),monthKey=`${monthDate.getFullYear()}-${String(monthDate.getMonth()+1).padStart(2,"0")}`,monthEntries=entries.filter(entry=>entry.date.startsWith(monthKey)),income=monthEntries.filter(entry=>entry.type==="income").reduce((sum,entry)=>sum+entry.amount,0),expense=monthEntries.filter(entry=>entry.type==="expense").reduce((sum,entry)=>sum+entry.amount,0),activeGroup=groups[account.activeGroupId];
+  return <section className="content budget-page">
+    <header className="budget-intro"><WalletCards/><div><h1>BUDGET</h1><p>En enkel överblick över pengarna, privat eller tillsammans.</p></div><div className="calendar-space-wrap budget-space"><button className="calendar-space-button" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span><small>{privateMode?"PRIVAT":"GRUPP"}</small><strong>{privateMode?"Bara jag":activeGroup?.name||"Välj grupp"}</strong></span><ChevronDown/></button>{spaceOpen&&<div className="calendar-space-menu"><button className={privateMode?"selected":""} onClick={()=>{onMode(true);setSpaceOpen(false)}}><LockKeyhole/><strong>Privat</strong>{privateMode&&<Check/>}</button>{memberships.map(item=><button key={item.groupId} className={!privateMode&&item.groupId===account.activeGroupId?"selected":""} onClick={()=>{onSwitchGroup(item.groupId);setSpaceOpen(false)}}><GroupIcon id={groups[item.groupId]?.iconId}/><strong>{groups[item.groupId]?.name||"Grupp"}</strong>{!privateMode&&item.groupId===account.activeGroupId&&<Check/>}</button>)}</div>}</div></header>
+    <nav className="budget-month-nav"><button onClick={()=>setMonthOffset(value=>value-1)} aria-label="Föregående månad"><ChevronLeft/></button><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(monthDate)}</strong><button onClick={()=>setMonthOffset(value=>value+1)} aria-label="Nästa månad"><ChevronRight/></button></nav>
+    <div className="budget-summary"><article><small>INKOMSTER</small><strong className="income">+ {budgetMoney(income)}</strong></article><article><small>UTGIFTER</small><strong className="expense">− {budgetMoney(expense)}</strong></article><article className="balance"><small>KVAR</small><strong className={income-expense<0?"expense":"income"}>{budgetMoney(income-expense)}</strong></article></div>
+    <div className="budget-actions"><button onClick={()=>setEditing(null)}><Plus/> LÄGG TILL POST</button></div>
+    <section className="budget-list"><h2>MÅNADENS POSTER</h2>{monthEntries.length?monthEntries.map(entry=><button key={entry.id} className="budget-row" onClick={()=>setEditing(entry)}><span className={entry.type}>{entry.type==="income"?"+":"−"}</span><span><strong>{entry.title}</strong><small>{entry.category} · {new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${entry.date}T12:00:00`))}{!privateMode&&entry.creatorName?` · ${entry.creatorName}`:""}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":"− "}{budgetMoney(entry.amount)}</b><ChevronRight/></button>):<div className="budget-empty"><WalletCards/><h3>Inga poster i {new Intl.DateTimeFormat("sv-SE",{month:"long"}).format(monthDate)}</h3><p>Lägg in en inkomst eller utgift för att börja.</p></div>}</section>
+    {editing!==undefined&&<BudgetEditor entry={editing||undefined} monthKey={monthKey} account={account} onClose={()=>setEditing(undefined)} onSave={async entry=>{await onSave(entry);setEditing(undefined)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>}
+    {confirmDelete&&<div className="modal-backdrop"><div className="modal confirm-delete-modal"><Trash2/><h2>TA BORT BUDGETPOSTEN?</h2><p>“{confirmDelete.title}” tas bort. Det går inte att ångra.</p><div className="modal-actions"><button onClick={()=>setConfirmDelete(null)}>AVBRYT</button><button className="danger" onClick={async()=>{await onDelete(confirmDelete);setConfirmDelete(null);setEditing(undefined)}}>TA BORT</button></div></div></div>}
+  </section>;
+}
+function BudgetEditor({entry,monthKey,account,onClose,onSave,onDelete}:{entry?:BudgetEntry;monthKey:string;account:Account;onClose:()=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete?:()=>void}){
+  const [type,setType]=useState<"income"|"expense">(entry?.type||"expense"),[title,setTitle]=useState(entry?.title||""),[amount,setAmount]=useState(entry?String(entry.amount):""),[category,setCategory]=useState(entry?.category||"Mat"),[date,setDate]=useState(entry?.date||`${monthKey}-01`),[note,setNote]=useState(entry?.note||""),[busy,setBusy]=useState(false);
+  useEffect(()=>{const options=budgetCategories[type];if(!options.includes(category as never))setCategory(options[0])},[type,category]);
+  const parsedAmount=Number(amount.replace(",","."));
+  return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-editor"><button className="modal-x" onClick={onClose}><X/></button><WalletCards/><h2>{entry?"REDIGERA POST":"NY BUDGETPOST"}</h2><div className="budget-type"><button className={type==="expense"?"selected expense":""} onClick={()=>setType("expense")}>UTGIFT</button><button className={type==="income"?"selected income":""} onClick={()=>setType("income")}>INKOMST</button></div><label>VAD GÄLLER DET?<input autoFocus value={title} maxLength={80} onChange={event=>setTitle(event.target.value)} placeholder={type==="income"?"Till exempel lön":"Till exempel matbutiken"}/></label><div className="budget-editor-grid"><label>BELOPP (KR)<input inputMode="decimal" value={amount} onChange={event=>setAmount(event.target.value)} placeholder="0"/></label><label>DATUM<input type="date" value={date} onChange={event=>setDate(event.target.value)}/></label></div><label>KATEGORI<select value={category} onChange={event=>setCategory(event.target.value)}>{budgetCategories[type].map(value=><option key={value}>{value}</option>)}</select></label><label>ANTECKNING <small>(valfritt)</small><textarea value={note} onChange={event=>setNote(event.target.value)} placeholder="Något att komma ihåg?"/></label><footer>{onDelete&&<button className="danger" onClick={onDelete}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!date||!Number.isFinite(parsedAmount)||parsedAmount<=0} onClick={async()=>{setBusy(true);try{await onSave({id:entry?.id||crypto.randomUUID(),type,title:title.trim(),amount:parsedAmount,category,date,note:note.trim(),creatorId:entry?.creatorId||account.uid,creatorName:entry?.creatorName||account.displayName,createdAt:entry?.createdAt||Date.now(),updatedAt:Date.now()})}finally{setBusy(false)}}}>{busy?"SPARAR…":"SPARA"}</button></footer></section></div>;
+}
+
 function MealPlannerPage({events,recipes,lists,privateMode,account,memberships,groups,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete}:{events:CalendarEvent[];recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>}){
   const [weekOffset,setWeekOffset]=useState(0),[createDate,setCreateDate]=useState(calendarDateKey(new Date())),[viewing,setViewing]=useState<CalendarEvent|null>(null),[editing,setEditingRaw]=useState<CalendarEvent|null>(null),[confirmDelete,setConfirmDelete]=useState<CalendarEvent|null>(null),[deleting,setDeleting]=useState(false),[spaceOpen,setSpaceOpen]=useState(false);
   const setEditing=(value:CalendarEvent|null)=>{if(value)setViewing(value);else setEditingRaw(null)};
@@ -5897,11 +5932,13 @@ function AuthenticatedApp() {
   const [privateNotes,setPrivateNotes]=useState<BubbsunNote[]>([]);
   const [calendarEvents,setCalendarEvents]=useState<CalendarEvent[]>([]);
   const [privateCalendarEvents,setPrivateCalendarEvents]=useState<CalendarEvent[]>([]);
+  const [budgetEntries,setBudgetEntries]=useState<BudgetEntry[]>([]);
+  const [privateBudgetEntries,setPrivateBudgetEntries]=useState<BudgetEntry[]>([]);
   const [recipes,setRecipes]=useState<Recipe[]>([]);
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -6099,6 +6136,7 @@ function AuthenticatedApp() {
   useEffect(()=>watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds),[members]);
   useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
+  useEffect(()=>user&&databaseReady?watchPrivateBudgetEntries(user.uid,setPrivateBudgetEntries):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady]);
   useEffect(()=>{if(user&&databaseReady)void reconcileRecipePublications(user.uid).catch(error=>console.error("Kunde inte städa offentliga recept",error))},[user,databaseReady]);
@@ -6178,6 +6216,7 @@ function AuthenticatedApp() {
   }, [account?.activeGroupId, privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode){setBudgetEntries([]);return;}return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}const groupId=account.activeGroupId;setRecipes([]);return watchRecipes(groupId,setRecipes);},[account?.activeGroupId,privateMode]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
@@ -6671,6 +6710,7 @@ function AuthenticatedApp() {
   };
   const activeNotes=privateMode?privateNotes:notes;
   const activeCalendarEvents=privateMode?privateCalendarEvents:calendarEvents;
+  const activeBudgetEntries=privateMode?privateBudgetEntries:budgetEntries;
   const activeRecipes=privateMode?privateRecipes:recipes;
   const syncedActiveRecipes=useMemo(()=>mergePublicRecipeLikes(activeRecipes,publicRecipes),[activeRecipes,publicRecipes]);
   const activitySeenAt=account?.activitySeenAt??Date.now();
@@ -6717,6 +6757,8 @@ function AuthenticatedApp() {
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
   const persistCalendarEvent=async(event:CalendarEvent,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time||"",endTime:event.endTime||"",allDay:Boolean(event.allDay),category:event.category||"",mealType:event.mealType||"",color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays||[],recurrenceForever:Boolean(event.recurrenceForever),recurrenceUntil:event.recurrenceUntil||"",excludedDates:event.excludedDates||[],note:event.note||"",linkedListIds:event.linkedListIds||[],linkedRecipeIds:event.linkedRecipeIds||[],reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid,locations};await syncCalendarEventLocations(user.uid,complete,previous,locations)};
   const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;await removeCalendarEventEverywhere(user.uid,event,privateMode?"private":account.activeGroupId)};
+  const persistBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;if(privateMode)await savePrivateBudgetEntry(user.uid,entry);else if(account.activeGroupId)await saveBudgetEntry(account.activeGroupId,entry)};
+  const deleteBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;if(privateMode)await removePrivateBudgetEntry(user.uid,entry.id);else if(account.activeGroupId)await removeBudgetEntry(account.activeGroupId,entry.id)};
   const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations)};
   const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId)};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
@@ -6834,9 +6876,9 @@ function AuthenticatedApp() {
         supporterTitle={account.supporter ? account.supporterTitle : undefined}
         glow={account.supporter && account.supporterGlow !== false}
         glowColor={account.supporterGlowColor}
-        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "meal-planner" ? "Veckans måltider" : page === "recipes" ? "Kokboken" : page === "recipe-discover" ? "Upptäck recept" : undefined}
+        tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "meal-planner" ? "Veckans måltider" : page === "recipes" ? "Kokboken" : page === "recipe-discover" ? "Upptäck recept" : page === "budget" ? "Budget" : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
-        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="meal-planner"?"meal-planner":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":"lists")}
+        onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="meal-planner"?"meal-planner":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":page==="budget"?"budget":"lists")}
         onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
@@ -6951,6 +6993,7 @@ function AuthenticatedApp() {
         onEventOpened={()=>setActivityCalendarEventId("")}
       />}
       {page === "meal-planner" && <MealPlannerPage events={activeCalendarEvents.filter(event=>event.category==="meal-plan")} recipes={syncedActiveRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} creating={addingMealPlan} onCreating={setAddingMealPlan} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistCalendarEvent} onDelete={deleteCalendarEvent}/>}
+      {page === "budget" && <BudgetPage entries={activeBudgetEntries} privateMode={privateMode} account={account} memberships={memberships} groups={groups} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistBudgetEntry} onDelete={deleteBudgetEntry}/>}
       {page === "recipes" && <RecipesPage
         recipes={syncedActiveRecipes}
         lists={visibleLists}
@@ -6990,7 +7033,8 @@ function AuthenticatedApp() {
           if(calendarEvent?.category==="meal-plan")navigate("meal-planner");
           else{setActivityCalendarEventId(entry.targetId);navigate("calendar")}
         }
-      }}/>} 
+      }}/>
+      }
       {page === "people" && (
         <PeoplePage
           account={account}
@@ -7103,7 +7147,9 @@ function AuthenticatedApp() {
           onSave={(values) => void addNewList(values)}
         />
       )}
-      {addingNote&&<NewNoteEditor onCancel={()=>setAddingNote(false)} onSave={note=>void createNote(note)}/>} 
+      {addingNote&&(
+        <NewNoteEditor onCancel={()=>setAddingNote(false)} onSave={note=>void createNote(note)}/>
+      )}
     </main>
   );
 }

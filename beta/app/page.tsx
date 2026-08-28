@@ -1069,7 +1069,7 @@ function Header({
           <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
         </div>}
         {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "add" ? (
-          <div className="header-add-actions">{tabTitle==="Budget"&&<button className="theme-button header-transfer" aria-label="Ny överföring" title="Ny överföring" onClick={()=>window.dispatchEvent(new Event("bubbsun:new-budget-transfer"))}>⇄</button>}<button
+          <div className="header-add-actions">{tabTitle==="Budget"&&<button className="header-transfer" aria-label="Ny överföring" title="Ny överföring" onClick={()=>window.dispatchEvent(new Event("bubbsun:new-budget-transfer"))}>⇄</button>}<button
             className="theme-button header-add"
             aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}

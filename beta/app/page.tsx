@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Eye,
   Funnel,
+  Gamepad2,
   Flag,
   Home,
   History,
@@ -80,6 +81,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "../src/lib/firebase";
+import { FrasseGame, type FrasseProgress } from "../src/FrasseGame";
 import {
   acceptPrivacy,
   createGroup,
@@ -964,6 +966,7 @@ function Header({
   onOpenAdmin,
   onOpenReports,
   language,
+  wallet,
 }: {
   onMenu: () => void;
   onHome: () => void;
@@ -981,6 +984,7 @@ function Header({
   onOpenAdmin?: () => void;
   onOpenReports?: () => void;
   language: string;
+  wallet?: FrasseProgress | null;
 }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -1049,7 +1053,7 @@ function Header({
           <i aria-hidden="true"/>
           <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
         </div>}
-        {mode === "add" ? (
+        {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} kr</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} kr</strong></span></div> : mode === "add" ? (
           <button
             className="theme-button header-add"
             aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
@@ -1215,6 +1219,11 @@ function Drawer({
               <span>Recept</span>
             </button>
             <div className="drawer-recipe-submenu"><button onClick={()=>onPage("recipes")}><BookOpen/><span>Kokboken</span><ChevronRight/></button><button onClick={()=>onPage("recipe-discover")}><Compass/><span>Upptäck</span><ChevronRight/></button></div>
+            <button className="games-nav" onClick={() => onPage("games")}>
+              <Gamepad2 />
+              <span>Nöje</span>
+              <ChevronRight />
+            </button>
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
@@ -5876,6 +5885,8 @@ function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seen
   </section>;
 }
 
+function GamesPage({onOpen}:{onOpen:()=>void}){return <section className="content subpage games-page"><div className="content-heading games-heading"><Gamepad2/><div><h1>NÖJE</h1><p>Små spel med stor Bubbsun-karaktär</p></div></div><div className="game-card-grid"><button className="game-library-card" onClick={onOpen}><div className="game-cover"><span>NYTT</span><i><Gamepad2/></i></div><div className="game-card-copy"><small>ARKAD · TUR & TASSAR</small><h2>Frasses enarmade bandit</h2><p>Snurra, levla och bygg upp ditt permanenta valv.</p><strong>SPELA NU <ChevronRight/></strong></div></button></div></section>}
+
 function AuthenticatedApp() {
   const privateListsLoadedFor = useRef("");
   const listsHistoryRef = useRef<BubbsunList[]>([]);
@@ -5901,7 +5912,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","games","frasse","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -5949,6 +5960,7 @@ function AuthenticatedApp() {
   const [chatPeer,setChatPeer]=useState<ChatPeer|null>(null);
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
+  const [gameWallet,setGameWallet]=useState<FrasseProgress|null>(null);
   const previousPageRef = useRef<Page>(page);
 
   useEffect(() => {
@@ -6851,6 +6863,7 @@ function AuthenticatedApp() {
         }
         onOpenReports={account.megaSuperBoss || account.founder?()=>{setAdminStartTab("reports");navigate("admin")}:undefined}
         language={language}
+        wallet={page==="frasse"?gameWallet:null}
       />
       {page === "lists" && (
         <ListsPage
@@ -6973,6 +6986,8 @@ function AuthenticatedApp() {
         onRecipeOpened={()=>setActivityRecipeId("")}
       />}
       {page === "recipe-discover" && <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy} onMessageCreator={recipe=>setChatPeer({uid:recipe.creatorId,name:recipe.creatorName,color:recipe.creatorColor??colorOptions[0]})}/>}
+      {page === "games" && <GamesPage onOpen={()=>navigate("frasse")}/>} 
+      {page === "frasse" && <FrasseGame uid={user.uid} displayName={account.displayName} onBack={()=>navigate("games")} onWallet={setGameWallet}/>} 
       {page === "chat"&&<ChatPage account={account} chats={directChats} memberships={memberships} groups={groups} language={language} onOpen={setChatPeer}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);

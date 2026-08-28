@@ -747,9 +747,9 @@ function LoginPage({
   error: string;
   busy: boolean;
 }) {
-  const isAndroid =
-    /Android/i.test(navigator.userAgent) ||
-    new URLSearchParams(window.location.search).has("gisLoginTest");
+  // Google Identity Services avoids popup sessions that can hang in modern
+  // browsers. Keep Firebase's popup flow available as compatibility mode.
+  const useGoogleIdentity = true;
   return (
     <main className="login-page">
       <div className="login-layout">
@@ -767,7 +767,7 @@ function LoginPage({
               hemma, i butiken och på språng.
             </p>
           </div>
-          {isAndroid ? (
+          {useGoogleIdentity ? (
             <>
               <GoogleIdentityButton onCredential={onGoogleCredential} busy={busy} />
               <button className="google-login-compat" onClick={onLogin} disabled={busy}>

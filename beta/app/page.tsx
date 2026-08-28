@@ -81,7 +81,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { auth, db } from "../src/lib/firebase";
 import { FrasseGame, type FrasseProgress } from "../src/FrasseGame";
 import {
@@ -211,6 +211,7 @@ import "./globals.css";
 import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
+import "./yatzy-embedded.css";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
 
@@ -3291,7 +3292,7 @@ function BudgetPage({entries,settings,privateMode,account,memberships,groups,cre
   </section>;
 }
 function BudgetAccountOverview({settings,entries}:{settings:BudgetSettings;entries:BudgetEntry[]}){if(!settings.banks.length)return null;return <section className="budget-accounts-overview"><h2>BANKER & KONTON</h2><div>{settings.banks.map(bank=><article key={bank.id}><header><strong>{bank.name}</strong></header>{bank.accounts.map(account=>{const total=entries.filter(entry=>entry.accountId===account.id).reduce((sum,entry)=>sum+(entry.type==="income"?entry.amount:-entry.amount),0);return <p key={account.id}><strong>{account.name}</strong><b>{budgetMoney(total)}</b></p>})}</article>)}</div></section>}
-function BudgetSettingsEditor({settings,onClose,onSave}:{settings:BudgetSettings;onClose:()=>void;onSave:(settings:BudgetSettings)=>Promise<void>}){const [banks,setBanks]=useState(settings.banks);return <div className="modal-backdrop"><section className="modal budget-settings-editor"><button className="modal-x" onClick={onClose}><X/></button><header><Settings/><h2>BUDGETINSTÄLLNINGAR</h2></header><div className="budget-bank-editor">{banks.map(bank=><section key={bank.id}><div><input value={bank.name} onChange={event=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,name:event.target.value}:item))}/><button onClick={()=>setBanks(old=>old.filter(item=>item.id!==bank.id))}><Trash2/></button></div>{bank.accounts.map(account=><div className="budget-account-edit" key={account.id}><input value={account.name} onChange={event=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:item.accounts.map(value=>value.id===account.id?{...value,name:event.target.value}:value)}:item))}/><button onClick={()=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:item.accounts.filter(value=>value.id!==account.id)}:item))}><Trash2/></button></div>)}<button className="add-account" onClick={()=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:[...item.accounts,{id:crypto.randomUUID(),name:"Nytt konto"}]}:item))}><Plus/> LÄGG TILL KONTO</button></section>)}</div><button className="add-bank" onClick={()=>setBanks(old=>[...old,{id:crypto.randomUUID(),name:"Ny bank",accounts:[]}])}><Plus/> LÄGG TILL BANK</button><footer><button onClick={onClose}>AVBRYT</button><button onClick={()=>onSave({banks,updatedAt:Date.now()})}>SPARA</button></footer></section></div>}
+function BudgetSettingsEditor({settings,onClose,onSave}:{settings:BudgetSettings;onClose:()=>void;onSave:(settings:BudgetSettings)=>Promise<void>}){const [banks,setBanks]=useState(settings.banks);return <div className="modal-backdrop"><section className="modal budget-settings-editor"><button className="modal-x" onClick={onClose}><X/></button><header><Settings/><h2>BUDGETINSTÄLLNINGAR</h2></header><div className="budget-bank-editor">{banks.map(bank=><section key={bank.id}><div><input value={bank.name} placeholder="Namn på bank" onChange={event=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,name:event.target.value}:item))}/><button onClick={()=>setBanks(old=>old.filter(item=>item.id!==bank.id))}><Trash2/></button></div>{bank.accounts.map(account=><div className="budget-account-edit" key={account.id}><input value={account.name} placeholder="Namn på konto" onChange={event=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:item.accounts.map(value=>value.id===account.id?{...value,name:event.target.value}:value)}:item))}/><button onClick={()=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:item.accounts.filter(value=>value.id!==account.id)}:item))}><Trash2/></button></div>)}<button className="add-account" onClick={()=>setBanks(old=>old.map(item=>item.id===bank.id?{...item,accounts:[...item.accounts,{id:crypto.randomUUID(),name:""}]}:item))}><Plus/> LÄGG TILL KONTO</button></section>)}</div><button className="add-bank" onClick={()=>setBanks(old=>[...old,{id:crypto.randomUUID(),name:"",accounts:[]}])}><Plus/> LÄGG TILL BANK</button><footer><button onClick={onClose}>AVBRYT</button><button onClick={()=>onSave({banks,updatedAt:Date.now()})}>SPARA</button></footer></section></div>}
 function BudgetEditor({entry,settings,monthKey,account,onClose,onSave,onDelete}:{entry?:BudgetEntry;settings:BudgetSettings;monthKey:string;account:Account;onClose:()=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete?:()=>void}){
   const accounts=settings.banks.flatMap(bank=>bank.accounts.map(value=>({id:value.id,name:`${bank.name} · ${value.name}`}))),[type,setType]=useState<"income"|"expense">(entry?.type||"expense"),[title,setTitle]=useState(entry?.title||""),[amount,setAmount]=useState(entry?String(entry.amount):""),[category,setCategory]=useState(entry?.category||"Mat"),[subcategory,setSubcategory]=useState(entry?.subcategory||"Hyra/avgift"),[accountId,setAccountId]=useState(entry?.accountId||accounts[0]?.id||""),[date,setDate]=useState(entry?.date||`${monthKey}-01`),[recurring,setRecurring]=useState(entry?.recurrence==="monthly"),[note,setNote]=useState(entry?.note||""),[busy,setBusy]=useState(false);
   useEffect(()=>{const options=budgetCategories[type];if(!options.includes(category as never))setCategory(options[0])},[type,category]);
@@ -4583,6 +4584,7 @@ function AdminPage({
   publicRecipes,
   messageCount,
   initialTab,
+  gameCardImages,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4594,8 +4596,9 @@ function AdminPage({
   publicRecipes: Recipe[];
   messageCount: number;
   initialTab: "stats" | "members" | "reports";
+  gameCardImages: GameCardImages;
 }) {
-  const [tab, setTab] = useState<"stats" | "members" | "reports" | "recipes" | "system" | "themes">(
+  const [tab, setTab] = useState<"stats" | "members" | "reports" | "recipes" | "games" | "system" | "themes">(
       initialTab,
     ),
     [selected, setSelected] = useState<Account | null>(null),
@@ -4633,6 +4636,7 @@ function AdminPage({
         <button className={tab === "themes" ? "selected" : ""} onClick={() => setTab("themes")}>TEMA</button>
         <button className={tab === "reports" ? "selected" : ""} onClick={() => setTab("reports")}>BUGGAR & FÖRSLAG</button>
         <button className={tab === "recipes" ? "selected" : ""} onClick={() => setTab("recipes")}>RECEPT ({publicRecipes.length})</button>
+        <button className={tab === "games" ? "selected" : ""} onClick={() => setTab("games")}>SPEL</button>
         <button className={tab === "system" ? "selected" : ""} onClick={() => setTab("system")}>SYSTEM</button>
       </div>
       {tab === "stats" && <><div className="stats-grid">
@@ -4744,6 +4748,7 @@ function AdminPage({
           ))}
         </div>
       )}
+      {tab === "games" && <AdminGames images={gameCardImages}/>}
       {tab === "system" && <div className="admin-system-tab"><GlobalPinEditor /><a
         className="version-link"
         href="https://github.com/finalworld/Bubbsun/releases"
@@ -5907,7 +5912,7 @@ function ChatPage({account,chats,memberships,groups,language,onOpen}:{account:Ac
 
 type ActivityEntry = {
   id: string;
-  kind: "list" | "note" | "calendar" | "recipe";
+  kind: "list" | "note" | "calendar" | "recipe" | "game";
   title: string;
   detail: string;
   at: number;
@@ -5922,14 +5927,25 @@ function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seen
   return <section className="content subpage notifications-page">
     <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
     {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt&&!entry.isOwn?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
-      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":"▣"}</span>
+      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":entry.kind==="game"?"🎲":"▣"}</span>
       <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
       {entry.at>seenAt&&!entry.isOwn&&<b>NYTT</b>}<ChevronRight/>
     </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar, recept eller kalender syns det här.</span></div>}
   </section>;
 }
 
-function GamesPage({onOpen,vault}:{onOpen:()=>void;vault:number}){return <section className="content subpage games-page"><div className="content-heading games-heading"><Gamepad2/><div><h1>NÖJE</h1><p>Små spel med stor Bubbsun-karaktär</p></div><div className="games-vault"><img src="/games/bubb-yatzy/bb-coins.png" alt=""/><span><small>DITT VALV</small><strong>{vault.toLocaleString("sv-SE")} Bb</strong><em>Bubbisar</em></span></div></div><div className="game-card-grid"><button className="game-library-card" onClick={onOpen}><div className="game-cover"><span>KLASSIKER</span><i><Gamepad2/></i></div><div className="game-card-copy"><small>ARKAD · TUR & TASSAR</small><h2>Frasses enarmade bandit</h2><p>Snurra, levla och bygg upp ditt permanenta valv med Bubbisar.</p><strong>SPELA NU <ChevronRight/></strong></div></button><button className="game-library-card yatzy-library-card" onClick={()=>{window.location.href="/games/bubb-yatzy/"}}><div className="game-cover yatzy-cover"><span>NYTT</span><i>🎲</i></div><div className="game-card-copy"><small>TÄRNINGAR · SINGEL &amp; GRUPP</small><h2>Bubb Yatzy</h2><p>Klassisk svensk Yatzy mot datorn eller någon i din grupp.</p><strong>SPELA NU <ChevronRight/></strong></div></button></div></section>}
+type GameCardImages={frasseImage:string;yatzyImage:string};
+function GamesPage({onOpen,onYatzy,vault,images}:{onOpen:()=>void;onYatzy:()=>void;vault:number;images:GameCardImages}){return <section className="content subpage games-page"><div className="content-heading games-heading"><Gamepad2/><div><h1>NÖJE</h1><p>Små spel med stor Bubbsun-karaktär</p></div><div className="games-vault"><img src="/games/bubb-yatzy/bb-coins-v2.png" alt=""/><span><small>DITT VALV</small><strong>{vault.toLocaleString("sv-SE")} Bb</strong><em>Bubbisar</em></span></div></div><div className="game-card-grid"><button className="game-library-card" onClick={onOpen}><div className={`game-cover${images.frasseImage?" has-custom-cover":""}`} style={images.frasseImage?{backgroundImage:`url(${images.frasseImage})`}:undefined}><span>KLASSIKER</span><i><Gamepad2/></i></div><div className="game-card-copy"><small>ARKAD · TUR & TASSAR</small><h2>Frasses enarmade bandit</h2><p>Snurra, levla och bygg upp ditt permanenta valv med Bubbisar.</p><strong>SPELA NU <ChevronRight/></strong></div></button><button className="game-library-card yatzy-library-card" onClick={onYatzy}><div className={`game-cover yatzy-cover${images.yatzyImage?" has-custom-cover":""}`} style={images.yatzyImage?{"--game-cover-image":`url("${images.yatzyImage}")`} as CSSProperties:undefined}><span>NYTT</span><i>🎲</i></div><div className="game-card-copy"><small>TÄRNINGAR · SINGEL &amp; GRUPP</small><h2>Bubb Yatzy</h2><p>Klassisk svensk Yatzy mot datorn eller någon i din grupp.</p><strong>SPELA NU <ChevronRight/></strong></div></button></div></section>}
+
+function YatzyPage(){return <section className="yatzy-embedded-page"><iframe title="Bubb Yatzy" src="/games/bubb-yatzy/?embedded=1" allow="autoplay"/></section>}
+
+function AdminGames({images}:{images:GameCardImages}){
+  const [draft,setDraft]=useState(images),[saving,setSaving]=useState(""),[status,setStatus]=useState("");
+  useEffect(()=>setDraft(images),[images.frasseImage,images.yatzyImage]);
+  const cards=[{key:"frasseImage" as const,title:"Frasses enarmade bandit",fallback:"/beta/games/frasses-enarmade-bandit/frasse-symbols.png"},{key:"yatzyImage" as const,title:"Bubb Yatzy",fallback:""}];
+  const save=async(key:keyof GameCardImages)=>{setSaving(key);setStatus("");try{await setDoc(doc(db,"appConfig","gameCards"),{[key]:draft[key],updatedAt:serverTimestamp()},{merge:true});setStatus("Spelbilden är sparad ✓")}catch(reason){setStatus(reason instanceof Error?reason.message:"Kunde inte spara bilden.")}finally{setSaving("")}};
+  return <div className="admin-games"><header><Gamepad2/><div><h2>SPELBILDER</h2><p>Byt omslagsbilden som visas på Nöje-sidan.</p></div></header><div>{cards.map(card=><article key={card.key}><div className={`admin-game-preview ${card.key==="yatzyImage"&&!draft[card.key]?"yatzy-default":""}`} style={draft[card.key]||card.fallback?{backgroundImage:`url(${draft[card.key]||card.fallback})`}:undefined}>{!draft[card.key]&&card.key==="yatzyImage"&&<span>⚄ ⚁<br/>⚂ ⚅</span>}</div><section><small>SPELKORT</small><h3>{card.title}</h3><p>Rekommenderat format: liggande bild, minst 900 × 550 px.</p><div><label><ImagePlus/> VÄLJ BILD<input type="file" accept="image/*" onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{const image=await compressRecipeImage(file);setDraft(current=>({...current,[card.key]:image}));setStatus("")}catch{setStatus("Bilden kunde inte läsas.")}}}/></label><button disabled={saving===card.key||draft[card.key]===images[card.key]} onClick={()=>void save(card.key)}>{saving===card.key?"SPARAR…":"SPARA"}</button><button className="cancel" disabled={!draft[card.key]} onClick={()=>setDraft(current=>({...current,[card.key]:""}))}>ÅTERSTÄLL</button></div></section></article>)}</div>{status&&<p className="admin-save-status">{status}</p>}</div>;
+}
 
 function AuthenticatedApp() {
   const privateListsLoadedFor = useRef("");
@@ -5960,7 +5976,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","games","frasse","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","games","frasse","yatzy","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -6011,7 +6027,11 @@ function AuthenticatedApp() {
   const [databaseReady, setDatabaseReady] = useState(false);
   const [gameWallet,setGameWallet]=useState<FrasseProgress|null>(null);
   const [gameVault,setGameVault]=useState(0);
+  const [gameCardImages,setGameCardImages]=useState<GameCardImages>({frasseImage:"",yatzyImage:""});
+  const [gameNotifications,setGameNotifications]=useState<Array<{id:string;actorName:string;matchId:string;type:"challenge"|"turn"|"result";createdAt:number}>>([]);
   useEffect(()=>{if(!user)return;return onSnapshot(doc(db,"games","frasses-enarmade-bandit","players",user.uid),snapshot=>setGameVault(Math.max(0,Number(snapshot.data()?.vault)||0)))},[user]);
+  useEffect(()=>{if(!user)return;return onSnapshot(doc(db,"appConfig","gameCards"),snapshot=>setGameCardImages({frasseImage:String(snapshot.data()?.frasseImage||""),yatzyImage:String(snapshot.data()?.yatzyImage||"")}))},[user]);
+  useEffect(()=>{if(!user)return;return onSnapshot(query(collection(db,"gameNotifications"),where("recipientUid","==",user.uid)),snapshot=>setGameNotifications(snapshot.docs.map(item=>({id:item.id,actorName:String(item.data().actorName||"En vän"),matchId:String(item.data().matchId||""),type:item.data().type as "challenge"|"turn"|"result",createdAt:Number(item.data().createdAt)||0}))))},[user]);
   const previousPageRef = useRef<Page>(page);
 
   useEffect(() => {
@@ -6752,8 +6772,9 @@ function AuthenticatedApp() {
     const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0],actor=latest?.uid||value.creatorId,action=(value.history?.length||0)>1?"ändrade anteckningen":"skapade anteckningen",actorName=privateMode?account.displayName:(latest?.name||memberName(actor));return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade kalenderposten":"ändrade kalenderposten";return{id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const recipeEntries=activeRecipes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade receptet":"ändrade receptet";return{id:`recipe-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"recipe" as const,title:value.title,detail:`🍲 ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
-    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
-  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members]);
+    const gameEntries=gameNotifications.map(value=>({id:`game-${value.id}`,kind:"game" as const,title:value.type==="challenge"?"Ny utmaning i Bubb Yatzy":value.type==="result"?"Yatzy-matchen är färdig":"Din tur i Bubb Yatzy",detail:value.type==="challenge"?`${value.actorName} utmanade dig`:value.type==="result"?`${value.actorName} avslutade matchen`:`${value.actorName} har gjort sitt drag`,at:value.createdAt,color:fallbackColor,isPrivate:false,targetId:value.matchId,isOwn:false}));
+    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries,...gameEntries].sort((a,b)=>b.at-a.at).slice(0,60);
+  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members,gameNotifications]);
   const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
   const chatUnreadCount=directChats.filter(chat=>chat.lastSenderId!==user?.uid&&chat.lastMessageAt>(chat.readAt?.[user?.uid||""]||0)).length;
   useEffect(()=>{const unread=notificationCount+chatUnreadCount;document.title=`${unread>0?`(${unread}) `:""}Bubbsun – listor med karaktär`;return()=>{document.title="Bubbsun – listor med karaktär"}},[notificationCount,chatUnreadCount]);
@@ -7049,7 +7070,8 @@ function AuthenticatedApp() {
       {page === "recipe-discover" && (
         <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy} onMessageCreator={recipe=>setChatPeer({uid:recipe.creatorId,name:recipe.creatorName,color:recipe.creatorColor??colorOptions[0]})}/>
       )}
-      {page === "games" && <GamesPage vault={gameVault} onOpen={()=>navigate("frasse")}/>}
+      {page === "games" && <GamesPage vault={gameVault} images={gameCardImages} onOpen={()=>navigate("frasse")} onYatzy={()=>navigate("yatzy")}/>}
+      {page === "yatzy" && <YatzyPage/>}
       {page === "frasse" && <FrasseGame uid={user.uid} displayName={account.displayName} onBack={()=>navigate("games")} onWallet={setGameWallet}/>}
       {page === "chat"&&<ChatPage account={account} chats={directChats} memberships={memberships} groups={groups} language={language} onOpen={setChatPeer}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
@@ -7060,6 +7082,8 @@ function AuthenticatedApp() {
         }else if(entry.kind==="note"){
           const note=(entry.isPrivate?privateNotes:notes).find(value=>value.id===entry.targetId);
           if(note)openNote(note,entry.isPrivate);
+        }else if(entry.kind==="game"){
+          window.location.href=`/games/bubb-yatzy/?match=${encodeURIComponent(entry.targetId)}`;
         }else if(entry.kind==="recipe"){
           setActivityRecipeId(entry.targetId);
           navigate("recipes");
@@ -7131,6 +7155,7 @@ function AuthenticatedApp() {
           publicRecipes={publicRecipes}
           messageCount={adminMessageCount}
           initialTab={adminStartTab}
+          gameCardImages={gameCardImages}
         />
       )}
       <Drawer

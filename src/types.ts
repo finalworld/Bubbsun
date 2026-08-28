@@ -131,7 +131,9 @@ export type BudgetEntry = {
   title: string;
   amount: number;
   category: string;
+  subcategory?: string;
   date: string;
+  recurrence?: "monthly";
   note?: string;
   creatorId: string;
   creatorName: string;

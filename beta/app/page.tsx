@@ -1069,13 +1069,13 @@ function Header({
           <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
         </div>}
         {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "add" ? (
-          <button
+          <div className="header-add-actions">{tabTitle==="Budget"&&<button className="theme-button header-transfer" aria-label="Ny överföring" title="Ny överföring" onClick={()=>window.dispatchEvent(new Event("bubbsun:new-budget-transfer"))}>⇄</button>}<button
             className="theme-button header-add"
             aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}
           >
             <Plus />
-          </button>
+          </button></div>
         ) : mode === "manage" ? (
           <button
             className="theme-button header-manage"
@@ -3280,13 +3280,14 @@ const budgetBillTypes=["Hyra/avgift","El","Mobil","Internet","Försäkring","Lå
 const budgetMoney=(value:number)=>new Intl.NumberFormat("sv-SE",{style:"currency",currency:"SEK",maximumFractionDigits:0}).format(value);
 function BudgetPage({entries,settings,privateMode,account,memberships,groups,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onSaveSettings}:{entries:BudgetEntry[];settings:BudgetSettings;privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete:(entry:BudgetEntry)=>Promise<void>;onSaveSettings:(settings:BudgetSettings)=>Promise<void>}){
   const now=new Date(),[monthOffset,setMonthOffset]=useState(0),[spaceOpen,setSpaceOpen]=useState(false),[settingsOpen,setSettingsOpen]=useState(false),[transferOpen,setTransferOpen]=useState(false),[editing,setEditing]=useState<BudgetEntry|null|undefined>(undefined),[confirmDelete,setConfirmDelete]=useState<BudgetEntry|null>(null);
+  useEffect(()=>{const open=()=>setTransferOpen(true);window.addEventListener("bubbsun:new-budget-transfer",open);return()=>window.removeEventListener("bubbsun:new-budget-transfer",open)},[]);
   const monthDate=new Date(now.getFullYear(),now.getMonth()+monthOffset,1),monthKey=`${monthDate.getFullYear()}-${String(monthDate.getMonth()+1).padStart(2,"0")}`,monthNumber=monthDate.getFullYear()*12+monthDate.getMonth(),monthEntries=entries.flatMap(entry=>{const start=new Date(`${entry.date}T12:00:00`),startNumber=start.getFullYear()*12+start.getMonth();if(entry.recurrence==="monthly"&&monthNumber>=startNumber){const day=Math.min(start.getDate(),new Date(monthDate.getFullYear(),monthDate.getMonth()+1,0).getDate());return[{entry,occurrenceDate:`${monthKey}-${String(day).padStart(2,"0")}`}]}return entry.date.startsWith(monthKey)?[{entry,occurrenceDate:entry.date}]:[]}).sort((a,b)=>b.occurrenceDate.localeCompare(a.occurrenceDate)),income=monthEntries.filter(item=>item.entry.type==="income").reduce((sum,item)=>sum+item.entry.amount,0),expense=monthEntries.filter(item=>item.entry.type==="expense").reduce((sum,item)=>sum+item.entry.amount,0),activeGroup=groups[account.activeGroupId];
   const accountName=(id?:string)=>settings.banks.flatMap(bank=>bank.accounts.map(item=>({id:item.id,label:`${bank.name} · ${item.name}`}))).find(item=>item.id===id)?.label||"Ej valt konto";
   return <section className="content budget-page">
     <header className="budget-intro"><WalletCards/><div><h1>BUDGET</h1><p>En enkel överblick över pengarna, privat eller tillsammans.</p></div><div className="budget-space-tools"><div className="calendar-space-wrap budget-space"><button className="calendar-space-button" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span><small>{privateMode?"PRIVAT":"GRUPP"}</small><strong>{privateMode?"Bara jag":activeGroup?.name||"Välj grupp"}</strong></span><ChevronDown/></button>{spaceOpen&&<div className="calendar-space-menu"><button className={privateMode?"selected":""} onClick={()=>{onMode(true);setSpaceOpen(false)}}><LockKeyhole/><strong>Privat</strong>{privateMode&&<Check/>}</button>{memberships.map(item=><button key={item.groupId} className={!privateMode&&item.groupId===account.activeGroupId?"selected":""} onClick={()=>{onSwitchGroup(item.groupId);setSpaceOpen(false)}}><GroupIcon id={groups[item.groupId]?.iconId}/><strong>{groups[item.groupId]?.name||"Grupp"}</strong>{!privateMode&&item.groupId===account.activeGroupId&&<Check/>}</button>)}</div>}</div><button className="budget-settings-trigger" aria-label="Budgetinställningar" onClick={()=>setSettingsOpen(true)}><Settings/></button></div></header>
     <nav className="budget-month-nav"><button onClick={()=>setMonthOffset(value=>value-1)} aria-label="Föregående månad"><ChevronLeft/></button><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(monthDate)}</strong><button onClick={()=>setMonthOffset(value=>value+1)} aria-label="Nästa månad"><ChevronRight/></button></nav>
     <div className="budget-summary"><article><small>INKOMSTER</small><strong className="income">+ {budgetMoney(income)}</strong></article><article><small>UTGIFTER</small><strong className="expense">− {budgetMoney(expense)}</strong></article><article className="balance"><small>KVAR</small><strong className={income-expense<0?"expense":"income"}>{budgetMoney(income-expense)}</strong></article></div>
-    <div className="budget-transfer-action"><button onClick={()=>setTransferOpen(true)}>⇄ LÄGG TILL ÖVERFÖRING</button></div>{transferOpen&&<BudgetTransferEditor settings={settings} monthKey={monthKey} account={account} onClose={()=>setTransferOpen(false)} onSave={async entry=>{await onSave(entry);setTransferOpen(false)}}/>}
+    {transferOpen&&<BudgetTransferEditor settings={settings} monthKey={monthKey} account={account} onClose={()=>setTransferOpen(false)} onSave={async entry=>{await onSave(entry);setTransferOpen(false)}}/>}
     <BudgetAccountOverview settings={settings} entries={monthEntries.map(item=>item.entry)}/><section className="budget-list"><h2>MÅNADENS POSTER</h2>{monthEntries.length?monthEntries.map(({entry,occurrenceDate})=><button key={entry.id} className="budget-row" onClick={()=>setEditing(entry)}><span className={entry.type}>{entry.type==="income"?"+":"−"}</span><span><strong>{entry.title}</strong><small>{entry.category}{entry.subcategory?` · ${entry.subcategory}`:""} · {accountName(entry.accountId)} · {new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${occurrenceDate}T12:00:00`))}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":"− "}{budgetMoney(entry.amount)}</b><ChevronRight/></button>):<div className="budget-empty"><WalletCards/><h3>Inga poster</h3></div>}</section>
     {(creating||editing!==undefined)&&<BudgetEditor entry={editing||undefined} settings={settings} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}}/>}
     {confirmDelete&&<div className="modal-backdrop"><div className="modal confirm-delete-modal"><Trash2/><h2>TA BORT BUDGETPOSTEN?</h2><p>“{confirmDelete.title}” tas bort. Det går inte att ångra.</p><div className="modal-actions"><button onClick={()=>setConfirmDelete(null)}>AVBRYT</button><button className="danger" onClick={async()=>{await onDelete(confirmDelete);setConfirmDelete(null);setEditing(undefined)}}>TA BORT</button></div></div></div>}
@@ -3300,11 +3301,240 @@ function BudgetTransferEditor({settings,monthKey,account,onClose,onSave}:{settin
   const accounts=settings.banks.flatMap(bank=>bank.accounts.map(item=>({id:item.id,label:`${bank.name} · ${item.name}`}))),[fromAccountId,setFrom]=useState(accounts[0]?.id||""),[toAccountId,setTo]=useState(accounts[1]?.id||""),[amount,setAmount]=useState(""),[date,setDate]=useState(`${monthKey}-01`),[title,setTitle]=useState(""),[recurring,setRecurring]=useState(true),[busy,setBusy]=useState(false),parsedAmount=Number(amount.replace(",","."));
   return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-transfer-editor"><button className="modal-x" onClick={onClose}><X/></button><header><span>⇄</span><div><small>BUDGET</small><h2>NY ÖVERFÖRING</h2></div></header><p>Flytta pengar mellan två av dina konton utan att påverka månadens inkomster eller utgifter.</p><label>VAD GÄLLER DET?<input value={title} onChange={event=>setTitle(event.target.value)} placeholder="Till exempel Månadssparande"/></label><div className="budget-transfer-route"><label>FRÅN KONTO<select value={fromAccountId} onChange={event=>setFrom(event.target.value)}>{accounts.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label><b>→</b><label>TILL KONTO<select value={toAccountId} onChange={event=>setTo(event.target.value)}>{accounts.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label></div><div className="budget-editor-grid"><label>BELOPP (KR)<input inputMode="decimal" value={amount} onChange={event=>setAmount(event.target.value)} placeholder="500"/></label><label>DATUM<input type="date" value={date} onChange={event=>setDate(event.target.value)}/></label></div><label className="budget-recurring"><input type="checkbox" checked={recurring} onChange={event=>setRecurring(event.target.checked)}/><span><strong>Överför varje månad</strong><small>Samma belopp flyttas mellan kontona varje månad.</small></span></label><footer><button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||accounts.length<2||fromAccountId===toAccountId||!date||!Number.isFinite(parsedAmount)||parsedAmount<=0} onClick={async()=>{setBusy(true);try{await onSave({id:crypto.randomUUID(),type:"transfer",title:title.trim()||"Överföring",amount:parsedAmount,category:"Överföring",fromAccountId,toAccountId,date,recurrence:recurring?"monthly":undefined,creatorId:account.uid,creatorName:account.displayName,createdAt:Date.now(),updatedAt:Date.now()})}finally{setBusy(false)}}}>{busy?"SPARAR…":"SPARA ÖVERFÖRING"}</button></footer></section></div>
 }
-function BudgetEditor({entry,settings,monthKey,account,onClose,onSave,onDelete}:{entry?:BudgetEntry;settings:BudgetSettings;monthKey:string;account:Account;onClose:()=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete?:()=>void}){
-  const accounts=settings.banks.flatMap(bank=>bank.accounts.map(value=>({id:value.id,name:`${bank.name} · ${value.name}`}))),[type,setType]=useState<"income"|"expense">(entry?.type||"expense"),[title,setTitle]=useState(entry?.title||""),[amount,setAmount]=useState(entry?String(entry.amount):""),[category,setCategory]=useState(entry?.category||"Mat"),[subcategory,setSubcategory]=useState(entry?.subcategory||"Hyra/avgift"),[accountId,setAccountId]=useState(entry?.accountId||accounts[0]?.id||""),[date,setDate]=useState(entry?.date||`${monthKey}-01`),[recurring,setRecurring]=useState(entry?.recurrence==="monthly"),[note,setNote]=useState(entry?.note||""),[busy,setBusy]=useState(false);
-  useEffect(()=>{const options=budgetCategories[type];if(!options.includes(category as never))setCategory(options[0])},[type,category]);
-  const parsedAmount=Number(amount.replace(",","."));
-  return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-editor"><button className="modal-x budget-editor-x" onClick={onClose} aria-label="Stäng"><X/></button><header><WalletCards/><div><small>{entry?"BUDGETPOST":"LÄGG TILL"}</small><h2>{entry?"REDIGERA POST":"NY BUDGETPOST"}</h2></div></header><div className="budget-type"><button type="button" className={type==="expense"?"selected expense":""} onClick={()=>setType("expense")}>− UTGIFT</button><button type="button" className={type==="income"?"selected income":""} onClick={()=>setType("income")}>+ INKOMST</button></div><label>VAD GÄLLER DET?<input autoFocus value={title} maxLength={80} onChange={event=>setTitle(event.target.value)} placeholder={type==="income"?"Till exempel lön":"Till exempel matbutiken"}/></label><div className="budget-editor-grid"><label>BELOPP (KR)<input inputMode="decimal" value={amount} onChange={event=>setAmount(event.target.value)} placeholder="0"/></label><label>{recurring?"FÖRSTA DATUM":"DATUM"}<input type="date" value={date} onChange={event=>setDate(event.target.value)}/></label></div><div className="budget-editor-grid"><label>KATEGORI<select value={category} onChange={event=>setCategory(event.target.value)}>{budgetCategories[type].map(value=><option key={value}>{value}</option>)}</select></label>{type==="expense"&&category==="Räkningar"&&<label>TYP AV RÄKNING<select value={subcategory} onChange={event=>setSubcategory(event.target.value)}>{budgetBillTypes.map(value=><option key={value}>{value}</option>)}</select></label>}</div><label className="budget-recurring"><input type="checkbox" checked={recurring} onChange={event=>setRecurring(event.target.checked)}/><span><strong>Återkommer varje månad</strong><small>Samma post läggs in automatiskt från valt datum.</small></span></label>{entry?.recurrence==="monthly"&&<p className="budget-series-note">Ändringar här gäller hela den återkommande serien.</p>}<label>ANTECKNING <small>(valfritt)</small><textarea value={note} onChange={event=>setNote(event.target.value)} placeholder="Något att komma ihåg?"/></label><footer>{onDelete&&<button className="danger" onClick={onDelete}><Trash2/> TA BORT</button>}<button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||!title.trim()||!date||!Number.isFinite(parsedAmount)||parsedAmount<=0} onClick={async()=>{setBusy(true);try{await onSave({id:entry?.id||crypto.randomUUID(),type,title:title.trim(),amount:parsedAmount,category,subcategory:type==="expense"&&category==="Räkningar"?subcategory:"",date,recurrence:recurring?"monthly":undefined,note:note.trim(),creatorId:entry?.creatorId||account.uid,creatorName:entry?.creatorName||account.displayName,createdAt:entry?.createdAt||Date.now(),updatedAt:Date.now()})}finally{setBusy(false)}}}>{busy?"SPARAR…":"SPARA"}</button></footer></section></div>;
+function BudgetEditor({
+  entry,
+  settings,
+  monthKey,
+  account,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  entry?: BudgetEntry;
+  settings: BudgetSettings;
+  monthKey: string;
+  account: Account;
+  onClose: () => void;
+  onSave: (entry: BudgetEntry) => Promise<void>;
+  onDelete?: () => void;
+}) {
+  const initialBank =
+      settings.banks.find((bank) =>
+        bank.accounts.some((item) => item.id === entry?.accountId),
+      )?.id ||
+      settings.banks[0]?.id ||
+      "",
+    [bankId, setBankId] = useState(initialBank),
+    bankAccounts =
+      settings.banks.find((bank) => bank.id === bankId)?.accounts || [],
+    [type, setType] = useState<"income" | "expense">(
+      entry?.type === "income" ? "income" : "expense",
+    ),
+    [title, setTitle] = useState(entry?.title || ""),
+    [amount, setAmount] = useState(entry ? String(entry.amount) : ""),
+    [category, setCategory] = useState(entry?.category || "Mat"),
+    [subcategory, setSubcategory] = useState(
+      entry?.subcategory || "Hyra/avgift",
+    ),
+    [accountId, setAccountId] = useState(
+      entry?.accountId || bankAccounts[0]?.id || "",
+    ),
+    [date, setDate] = useState(entry?.date || `${monthKey}-01`),
+    [recurring, setRecurring] = useState(entry?.recurrence === "monthly"),
+    [note, setNote] = useState(entry?.note || ""),
+    [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const options = budgetCategories[type];
+    if (!options.includes(category as never)) setCategory(options[0]);
+  }, [type, category]);
+  const parsedAmount = Number(amount.replace(",", "."));
+  return (
+    <div
+      className="modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section className="modal budget-editor">
+        <button
+          className="modal-x budget-editor-x"
+          onClick={onClose}
+          aria-label="Stäng"
+        >
+          <X />
+        </button>
+        <header>
+          <WalletCards />
+          <div>
+            <small>{entry ? "BUDGETPOST" : "LÄGG TILL"}</small>
+            <h2>{entry ? "REDIGERA POST" : "NY BUDGETPOST"}</h2>
+          </div>
+        </header>
+        <div className="budget-type">
+          <button
+            type="button"
+            className={type === "expense" ? "selected expense" : ""}
+            onClick={() => setType("expense")}
+          >
+            − UTGIFT
+          </button>
+          <button
+            type="button"
+            className={type === "income" ? "selected income" : ""}
+            onClick={() => setType("income")}
+          >
+            + INKOMST
+          </button>
+        </div>
+        <label>
+          VAD GÄLLER DET?
+          <input
+            autoFocus
+            value={title}
+            maxLength={80}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder={
+              type === "income" ? "Till exempel lön" : "Till exempel matbutiken"
+            }
+          />
+        </label>
+        <div className="budget-editor-grid">
+          <label>
+            BELOPP (KR)
+            <input
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="0"
+            />
+          </label>
+          <label>
+            {recurring ? "FÖRSTA DATUM" : "DATUM"}
+            <input
+              type="date"
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </label>
+        </div>
+        <div className="budget-editor-grid">
+          <label>
+            KATEGORI
+            <select
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+            >
+              {budgetCategories[type].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          {type === "expense" && category === "Räkningar" && (
+            <label>
+              TYP AV RÄKNING
+              <select
+                value={subcategory}
+                onChange={(event) => setSubcategory(event.target.value)}
+              >
+                {budgetBillTypes.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="budget-editor-grid budget-account-picker">
+          <label>
+            BANK
+            <select value={bankId} onChange={(event)=>{const next=event.target.value;setBankId(next);setAccountId(settings.banks.find(bank=>bank.id===next)?.accounts[0]?.id||"")}}>
+              <option value="">Välj bank</option>
+              {settings.banks.map(bank=><option value={bank.id} key={bank.id}>{bank.name}</option>)}
+            </select>
+          </label>
+          <label>
+            KONTO
+            <select value={accountId} onChange={(event)=>setAccountId(event.target.value)} disabled={!bankId}>
+              <option value="">Välj konto</option>
+              {bankAccounts.map(item=><option value={item.id} key={item.id}>{budgetAccountIcon(item.icon)} {item.name}</option>)}
+            </select>
+          </label>
+        </div>
+        <label className="budget-recurring">
+          <input
+            type="checkbox"
+            checked={recurring}
+            onChange={(event) => setRecurring(event.target.checked)}
+          />
+          <span>
+            <strong>Återkommer varje månad</strong>
+            <small>Samma post läggs in automatiskt från valt datum.</small>
+          </span>
+        </label>
+        {entry?.recurrence === "monthly" && (
+          <p className="budget-series-note">
+            Ändringar här gäller hela den återkommande serien.
+          </p>
+        )}
+        <label>
+          ANTECKNING <small>(valfritt)</small>
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Något att komma ihåg?"
+          />
+        </label>
+        <footer>
+          {onDelete && (
+            <button className="danger" onClick={onDelete}>
+              <Trash2 /> TA BORT
+            </button>
+          )}
+          <button className="cancel" onClick={onClose}>
+            AVBRYT
+          </button>
+          <button
+            disabled={
+              busy ||
+              !title.trim() ||
+              !date ||
+              !Number.isFinite(parsedAmount) ||
+              parsedAmount <= 0
+              || !bankId
+              || !accountId
+            }
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onSave({
+                  id: entry?.id || crypto.randomUUID(),
+                  type,
+                  title: title.trim(),
+                  amount: parsedAmount,
+                  category,
+                  subcategory:
+                    type === "expense" && category === "Räkningar"
+                      ? subcategory
+                      : "",
+                  accountId,
+                  date,
+                  recurrence: recurring ? "monthly" : undefined,
+                  note: note.trim(),
+                  creatorId: entry?.creatorId || account.uid,
+                  creatorName: entry?.creatorName || account.displayName,
+                  createdAt: entry?.createdAt || Date.now(),
+                  updatedAt: Date.now(),
+                });
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "SPARAR…" : "SPARA"}
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
 }
 
 function MealPlannerPage({events,recipes,lists,privateMode,account,memberships,groups,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete}:{events:CalendarEvent[];recipes:Recipe[];lists:BubbsunList[];privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(event:CalendarEvent)=>Promise<void>;onDelete:(event:CalendarEvent)=>Promise<void>}){

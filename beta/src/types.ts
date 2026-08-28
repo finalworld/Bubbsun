@@ -127,12 +127,14 @@ export type CalendarEvent = {
 
 export type BudgetEntry = {
   id: string;
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
   title: string;
   amount: number;
   category: string;
   subcategory?: string;
   accountId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
   date: string;
   recurrence?: "monthly";
   note?: string;
@@ -183,7 +185,7 @@ export type Recipe = {
 
 export type GlobalPin = { id: string; title: string; infoText: string; status: string; revision: number; createdAt?: unknown; updatedAt?: unknown; publishedAt?: unknown; unpublishedAt?: unknown; items: Array<{ id: string; name: string; quantity: string; order: number; reactionCount: number }> };
 export type PublicListShare = { id: string; name: string; createdAt?: unknown; showNotes?: boolean; items: Array<{ name: string; quantity: string; completed: boolean; note?: string }> };
-export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "meal-planner" | "recipes" | "recipe-discover" | "budget" | "games" | "frasse" | "notifications" | "chat" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
+export type Page = "lists" | "list" | "notes" | "note" | "calendar" | "meal-planner" | "recipes" | "recipe-discover" | "budget" | "games" | "frasse" | "yatzy" | "notifications" | "chat" | "people" | "stats" | "settings" | "support" | "about" | "help" | "privacy" | "feedback" | "versions" | "admin";
 
 export type Report = { id: string; authorUid: string; kind: string; category: string; title: string; description: string; status: string; createdAt?: unknown };
 export type ThemePalette = { id: string; bg: string; paper: string; panel: string; text: string; accent: string; outline: string; header?: string; headerButton?: string; brandDecoration?: string; brandSuffix?: string; calendarEventBackground?: string; paletteVersion?: number };

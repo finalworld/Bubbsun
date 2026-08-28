@@ -3398,7 +3398,7 @@ function BudgetEditor({
             }
           />
         </label>
-        <div className="budget-editor-grid">
+        <div className="budget-editor-grid budget-primary-fields">
           <label>
             BELOPP (KR)
             <input
@@ -3417,7 +3417,7 @@ function BudgetEditor({
             />
           </label>
         </div>
-        <div className="budget-editor-grid">
+        <div className="budget-editor-grid budget-category-fields">
           <label>
             KATEGORI
             <select
@@ -3444,15 +3444,15 @@ function BudgetEditor({
           )}
         </div>
         <div className="budget-editor-grid budget-account-picker">
-          <label>
-            BANK
+          <label className="budget-bank-choice">
+            <span>BANK</span>
             <select value={bankId} onChange={(event)=>{const next=event.target.value;setBankId(next);setAccountId(settings.banks.find(bank=>bank.id===next)?.accounts[0]?.id||"")}}>
               <option value="">Välj bank</option>
               {settings.banks.map(bank=><option value={bank.id} key={bank.id}>{bank.name}</option>)}
             </select>
           </label>
-          <label>
-            KONTO
+          <label className="budget-account-choice">
+            <span>KONTO</span>
             <select value={accountId} onChange={(event)=>setAccountId(event.target.value)} disabled={!bankId}>
               <option value="">Välj konto</option>
               {bankAccounts.map(item=><option value={item.id} key={item.id}>{budgetAccountIcon(item.icon)} {item.name}</option>)}

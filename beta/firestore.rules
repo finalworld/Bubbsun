@@ -294,6 +294,18 @@ service cloud.firestore {
         allow create, update: if signedIn() && request.auth.uid == uid;
         allow delete: if isMega();
       }
+      match /matches/{matchId} {
+        allow read: if signedIn() && request.auth.uid in resource.data.participantIds;
+        allow create: if signedIn()
+          && request.auth.uid in request.resource.data.participantIds
+          && request.resource.data.participantIds.size() == 2
+          && member(request.resource.data.groupId);
+        allow update: if signedIn()
+          && request.auth.uid in resource.data.participantIds
+          && request.resource.data.participantIds == resource.data.participantIds
+          && request.resource.data.groupId == resource.data.groupId;
+        allow delete: if isMega();
+      }
     }
 
     match /admin/{document=**} {

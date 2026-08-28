@@ -132,6 +132,7 @@ export type BudgetEntry = {
   amount: number;
   category: string;
   subcategory?: string;
+  accountId?: string;
   date: string;
   recurrence?: "monthly";
   note?: string;
@@ -140,6 +141,10 @@ export type BudgetEntry = {
   createdAt: number;
   updatedAt: number;
 };
+
+export type BudgetAccount = { id: string; name: string };
+export type BudgetBank = { id: string; name: string; accounts: BudgetAccount[] };
+export type BudgetSettings = { banks: BudgetBank[]; updatedAt: number };
 
 export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };
 export type Recipe = {

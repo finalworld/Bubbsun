@@ -144,7 +144,7 @@ export type BudgetEntry = {
   updatedAt: number;
 };
 
-export type BudgetAccount = { id: string; name: string };
+export type BudgetAccount = { id: string; name: string; icon?: string };
 export type BudgetBank = { id: string; name: string; accounts: BudgetAccount[] };
 export type BudgetSettings = { banks: BudgetBank[]; updatedAt: number };
 

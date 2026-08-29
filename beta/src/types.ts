@@ -137,6 +137,8 @@ export type BudgetEntry = {
   toAccountId?: string;
   date: string;
   recurrence?: "monthly";
+  status?: "planned" | "paid";
+  paidAt?: number;
   note?: string;
   creatorId: string;
   creatorName: string;
@@ -144,9 +146,10 @@ export type BudgetEntry = {
   updatedAt: number;
 };
 
-export type BudgetAccount = { id: string; name: string; icon?: string };
+export type BudgetAccount = { id: string; name: string; icon?: string; openingBalance?: number; reconciledBalance?: number; reconciledAt?: number };
 export type BudgetBank = { id: string; name: string; accounts: BudgetAccount[] };
-export type BudgetSettings = { banks: BudgetBank[]; updatedAt: number };
+export type BudgetSavingsGoal = { id: string; name: string; target: number; saved: number; accountId?: string };
+export type BudgetSettings = { banks: BudgetBank[]; categoryBudgets?: Record<string,number>; savingsGoals?: BudgetSavingsGoal[]; updatedAt: number };
 
 export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };
 export type Recipe = {

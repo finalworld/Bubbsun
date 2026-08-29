@@ -87,6 +87,20 @@
   font-weight: 700;
 }
 
+.occasion .end-occasion {
+  white-space: nowrap;
+}
+
+@media (max-width: 699px) {
+  .occasion {
+    flex-wrap: wrap;
+  }
+
+  .occasion .end-occasion {
+    flex: 1 0 100%;
+  }
+}
+
 .quick-prices button.subtracted {
   background: #a6463f;
   color: white;

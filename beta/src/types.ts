@@ -153,7 +153,7 @@ export type BudgetEntry = {
 export type BudgetAccount = { id: string; name: string; icon?: string; openingBalance?: number; reconciledBalance?: number; reconciledAt?: number; linkedGroupId?: string; linkedAccountId?: string };
 export type BudgetBank = { id: string; name: string; accounts: BudgetAccount[] };
 export type BudgetSavingsGoal = { id: string; name: string; target: number; saved: number; accountId?: string };
-export type BudgetSettings = { banks: BudgetBank[]; categoryBudgets?: Record<string,number>; savingsGoals?: BudgetSavingsGoal[]; updatedAt: number };
+export type BudgetSettings = { banks: BudgetBank[]; defaultAccountId?: string; categoryBudgets?: Record<string,number>; savingsGoals?: BudgetSavingsGoal[]; updatedAt: number };
 
 export type RecipeIngredient = { id: string; amount: string; unit: string; name: string; isHeading?: boolean };
 export type Recipe = {

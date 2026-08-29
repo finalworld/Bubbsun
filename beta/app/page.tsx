@@ -220,7 +220,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.904";
+const bubbsunVersion = "0.905";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -4129,14 +4129,33 @@ function SettingsPage({
   );
 }
 
+function AboutSectionHeader({active,onPage,title,subtitle}:{active:"about"|"versions"|"help"|"support";onPage:(page:Page)=>void;title:string;subtitle:string}) {
+  const heroIcon=active==="versions"?<History/>:active==="help"?<BookOpen/>:active==="support"?<Heart/>:<Info/>;
+  return <>
+    <header className="about-hero">
+      <span className="about-hero-icon">{heroIcon}</span>
+      <div><small>BAKOM LISTORNA</small><h1>{title}</h1><p>{subtitle}.</p></div>
+      <strong>BUBBSUN <b>v{bubbsunVersion}</b></strong>
+    </header>
+    <nav className="about-tabs" aria-label="Om Bubbsun">
+      <button className={active==="about"?"selected":""} aria-current={active==="about"?"page":undefined} onClick={()=>onPage("about")}><Info/> OM OSS</button>
+      <button className={active==="versions"?"selected":""} aria-current={active==="versions"?"page":undefined} onClick={()=>onPage("versions")}><History/> NYHETER</button>
+      <button className={active==="help"?"selected":""} aria-current={active==="help"?"page":undefined} onClick={()=>onPage("help")}><BookOpen/> HJÄLP</button>
+      <button className={active==="support"?"selected":""} aria-current={active==="support"?"page":undefined} onClick={()=>onPage("support")}><Heart/> STÖD</button>
+    </nav>
+  </>;
+}
+
 function SupportPage({
   account,
   onActivate,
   onSave,
+  onPage,
 }: {
   account: Account;
   onActivate: () => Promise<void>;
   onSave: (values: Record<string, unknown>) => void;
+  onPage: (page: Page) => void;
 }) {
   const titles = [
       { id: "none", label: "Ingen" },
@@ -4162,14 +4181,8 @@ function SupportPage({
     }
   };
   return (
-    <section className="content subpage">
-      <div className="content-heading">
-        <span className="heading-emoji">♥</span>
-        <div>
-          <h1>STÖD BUBBSUN</h1>
-          <p>Supporter, Facebook och Bubbsun</p>
-        </div>
-      </div>
+    <section className="content subpage about-page about-section-page">
+      <AboutSectionHeader active="support" onPage={onPage} title="STÖD BUBBSUN" subtitle="Supporter, Facebook och extra mycket hjärta" />
       <div className="support-hero">
         <div className="love-medallion">♥</div>
         <i>♥</i>
@@ -4273,7 +4286,7 @@ function SupportPage({
   );
 }
 
-function HelpPage() {
+function HelpPage({ onPage }: { onPage: (page: Page) => void }) {
   const guides = [
     {
       icon: "🔒",
@@ -4452,14 +4465,8 @@ function HelpPage() {
     [guide.title, guide.intro, ...guide.steps].join(" ").toLocaleLowerCase("sv-SE").includes(query.trim().toLocaleLowerCase("sv-SE")),
   );
   return (
-    <section className="content subpage help-page">
-      <div className="content-heading">
-        <ListChecks />
-        <div>
-          <h1>HJÄLP & GUIDER</h1>
-          <p>Tryck, läs och gör ett steg i taget</p>
-        </div>
-      </div>
+    <section className="content subpage help-page about-page about-section-page">
+      <AboutSectionHeader active="help" onPage={onPage} title="HJÄLP & GUIDER" subtitle="Tryck, läs och gör ett steg i taget" />
       <div className="help-welcome">
         <span>👋</span>
         <div>
@@ -4689,16 +4696,10 @@ function FeedbackPage({
   );
 }
 
-function VersionsPage() {
+function VersionsPage({ onPage }: { onPage: (page: Page) => void }) {
   return (
-    <section className="content subpage">
-      <div className="content-heading">
-        <ListChecks />
-        <div>
-          <h1>VERSIONER & NYHETER</h1>
-          <p>Patch notes</p>
-        </div>
-      </div>
+    <section className="content subpage about-page about-section-page versions-page">
+      <AboutSectionHeader active="versions" onPage={onPage} title="VERSIONER & NYHETER" subtitle="Nytt, ändrat och lagat i Bubbsun" />
       <div className="version-card">
         <strong>BUBBSUN v{bubbsunVersion} · {bubbsunEdition.toLocaleUpperCase("sv-SE")}</strong>
         <p>
@@ -4735,16 +4736,7 @@ function AboutPage({ onPage }: { onPage: (page: Page) => void }) {
   ];
   return (
     <section className="content subpage about-page">
-      <header className="about-hero">
-        <span className="about-hero-icon"><Info/></span>
-        <div>
-          <small>BAKOM LISTORNA</small>
-          <h1>OM BUBBSUN</h1>
-          <p>En liten plats för stora och små delar av vardagen.</p>
-        </div>
-        <strong>BUBBSUN <b>v{bubbsunVersion}</b></strong>
-      </header>
-      <nav className="about-tabs" aria-label="Om Bubbsun"><button className="selected"><Info/> OM OSS</button><button onClick={()=>onPage("versions")}><History/> NYHETER</button><button onClick={()=>onPage("help")}><BookOpen/> HJÄLP</button><button onClick={()=>onPage("support")}><Heart/> STÖD</button></nav>
+      <AboutSectionHeader active="about" onPage={onPage} title="OM BUBBSUN" subtitle="En liten plats för stora och små delar av vardagen" />
       <div className="about-top">
         <article className="creator-card about-team">
           <header><small>MÄNNISKORNA & NOSEN</small><h2>TEAM BUBBSUN</h2></header>
@@ -7325,14 +7317,15 @@ function AuthenticatedApp() {
             })
           }
           onSave={(values) => void savePreferences(user.uid, values)}
+          onPage={navigate}
         />
       )}
-      {page === "help" && <HelpPage />}
+      {page === "help" && <HelpPage onPage={navigate} />}
       {page === "privacy" && <PrivacyPage />}
       {page === "feedback" && (
         <FeedbackPage uid={user.uid} language={language} themeId={themeId} />
       )}
-      {page === "versions" && <VersionsPage />}
+      {page === "versions" && <VersionsPage onPage={navigate} />}
       {page === "about" && <AboutPage onPage={navigate} />}
       {page === "admin" && (account.megaSuperBoss || account.founder) && (
         <AdminPage

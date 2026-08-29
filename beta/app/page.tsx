@@ -3271,8 +3271,8 @@ function CalendarPage({events,lists,privateMode,account,memberships,groups,membe
 }
 
 const mealTypes=["Frukost","Mellanmål","Lunch","Fika","Middag","Kvällsmål","Annat"];
-const budgetCategories={expense:["Mat","Boende","Räkningar","Transport","Shopping","Nöje","Barn","Husdjur","Hälsa","Resor","Presenter","Studier","Övrigt"],income:["Lön","Bidrag","Försäljning","Återbetalning","Bonus","Pension","Gåva","Övrigt"]} as const;
-const budgetCategoryIcons:Record<string,string>={Mat:"🛒",Boende:"🏠",Räkningar:"🧾",Transport:"🚗",Shopping:"🛍️",Nöje:"🎉",Barn:"🧸",Husdjur:"🐾",Hälsa:"❤️",Resor:"✈️",Presenter:"🎁",Studier:"🎓",Lön:"💰",Bidrag:"🤝",Försäljning:"🏷️",Återbetalning:"↩️",Bonus:"✨",Pension:"🌿",Gåva:"🎁",Övrigt:"•••"};
+const budgetCategories={expense:["Mat","Boende","Räkningar","Försäkring","Transport","Shopping","Nöje","Barn","Husdjur","Hälsa","Resor","Presenter","Studier","Övrigt"],income:["Lön","Bidrag","Försäljning","Återbetalning","Bonus","Pension","Gåva","Övrigt"]} as const;
+const budgetCategoryIcons:Record<string,string>={Mat:"🛒",Boende:"🏠",Räkningar:"🧾",Försäkring:"🛡️",Transport:"🚗",Shopping:"🛍️",Nöje:"🎉",Barn:"🧸",Husdjur:"🐾",Hälsa:"❤️",Resor:"✈️",Presenter:"🎁",Studier:"🎓",Lön:"💰",Bidrag:"🤝",Försäljning:"🏷️",Återbetalning:"↩️",Bonus:"✨",Pension:"🌿",Gåva:"🎁",Övrigt:"•••"};
 const budgetBillTypes=["Hyra/avgift","El","Mobil","Internet","Försäkring","Lån","Prenumeration","Annat"];
 const budgetMoney=(value:number)=>new Intl.NumberFormat("sv-SE",{style:"currency",currency:"SEK",minimumFractionDigits:0,maximumFractionDigits:2}).format(value);
 const budgetDecimalText=(value:string)=>/^-?\d*(?:[,.]\d{0,2})?$/.test(value)?value:null;

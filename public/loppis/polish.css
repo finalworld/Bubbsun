@@ -105,6 +105,10 @@
   margin: 0 auto;
 }
 
+.start-pass-actions {
+  grid-template-columns: 1fr;
+}
+
 .app-dialog .dialog-message {
   margin: 0 0 18px;
   color: #625d53;

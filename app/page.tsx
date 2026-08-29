@@ -211,7 +211,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.906";
+const bubbsunVersion = "0.907";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -4612,23 +4612,23 @@ function AboutPage({ onPage }: { onPage: (page: Page) => void }) {
     <section className="content subpage about-page">
       <AboutSectionHeader active="about" onPage={onPage} title="OM BUBBSUN" subtitle="En liten plats för stora och små delar av vardagen" />
       <div className="about-top">
-        <div className="creator-card">
+        <div className="creator-card about-team">
           <div>
-            <img src="/assets/android/about_man.png" />
+            <i className="about-avatar daniel"><img src="/assets/android/about_man.png" alt="Daniel Grandin" /></i>
             <span>
               <strong>Daniel Grandin</strong>
               <small>Utveckling & design</small>
             </span>
           </div>
           <div>
-            <img src="/assets/android/about_woman.png" />
+            <i className="about-avatar sanja"><img src="/assets/android/about_woman.png" alt="Sanja Kropsu" /></i>
             <span>
               <strong>Sanja Kropsu</strong>
               <small>Idéer, testning & feedback</small>
             </span>
           </div>
           <div>
-            <img src="/assets/android/frasse.png" />
+            <i className="about-avatar frasse"><img src="/assets/android/frasse.png" alt="Frasse" /></i>
             <span>
               <strong>Frasse</strong>
               <small>Support & kvalitetskontroll</small>

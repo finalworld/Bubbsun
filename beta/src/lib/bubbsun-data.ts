@@ -522,6 +522,9 @@ export async function setListFollowing(uid:string,groupId:string,listId:string,f
 export function watchFollowedNotes(uid:string,callback:(ids:Set<string>)=>void):Unsubscribe {
   return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback(new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))));
 }
+export function watchFollowedContent(uid:string,callback:(values:{lists:Set<string>;notes:Set<string>})=>void):Unsubscribe {
+  return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback({lists:new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind!=="note").map(item=>item.id)),notes:new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))}));
+}
 
 export async function setNoteFollowing(uid:string,groupId:string,noteId:string,following:boolean) {
   const ref=doc(db,"users",uid,"notificationPreferences",`note_${groupId}_${noteId}`);

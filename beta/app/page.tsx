@@ -126,6 +126,7 @@ import {
   watchAllPrivateLists,
   watchFollowedLists,
   watchFollowedNotes,
+  watchFollowedContent,
   watchGlobalPin,
   watchGlobalPins,
   watchGroup,
@@ -6308,6 +6309,7 @@ function AuthenticatedApp() {
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
   const previousPageRef = useRef<Page>(page);
+  const recipePublicationsReconciledFor=useRef("");
 
   useEffect(() => {
     listsHistoryRef.current = lists;
@@ -6453,17 +6455,18 @@ function AuthenticatedApp() {
       }),
     [],
   );
+  const needsLists=["lists","list","calendar","meal-planner","recipes","recipe-discover","notifications","stats"].includes(page),needsNotes=["notes","note","notifications"].includes(page),needsRecipes=["recipes","recipe-discover","meal-planner","notifications"].includes(page),needsMembers=["lists","list","notes","note","calendar","meal-planner","recipes","notifications","people","stats"].includes(page),needsFollowedContent=["lists","notes","notifications"].includes(page),needsListReadStates=["lists","notifications"].includes(page),isAdminPage=page==="admin";
   useEffect(()=>user&&databaseReady?watchDirectChats(user.uid,setDirectChats):undefined,[user,databaseReady]);
-  useEffect(()=>watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds),[members]);
-  useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
-  useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
+  useEffect(()=>needsMembers?watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds):undefined,[members,needsMembers]);
+  useEffect(()=>user&&databaseReady&&privateMode&&needsNotes?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady,privateMode,needsNotes]);
+  useEffect(()=>user&&databaseReady&&privateMode?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady,privateMode]);
   useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetEntries(user.uid,setPrivateBudgetEntries):undefined,[user,databaseReady,page]);
   useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetSettings(user.uid,setPrivateBudgetSettings):undefined,[user,databaseReady,page]);
   useEffect(()=>{if(!databaseReady||page!=="budget")return;const ids=memberships.map(item=>item.groupId),unsubs=ids.map(groupId=>watchBudgetSettings(groupId,settings=>setGroupBudgetSettings(old=>({...old,[groupId]:settings}))));setGroupBudgetSettings(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,memberships,page]);
   useEffect(()=>{if(!databaseReady||page!=="budget"||!privateMode)return;const membershipIds=new Set(memberships.map(item=>item.groupId)),ids=Array.from(new Set(privateBudgetSettings.banks.flatMap(bank=>bank.accounts.flatMap(item=>item.linkedGroupId&&membershipIds.has(item.linkedGroupId)?[item.linkedGroupId]:[])))),unsubs=ids.map(groupId=>watchBudgetEntries(groupId,entries=>setGroupBudgetEntries(old=>({...old,[groupId]:entries}))));setGroupBudgetEntries(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,page,privateMode,memberships,privateBudgetSettings]);
-  useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
-  useEffect(()=>user&&databaseReady?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady]);
-  useEffect(()=>{if(user&&databaseReady)void reconcileRecipePublications(user.uid).catch(error=>console.error("Kunde inte städa offentliga recept",error))},[user,databaseReady]);
+  useEffect(()=>user&&databaseReady&&privateMode&&needsRecipes?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady,privateMode,needsRecipes]);
+  useEffect(()=>user&&databaseReady&&["recipes","recipe-discover"].includes(page)?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady,page]);
+  useEffect(()=>{if(!user||!databaseReady||!["recipes","recipe-discover"].includes(page)||recipePublicationsReconciledFor.current===user.uid)return;recipePublicationsReconciledFor.current=user.uid;void reconcileRecipePublications(user.uid).catch(error=>{recipePublicationsReconciledFor.current="";console.error("Kunde inte städa offentliga recept",error)})},[user,databaseReady,page]);
   useEffect(
     () =>
       user && databaseReady ? watchAccount(user.uid, setAccount) : undefined,
@@ -6485,19 +6488,19 @@ function AuthenticatedApp() {
     };
   }, [user, databaseReady]);
   useEffect(() => {
-    if (!account?.megaSuperBoss && !account?.founder) {
+    if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) {
       setOnlineCount(0);
       return;
     }
     return watchOnlineCount(setOnlineCount);
-  }, [account?.megaSuperBoss, account?.founder]);
+  }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
   useEffect(() => {
-    if (!account?.megaSuperBoss && !account?.founder) {
+    if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) {
       setOnlineUserIds(new Set());
       return;
     }
     return watchOnlineUserIds(setOnlineUserIds);
-  }, [account?.megaSuperBoss, account?.founder]);
+  }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
   useEffect(
     () =>
       user && databaseReady
@@ -6507,10 +6510,10 @@ function AuthenticatedApp() {
   );
   useEffect(
     () =>
-      user && databaseReady
+      user && databaseReady && needsLists
         ? watchPrivateLists(user.uid, setPrivateLists)
         : undefined,
-    [user, databaseReady],
+    [user, databaseReady, needsLists],
   );
   useEffect(() => {
     const unsubs = memberships.map((m) =>
@@ -6525,24 +6528,13 @@ function AuthenticatedApp() {
     );
     return () => unsubs.forEach((x) => x());
   }, [memberships]);
-  useEffect(() => {
-    if (!account?.activeGroupId || privateMode) {
-      setMembers([]);
-      setLists([]);
-      return;
-    }
-    const a = watchGroupMembers(account.activeGroupId, setMembers),
-      b = watchLists(account.activeGroupId, setLists);
-    return () => {
-      a();
-      b();
-    };
-  }, [account?.activeGroupId, privateMode]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsMembers)return;return watchGroupMembers(account.activeGroupId,setMembers)},[account?.activeGroupId,privateMode,needsMembers]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsLists)return;return watchLists(account.activeGroupId,setLists)},[account?.activeGroupId,privateMode,needsLists]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsNotes)return;return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode,needsNotes]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode,page]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetSettings(account.activeGroupId,setBudgetSettings);},[account?.activeGroupId,privateMode,page]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}const groupId=account.activeGroupId;setRecipes([]);return watchRecipes(groupId,setRecipes);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsRecipes)return;return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode,needsRecipes]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(
@@ -6554,20 +6546,10 @@ function AuthenticatedApp() {
     () => (databaseReady ? watchGlobalPin(setGlobalPin) : undefined),
     [databaseReady],
   );
+  useEffect(()=>user&&databaseReady&&needsFollowedContent?watchFollowedContent(user.uid,values=>{setFollowedListIds(values.lists);setFollowedNoteIds(values.notes)}):undefined,[user,databaseReady,needsFollowedContent]);
   useEffect(
-    () =>
-      user && databaseReady
-        ? watchFollowedLists(user.uid, setFollowedListIds)
-        : undefined,
-    [user, databaseReady],
-  );
-  useEffect(
-    () => user&&databaseReady?watchFollowedNotes(user.uid,setFollowedNoteIds):undefined,
-    [user,databaseReady],
-  );
-  useEffect(
-    () => user&&databaseReady?watchListReadStates(user.uid,setListReadAt):undefined,
-    [user,databaseReady],
+    () => user&&databaseReady&&needsListReadStates?watchListReadStates(user.uid,setListReadAt):undefined,
+    [user,databaseReady,needsListReadStates],
   );
   useEffect(() => {
     if (!user || privateMode || !account?.activeGroupId) return;
@@ -6601,28 +6583,21 @@ function AuthenticatedApp() {
   },[notes,user,account?.activeGroupId,privateMode,followedNoteIds]);
   useEffect(() => {
     if (!account?.megaSuperBoss && !account?.founder) return;
-    const a = watchAllAccounts(setAllAccounts),
-      b = watchReports(setReports),
-      c = watchThemePalettes(setThemePalettes);
-    return () => { a(); b(); c(); };
+    return watchThemePalettes(setThemePalettes);
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(() => {
-    if (!account?.megaSuperBoss && !account?.founder) return;
-    const a = watchAllLists(setAllAdminLists),
-      b = watchAllPrivateLists(setAllAdminPrivateLists);
-    return () => {
-      a();
-      b();
-    };
-  }, [account?.megaSuperBoss, account?.founder]);
+    if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) return;
+    const a=watchAllAccounts(setAllAccounts),b=watchReports(setReports),c=watchAllLists(setAllAdminLists),d=watchAllPrivateLists(setAllAdminPrivateLists);
+    return()=>{a();b();c();d()};
+  }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
   useEffect(()=>{
-    if(!account?.megaSuperBoss&&!account?.founder)return;
+    if((!account?.megaSuperBoss&&!account?.founder)||!isAdminPage)return;
     return watchAdminUserCounts(allAccounts.map(item=>item.uid),setAdminUserCounts);
-  },[account?.megaSuperBoss,account?.founder,allAccounts.map(item=>item.uid).join("|")]);
+  },[account?.megaSuperBoss,account?.founder,isAdminPage,allAccounts.map(item=>item.uid).join("|")]);
   useEffect(()=>{
-    if(!account?.megaSuperBoss&&!account?.founder)return;
+    if((!account?.megaSuperBoss&&!account?.founder)||!isAdminPage)return;
     return watchTotalDirectMessageCount(setAdminMessageCount);
-  },[account?.megaSuperBoss,account?.founder]);
+  },[account?.megaSuperBoss,account?.founder,isAdminPage]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
     if (user && account && account.themeId !== themeId) {
@@ -7219,8 +7194,8 @@ function AuthenticatedApp() {
         onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "budget" ? setAddingBudget(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || page === "budget" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
-        onlineCount={account.megaSuperBoss || account.founder ? onlineCount : undefined}
-        reportCount={account.megaSuperBoss || account.founder ? reports.filter(report=>report.status==="new").length : undefined}
+        onlineCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? onlineCount : undefined}
+        reportCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
         chatUnreadCount={chatUnreadCount}
         onOpenAdmin={

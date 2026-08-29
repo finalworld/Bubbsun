@@ -3660,6 +3660,8 @@ body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button.selecte
   font-style:normal;
   filter:saturate(1.25) contrast(1.08);
 }
+.public-recipe-view .recipe-dietary-tags span>i svg{width:19px;height:19px;stroke-width:2.4;color:var(--theme-paper)}
+.recipe-dietary-filter button>span svg,.recipe-dietary-editor label>span svg,.recipe-dietary-tags span>i svg{display:block;width:20px;height:20px;stroke-width:2.3}
 .public-recipe-view .recipe-dietary-tags span>b{
   font:900 .82rem/1 system-ui,sans-serif;
 }

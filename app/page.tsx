@@ -13,6 +13,7 @@ import {
   BookOpen,
   Compass,
   CalendarDays,
+  Carrot,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -35,6 +36,8 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Milk,
+  MilkOff,
   MoveRight,
   NotebookPen,
   Palette,
@@ -43,6 +46,7 @@ import {
   Plus,
   Printer,
   Search,
+  Vegan,
   Share2,
   ArrowUpDown,
   Settings,
@@ -52,6 +56,7 @@ import {
   UserRound,
   Users,
   WalletCards,
+  WheatOff,
   Wrench,
   X,
 } from "lucide-react";
@@ -211,7 +216,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.916";
+const bubbsunVersion = "0.917";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -5287,11 +5292,11 @@ const recipeSubcategories: Record<string, string[]> = {
 };
 const recipeCategories=["",...Object.keys(recipeSubcategories)];
 const recipeDietaryOptions=[
-  {value:"vegetarian",label:"Vegetariskt",icon:"🥕"},
-  {value:"vegan",label:"Veganskt",icon:"🌱"},
-  {value:"lactose-free",label:"Laktosfritt",icon:"🥛"},
-  {value:"dairy-free",label:"Mjölkfritt",icon:"🚫🥛"},
-  {value:"gluten-free",label:"Glutenfritt",icon:"🌾"},
+  {value:"vegetarian",label:"Vegetariskt",icon:<Carrot/>},
+  {value:"vegan",label:"Veganskt",icon:<Vegan/>},
+  {value:"lactose-free",label:"Laktosfritt",icon:<Milk/>},
+  {value:"dairy-free",label:"Mjölkfritt",icon:<MilkOff/>},
+  {value:"gluten-free",label:"Glutenfritt",icon:<WheatOff/>},
 ] as const;
 const recipeCategoryLabel=(recipe:Recipe)=>[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"RECEPT";
 const recipeSlug=(title:string)=>title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sv-SE").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept";

@@ -226,7 +226,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.916";
+const bubbsunVersion = "0.917";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");

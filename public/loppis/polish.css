@@ -99,6 +99,12 @@
   width: min(500px, 100%);
 }
 
+.start-pass-screen {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
 .app-dialog .dialog-message {
   margin: 0 0 18px;
   color: #625d53;

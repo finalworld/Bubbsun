@@ -3901,4 +3901,5 @@ body .app-shell .modal .budget-status-picker>button.selected{border-color:var(--
 .about-page .about-team .about-avatar.daniel img{transform:scale(1.12)}
 .about-page .about-team .about-avatar.sanja img{transform:scale(1.11)}
 .about-page .about-team .about-avatar.frasse img{transform:scale(2.05);transform-origin:50% 18%}
-@media(max-width:430px){.about-page .about-team .about-avatar{width:52px;height:52px}}
+.about-page .about-team .about-avatar.frasse{position:static!important;right:auto!important;bottom:auto!important;width:62px!important;height:62px!important;border-radius:50%!important}
+@media(max-width:430px){.about-page .about-team .about-avatar,.about-page .about-team .about-avatar.frasse{width:52px!important;height:52px!important}}

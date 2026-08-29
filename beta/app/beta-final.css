@@ -3881,6 +3881,29 @@ body .app-shell .modal .budget-status-picker>button.selected{border-color:var(--
   .public-recipe-view .public-recipe-like-count svg{width:21px;height:21px}
   .public-recipe-view .public-recipe-like-count b{font-size:16px}
 }
+/* Public recipe actions — one light, borderless icon row in the top-right. */
+.public-recipe-view .recipe-view-tools>.public-recipe-like-count{
+  order:5;
+  grid-column:3;
+  min-width:0;
+  height:52px;
+  padding:0 4px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+@media(min-width:900px){
+  .public-recipe-view .recipe-view-tools{top:306px;right:28px}
+}
+@media(max-width:899px){
+  .public-recipe-view .recipe-view-tools>.public-recipe-like-count{
+    grid-column:3!important;
+    grid-row:1!important;
+    height:48px;
+    padding:0 3px;
+  }
+}
 /* Help centre — v0.904 */
 .help-search{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr) 42px;grid-template-areas:"icon label clear" "icon input clear";align-items:center;column-gap:10px;margin:0 0 24px;padding:12px 13px;border:2px solid var(--theme-outline);border-radius:16px;background:var(--theme-paper);color:var(--theme-text)}
 .help-search>svg{grid-area:icon;width:26px;height:26px;color:var(--theme-accent)}

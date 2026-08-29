@@ -8,7 +8,6 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
-  BarChart3,
   Bell,
   BookOpen,
   Compass,
@@ -1246,11 +1245,6 @@ function Drawer({
             <button onClick={() => onPage("people")}>
               <Users />
               <span>Användare & grupper</span>
-              <ChevronRight />
-            </button>
-            <button onClick={() => onPage("stats")}>
-              <BarChart3 />
-              <span>Statistik</span>
               <ChevronRight />
             </button>
             <button onClick={() => onPage("settings")}>
@@ -4016,135 +4010,6 @@ function PeoplePage({
   );
 }
 
-function StatsPage({
-  lists,
-  members,
-  groupName,
-}: {
-  lists: BubbsunList[];
-  members: Membership[];
-  groupName: string;
-}) {
-  const items = lists.flatMap((x) => x.items),
-    completed = items.filter((x) => x.completed),
-    likes = items.reduce((n, x) => n + x.likedBy.length, 0);
-  const top = [...lists].sort((a, b) => b.items.length - a.items.length)[0],
-    mostDone = [...lists].sort(
-      (a, b) =>
-        b.items.filter((x) => x.completed).length -
-        a.items.filter((x) => x.completed).length,
-    )[0];
-  const avg = lists.length
-      ? Math.round((items.length / lists.length) * 10) / 10
-      : 0,
-    completion = items.length
-      ? Math.round((completed.length / items.length) * 100)
-      : 0,
-    open = items.length - completed.length;
-  return (
-    <section className="content subpage">
-      <div className="content-heading">
-        <BarChart3 />
-        <div>
-          <h1>STATISTIK</h1>
-          <p>{groupName}</p>
-        </div>
-      </div>
-      <div className="stats-grid">
-        <div>
-          <ListChecks />
-          <small>LISTOR</small>
-          <strong>{lists.length}</strong>
-        </div>
-        <div>
-          <CirclePlus />
-          <small>POSTER</small>
-          <strong>{items.length}</strong>
-        </div>
-        <div>
-          <Check />
-          <small>KLARA</small>
-          <strong>{completed.length}</strong>
-        </div>
-        <div>
-          <span className="stats-flame">🔥</span>
-          <small>ELDAR</small>
-          <strong>{likes}</strong>
-        </div>
-      </div>
-      <div className="stats-fun-grid">
-        <div>
-          <strong>{open}</strong>
-          <small>KVAR JUST NU</small>
-        </div>
-        <div>
-          <strong>{avg}</strong>
-          <small>POSTER PER LISTA</small>
-        </div>
-        <div>
-          <strong>{lists.filter((x) => x.items.length === 0).length}</strong>
-          <small>TOMMA LISTOR</small>
-        </div>
-        <div>
-          <strong>{items.filter((x) => x.quantity.trim()).length}</strong>
-          <small>MED MÄNGD</small>
-        </div>
-      </div>
-      <div className="bar-card">
-        <h2>KLART I PROCENT</h2>
-        <div>
-          <i style={{ width: `${completion}%` }} />
-        </div>
-        <strong>{completion}%</strong>
-      </div>
-      <div className="feature-card">
-        <span>🏆</span>
-        <div>
-          <small>MEST ANVÄNDA LISTA</small>
-          <strong>{top?.name || "Ingen ännu"}</strong>
-          <p>{top?.items.length || 0} poster</p>
-        </div>
-      </div>
-      <div className="feature-card">
-        <span>👥</span>
-        <div>
-          <small>AKTIVA I GRUPPEN</small>
-          <strong>{members.length}</strong>
-          <p>familjemedlemmar</p>
-        </div>
-      </div>
-      <div className="feature-card">
-        <span>✅</span>
-        <div>
-          <small>FLEST AVBOCKNINGAR</small>
-          <strong>{mostDone?.name || "Ingen ännu"}</strong>
-          <p>
-            {mostDone?.items.filter((x) => x.completed).length || 0} klara
-            poster
-          </p>
-        </div>
-      </div>
-      <div className="stats-cheer">
-        <span>{completion >= 75 ? "🏆" : completion >= 40 ? "✨" : "🌱"}</span>
-        <div>
-          <strong>
-            {completion >= 75
-              ? "Riktigt listproffs!"
-              : completion >= 40
-                ? "Bra fart i listorna!"
-                : "Allt börjar med en post."}
-          </strong>
-          <p>
-            {likes
-              ? `${likes} tummar har delats ut i ${groupName}.`
-              : "Här finns plats för de första tummarna."}
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function SettingsPage({
   account,
   themeId,
@@ -6261,7 +6126,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","notifications","chat","people","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -6457,7 +6322,7 @@ function AuthenticatedApp() {
       }),
     [],
   );
-  const needsLists=["lists","list","calendar","meal-planner","recipes","recipe-discover","notifications","stats"].includes(page),needsNotes=["notes","note","notifications"].includes(page),needsRecipes=["recipes","recipe-discover","meal-planner","notifications"].includes(page),needsMembers=["lists","list","notes","note","calendar","meal-planner","recipes","notifications","people","stats"].includes(page),needsFollowedContent=["lists","notes","notifications"].includes(page),needsListReadStates=["lists","notifications"].includes(page),isAdminPage=page==="admin";
+  const needsLists=["lists","list","calendar","meal-planner","recipes","recipe-discover","notifications"].includes(page),needsNotes=["notes","note","notifications"].includes(page),needsRecipes=["recipes","recipe-discover","meal-planner","notifications"].includes(page),needsMembers=["lists","list","notes","note","calendar","meal-planner","recipes","notifications","people"].includes(page),needsFollowedContent=["lists","notes","notifications"].includes(page),needsListReadStates=["lists","notifications"].includes(page),isAdminPage=page==="admin";
   useEffect(()=>user&&databaseReady?watchDirectChats(user.uid,setDirectChats):undefined,[user,databaseReady]);
   useEffect(()=>needsMembers?watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds):undefined,[members,needsMembers]);
   useEffect(()=>user&&databaseReady&&privateMode&&needsNotes?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady,privateMode,needsNotes]);
@@ -7381,13 +7246,6 @@ function AuthenticatedApp() {
           language={language}
           onlineUserIds={groupOnlineUserIds}
           onSelectGroup={async id=>{if(id===account.activeGroupId)return;await switchGroup(user.uid,id);setPrivateMode(false)}}
-        />
-      )}
-      {page === "stats" && (
-        <StatsPage
-          lists={visibleLists}
-          members={members}
-          groupName={groupName}
         />
       )}
       {page === "settings" && (

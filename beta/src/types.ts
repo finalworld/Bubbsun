@@ -137,6 +137,7 @@ export type BudgetEntry = {
   toAccountId?: string;
   date: string;
   recurrence?: "monthly" | "weekly";
+  businessDayAdjustment?: "previous" | "next";
   status?: "planned" | "paid";
   autoPay?: boolean;
   paidAt?: number;

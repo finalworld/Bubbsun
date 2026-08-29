@@ -22,10 +22,13 @@ import {
   Eye,
   Funnel,
   Flag,
+  Heart,
   Home,
   History,
   ImagePlus,
+  Info,
   ListChecks,
+  Lightbulb,
   Link2,
   Unlink2,
   LockKeyhole,
@@ -42,6 +45,7 @@ import {
   Plus,
   Printer,
   Search,
+  Bug,
   Share2,
   ArrowUpDown,
   ArrowLeftRight,
@@ -4671,63 +4675,65 @@ function VersionsPage() {
 }
 
 function AboutPage({ onPage }: { onPage: (page: Page) => void }) {
+  const links=[
+    {page:"feedback" as Page,label:"Rapportera problem",description:"Något som inte fungerar? Berätta för oss.",icon:<Bug/>,tone:"berry"},
+    {page:"feedback" as Page,label:"Skicka förslag",description:"Hjälp Bubbsun att bli ännu mysigare.",icon:<Lightbulb/>,tone:"sun"},
+    {page:"versions" as Page,label:"Versioner & nyheter",description:"Se vad som är nytt och vad som har förbättrats.",icon:<History/>,tone:"green"},
+    {page:"help" as Page,label:"Hjälp & guider",description:"Hitta svar och lär dig funktionerna.",icon:<BookOpen/>,tone:"blue"},
+    {page:"privacy" as Page,label:"Integritet & molndata",description:"Så hanterar Bubbsun dina uppgifter.",icon:<LockKeyhole/>,tone:"plum"},
+    {page:"support" as Page,label:"Stöd Bubbsun",description:"Ge lite kärlek till projektets fortsättning.",icon:<Heart/>,tone:"heart"},
+  ];
   return (
-    <section className="content subpage">
-      <div className="content-heading">
-        <span className="heading-emoji">ⓘ</span>
+    <section className="content subpage about-page">
+      <header className="about-hero">
+        <span className="about-hero-icon"><Info/></span>
         <div>
+          <small>BAKOM LISTORNA</small>
           <h1>OM BUBBSUN</h1>
-          <p>Version, skapare och kontakt</p>
+          <p>En liten plats för stora och små delar av vardagen.</p>
         </div>
-      </div>
+        <strong>BUBBSUN <b>v0.901</b></strong>
+      </header>
+      <nav className="about-tabs" aria-label="Om Bubbsun"><button className="selected"><Info/> OM OSS</button><button onClick={()=>onPage("versions")}><History/> NYHETER</button><button onClick={()=>onPage("help")}><BookOpen/> HJÄLP</button><button onClick={()=>onPage("support")}><Heart/> STÖD</button></nav>
       <div className="about-top">
-        <div className="creator-card">
+        <article className="creator-card about-team">
+          <header><small>MÄNNISKORNA & NOSEN</small><h2>TEAM BUBBSUN</h2></header>
           <div>
-            <img src="/assets/android/about_man.png" />
+            <img src="/assets/android/about_man.png" alt="Daniel Grandin" />
             <span>
               <strong>Daniel Grandin</strong>
               <small>Utveckling & design</small>
             </span>
           </div>
           <div>
-            <img src="/assets/android/about_woman.png" />
+            <img src="/assets/android/about_woman.png" alt="Sanja Kropsu" />
             <span>
               <strong>Sanja Kropsu</strong>
               <small>Idéer, testning & feedback</small>
             </span>
           </div>
           <div>
-            <img src="/assets/android/frasse.png" />
+            <img src="/assets/android/frasse.png" alt="Frasse" />
             <span>
               <strong>Frasse</strong>
               <small>Support & kvalitetskontroll</small>
             </span>
           </div>
-        </div>
-        <div className="info-card about-story">
-          <span>✦</span>
+        </article>
+        <article className="info-card about-story">
+          <span><Heart/></span>
+          <small>VARFÖR BUBBSUN FINNS</small>
           <h2>LISTOR MED HJÄRTA</h2>
           <p>
             Bubbsun föddes ur vardagens små listor – och växte till en varm
             plats där familjen kan hjälpas åt, minnas mer och glömma mindre.
           </p>
           <strong>Enkelt. Personligt. Tillsammans.</strong>
-        </div>
+          <div><i>✦</i><span>BYGGT MED OMTANKE</span><i>✦</i></div>
+        </article>
       </div>
-      <div className="about-links">
-        <button className="problem" onClick={() => onPage("feedback")}>
-          🐞 RAPPORTERA PROBLEM
-        </button>
-        <button onClick={() => onPage("feedback")}>💡 SKICKA FÖRSLAG</button>
-        <button onClick={() => onPage("versions")}>
-          📋 VERSIONER & NYHETER
-        </button>
-        <button onClick={() => onPage("help")}>ⓘ HJÄLP & GUIDER</button>
-        <button onClick={() => onPage("privacy")}>
-          🔒 INTEGRITET & MOLNDATA
-        </button>
-        <button onClick={() => onPage("support")}>♥ STÖD BUBBSUN</button>
-      </div>
+      <section className="about-explore"><header><small>MER OM BUBBSUN</small><h2>HITTA RÄTT</h2></header><div className="about-links">{links.map(link=><button className={link.tone} key={link.label} onClick={()=>onPage(link.page)}><i>{link.icon}</i><span><strong>{link.label}</strong><small>{link.description}</small></span><ChevronRight/></button>)}</div></section>
+      <footer className="about-signoff"><span>✦</span><p>Skapad i Sverige för röriga, fina och alldeles vanliga liv.</p><span>✦</span></footer>
     </section>
   );
 }

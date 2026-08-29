@@ -220,7 +220,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.905";
+const bubbsunVersion = "0.906";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -4697,30 +4697,24 @@ function FeedbackPage({
 }
 
 function VersionsPage({ onPage }: { onPage: (page: Page) => void }) {
+  const milestones=[
+    {version:bubbsunVersion,eyebrow:"JUST NU",title:"Bubbsun blir tydligare",icon:"✨",tone:"current",text:"Budgeten har blivit smartare, receptsidorna finare och Om, Nyheter, Hjälp och Stöd hör nu tydligt ihop.",points:["Enklare hjälp med sökning","Tydligare delade budgetkonton","Förfinade recept och gemensamma informationsflikar"]},
+    {version:"0.900",eyebrow:"ALMOST DONE EDITION",title:"Recepten flyttar in",icon:"🥘",tone:"berry",text:"Bubbsun växte från listor till en större plats för vardagen.",points:["Kokbok, receptsökning och offentliga recept","Kostmärkningar, utskrift och ingredienslistor","Matplanering och direktmeddelanden"]},
+    {version:"0.800",eyebrow:"VARDAGEN VÄXER",title:"Fler saker än listor",icon:"📒",tone:"blue",text:"Gränssnittet byggdes om och nya vardagsverktyg fick egna tydliga platser.",points:["Anteckningar och nya specialiserade listor","Snabbare gruppbyte och tydligare medlemsvyer","Stabilare sparning, fler ikoner och bättre mobilstöd"]},
+    {version:"0.700",eyebrow:"WEB EDITION",title:"Samma Bubbsun överallt",icon:"🌐",tone:"green",text:"Android-appen blev ett lätt skal runt webbappen.",points:["Samma listor på Android, dator och iPhone","Webbuppdateringar utan ny appinstallation","Google-inloggning och Firebase-synkning"]},
+    {version:"0.600",eyebrow:"FAMILY EXPANSION",title:"Riktiga grupper",icon:"👨‍👩‍👧‍👦",tone:"sun",text:"Bubbsun fick ett helt gruppsystem för familjer, vänner och andra små gäng.",points:["Flera grupper per konto","Ägare, bossar, medlemmar och ansökningar","Följning, notiser och gruppadministration"]},
+    {version:"0.500",eyebrow:"TOGETHER EDITION",title:"Bubbsun tillsammans",icon:"🤝",tone:"plum",text:"Den första stora molnversionen gjorde listorna gemensamma på riktigt.",points:["Google-inloggning och realtidssynkning","Privata och delade listor","Gruppkod, roller och säker flytt av gamla listor"]},
+  ];
   return (
     <section className="content subpage about-page about-section-page versions-page">
       <AboutSectionHeader active="versions" onPage={onPage} title="VERSIONER & NYHETER" subtitle="Nytt, ändrat och lagat i Bubbsun" />
-      <div className="version-card">
-        <strong>BUBBSUN v{bubbsunVersion} · {bubbsunEdition.toLocaleUpperCase("sv-SE")}</strong>
-        <p>
-          Smartare budgetkonton, färre onödiga dataläsningar och en helt
-          omarbetad Om Bubbsun-sida.
-        </p>
-      </div>
-      {["0.604", "0.603", "0.602", "0.601", "0.600", "0.501", "0.500"].map(
-        (v) => (
-          <a
-            className="version-link"
-            key={v}
-            href={`https://github.com/finalworld/Bubbsun/releases/tag/v${v}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Bubbsun v{v}
-            <ChevronRight />
-          </a>
-        ),
-      )}
+      <section className="version-intro"><span>✦</span><div><small>BUBBSUNS RESA</small><h2>FRÅN EN LISTA TILL HELA VARDAGEN</h2><p>Här är de stora stegen. Små rättningar mellan hundratalen är samlade längre ner.</p></div></section>
+      <div className="version-timeline">{milestones.map((item,index)=><article className={`version-milestone ${item.tone}`} key={item.version}>
+        <div className="version-rail"><i>{item.icon}</i>{index< milestones.length-1&&<span/>}</div>
+        <div className="version-milestone-card"><header><span><small>{item.eyebrow}</small><strong>v{item.version}</strong></span>{index===0&&<b>NYAST</b>}</header><h2>{item.title}</h2><p>{item.text}</p><ul>{item.points.map(point=><li key={point}><Check/>{point}</li>)}</ul></div>
+      </article>)}</div>
+      <section className="version-archive"><span>🗃️</span><div><small>DEN TIDIGA TIDEN</small><h2>0.400 OCH ÄLDRE</h2><p>Den nuvarande versionshistoriken börjar vid 0.461. Äldre milstolpar finns inte kvar tillräckligt tydligt, så här hittar vi inte på något.</p></div></section>
+      <section className="version-small-releases"><header><small>ALLA SMÅ STEG</small><h2>MINDRE VERSIONER</h2></header><div>{["0.702","0.701","0.700","0.604","0.603","0.602","0.601","0.600","0.501","0.500"].map(v=><a className="version-link" key={v} href={`https://github.com/finalworld/Bubbsun/releases/tag/v${v}`} target="_blank" rel="noreferrer"><span>Bubbsun v{v}<small>Öppna versionsinformationen</small></span><ChevronRight/></a>)}</div></section>
     </section>
   );
 }

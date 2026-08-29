@@ -6455,9 +6455,10 @@ function AuthenticatedApp() {
   useEffect(()=>watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds),[members]);
   useEffect(()=>user&&databaseReady?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady]);
-  useEffect(()=>user&&databaseReady?watchPrivateBudgetEntries(user.uid,setPrivateBudgetEntries):undefined,[user,databaseReady]);
-  useEffect(()=>user&&databaseReady?watchPrivateBudgetSettings(user.uid,setPrivateBudgetSettings):undefined,[user,databaseReady]);
-  useEffect(()=>{if(!databaseReady)return;const ids=memberships.map(item=>item.groupId),unsubs=ids.flatMap(groupId=>[watchBudgetEntries(groupId,entries=>setGroupBudgetEntries(old=>({...old,[groupId]:entries}))),watchBudgetSettings(groupId,settings=>setGroupBudgetSettings(old=>({...old,[groupId]:settings})))]);setGroupBudgetEntries(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));setGroupBudgetSettings(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,memberships]);
+  useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetEntries(user.uid,setPrivateBudgetEntries):undefined,[user,databaseReady,page]);
+  useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetSettings(user.uid,setPrivateBudgetSettings):undefined,[user,databaseReady,page]);
+  useEffect(()=>{if(!databaseReady||page!=="budget")return;const ids=memberships.map(item=>item.groupId),unsubs=ids.map(groupId=>watchBudgetSettings(groupId,settings=>setGroupBudgetSettings(old=>({...old,[groupId]:settings}))));setGroupBudgetSettings(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,memberships,page]);
+  useEffect(()=>{if(!databaseReady||page!=="budget"||!privateMode)return;const membershipIds=new Set(memberships.map(item=>item.groupId)),ids=Array.from(new Set(privateBudgetSettings.banks.flatMap(bank=>bank.accounts.flatMap(item=>item.linkedGroupId&&membershipIds.has(item.linkedGroupId)?[item.linkedGroupId]:[])))),unsubs=ids.map(groupId=>watchBudgetEntries(groupId,entries=>setGroupBudgetEntries(old=>({...old,[groupId]:entries}))));setGroupBudgetEntries(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,page,privateMode,memberships,privateBudgetSettings]);
   useEffect(()=>user&&databaseReady?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady]);
   useEffect(()=>user&&databaseReady?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady]);
   useEffect(()=>{if(user&&databaseReady)void reconcileRecipePublications(user.uid).catch(error=>console.error("Kunde inte städa offentliga recept",error))},[user,databaseReady]);
@@ -6537,8 +6538,8 @@ function AuthenticatedApp() {
   }, [account?.activeGroupId, privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setNotes([]);return;}return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setBudgetEntries([]);return;}return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setBudgetSettings({banks:[],categoryBudgets:{},savingsGoals:[],updatedAt:0});return;}return watchBudgetSettings(account.activeGroupId,setBudgetSettings);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode,page]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetSettings(account.activeGroupId,setBudgetSettings);},[account?.activeGroupId,privateMode,page]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode){setRecipes([]);return;}const groupId=account.activeGroupId;setRecipes([]);return watchRecipes(groupId,setRecipes);},[account?.activeGroupId,privateMode]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)

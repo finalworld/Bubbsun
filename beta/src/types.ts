@@ -135,6 +135,7 @@ export type BudgetEntry = {
   accountId?: string;
   fromAccountId?: string;
   toAccountId?: string;
+  externalRecipient?: string;
   date: string;
   recurrence?: "monthly" | "weekly";
   businessDayAdjustment?: "previous" | "next";

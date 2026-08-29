@@ -79,6 +79,14 @@
   transform: translateY(1px) scale(0.99);
 }
 
+.start-cash-note {
+  display: block;
+  margin-top: 3px;
+  color: #777166;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
 .quick-prices button.subtracted {
   background: #a6463f;
   color: white;
@@ -613,6 +621,11 @@ img.avatar {
 
   .stat strong {
     font-size: 17pt;
+  }
+
+  .start-cash-note {
+    margin-top: 1px;
+    font-size: 7pt;
   }
 
   .seller-totals {

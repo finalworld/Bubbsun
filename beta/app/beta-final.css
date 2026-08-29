@@ -3879,3 +3879,12 @@ body .app-shell .modal .budget-status-picker>button.selected{border-color:var(--
   .public-recipe-view .public-recipe-like-count svg{width:21px;height:21px}
   .public-recipe-view .public-recipe-like-count b{font-size:16px}
 }
+/* Help centre — v0.904 */
+.help-search{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr) 42px;grid-template-areas:"icon label clear" "icon input clear";align-items:center;column-gap:10px;margin:0 0 24px;padding:12px 13px;border:2px solid var(--theme-outline);border-radius:16px;background:var(--theme-paper);color:var(--theme-text)}
+.help-search>svg{grid-area:icon;width:26px;height:26px;color:var(--theme-accent)}
+.help-search>span{grid-area:label;font:900 11px/1.2 Arial,sans-serif;letter-spacing:1px;color:var(--theme-accent);text-transform:uppercase}
+.help-search>input{grid-area:input;width:100%;min-width:0;padding:3px 0 0!important;border:0!important;background:transparent!important;box-shadow:none!important;font:16px/1.35 Arial,sans-serif;color:var(--theme-text)}
+.help-search>input:focus{outline:0}.help-search:focus-within{border-color:var(--theme-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--theme-accent) 16%,transparent)}
+.help-search>button{grid-area:clear;width:38px;height:38px;padding:8px;border:0;border-radius:50%;background:color-mix(in srgb,var(--theme-accent) 12%,var(--theme-panel));color:var(--theme-accent)}
+.help-search>button svg{width:20px;height:20px}.help-empty{display:grid;justify-items:center;gap:7px;padding:28px 18px;border:2px dashed var(--theme-outline);border-radius:16px;background:var(--theme-panel);text-align:center}.help-empty>span{font-size:38px}.help-empty>strong{font-size:18px}.help-empty>small{max-width:440px;font:14px/1.45 Arial,sans-serif}
+@media(max-width:620px){.help-search{grid-template-columns:24px minmax(0,1fr) 38px;padding:10px}.help-search>svg{width:22px;height:22px}.help-search>input{font-size:14px}.help-all-title{font-size:15px}}

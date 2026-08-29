@@ -220,7 +220,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.903";
+const bubbsunVersion = "0.904";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -4409,15 +4409,55 @@ function HelpPage() {
         "Mina listor är privata. Gruppens listor syns bara för gruppens medlemmar.",
       ],
     },
+    {
+      icon: "📒", title: "Skriv en anteckning", intro: "Spara text som du vill komma ihåg.",
+      steps: ["Öppna menyn och tryck på Anteckningar.", "Välj Privat om bara du ska läsa. Välj en grupp om ni ska läsa tillsammans.", "Tryck på plus, skriv en rubrik och din text.", "Tryck på Spara. Du kan öppna anteckningen igen och ändra den när du vill."],
+    },
+    {
+      icon: "📅", title: "Lägg något i kalendern", intro: "Kom ihåg en dag, tid eller händelse.",
+      steps: ["Öppna Kalender i menyn.", "Tryck på plus och skriv vad som ska hända.", "Välj datum. Lägg till tid och plats om du vill.", "Välj Privat eller en grupp och tryck på Spara."],
+    },
+    {
+      icon: "🍽️", title: "Planera mat för veckan", intro: "Bestäm vad ni ska äta, en dag i taget.",
+      steps: ["Öppna Matplanering i menyn.", "Välj veckan du vill planera.", "Tryck på en dag och skriv maten eller välj ett sparat recept.", "Ändringen sparas. I en grupp ser alla samma matplanering."],
+    },
+    {
+      icon: "🥘", title: "Spara och dela ett recept", intro: "Ha ingredienser och steg på samma plats.",
+      steps: ["Öppna Recept och tryck på plus.", "Skriv namn, ingredienser och hur man gör. Lägg till en bild om du vill.", "Välj kostmärkning, till exempel laktosfritt, när det passar.", "Spara receptet. Välj Dela om andra ska kunna öppna receptlänken."],
+    },
+    {
+      icon: "💰", title: "Kom igång med budgeten", intro: "Berätta vilka konton och pengar du har.",
+      steps: ["Öppna Budget och sedan budgetens inställningar.", "Lägg till din bank och dina konton. Saldot när du börjar skrivs bara en gång.", "Lägg till en inkomst när pengar kommer in och en utgift när pengar går ut.", "En överföring flyttar pengar mellan dina konton. Den är inte en ny inkomst eller utgift."],
+    },
+    {
+      icon: "🔁", title: "Pengar som återkommer", intro: "Bra för lön, hyra och veckovisa överföringar.",
+      steps: ["Skapa en inkomst, utgift eller överföring.", "Välj Återkommande och hur ofta den ska hända.", "Välj Planerad om du vill godkänna den själv. Välj automatisk om Bubbsun ska registrera den på dagen.", "Om en månad saknar dag 31 används månadens sista dag. För inkomster kan du välja närmaste arbetsdag."],
+    },
+    {
+      icon: "🔗", title: "Dela ett enda konto med en grupp", intro: "Samma konto kan synas privat och i gruppen.",
+      steps: ["Öppna budgetens kontoinställningar.", "Välj just kontot som ska delas och länka det till gruppen.", "Det är fortfarande ett enda konto. Saldo och poster ändras på båda platserna.", "Tryck på den röda brutna länken vid kontot när du vill sluta dela det."],
+    },
+    {
+      icon: "💬", title: "Skicka ett meddelande", intro: "Prata med en annan person i Bubbsun.",
+      steps: ["Öppna Meddelanden i menyn.", "Välj personen du vill skriva till.", "Skriv meddelandet och tryck på skicka.", "En siffra vid klockan visar när något nytt väntar på dig."],
+    },
+    {
+      icon: "🧹", title: "Rensa eller börja om", intro: "Gör detta bara när du verkligen vill ta bort något.",
+      steps: ["Öppna Inställningar och läs noga vad knappen tar bort.", "Nollställ kontopengar tar bort saldon och budgetposter, men låter övrigt innehåll vara kvar.", "Återställ allt tar bort mycket mer och frågar två gånger innan något händer.", "Det som har raderats kan normalt inte hämtas tillbaka."],
+    },
   ];
   const [open, setOpen] = useState("");
+  const [query, setQuery] = useState("");
+  const visibleGuides = guides.filter((guide) =>
+    [guide.title, guide.intro, ...guide.steps].join(" ").toLocaleLowerCase("sv-SE").includes(query.trim().toLocaleLowerCase("sv-SE")),
+  );
   return (
     <section className="content subpage help-page">
       <div className="content-heading">
         <ListChecks />
         <div>
           <h1>HJÄLP & GUIDER</h1>
-          <p>Enkla förklaringar, steg för steg</p>
+          <p>Tryck, läs och gör ett steg i taget</p>
         </div>
       </div>
       <div className="help-welcome">
@@ -4425,8 +4465,8 @@ function HelpPage() {
         <div>
           <h2>Välkommen till Bubbsun!</h2>
           <p>
-            Här finns hjälp utan krångliga ord. Tryck på en fråga nedan för att
-            läsa svaret.
+            Här förklaras hela Bubbsun med korta ord. Sök efter det du vill göra
+            eller tryck på en fråga.
           </p>
         </div>
       </div>
@@ -4447,9 +4487,15 @@ function HelpPage() {
           </li>
         </ol>
       </div>
+      <label className="help-search">
+        <Search aria-hidden="true" />
+        <span>Sök efter hjälp</span>
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Till exempel budget, recept eller grupp" />
+        {query && <button type="button" aria-label="Töm sökningen" onClick={() => setQuery("")}><X /></button>}
+      </label>
       <h2 className="help-all-title">ALLA GUIDER</h2>
       <div className="guide-list help-guide-list">
-        {guides.map((guide) => {
+        {visibleGuides.map((guide) => {
           const active = open === guide.title;
           return (
             <button
@@ -4480,6 +4526,7 @@ function HelpPage() {
             </button>
           );
         })}
+        {visibleGuides.length === 0 && <div className="help-empty"><span>🤔</span><strong>Jag hittade ingen sådan hjälp</strong><small>Prova ett enklare ord, till exempel ”pengar”, ”lista” eller ”recept”.</small></div>}
       </div>
       <div className="help-last-note">
         <strong>Hittar du inte svaret?</strong>

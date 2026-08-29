@@ -138,6 +138,7 @@ export type BudgetEntry = {
   date: string;
   recurrence?: "monthly";
   status?: "planned" | "paid";
+  autoPay?: boolean;
   paidAt?: number;
   note?: string;
   creatorId: string;

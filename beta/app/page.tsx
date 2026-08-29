@@ -220,6 +220,9 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
+const bubbsunVersion = "0.902";
+const bubbsunEdition = "Almost Done Edition";
+
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
 
 const iconSources: Record<string, string> = {
@@ -1316,7 +1319,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.901 · Almost Done Edition
+            Bubbsun v{bubbsunVersion} · {bubbsunEdition}
           </small>
         </div>
       </aside>
@@ -4650,10 +4653,10 @@ function VersionsPage() {
         </div>
       </div>
       <div className="version-card">
-        <strong>WEBBAPP · FÖRHANDSVISNING</strong>
+        <strong>BUBBSUN v{bubbsunVersion} · {bubbsunEdition.toLocaleUpperCase("sv-SE")}</strong>
         <p>
-          Ny responsiv Bubbsun-webbapp med delade och privata listor,
-          Google-inloggning, teman och gruppsynkning.
+          Smartare budgetkonton, färre onödiga dataläsningar och en helt
+          omarbetad Om Bubbsun-sida.
         </p>
       </div>
       {["0.604", "0.603", "0.602", "0.601", "0.600", "0.501", "0.500"].map(
@@ -4692,7 +4695,7 @@ function AboutPage({ onPage }: { onPage: (page: Page) => void }) {
           <h1>OM BUBBSUN</h1>
           <p>En liten plats för stora och små delar av vardagen.</p>
         </div>
-        <strong>BUBBSUN <b>v0.901</b></strong>
+        <strong>BUBBSUN <b>v{bubbsunVersion}</b></strong>
       </header>
       <nav className="about-tabs" aria-label="Om Bubbsun"><button className="selected"><Info/> OM OSS</button><button onClick={()=>onPage("versions")}><History/> NYHETER</button><button onClick={()=>onPage("help")}><BookOpen/> HJÄLP</button><button onClick={()=>onPage("support")}><Heart/> STÖD</button></nav>
       <div className="about-top">

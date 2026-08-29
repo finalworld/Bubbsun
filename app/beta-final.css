@@ -3619,3 +3619,53 @@ body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button.selecte
   body .app-shell .calendar-page .calendar-week>section>h2{position:relative!important;box-sizing:border-box!important;align-items:center!important;justify-content:flex-start!important;padding:52px 4px 8px!important}
   body .app-shell .calendar-page .calendar-week>section>h2>button.calendar-week-mobile-add{position:absolute!important;inset:9px auto auto 50%!important;left:50%!important;top:9px!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;transform:translateX(-50%)!important;z-index:3!important}
 }
+/* Shared recipe presentation — v0.903 */
+.public-recipe-view{
+  overflow:hidden;
+  border-radius:34px;
+}
+.public-recipe-view .public-recipe-like-count{
+  width:auto;
+  min-width:72px;
+  padding:0 12px;
+  gap:8px;
+  border-radius:14px;
+}
+.public-recipe-view .public-recipe-like-count svg{
+  width:24px;
+  height:24px;
+  stroke-width:2.5;
+}
+.public-recipe-view .public-recipe-like-count b{
+  min-width:0;
+  height:auto;
+  padding:0;
+  background:transparent;
+  font:900 18px/1 Arial,sans-serif;
+}
+.public-recipe-view .recipe-dietary-tags span{
+  gap:8px;
+  padding:5px 12px 5px 6px;
+}
+.public-recipe-view .recipe-dietary-tags span>i{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  flex:0 0 30px;
+  border-radius:50%;
+  background:var(--theme-accent);
+  box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--theme-paper) 48%,transparent);
+  font:normal 17px/1 "Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  font-style:normal;
+  filter:saturate(1.25) contrast(1.08);
+}
+.public-recipe-view .recipe-dietary-tags span>b{
+  font:900 .82rem/1 system-ui,sans-serif;
+}
+@media(max-width:700px){
+  .public-recipe-view{border-radius:24px}
+  .public-recipe-view .public-recipe-like-count{min-width:60px;padding:0 10px;gap:6px}
+  .public-recipe-view .public-recipe-like-count svg{width:21px;height:21px}
+  .public-recipe-view .public-recipe-like-count b{font-size:16px}
+}

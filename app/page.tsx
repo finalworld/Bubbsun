@@ -209,6 +209,9 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
+const bubbsunVersion = "0.903";
+const bubbsunEdition = "Almost Done Edition";
+
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
 
 const iconSources: Record<string, string> = {
@@ -1303,7 +1306,7 @@ function Drawer({
             </small>
           )}
           <small className="drawer-version-text">
-            Bubbsun v0.901 · Almost Done Edition
+            Bubbsun v{bubbsunVersion} · {bubbsunEdition}
           </small>
         </div>
       </aside>
@@ -5192,7 +5195,7 @@ const recipeDietaryOptions=[
 const recipeCategoryLabel=(recipe:Recipe)=>[recipe.category,recipe.subcategory].filter(Boolean).join(" · ")||"RECEPT";
 const recipeSlug=(title:string)=>title.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sv-SE").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"recept";
 const recipePublicUrl=(recipe:Recipe)=>`https://www.bubbsun.se/recept/${encodeURIComponent(recipe.id)}/${recipeSlug(recipe.title)}`;
-function RecipeDietaryTags({recipe}:{recipe:Recipe}){const tags=recipeDietaryOptions.filter(option=>recipe.dietaryTags?.includes(option.value));return tags.length?<div className="recipe-dietary-tags">{tags.map(tag=><span key={tag.value}>{tag.icon} {tag.label}</span>)}</div>:null}
+function RecipeDietaryTags({recipe}:{recipe:Recipe}){const tags=recipeDietaryOptions.filter(option=>recipe.dietaryTags?.includes(option.value));return tags.length?<div className="recipe-dietary-tags">{tags.map(tag=><span key={tag.value}><i aria-hidden="true">{tag.icon}</i><b>{tag.label}</b></span>)}</div>:null}
 function RecipeDietaryFilter({value,onChange}:{value:string[];onChange:(value:string[])=>void}){return <div className="recipe-dietary-filter" aria-label="Filtrera efter kostmärkning">{recipeDietaryOptions.map(option=>{const selected=value.includes(option.value);return <button type="button" key={option.value} className={selected?"selected":""} aria-pressed={selected} onClick={()=>onChange(selected?value.filter(item=>item!==option.value):[...value,option.value])}><span>{option.icon}</span><strong>{option.label}</strong>{selected&&<Check/>}</button>})}</div>}
 const recipeSortOptions=[{value:"liked",label:"Mest gillade"},{value:"newest",label:"Senast inlagda"},{value:"oldest",label:"Äldst först"},{value:"alpha",label:"A–Ö"}];
 const recipeTimeOptions=[{value:0,label:"Alla tider"},{value:15,label:"≤ 15 min"},{value:30,label:"≤ 30 min"},{value:60,label:"≤ 60 min"}];
@@ -7177,7 +7180,7 @@ function usePublicRecipeMetadata(recipe:Recipe|null|undefined){
   },[recipe]);
 }
 
-function PublicRecipeArticle({recipe}:{recipe:Recipe}){return <article className="recipe-view public-recipe-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}>{recipe.image?<img className="recipe-hero" src={recipe.image} alt={recipe.title}/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(recipe)}</small><h1>{recipe.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={recipe}/><span className="public-recipe-like-count" aria-label={`${recipe.likedBy?.length||0} gillningar`}><ThumbsUp/><span>GILLNINGAR</span><b>{recipe.likedBy?.length||0}</b></span></div><div className="recipe-facts">{recipe.servings>0&&<span>🍽️ {recipeYieldLabel(recipe)}</span>}{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {recipe.creatorName}</div>{recipe.description&&<section className="recipe-description"><h3>OM RECEPTET</h3><p>{recipe.description}</p></section>}<RecipeIngredients recipe={recipe}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(recipe.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{recipe.note&&<aside><b>ANTECKNING</b><p>{recipe.note}</p></aside>}<RecipeSourceLink recipe={recipe}/><footer><a href="/recept">← Upptäck fler recept</a></footer></article>}
+function PublicRecipeArticle({recipe}:{recipe:Recipe}){return <article className="recipe-view public-recipe-view" style={{"--recipe-creator":"var(--theme-accent)"} as CSSProperties}>{recipe.image?<img className="recipe-hero" src={recipe.image} alt={recipe.title}/>:<div className="recipe-hero fallback">🍲</div>}<small>{recipeCategoryLabel(recipe)}</small><h1>{recipe.title}</h1><div className="recipe-view-tools"><RecipePrintButton/><RecipeShareControl recipe={recipe}/><span className="public-recipe-like-count" aria-label={`${recipe.likedBy?.length||0} gillningar`} title="Gillningar"><ThumbsUp/><b>{recipe.likedBy?.length||0}</b></span></div><div className="recipe-facts">{recipe.servings>0&&<span>🍽️ {recipeYieldLabel(recipe)}</span>}{recipe.minutes>0&&<span>⏱️ {recipe.minutes} minuter</span>}</div><div className="recipe-creator-line">Skapad av {recipe.creatorName}</div>{recipe.description&&<section className="recipe-description"><h3>OM RECEPTET</h3><p>{recipe.description}</p></section>}<RecipeIngredients recipe={recipe}/><section><h3>GÖR SÅ HÄR</h3><div className="recipe-instructions">{recipeInstructionSteps(recipe.instructions).map((step,index)=><p key={index}><b>{index+1}</b><span>{step}</span></p>)}</div></section>{recipe.note&&<aside><b>ANTECKNING</b><p>{recipe.note}</p></aside>}<RecipeSourceLink recipe={recipe}/><footer><a href="/recept">← Upptäck fler recept</a></footer></article>}
 
 function PublicRecipeBrand(){return <a className="public-recipe-brand" href="/"><strong>Bubbsun<span>.se</span></strong><small>LISTOR MED KARAKTÄR <b>✦</b></small></a>}
 

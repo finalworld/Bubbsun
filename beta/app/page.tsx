@@ -22,7 +22,6 @@ import {
   ExternalLink,
   Eye,
   Funnel,
-  Gamepad2,
   Flag,
   Home,
   History,
@@ -82,9 +81,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
-import { collection, doc, onSnapshot, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { auth, db } from "../src/lib/firebase";
-import { FrasseGame, type FrasseProgress } from "../src/FrasseGame";
 import {
   acceptPrivacy,
   createGroup,
@@ -212,7 +209,6 @@ import "./globals.css";
 import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
-import "./yatzy-embedded.css";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
 
@@ -1238,11 +1234,6 @@ function Drawer({
             <button onClick={() => onPage("budget")}>
               <WalletCards />
               <span>Budget</span>
-              <ChevronRight />
-            </button>
-            <button className="games-nav" onClick={() => onPage("games")}>
-              <Gamepad2 />
-              <span>Nöje</span>
               <ChevronRight />
             </button>
             <button onClick={() => onPage("people")}>
@@ -3276,7 +3267,8 @@ function CalendarPage({events,lists,privateMode,account,memberships,groups,membe
 }
 
 const mealTypes=["Frukost","Mellanmål","Lunch","Fika","Middag","Kvällsmål","Annat"];
-const budgetCategories={expense:["Mat","Boende","Transport","Barn","Nöje","Räkningar","Övrigt"],income:["Lön","Bidrag","Försäljning","Övrigt"]} as const;
+const budgetCategories={expense:["Mat","Boende","Räkningar","Transport","Shopping","Nöje","Barn","Husdjur","Hälsa","Resor","Presenter","Studier","Övrigt"],income:["Lön","Bidrag","Försäljning","Återbetalning","Bonus","Pension","Gåva","Övrigt"]} as const;
+const budgetCategoryIcons:Record<string,string>={Mat:"🛒",Boende:"🏠",Räkningar:"🧾",Transport:"🚗",Shopping:"🛍️",Nöje:"🎉",Barn:"🧸",Husdjur:"🐾",Hälsa:"❤️",Resor:"✈️",Presenter:"🎁",Studier:"🎓",Lön:"💰",Bidrag:"🤝",Försäljning:"🏷️",Återbetalning:"↩️",Bonus:"✨",Pension:"🌿",Gåva:"🎁",Övrigt:"•••"};
 const budgetBillTypes=["Hyra/avgift","El","Mobil","Internet","Försäkring","Lån","Prenumeration","Annat"];
 const budgetMoney=(value:number)=>new Intl.NumberFormat("sv-SE",{style:"currency",currency:"SEK",maximumFractionDigits:0}).format(value);
 function BudgetPage({entries,settings,privateMode,account,memberships,groups,creating,onCreating,onMode,onSwitchGroup,onSave,onDelete,onSaveSettings}:{entries:BudgetEntry[];settings:BudgetSettings;privateMode:boolean;account:Account;memberships:Membership[];groups:Record<string,Group>;creating:boolean;onCreating:(value:boolean)=>void;onMode:(value:boolean)=>void;onSwitchGroup:(id:string)=>void;onSave:(entry:BudgetEntry)=>Promise<void>;onDelete:(entry:BudgetEntry)=>Promise<void>;onSaveSettings:(settings:BudgetSettings)=>Promise<void>}){
@@ -3302,6 +3294,7 @@ function BudgetTransferEditor({settings,monthKey,account,onClose,onSave}:{settin
   const accounts=settings.banks.flatMap(bank=>bank.accounts.map(item=>({id:item.id,label:`${bank.name} · ${item.name}`}))),[fromAccountId,setFrom]=useState(accounts[0]?.id||""),[toAccountId,setTo]=useState(accounts[1]?.id||""),[amount,setAmount]=useState(""),[date,setDate]=useState(`${monthKey}-01`),[title,setTitle]=useState(""),[recurring,setRecurring]=useState(true),[busy,setBusy]=useState(false),parsedAmount=Number(amount.replace(",","."));
   return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-transfer-editor"><button className="modal-x" onClick={onClose}><X/></button><header><span>⇄</span><div><small>BUDGET</small><h2>NY ÖVERFÖRING</h2></div></header><p>Flytta pengar mellan två av dina konton utan att påverka månadens inkomster eller utgifter.</p><label>VAD GÄLLER DET?<input value={title} onChange={event=>setTitle(event.target.value)} placeholder="Till exempel Månadssparande"/></label><div className="budget-transfer-route"><label>FRÅN KONTO<select value={fromAccountId} onChange={event=>setFrom(event.target.value)}>{accounts.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label><b>→</b><label>TILL KONTO<select value={toAccountId} onChange={event=>setTo(event.target.value)}>{accounts.map(item=><option value={item.id} key={item.id}>{item.label}</option>)}</select></label></div><div className="budget-editor-grid"><label>BELOPP (KR)<input inputMode="decimal" value={amount} onChange={event=>setAmount(event.target.value)} placeholder="500"/></label><label>DATUM<input type="date" value={date} onChange={event=>setDate(event.target.value)}/></label></div><label className="budget-recurring"><input type="checkbox" checked={recurring} onChange={event=>setRecurring(event.target.checked)}/><span><strong>Överför varje månad</strong><small>Samma belopp flyttas mellan kontona varje månad.</small></span></label><footer><button className="cancel" onClick={onClose}>AVBRYT</button><button disabled={busy||accounts.length<2||fromAccountId===toAccountId||!date||!Number.isFinite(parsedAmount)||parsedAmount<=0} onClick={async()=>{setBusy(true);try{await onSave({id:crypto.randomUUID(),type:"transfer",title:title.trim()||"Överföring",amount:parsedAmount,category:"Överföring",fromAccountId,toAccountId,date,recurrence:recurring?"monthly":undefined,creatorId:account.uid,creatorName:account.displayName,createdAt:Date.now(),updatedAt:Date.now()})}finally{setBusy(false)}}}>{busy?"SPARAR…":"SPARA ÖVERFÖRING"}</button></footer></section></div>
 }
+function BudgetCategoryPicker({type,value,onChange}:{type:"expense"|"income";value:string;onChange:(value:string)=>void}){const [open,setOpen]=useState(false),pickerRef=useRef<HTMLDivElement|null>(null);useEffect(()=>{if(!open)return;const close=(event:PointerEvent)=>{if(!pickerRef.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[open]);return <div ref={pickerRef} className={`budget-category-picker${open?" open":""}`}><button type="button" className="budget-category-trigger" aria-haspopup="listbox" aria-expanded={open} onClick={()=>setOpen(current=>!current)}><span><i>{budgetCategoryIcons[value]}</i><strong>{value}</strong></span><ChevronDown/></button>{open&&<div className="budget-category-menu" role="listbox">{budgetCategories[type].map(option=><button type="button" role="option" aria-selected={option===value} className={option===value?"selected":""} key={option} onClick={()=>{onChange(option);setOpen(false)}}><i>{budgetCategoryIcons[option]}</i><span>{option}</span>{option===value&&<Check/>}</button>)}</div>}</div>}
 function BudgetEditor({
   entry,
   settings,
@@ -3419,17 +3412,7 @@ function BudgetEditor({
           </label>
         </div>
         <div className="budget-editor-grid budget-category-fields">
-          <label>
-            KATEGORI
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              {budgetCategories[type].map((value) => (
-                <option key={value}>{value}</option>
-              ))}
-            </select>
-          </label>
+          <div className="budget-category-field"><span>KATEGORI</span><BudgetCategoryPicker type={type} value={category} onChange={setCategory}/></div>
           {type === "expense" && category === "Räkningar" && (
             <label>
               TYP AV RÄKNING
@@ -4822,7 +4805,6 @@ function AdminPage({
   publicRecipes,
   messageCount,
   initialTab,
-  gameCardImages,
 }: {
   lists: BubbsunList[];
   members: Membership[];
@@ -4834,9 +4816,8 @@ function AdminPage({
   publicRecipes: Recipe[];
   messageCount: number;
   initialTab: "stats" | "members" | "reports";
-  gameCardImages: GameCardImages;
 }) {
-  const [tab, setTab] = useState<"stats" | "members" | "reports" | "recipes" | "games" | "system" | "themes">(
+  const [tab, setTab] = useState<"stats" | "members" | "reports" | "recipes" | "system" | "themes">(
       initialTab,
     ),
     [selected, setSelected] = useState<Account | null>(null),
@@ -4874,7 +4855,6 @@ function AdminPage({
         <button className={tab === "themes" ? "selected" : ""} onClick={() => setTab("themes")}>TEMA</button>
         <button className={tab === "reports" ? "selected" : ""} onClick={() => setTab("reports")}>BUGGAR & FÖRSLAG</button>
         <button className={tab === "recipes" ? "selected" : ""} onClick={() => setTab("recipes")}>RECEPT ({publicRecipes.length})</button>
-        <button className={tab === "games" ? "selected" : ""} onClick={() => setTab("games")}>SPEL</button>
         <button className={tab === "system" ? "selected" : ""} onClick={() => setTab("system")}>SYSTEM</button>
       </div>
       {tab === "stats" && <><div className="stats-grid">
@@ -4986,8 +4966,12 @@ function AdminPage({
           ))}
         </div>
       )}
-      {tab === "games" && <AdminGames images={gameCardImages}/>}
-      {tab === "system" && <div className="admin-system-tab"><GlobalPinEditor /><a
+      {tab === "system" && <div className="admin-system-tab"><section className="admin-quota-panel">
+        <div><small>FIREBASE · STANDARDKVOT</small><h2>Databasanvändning</h2><p>Firebase visar aktuell förbrukning med ungefär 1–4 minuters fördröjning. Bubbsun håller inga extra lyssnare öppna för den här rutan.</p></div>
+        <div className="admin-quota-limits"><span><strong>50 000</strong><small>LÄSNINGAR / DAG</small></span><span><strong>20 000</strong><small>SKRIVNINGAR / DAG</small></span><span><strong>20 000</strong><small>RADERINGAR / DAG</small></span></div>
+        <a href="https://console.firebase.google.com/project/bubbsan-c3ec7/firestore/usage" target="_blank" rel="noreferrer">SE AKTUELL FÖRBRUKNING I FIREBASE <ChevronRight /></a>
+        <p className="admin-quota-note">Automatiska livevärden här kräver en säker serverkoppling till Google Cloud Monitoring. Inga hemliga nycklar läggs i webbläsaren.</p>
+      </section><GlobalPinEditor /><a
         className="version-link"
         href="https://github.com/finalworld/Bubbsun/releases"
         target="_blank"
@@ -6165,24 +6149,11 @@ function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seen
   return <section className="content subpage notifications-page">
     <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
     {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt&&!entry.isOwn?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
-      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":entry.kind==="game"?"🎲":"▣"}</span>
+      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":"▣"}</span>
       <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
       {entry.at>seenAt&&!entry.isOwn&&<b>NYTT</b>}<ChevronRight/>
     </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar, recept eller kalender syns det här.</span></div>}
   </section>;
-}
-
-type GameCardImages={frasseImage:string;yatzyImage:string};
-function GamesPage({onOpen,onYatzy,vault,images}:{onOpen:()=>void;onYatzy:()=>void;vault:number;images:GameCardImages}){return <section className="content subpage games-page"><div className="content-heading games-heading"><Gamepad2/><div><h1>NÖJE</h1><p>Små spel med stor Bubbsun-karaktär</p></div><div className="games-vault"><img src="/games/bubb-yatzy/bb-coins-v2.png" alt=""/><span><small>DITT VALV</small><strong>{vault.toLocaleString("sv-SE")} Bb</strong><em>Bubbisar</em></span></div></div><div className="game-card-grid"><button className="game-library-card" onClick={onOpen}><div className={`game-cover${images.frasseImage?" has-custom-cover":""}`} style={images.frasseImage?{backgroundImage:`url(${images.frasseImage})`}:undefined}><span>KLASSIKER</span><i><Gamepad2/></i></div><div className="game-card-copy"><small>ARKAD · TUR & TASSAR</small><h2>Frasses enarmade bandit</h2><p>Snurra, levla och bygg upp ditt permanenta valv med Bubbisar.</p><strong>SPELA NU <ChevronRight/></strong></div></button><button className="game-library-card yatzy-library-card" onClick={onYatzy}><div className={`game-cover yatzy-cover${images.yatzyImage?" has-custom-cover":""}`} style={images.yatzyImage?{"--game-cover-image":`url("${images.yatzyImage}")`} as CSSProperties:undefined}><span>NYTT</span><i>🎲</i></div><div className="game-card-copy"><small>TÄRNINGAR · SINGEL &amp; GRUPP</small><h2>Bubb Yatzy</h2><p>Klassisk svensk Yatzy mot datorn eller någon i din grupp.</p><strong>SPELA NU <ChevronRight/></strong></div></button></div></section>}
-
-function YatzyPage({theme,matchId}:{theme:{id:string;bg:string;paper:string;panel:string;text:string;accent:string;outline:string};matchId?:string}){const params=new URLSearchParams({embedded:"1",theme:theme.id,bg:theme.bg,paper:theme.paper,panel:theme.panel,text:theme.text,accent:theme.accent,outline:theme.outline});if(matchId)params.set("match",matchId);return <section className="yatzy-embedded-page" style={{background:theme.bg}}><iframe key={matchId||"yatzy-menu"} title="Bubb Yatzy" src={`/games/bubb-yatzy/?${params.toString()}`} style={{background:theme.bg}} allow="autoplay"/></section>}
-
-function AdminGames({images}:{images:GameCardImages}){
-  const [draft,setDraft]=useState(images),[saving,setSaving]=useState(""),[status,setStatus]=useState("");
-  useEffect(()=>setDraft(images),[images.frasseImage,images.yatzyImage]);
-  const cards=[{key:"frasseImage" as const,title:"Frasses enarmade bandit",fallback:"/beta/games/frasses-enarmade-bandit/frasse-symbols.png"},{key:"yatzyImage" as const,title:"Bubb Yatzy",fallback:""}];
-  const save=async(key:keyof GameCardImages)=>{setSaving(key);setStatus("");try{await setDoc(doc(db,"appConfig","gameCards"),{[key]:draft[key],updatedAt:serverTimestamp()},{merge:true});setStatus("Spelbilden är sparad ✓")}catch(reason){setStatus(reason instanceof Error?reason.message:"Kunde inte spara bilden.")}finally{setSaving("")}};
-  return <div className="admin-games"><header><Gamepad2/><div><h2>SPELBILDER</h2><p>Byt omslagsbilden som visas på Nöje-sidan.</p></div></header><div>{cards.map(card=><article key={card.key}><div className={`admin-game-preview ${card.key==="yatzyImage"&&!draft[card.key]?"yatzy-default":""}`} style={draft[card.key]||card.fallback?{backgroundImage:`url(${draft[card.key]||card.fallback})`}:undefined}>{!draft[card.key]&&card.key==="yatzyImage"&&<span>⚄ ⚁<br/>⚂ ⚅</span>}</div><section><small>SPELKORT</small><h3>{card.title}</h3><p>Rekommenderat format: liggande bild, minst 900 × 550 px.</p><div><label><ImagePlus/> VÄLJ BILD<input type="file" accept="image/*" onChange={async event=>{const file=event.target.files?.[0];if(!file)return;try{const image=await compressRecipeImage(file);setDraft(current=>({...current,[card.key]:image}));setStatus("")}catch{setStatus("Bilden kunde inte läsas.")}}}/></label><button disabled={saving===card.key||draft[card.key]===images[card.key]} onClick={()=>void save(card.key)}>{saving===card.key?"SPARAR…":"SPARA"}</button><button className="cancel" disabled={!draft[card.key]} onClick={()=>setDraft(current=>({...current,[card.key]:""}))}>ÅTERSTÄLL</button></div></section></article>)}</div>{status&&<p className="admin-save-status">{status}</p>}</div>;
 }
 
 function AuthenticatedApp() {
@@ -6214,7 +6185,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","games","frasse","yatzy","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","notifications","chat","people","stats","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -6261,17 +6232,8 @@ function AuthenticatedApp() {
   const [groupOnlineUserIds,setGroupOnlineUserIds]=useState<Set<string>>(new Set());
   const [directChats,setDirectChats]=useState<DirectChat[]>([]);
   const [chatPeer,setChatPeer]=useState<ChatPeer|null>(null);
-  useEffect(()=>{const receive=(event:MessageEvent)=>{if(event.origin!==window.location.origin||event.data?.type!=="bubbsun:open-yatzy-chat")return;const uid=String(event.data.uid||""),name=String(event.data.name||"Bubbsun-vän").slice(0,50);if(uid&&uid!==user?.uid)setChatPeer({uid,name,color:0x587556})};window.addEventListener("message",receive);return()=>window.removeEventListener("message",receive)},[user?.uid]);
   const [saveConflict, setSaveConflict] = useState(false);
   const [databaseReady, setDatabaseReady] = useState(false);
-  const [gameWallet,setGameWallet]=useState<FrasseProgress|null>(null);
-  const [gameVault,setGameVault]=useState(0);
-  const [gameCardImages,setGameCardImages]=useState<GameCardImages>({frasseImage:"",yatzyImage:""});
-  const [yatzyMatchId,setYatzyMatchId]=useState("");
-  const [gameNotifications,setGameNotifications]=useState<Array<{id:string;actorName:string;matchId:string;type:"challenge"|"turn"|"result";createdAt:number}>>([]);
-  useEffect(()=>{if(!user)return;return onSnapshot(doc(db,"games","frasses-enarmade-bandit","players",user.uid),snapshot=>{const data=snapshot.data()||{},balance=Number.isFinite(Number(data.balance))?Math.max(0,Number(data.balance)):1000,vault=Math.max(0,Number(data.vault)||0);setGameVault(vault);setGameWallet({balance,vault,xp:Number(data.xp)||0,prestige:Number(data.prestige)||0,bonusSpins:Number(data.bonusSpins)||0,jackpot:Number(data.jackpot)||0,wealth:balance+vault,displayName:String(data.displayName||account?.displayName||"Bubbsun"),updatedAt:data.updatedAt})})},[user,account?.displayName]);
-  useEffect(()=>{if(!user)return;return onSnapshot(doc(db,"appConfig","gameCards"),snapshot=>setGameCardImages({frasseImage:String(snapshot.data()?.frasseImage||""),yatzyImage:String(snapshot.data()?.yatzyImage||"")}))},[user]);
-  useEffect(()=>{if(!user)return;return onSnapshot(query(collection(db,"gameNotifications"),where("recipientUid","==",user.uid)),snapshot=>setGameNotifications(snapshot.docs.map(item=>({id:item.id,actorName:String(item.data().actorName||"En vän"),matchId:String(item.data().matchId||""),type:item.data().type as "challenge"|"turn"|"result",createdAt:Number(item.data().createdAt)||0}))))},[user]);
   const previousPageRef = useRef<Page>(page);
 
   useEffect(() => {
@@ -6567,11 +6529,7 @@ function AuthenticatedApp() {
     const a = watchAllAccounts(setAllAccounts),
       b = watchReports(setReports),
       c = watchThemePalettes(setThemePalettes);
-    return () => {
-      a();
-      b();
-      c();
-    };
+    return () => { a(); b(); c(); };
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(() => {
     if (!account?.megaSuperBoss && !account?.founder) return;
@@ -7012,12 +6970,10 @@ function AuthenticatedApp() {
     const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0],actor=latest?.uid||value.creatorId,action=(value.history?.length||0)>1?"ändrade anteckningen":"skapade anteckningen",actorName=privateMode?account.displayName:(latest?.name||memberName(actor));return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade kalenderposten":"ändrade kalenderposten";return{id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const recipeEntries=activeRecipes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade receptet":"ändrade receptet";return{id:`recipe-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"recipe" as const,title:value.title,detail:`🍲 ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
-    const gameEntries=gameNotifications.map(value=>({id:`game-${value.id}`,kind:"game" as const,title:value.type==="challenge"?"Ny utmaning i Bubb Yatzy":value.type==="result"?"Yatzy-matchen är färdig":"Din tur i Bubb Yatzy",detail:value.type==="challenge"?`${value.actorName} utmanade dig`:value.type==="result"?`${value.actorName} avslutade matchen`:`${value.actorName} har gjort sitt drag`,at:value.createdAt,color:fallbackColor,isPrivate:false,targetId:value.matchId,isOwn:false}));
-    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries,...gameEntries].sort((a,b)=>b.at-a.at).slice(0,60);
-  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members,gameNotifications]);
+    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
+  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members]);
   const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
   const chatUnreadCount=directChats.filter(chat=>chat.lastSenderId!==user?.uid&&chat.lastMessageAt>(chat.readAt?.[user?.uid||""]||0)).length;
-  useEffect(()=>{if(page!=="yatzy"||!user)return;const iframe=document.querySelector<HTMLIFrameElement>(".yatzy-embedded-page iframe"),peerIds=directChats.filter(chat=>chat.lastSenderId!==user.uid&&chat.lastMessageAt>(chat.readAt?.[user.uid]||0)).map(chat=>chat.participantIds.find(id=>id!==user.uid)||"").filter(Boolean);iframe?.contentWindow?.postMessage({type:"bubbsun:yatzy-chat-unread-peers",peerIds},window.location.origin)},[page,user,directChats]);
   useEffect(()=>{const unread=notificationCount+chatUnreadCount;document.title=`${unread>0?`(${unread}) `:""}Bubbsun – listor med karaktär`;return()=>{document.title="Bubbsun – listor med karaktär"}},[notificationCount,chatUnreadCount]);
   useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
   useEffect(()=>{
@@ -7185,7 +7141,7 @@ function AuthenticatedApp() {
         }
         onOpenReports={account.megaSuperBoss || account.founder?()=>{setAdminStartTab("reports");navigate("admin")}:undefined}
         language={language}
-        wallet={page==="frasse"||page==="yatzy"?gameWallet:null}
+        wallet={null}
       />
       {page === "lists" && (
         <ListsPage
@@ -7311,9 +7267,6 @@ function AuthenticatedApp() {
       {page === "recipe-discover" && (
         <DiscoverRecipesPage recipes={publicRecipes} uid={user.uid} memberships={memberships} groups={groups} onCreateIngredientList={createRecipeIngredientList} onSaveCopy={savePublicRecipeCopy} onMessageCreator={recipe=>setChatPeer({uid:recipe.creatorId,name:recipe.creatorName,color:recipe.creatorColor??colorOptions[0]})}/>
       )}
-      {page === "games" && <GamesPage vault={gameVault} images={gameCardImages} onOpen={()=>navigate("frasse")} onYatzy={()=>{setYatzyMatchId("");navigate("yatzy")}}/>}
-      {page === "yatzy" && <YatzyPage theme={activeTheme} matchId={yatzyMatchId}/>}
-      {page === "frasse" && <FrasseGame uid={user.uid} displayName={account.displayName} onBack={()=>navigate("games")} onWallet={setGameWallet}/>}
       {page === "chat"&&<ChatPage account={account} chats={directChats} memberships={memberships} groups={groups} language={language} onOpen={setChatPeer}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
         setPrivateMode(entry.isPrivate);
@@ -7323,9 +7276,6 @@ function AuthenticatedApp() {
         }else if(entry.kind==="note"){
           const note=(entry.isPrivate?privateNotes:notes).find(value=>value.id===entry.targetId);
           if(note)openNote(note,entry.isPrivate);
-        }else if(entry.kind==="game"){
-          setYatzyMatchId(entry.targetId);
-          navigate("yatzy");
         }else if(entry.kind==="recipe"){
           setActivityRecipeId(entry.targetId);
           navigate("recipes");
@@ -7397,7 +7347,6 @@ function AuthenticatedApp() {
           publicRecipes={publicRecipes}
           messageCount={adminMessageCount}
           initialTab={adminStartTab}
-          gameCardImages={gameCardImages}
         />
       )}
       <Drawer

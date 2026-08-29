@@ -3283,7 +3283,7 @@ function BudgetPage({entries,settings,privateMode,account,memberships,groups,cre
     <div className="budget-summary"><article><small>INKOMSTER</small><strong className="income">+ {budgetMoney(income)}</strong></article><article><small>UTGIFTER</small><strong className="expense">− {budgetMoney(expense)}</strong></article><article className="balance"><small>KVAR</small><strong className={income-expense<0?"expense":"income"}>{budgetMoney(income-expense)}</strong></article></div>
     <BudgetAccountOverview settings={settings} entries={monthEntries.map(item=>item.entry)}/><section className="budget-list"><h2>MÅNADENS POSTER</h2>{monthEntries.length?monthEntries.map(({entry,occurrenceDate})=><button key={entry.id} className="budget-row" onClick={()=>setEditing(entry)}><span className={entry.type}>{entry.type==="income"?"+":"−"}</span><span><strong>{entry.title}</strong><small>{entry.category}{entry.subcategory?` · ${entry.subcategory}`:""} · {accountName(entry.accountId)} · {new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${occurrenceDate}T12:00:00`))}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":"− "}{budgetMoney(entry.amount)}</b><ChevronRight/></button>):<div className="budget-empty"><WalletCards/><h3>Inga poster</h3></div>}</section></>:<section className="budget-list budget-recurring-list"><header><div><small>AUTOMATISKA POSTER</small><h2>ÅTERKOMMANDE</h2></div><b>{entries.filter(entry=>entry.recurrence==="monthly").length} st</b></header>{entries.filter(entry=>entry.recurrence==="monthly").sort((a,b)=>a.date.localeCompare(b.date)).map(entry=><button key={entry.id} className="budget-row" onClick={()=>{if(entry.type==="transfer"){setEditingTransfer(entry);setTransferOpen(true)}else setEditing(entry)}}><span className={entry.type}>{entry.type==="income"?"+":entry.type==="expense"?"−":"⇄"}</span><span><strong>{entry.title}</strong><small>{entry.type==="transfer"?"Överföring":entry.category} · varje månad den {Number(entry.date.slice(-2))}:e</small></span><b className={entry.type}>{entry.type==="income"?"+ ":entry.type==="expense"?"− ":""}{budgetMoney(entry.amount)}</b><ChevronRight/></button>)}{!entries.some(entry=>entry.recurrence==="monthly")&&<div className="budget-empty"><History/><h3>Inga återkommande poster</h3><p>Markera “Återkommer varje månad” när du skapar en post.</p></div>}</section>}
     {transferOpen&&<BudgetTransferEditor entry={editingTransfer} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setTransferOpen(false);setEditingTransfer(undefined)}} onDelete={editingTransfer?()=>{setConfirmDelete(editingTransfer);setTransferOpen(false);setEditingTransfer(undefined)}:undefined} onSave={async entry=>{await onSave(entry);setTransferOpen(false);setEditingTransfer(undefined)}}/>}
-    {(creating||editing!==undefined)&&<BudgetEditor entry={editing||undefined} initialType={createType} settings={settings} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}}/>}
+    {(creating||editing!==undefined)&&<BudgetEditor entry={editing||undefined} initialType={createType} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}}/>}
     {confirmDelete&&<div className="modal-backdrop"><div className="modal confirm-delete-modal"><Trash2/><h2>TA BORT BUDGETPOSTEN?</h2><p>“{confirmDelete.title}” tas bort. Det går inte att ångra.</p><div className="modal-actions"><button onClick={()=>setConfirmDelete(null)}>AVBRYT</button><button className="danger" onClick={async()=>{await onDelete(confirmDelete);setConfirmDelete(null);setEditing(undefined)}}>TA BORT</button></div></div></div>}
   </section>;
 }
@@ -3303,6 +3303,7 @@ function BudgetEditor({
   entry,
   initialType="expense",
   settings,
+  entries,
   monthKey,
   account,
   onClose,
@@ -3312,6 +3313,7 @@ function BudgetEditor({
   entry?: BudgetEntry;
   initialType?: "income" | "expense";
   settings: BudgetSettings;
+  entries: BudgetEntry[];
   monthKey: string;
   account: Account;
   onClose: () => void;
@@ -3343,6 +3345,7 @@ function BudgetEditor({
     [recurring, setRecurring] = useState(entry?.recurrence === "monthly"),
     [note, setNote] = useState(entry?.note || ""),
     [busy, setBusy] = useState(false);
+  const accountBalance=(id:string)=>entries.reduce((sum,value)=>value.type==="transfer"?sum+(value.toAccountId===id?value.amount:0)-(value.fromAccountId===id?value.amount:0):(id===""?!value.accountId:value.accountId===id)?sum+(value.type==="income"?value.amount:-value.amount):sum,0),accountOptions:BudgetTransferOption[]=[{id:"",bank:"UTAN KONTO",name:"Ej placerat",icon:"💰",balance:accountBalance("")},...settings.banks.flatMap(bank=>bank.accounts.map(item=>({id:item.id,bank:bank.name,name:item.name,icon:budgetAccountIcon(item.icon),balance:accountBalance(item.id)})))];
   useEffect(() => {
     const options = budgetCategories[type];
     if (!options.includes(category as never)) setCategory(options[0]);
@@ -3433,22 +3436,7 @@ function BudgetEditor({
             </label>
           )}
         </div>
-        <div className="budget-editor-grid budget-account-picker">
-          <label className="budget-bank-choice">
-            <span>BANK</span>
-            <select value={bankId} onChange={(event)=>{const next=event.target.value;setBankId(next);setAccountId(settings.banks.find(bank=>bank.id===next)?.accounts[0]?.id||"")}}>
-              <option value="">Välj bank</option>
-              {settings.banks.map(bank=><option value={bank.id} key={bank.id}>{bank.name}</option>)}
-            </select>
-          </label>
-          <label className="budget-account-choice">
-            <span>KONTO</span>
-            <select value={accountId} onChange={(event)=>setAccountId(event.target.value)} disabled={!bankId}>
-              <option value="">Välj konto</option>
-              {bankAccounts.map(item=><option value={item.id} key={item.id}>{budgetAccountIcon(item.icon)} {item.name}</option>)}
-            </select>
-          </label>
-        </div>
+        <div className="budget-entry-account-picker"><BudgetTransferAccountPicker label="KONTO" value={accountId} options={accountOptions} onChange={setAccountId}/></div>
         <label className="budget-recurring">
           <input
             type="checkbox"

@@ -12,6 +12,7 @@ import {
   BookOpen,
   Compass,
   CalendarDays,
+  Calculator,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -220,7 +221,7 @@ import "./v700.css";
 import "./v700-fixes.css";
 import "./beta-final.css";
 
-const bubbsunVersion = "0.910";
+const bubbsunVersion = "0.911";
 const bubbsunEdition = "Almost Done Edition";
 
 const NEW_BADGE_EPOCH = Date.parse("2026-08-14T00:00:00Z");
@@ -997,7 +998,7 @@ function Header({
   onHome: () => void;
   onAdd: () => void;
   onManage: () => void;
-  mode: "add" | "manage" | "none";
+  mode: "add" | "manage" | "none" | "calculator";
   supporterTitle?: string;
   glow?: boolean;
   glowColor?: string;
@@ -1078,8 +1079,8 @@ function Header({
           <i aria-hidden="true"/>
           <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
         </div>}
-        {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "add" ? (
-          tabTitle === "Budget" ? <span className="header-spacer"/> : <div className="header-add-actions"><button
+        {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "calculator" ? <div className="header-add-actions"><button className="theme-button header-add header-calculator" aria-label="Öppna miniräknaren" title="Miniräknare" onClick={onAdd}><Calculator/></button></div> : mode === "add" ? (
+          <div className="header-add-actions"><button
             className="theme-button header-add"
             aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}
@@ -3342,6 +3343,14 @@ function BudgetAccountOverview({settings,entries,sharedAccountIds,onSelect}:{set
 function BudgetAccountDetail({accountId,settings,entries,privateMode,onClose}:{accountId:string;settings:BudgetSettings;entries:Array<{entry:BudgetEntry;occurrenceDate:string}>;privateMode:boolean;onClose:()=>void}){const match=settings.banks.flatMap(bank=>bank.accounts.map(account=>({bank:bank.name,account}))).find(item=>item.account.id===accountId);if(!match)return null;const relevant=entries.filter(({entry})=>entry.type==="transfer"?entry.fromAccountId===accountId||entry.toAccountId===accountId:entry.accountId===accountId),signed=(entry:BudgetEntry)=>entry.type==="transfer"?(entry.toAccountId===accountId?entry.amount:-entry.amount):entry.type==="income"?entry.amount:-entry.amount,total=relevant.reduce((sum,{entry})=>sum+signed(entry),match.account.openingBalance||0),accountLabel=(id?:string)=>settings.banks.flatMap(bank=>bank.accounts.map(account=>({id:account.id,label:`${bank.name} · ${account.name}`}))).find(item=>item.id===id)?.label||(id===budgetUnassignedAccountId?"Ej placerat":"Okänt konto");return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-account-detail"><button className="modal-x" onClick={onClose}><X/></button><header><i>{budgetAccountIcon(match.account.icon)}</i><span><small>{match.bank}</small><h2>{match.account.name}</h2></span><b className={total<0?"expense":"income"}>{budgetMoney(total)}</b></header><div className="budget-account-detail-summary"><span>BERÄKNAT KONTOBELOPP</span><strong>Ingående {budgetMoney(match.account.openingBalance||0)} · {relevant.length} {relevant.length===1?"händelse":"händelser"}</strong></div><div className="budget-account-detail-list">{relevant.map(({entry,occurrenceDate})=>{const value=signed(entry);return <article key={`${entry.id}-${occurrenceDate}`}><i className={value<0?"expense":"income"}>{entry.type==="transfer"?"⇄":value>0?"+":"−"}</i><span><strong>{entry.title}</strong><small>{entry.type==="transfer"?`${accountLabel(entry.fromAccountId)} → ${entry.externalRecipient||accountLabel(entry.toAccountId)}`:entry.category} · {new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${occurrenceDate}T12:00:00`))}{!privateMode&&<> · {entry.creatorName}</>}</small></span><b className={value<0?"expense":"income"}>{value>0?"+ ":"− "}{budgetMoney(Math.abs(value))}</b></article>})}{!relevant.length&&<div className="budget-empty"><WalletCards/><h3>Inga händelser denna månad</h3></div>}</div><p className="budget-account-detail-note">Beloppet är ingående saldo plus betalda poster på kontot. Planerade poster påverkar inte saldot förrän de markeras som betalda.</p></section></div>}
 const budgetAccountIcons=[{id:"wallet",icon:"👛",label:"Betalkonto"},{id:"card",icon:"💳",label:"Bankkort"},{id:"bills",icon:"🧾",label:"Räkningar"},{id:"savings",icon:"🐷",label:"Sparkonto"},{id:"buffer",icon:"🔒",label:"Buffert"},{id:"salary",icon:"💰",label:"Lön"},{id:"cash",icon:"💵",label:"Kontanter"},{id:"home",icon:"🏠",label:"Boende"},{id:"food",icon:"🛒",label:"Mat"},{id:"car",icon:"🚗",label:"Bil"},{id:"travel",icon:"✈️",label:"Resor"},{id:"invest",icon:"📈",label:"Investeringar"},{id:"art",icon:"🎨",label:"Konst & hobby"},{id:"shopping",icon:"🛍️",label:"Shopping"},{id:"children",icon:"🧸",label:"Barn"},{id:"pets",icon:"🐾",label:"Husdjur"},{id:"health",icon:"🩺",label:"Hälsa"},{id:"study",icon:"🎓",label:"Studier"},{id:"phone",icon:"📱",label:"Abonnemang"},{id:"energy",icon:"⚡",label:"El & energi"},{id:"gift",icon:"🎁",label:"Presenter"},{id:"personal",icon:"👤",label:"Personligt"}];
 const budgetAccountIcon=(id?:string)=>budgetAccountIcons.find(item=>item.id===id)?.icon||"👛";
+function BudgetCalculator({onClose}:{onClose:()=>void}){
+  const [display,setDisplay]=useState("0"),[stored,setStored]=useState<number|null>(null),[operator,setOperator]=useState<"+"|"−"|"×"|"÷"|null>(null),[fresh,setFresh]=useState(true);
+  const numberValue=()=>Number(display.replace(/\s/g,"").replace(",","."))||0,format=(value:number)=>Number.isFinite(value)?new Intl.NumberFormat("sv-SE",{maximumFractionDigits:10}).format(value):"Fel",calculate=(left:number,right:number,op:typeof operator)=>op==="+"?left+right:op==="−"?left-right:op==="×"?left*right:op==="÷"?(right===0?Number.NaN:left/right):right;
+  const digit=(value:string)=>{if(display==="Fel"||fresh){setDisplay(value);setFresh(false)}else if(display.replace(/[^0-9]/g,"").length<12)setDisplay(display==="0"?value:display+value)};
+  const choose=(next:typeof operator)=>{const current=numberValue(),base=stored!==null&&operator?calculate(stored,current,operator):current;setStored(base);setDisplay(format(base));setOperator(next);setFresh(true)};
+  const equals=()=>{if(stored===null||!operator)return;const result=calculate(stored,numberValue(),operator);setDisplay(format(result));setStored(null);setOperator(null);setFresh(true)};
+  return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose()}}><section className="modal budget-calculator"><button className="modal-x" onClick={onClose}><X/></button><header><Calculator/><div><small>BUDGETVERKTYG</small><h2>MINIRÄKNARE</h2></div></header><output aria-live="polite">{display}</output><div className="budget-calculator-grid"><button className="clear" onClick={()=>{setDisplay("0");setStored(null);setOperator(null);setFresh(true)}}>C</button><button onClick={()=>setDisplay(value=>value.startsWith("-")?value.slice(1):value==="0"?value:`-${value}`)}>±</button><button onClick={()=>setDisplay(format(numberValue()/100))}>%</button><button className={operator==="÷"?"active":""} onClick={()=>choose("÷")}>÷</button>{["7","8","9"].map(value=><button key={value} onClick={()=>digit(value)}>{value}</button>)}<button className={operator==="×"?"active":""} onClick={()=>choose("×")}>×</button>{["4","5","6"].map(value=><button key={value} onClick={()=>digit(value)}>{value}</button>)}<button className={operator==="−"?"active":""} onClick={()=>choose("−")}>−</button>{["1","2","3"].map(value=><button key={value} onClick={()=>digit(value)}>{value}</button>)}<button className={operator==="+"?"active":""} onClick={()=>choose("+")}>+</button><button className="zero" onClick={()=>digit("0")}>0</button><button onClick={()=>{if(fresh||display.includes(","))return;setDisplay(`${display},`);setFresh(false)} }>,</button><button className="equals" onClick={equals}>=</button></div></section></div>
+}
 function BudgetSettingsEditor({settings,privateMode,groups,groupBudgetSettings,onClose,onSave,onReset,onClearMoney}:{settings:BudgetSettings;privateMode:boolean;groups:Record<string,Group>;groupBudgetSettings:Record<string,BudgetSettings>;onClose:()=>void;onSave:(settings:BudgetSettings)=>Promise<void>;onReset:()=>Promise<void>;onClearMoney:()=>Promise<void>}){
   const [banks,setBanks]=useState(settings.banks),[defaultAccountId,setDefaultAccountId]=useState(settings.defaultAccountId||""),[categoryBudgets,setCategoryBudgets]=useState(settings.categoryBudgets||{}),[goals,setGoals]=useState(settings.savingsGoals||[]),[resetStep,setResetStep]=useState(0),[resetText,setResetText]=useState(""),[moneyResetStep,setMoneyResetStep]=useState(0),[privateAccountValue,setPrivateAccountValue]=useState(""),[linkValue,setLinkValue]=useState("");
   const updateAccount=(bankId:string,accountId:string,patch:Record<string,unknown>)=>setBanks(old=>old.map(bank=>bank.id===bankId?{...bank,accounts:bank.accounts.map(account=>account.id===accountId?{...account,...patch}:account)}:bank));
@@ -6180,6 +6189,7 @@ function AuthenticatedApp() {
   const [addingCalendar,setAddingCalendar]=useState(false);
   const [addingMealPlan,setAddingMealPlan]=useState(false);
   const [addingBudget,setAddingBudget]=useState(false);
+  const [budgetCalculatorOpen,setBudgetCalculatorOpen]=useState(false);
   const [addingRecipe,setAddingRecipe]=useState(false);
   const [activityCalendarEventId,setActivityCalendarEventId]=useState("");
   const [activityRecipeId,setActivityRecipeId]=useState("");
@@ -7120,9 +7130,9 @@ function AuthenticatedApp() {
         tabTitle={page === "list" ? activeSelected?.name : page === "note" ? selectedNote?.title : page === "calendar" ? "Kalender" : page === "meal-planner" ? "Veckans måltider" : page === "recipes" ? "Kokboken" : page === "recipe-discover" ? "Upptäck recept" : page === "budget" ? "Budget" : undefined}
         onMenu={() => setMenuOpen(open=>!open)}
         onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="meal-planner"?"meal-planner":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":page==="budget"?"budget":"lists")}
-        onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "budget" ? setAddingBudget(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
+        onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "budget" ? setBudgetCalculatorOpen(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
-        mode={page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || page === "budget" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
+        mode={page === "budget" ? "calculator" : page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         onlineCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? onlineCount : undefined}
         reportCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
@@ -7236,6 +7246,7 @@ function AuthenticatedApp() {
       />}
       {page === "meal-planner" && <MealPlannerPage events={activeCalendarEvents.filter(event=>event.category==="meal-plan")} recipes={syncedActiveRecipes} lists={visibleLists} privateMode={privateMode} account={account} memberships={memberships} groups={groups} creating={addingMealPlan} onCreating={setAddingMealPlan} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistCalendarEvent} onDelete={deleteCalendarEvent}/>}
       {page === "budget" && <BudgetPage entries={activeBudgetEntries} settings={activeBudgetSettings} privateMode={privateMode} sharedAccountIds={sharedGroupBudgetAccountIds} account={account} memberships={memberships} groups={groups} groupBudgetSettings={groupBudgetSettings} creating={addingBudget} onCreating={setAddingBudget} onMode={setPrivateMode} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onSave={persistBudgetEntry} onDelete={deleteBudgetEntry} onSaveSettings={persistBudgetSettings} onReset={resetActiveBudget} onClearMoney={clearActiveBudgetMoney}/>}
+      {budgetCalculatorOpen&&<BudgetCalculator onClose={()=>setBudgetCalculatorOpen(false)}/>}
       {page === "recipes" && <RecipesPage
         recipes={syncedActiveRecipes}
         lists={visibleLists}

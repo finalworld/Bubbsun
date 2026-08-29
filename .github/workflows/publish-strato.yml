@@ -75,6 +75,9 @@ jobs:
           put -O public dist/.htaccess
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
+          # Kassuns indexfil är liten och kan få samma filstorlek trots nya
+          # cacheversioner. Ersätt den alltid så mobilen laddar senaste appen.
+          put -O public/loppis dist/loppis/index.html
           # RK Kassa ligger i webbplatsens public/rk.
           mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på

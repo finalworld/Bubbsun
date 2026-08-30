@@ -347,6 +347,7 @@ const listTypes = [
   { id: "home", label: "Hemfix", icon: "🔧" },
   { id: "orders", label: "Beställningar", icon: "📦" },
   { id: "wishlist", label: "Önskelista", icon: "🎁" },
+  { id: "links", label: "Sparade länkar", icon: "🔖" },
   { id: "other", label: "Annat", icon: "📝" },
 ] as const;
 const cleaningRooms = ["Hela hemmet", "Kök", "Vardagsrum", "Sovrum", "Badrum", "Hall", "Tvättstuga", "Ute"];
@@ -357,6 +358,9 @@ const homeFixTypes = ["Reparera", "Montera", "Underhåll", "Förbättring", "Ann
 const shortDate = (value?: string) => value
   ? new Date(`${value}T12:00:00`).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })
   : "";
+const cleanLinkUrl=(value:string)=>{const trimmed=value.trim();if(!trimmed)return "";try{return new URL(/^https?:\/\//i.test(trimmed)?trimmed:`https://${trimmed}`).toString()}catch{return ""}};
+const automaticLinkImage=(url:string)=>url?`https://image.thum.io/get/width/720/crop/420/noanimate/${url}`:"";
+const compressLinkImage=(file:File)=>new Promise<string>((resolve,reject)=>{const image=new Image(),url=URL.createObjectURL(file);image.onload=()=>{const maxWidth=560,maxHeight=330,scale=Math.min(1,maxWidth/image.width,maxHeight/image.height),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext("2d")?.drawImage(image,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);let quality=.58,result=canvas.toDataURL("image/webp",quality);while(result.length>70000&&quality>.25){quality-=.07;result=canvas.toDataURL("image/webp",quality)}resolve(result)};image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Bilden kunde inte läsas"))};image.src=url});
 const noteIcons=["idea","star","search","alarm","palette","archive","tag","lock"] as const;
 const noteIconSource=(icon:string)=>`${import.meta.env.BASE_URL}assets/note-icons/${noteIcons.includes(icon as typeof noteIcons[number])?icon:"idea"}.png`;
 const listTypeInfo = (id?: string) =>
@@ -2249,11 +2253,13 @@ function SortableItemRow({
   const [draftRecurrence,setDraftRecurrence]=useState(item.recurrence||"");
   const [draftDueDate,setDraftDueDate]=useState(item.dueDate||"");
   const [draftTaskType,setDraftTaskType]=useState(item.taskType||"");
+  const [draftLinkUrl,setDraftLinkUrl]=useState(item.linkUrl||"");
+  const [draftLinkImage,setDraftLinkImage]=useState(item.linkImage||"");
   const swipeStart=useRef<{x:number;y:number;pointerId:number}|null>(null);
   const suppressSwipeClick=useRef(false);
   const [swipeOffset,setSwipeOffset]=useState(0);
   const [swiping,setSwiping]=useState(false);
-  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||members.find(member=>member.displayName===(item.assigneeName||item.assignedTo))?.uid||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");},[item.name,item.quantity,item.note,item.assignedTo,item.assigneeId,item.assigneeName,item.status,item.priority,item.room,item.recurrence,item.dueDate,item.taskType,members]);
+  useEffect(()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||members.find(member=>member.displayName===(item.assigneeName||item.assignedTo))?.uid||"");setDraftStatus(item.status||"");setDraftPriority(item.priority||"Normal");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");setDraftLinkUrl(item.linkUrl||"");setDraftLinkImage(item.linkImage||"");},[item.name,item.quantity,item.note,item.assignedTo,item.assigneeId,item.assigneeName,item.status,item.priority,item.room,item.recurrence,item.dueDate,item.taskType,item.linkUrl,item.linkImage,members]);
   const startSwipe=(event:ReactPointerEvent<HTMLDivElement>)=>{
     if(event.pointerType!=="touch"||selecting||expanded)return;
     const target=event.target as HTMLElement;
@@ -2308,11 +2314,14 @@ function SortableItemRow({
         {(selecting ? selected : item.completed) && <Check />}
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
+        {listType==="links"&&item.linkUrl&&<img className="saved-link-thumb" src={item.linkImage||automaticLinkImage(item.linkUrl)} alt="" loading="lazy" onError={event=>{event.currentTarget.style.display="none"}}/>}
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
+        {listType==="links"&&item.linkUrl&&<small className="saved-link-domain">{(()=>{try{return new URL(item.linkUrl).hostname.replace(/^www\./,"")}catch{return item.linkUrl}})()}</small>}
         {(item.quantity||item.assignedTo||item.assigneeName||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,(item.assigneeName||item.assignedTo)&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assigneeName||item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
+          {listType==="links"&&item.linkUrl&&<a className="saved-link-open" href={item.linkUrl} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${item.name}`} title="Öppna länken"><ExternalLink/></a>}
           <button
             className={`like-button flame-button no-hover ${item.likedBy.length ? "has-votes" : ""} ${liked ? "liked" : ""}`}
             aria-label={liked ? "Ta bort din eld" : "Ge en eld"}
@@ -2348,13 +2357,14 @@ function SortableItemRow({
       <label>Namn<input value={draftName} onChange={event=>{setDraftName(event.target.value);onDirtyChange(true)}} /></label>
       <label>Mängd (valfritt)<input value={draftQuantity} onChange={event=>{setDraftQuantity(event.target.value);onDirtyChange(true)}} /></label>
       <label className="item-note-field">Anteckning (valfritt)<textarea value={draftNote} onChange={event=>{setDraftNote(event.target.value);onDirtyChange(true)}} placeholder="Skriv en anteckning…" /></label>
+      {listType==="links"&&<><label>Länk<input type="url" inputMode="url" value={draftLinkUrl} onChange={event=>{setDraftLinkUrl(event.target.value);onDirtyChange(true)}} placeholder="https://…" /></label><label className="saved-link-upload"><ImagePlus/> Byt bild<input type="file" accept="image/*" onChange={async event=>{const file=event.target.files?.[0];if(file){setDraftLinkImage(await compressLinkImage(file));onDirtyChange(true)}}}/></label>{(draftLinkImage||cleanLinkUrl(draftLinkUrl))&&<img className="saved-link-edit-preview" src={draftLinkImage||automaticLinkImage(cleanLinkUrl(draftLinkUrl))} alt="Förhandsvisning"/>}</>}
       {listType==="packing"&&<label>Vem ska ha med den?<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Alla</option>{(packPeople||[]).map(person=><option key={person}>{person}</option>)}</select></label>}
       {listType==="home"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Att göra</option><option>Att göra</option><option>Pågår</option><option>Klart</option></select></label>}
       {listType==="orders"&&<label>Status<select value={draftStatus} onChange={event=>{setDraftStatus(event.target.value);onDirtyChange(true)}}><option value="">Välj status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select></label>}
       {listType==="wishlist"&&<label>Önskas mest?<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select></label>}
       {listType==="cleaning"&&<><label>Rum<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select></label><label>Ansvarig<select value={draftAssigneeId} onChange={event=>{setDraftAssigneeId(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select></label><label>Upprepas<select value={draftRecurrence} onChange={event=>{setDraftRecurrence(event.target.value);onDirtyChange(true)}}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></label></>}
       {listType==="home"&&<><label>Plats<select value={draftRoom} onChange={event=>{setDraftRoom(event.target.value);onDirtyChange(true)}}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select></label><label>Ansvarig<select value={draftAssigneeId} onChange={event=>{setDraftAssigneeId(event.target.value);onDirtyChange(true)}}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select></label><label>Prioritet<select value={draftPriority} onChange={event=>{setDraftPriority(event.target.value);onDirtyChange(true)}}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></label><label>Typ av jobb<select value={draftTaskType} onChange={event=>{setDraftTaskType(event.target.value);onDirtyChange(true)}}><option value="">Välj typ</option>{homeFixTypes.map(value=><option key={value}>{value}</option>)}</select></label><label>Deadline (valfritt)<input type="date" value={draftDueDate} onChange={event=>{setDraftDueDate(event.target.value);onDirtyChange(true)}} /></label></>}
-      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim();if(!clean)return;const assignee=members.find(member=>member.uid===draftAssigneeId);onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"?draftAssignedTo:undefined,assigneeId:listType==="cleaning"||listType==="home"?assignee?.uid:undefined,assigneeName:listType==="cleaning"||listType==="home"?assignee?.displayName:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"||listType==="home"?draftPriority:undefined,room:listType==="cleaning"||listType==="home"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined,dueDate:listType==="home"?draftDueDate:undefined,taskType:listType==="home"?draftTaskType:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
+      <div><button className="cancel" onClick={()=>{setDraftName(item.name);setDraftQuantity(item.quantity);setDraftNote(item.note||"");setDraftAssignedTo(item.assignedTo||"");setDraftAssigneeId(item.assigneeId||"");setDraftRoom(item.room||"");setDraftRecurrence(item.recurrence||"");setDraftDueDate(item.dueDate||"");setDraftTaskType(item.taskType||"");setDraftLinkUrl(item.linkUrl||"");setDraftLinkImage(item.linkImage||"");onDirtyChange(false);onCloseEditor()}}>AVBRYT</button><button onClick={()=>{const clean=draftName.trim(),linkUrl=cleanLinkUrl(draftLinkUrl);if(!clean||(listType==="links"&&!linkUrl))return;const assignee=members.find(member=>member.uid===draftAssigneeId);onPatch(value=>({...value,name:clean,quantity:draftQuantity.trim(),note:draftNote.trim(),assignedTo:listType==="packing"?draftAssignedTo:undefined,assigneeId:listType==="cleaning"||listType==="home"?assignee?.uid:undefined,assigneeName:listType==="cleaning"||listType==="home"?assignee?.displayName:undefined,status:listType==="home"||listType==="orders"?draftStatus:undefined,priority:listType==="wishlist"||listType==="home"?draftPriority:undefined,room:listType==="cleaning"||listType==="home"?draftRoom:undefined,recurrence:listType==="cleaning"?draftRecurrence:undefined,dueDate:listType==="home"?draftDueDate:undefined,taskType:listType==="home"?draftTaskType:undefined,linkUrl:listType==="links"?linkUrl:undefined,linkImage:listType==="links"?draftLinkImage||undefined:undefined}));onDirtyChange(false);onCloseEditor()}}>SPARA</button></div>
     </div>}
     </div>
   );
@@ -2400,6 +2410,9 @@ function ListPage({
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [newItemNote,setNewItemNote]=useState("");
+  const [newLinkUrl,setNewLinkUrl]=useState("");
+  const [newLinkImage,setNewLinkImage]=useState("");
+  const [linkImageBusy,setLinkImageBusy]=useState(false);
   const [showNewItemNote,setShowNewItemNote]=useState(false);
   const [assignedTo,setAssignedTo]=useState("");
   const [itemStatus,setItemStatus]=useState("");
@@ -2503,7 +2516,8 @@ function ListPage({
     : [];
   const add = (suggestedName?: string) => {
     const cleanName = (suggestedName ?? name).trim().replace(/\s+/g, " ");
-    if (!cleanName) return;
+    const linkUrl=cleanLinkUrl(newLinkUrl);
+    if (!cleanName||(list.listType==="links"&&!linkUrl)) return;
     const existing = list.items.find(
       (item) => normalized(item.name) === normalized(cleanName),
     );
@@ -2548,12 +2562,14 @@ function ListPage({
       ...(list.listType==="cleaning"&&cleaningRecurrence?{recurrence:cleaningRecurrence}:{}),
       ...(list.listType==="home"&&homeFixPlace?{room:homeFixPlace}:{}),
       ...(list.listType==="home"?{priority:homeFixPriority}:{}),
+      ...(list.listType==="links"?{linkUrl,...(newLinkImage?{linkImage:newLinkImage}:{})}:{}),
     };
     onChange({ ...list, items: [item, ...list.items] });
     setName("");
     setQuantity("");
     setNewItemNote("");
     setShowNewItemNote(false);
+    setNewLinkUrl("");setNewLinkImage("");
     setAssignedTo("");setItemStatus("");setPriority("Normal");setCleaningRoom("");setCleaningAssignee("");setCleaningRecurrence("");setHomeFixPlace("");setHomeFixPriority("Normal");
   };
   const patchItem = (id: string, updater: (x: ListItem) => ListItem) =>
@@ -2787,7 +2803,7 @@ function ListPage({
           popup.document.write(`<!doctype html><html lang="sv"><head><title>${escape(list.name)}</title><style>body{max-width:760px;margin:35px auto;padding:0 24px;color:#24170f;font-family:Arial,sans-serif}h1{font:800 38px Georgia,serif;border-bottom:3px solid #587556;padding-bottom:12px}ul{list-style:none;padding:0;display:grid;gap:10px}li{display:grid;grid-template-columns:25px 1fr auto;gap:10px;align-items:start;padding:12px 4px;border-bottom:1px solid #cbb89f}.box{width:18px;height:18px;border:2px solid #587556;border-radius:4px}.done .box:after{content:'✓';display:block;text-align:center;line-height:16px}.done strong{text-decoration:line-through;color:#777}small{color:#69584d}.note{grid-column:2/-1;margin:5px 0 0;padding:8px;background:#f3eadc;border-radius:6px;white-space:pre-wrap}@media print{body{margin:0}}</style></head><body><h1>${escape(list.name)}</h1><ul>${chosen.map(item=>`<li class="${item.completed?"done":""}"><span class="box"></span><strong>${escape(item.name)}</strong><small>${escape(item.quantity)}</small>${printNotes&&item.note?`<p class="note">${escape(item.note)}</p>`:""}</li>`).join("")}</ul><script>window.onload=()=>window.print()<\/script></body></html>`);popup.document.close();setPrintOpen(false);
         }}>ÖPPNA UTSKRIFT</button>
       </div></div>}
-      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""}`}>
+      <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""} ${list.listType==="links" ? "add-panel-links" : ""}`}>
         <h2>LÄGG TILL</h2>
         <div className={showNewItemNote?"has-add-note":""}>
           <span className="autocomplete-wrap">
@@ -2816,6 +2832,7 @@ function ListPage({
             )}
           </span>
           <input
+            className={list.listType==="links"?"saved-link-title-input":undefined}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             onKeyDown={(e) => {
@@ -2823,8 +2840,9 @@ function ListPage({
               e.preventDefault();
               add();
             }}
-            placeholder="Mängd (valfritt)"
+            placeholder={list.listType==="links"?"Kort text (valfritt)":"Mängd (valfritt)"}
           />
+          {list.listType==="links"&&<><input className="saved-link-url-input" type="url" inputMode="url" value={newLinkUrl} onChange={event=>setNewLinkUrl(event.target.value)} placeholder="Klistra in länken här…"/><div className="saved-link-image-choice"><span>{newLinkImage?"Egen bild vald":"Bild hämtas automatiskt från sidan"}</span><label className={linkImageBusy?"busy":""}><ImagePlus/>{linkImageBusy?"KOMPRIMERAR…":"VÄLJ EGEN BILD"}<input type="file" accept="image/*" disabled={linkImageBusy} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;setLinkImageBusy(true);try{setNewLinkImage(await compressLinkImage(file))}finally{setLinkImageBusy(false)}}}/></label>{newLinkImage&&<button type="button" onClick={()=>setNewLinkImage("")}>ANVÄND AUTOMATISK</button>}</div>{(newLinkImage||cleanLinkUrl(newLinkUrl))&&<img className="saved-link-new-preview" src={newLinkImage||automaticLinkImage(cleanLinkUrl(newLinkUrl))} alt="Förhandsvisning"/>}</>}
           {list.listType==="packing"&&<select value={assignedTo} onChange={event=>setAssignedTo(event.target.value)}><option value="">För alla</option>{(list.packPeople||[]).map(person=><option key={person}>{person}</option>)}</select>}
           {list.listType==="home"&&<div className="homefix-quick-fields"><select aria-label="Plats" value={homeFixPlace} onChange={event=>setHomeFixPlace(event.target.value)}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select><select aria-label="Prioritet" value={homeFixPriority} onChange={event=>setHomeFixPriority(event.target.value)}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></div>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}

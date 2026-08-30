@@ -100,7 +100,9 @@ jobs:
           # API:t har en privat databasfil som inte får rensas när statiska
           # byggfiler byts ut. Gamla hashade filer är ofarliga och kan ligga kvar.
           mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
-          $RK_API_UPLOAD
+          # Variabler expanderas inte inne i lftp-here-documents. Kör därför
+          # RK:s API-spegel direkt och låt den privata konfigurationsfilen ligga kvar.
+          mirror --reverse --delete --exclude rk-kassa-db.php --ignore-time --no-perms rk-kassa/api/ public/rk/api/
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.
           put -O public/rk rk-kassa/dist/index.html

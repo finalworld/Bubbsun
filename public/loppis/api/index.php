@@ -206,8 +206,7 @@ try {
         $db->prepare('DELETE FROM users WHERE id=?')->execute([(string)$data['id']]);
     } else reply(['ok'=>false,'error'=>'Okänd åtgärd'],404);
 
-    $fresh = account_row($db, $account['id']);
-    reply(state_payload($db, $fresh));
+    reply(['ok'=>true]);
 } catch (PDOException $error) {
     $message = str_contains($error->getMessage(), 'UNIQUE') ? 'Namnet finns redan' : 'Databasen kunde inte uppdateras';
     reply(['ok'=>false,'error'=>$message],500);

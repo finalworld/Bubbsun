@@ -99,6 +99,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
+import { disableNetwork, enableNetwork } from "firebase/firestore";
 import { auth, db } from "../src/lib/firebase";
 import {
   acceptPrivacy,
@@ -120,6 +121,7 @@ import {
   loadPrivateBudgetEntries,
   loadPrivateBudgetSettings,
   loadPrivateRecipes,
+  loadPublicRecipes,
   loadGroupMembers,
   removeGroupMember,
   removeList,
@@ -6460,7 +6462,7 @@ function AuthenticatedApp() {
   useEffect(()=>{if(!databaseReady||page!=="budget")return;const ids=memberships.map(item=>item.groupId),unsubs=ids.map(groupId=>watchBudgetSettings(groupId,settings=>setGroupBudgetSettings(old=>({...old,[groupId]:settings}))));setGroupBudgetSettings(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,memberships,page]);
   useEffect(()=>{if(!databaseReady||page!=="budget"||!privateMode)return;const membershipIds=new Set(memberships.map(item=>item.groupId)),ids=Array.from(new Set(privateBudgetSettings.banks.flatMap(bank=>bank.accounts.flatMap(item=>item.linkedGroupId&&membershipIds.has(item.linkedGroupId)?[item.linkedGroupId]:[])))),unsubs=ids.map(groupId=>watchBudgetEntries(groupId,entries=>setGroupBudgetEntries(old=>({...old,[groupId]:entries}))));setGroupBudgetEntries(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,page,privateMode,memberships,privateBudgetSettings]);
   useEffect(()=>{if(!user||!databaseReady||!privateMode||!needsRecipes)return;let stopped=false;void loadPrivateRecipes(user.uid).then(values=>{if(!stopped)setPrivateRecipes(values)}).catch(error=>console.error("Privata recept kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,privateMode,needsRecipes]);
-  useEffect(()=>user&&databaseReady&&["recipes","recipe-discover"].includes(page)?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady,page]);
+  useEffect(()=>{if(!user||!databaseReady||!["recipes","recipe-discover"].includes(page))return;let stopped=false;void loadPublicRecipes().then(values=>{if(!stopped)setPublicRecipes(values)}).catch(error=>console.error("Publika recept kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,page]);
   useEffect(()=>{if(!user||!databaseReady||!["recipes","recipe-discover"].includes(page)||recipePublicationsReconciledFor.current===user.uid)return;recipePublicationsReconciledFor.current=user.uid;void reconcileRecipePublications(user.uid).catch(error=>{recipePublicationsReconciledFor.current="";console.error("Kunde inte städa offentliga recept",error)})},[user,databaseReady,page]);
   useEffect(
     () =>
@@ -6506,6 +6508,16 @@ function AuthenticatedApp() {
     () => (databaseReady ? watchGlobalPin(setGlobalPin) : undefined),
     [databaseReady],
   );
+  useEffect(()=>{
+    if(!user||!databaseReady)return;
+    let pauseTimer:number|undefined;
+    const resume=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=undefined;void enableNetwork(db).catch(()=>{})};
+    const pause=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=window.setTimeout(()=>{pauseTimer=undefined;void disableNetwork(db).catch(()=>{})},2500)};
+    const visibility=()=>document.visibilityState==="visible"?resume():pause();
+    const pageHide=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=undefined;void disableNetwork(db).catch(()=>{})};
+    document.addEventListener("visibilitychange",visibility);window.addEventListener("pagehide",pageHide);window.addEventListener("pageshow",resume);visibility();
+    return()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);document.removeEventListener("visibilitychange",visibility);window.removeEventListener("pagehide",pageHide);window.removeEventListener("pageshow",resume);void enableNetwork(db).catch(()=>{})};
+  },[user?.uid,databaseReady]);
   useEffect(()=>user&&databaseReady&&needsFollowedContent?watchFollowedContent(user.uid,values=>{setFollowedListIds(values.lists);setFollowedNoteIds(values.notes)}):undefined,[user,databaseReady,needsFollowedContent]);
   useEffect(
     () => user&&databaseReady&&needsListReadStates?watchListReadStates(user.uid,setListReadAt):undefined,
@@ -7499,7 +7511,7 @@ function PublicRecipePage({recipeId}:{recipeId:string}){
 }
 
 function PublicRecipesIndexPage(){
-  const [recipes,setRecipes]=useState<Recipe[]>([]),[ready,setReady]=useState(false);useEffect(()=>watchPublicRecipes(values=>{setRecipes(values.filter(value=>value.isPublic!==false));setReady(true)}),[]);useEffect(()=>{document.title="Publika recept | Bubbsun";document.querySelector('meta[name="robots"]')?.setAttribute("content","index,follow")},[]);
+  const [recipes,setRecipes]=useState<Recipe[]>([]),[ready,setReady]=useState(false);useEffect(()=>{let stopped=false;void loadPublicRecipes().then(values=>{if(!stopped){setRecipes(values.filter(value=>value.isPublic!==false));setReady(true)}}).catch(()=>{if(!stopped)setReady(true)});return()=>{stopped=true}},[]);useEffect(()=>{document.title="Publika recept | Bubbsun";document.querySelector('meta[name="robots"]')?.setAttribute("content","index,follow")},[]);
   return <main className="public-recipes-index"><PublicRecipeBrand/><header><BookOpen/><div><small>BUBBSUNS RECEPT</small><h1>Upptäck något gott</h1><p>Publika recept från Bubbsun-användare. Inget konto behövs.</p></div></header>{!ready?<p>Laddar recept…</p>:recipes.length?<div className="recipe-grid">{recipes.map(recipe=><a className="recipe-card public" href={`/recept/${encodeURIComponent(recipe.id)}/${recipeSlug(recipe.title)}`} key={recipe.id}>{recipe.image?<img src={recipe.image} alt={recipe.title}/>:<span className="recipe-fallback">🍲</span>}<span><small>{recipeCategoryLabel(recipe)}</small><strong>{recipe.title}</strong><em className="recipe-card-facts">{recipe.minutes>0&&<span>⏱️ {recipe.minutes} min</span>}{recipe.servings>0&&<span>🍽️ {recipeYieldLabel(recipe)}</span>}</em><em className="recipe-card-creator"><UserRound/><span>Skapad av <b>{recipe.creatorName}</b></span></em></span></a>)}</div>:<p>Inga publika recept ännu.</p>}</main>;
 }
 

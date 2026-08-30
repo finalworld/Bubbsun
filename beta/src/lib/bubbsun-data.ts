@@ -235,6 +235,7 @@ const publicRecipeId=(sourcePath:string)=>sourcePath.replace(/\//g,"__");
 const publicRecipeKey=(recipe:Recipe)=>recipe.sourcePath||`${recipe.creatorId}:${recipe.id}`;
 const uniquePublicRecipes=(recipes:Recipe[])=>Array.from(recipes.reduce((values,recipe)=>{const key=publicRecipeKey(recipe);const current=values.get(key);if(!current||(recipe.updatedAt||0)>(current.updatedAt||0))values.set(key,recipe);return values},new Map<string,Recipe>()).values()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
 export function watchPublicRecipes(callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")),snap=>callback(uniquePublicRecipes(snap.docs.map(parseRecipe).filter(recipe=>recipe.isPublic))));}
+export async function loadPublicRecipes():Promise<Recipe[]>{const snap=await getDocs(query(collection(db,"publicRecipes"),orderBy("updatedAt","desc")));return uniquePublicRecipes(snap.docs.map(parseRecipe).filter(recipe=>recipe.isPublic))}
 export async function getPublicRecipe(recipeId:string):Promise<Recipe|null>{
   const [direct,matches]=await Promise.all([
     getDoc(doc(db,"publicRecipes",recipeId)),

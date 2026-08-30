@@ -2314,14 +2314,14 @@ function SortableItemRow({
         {(selecting ? selected : item.completed) && <Check />}
       </button>
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
-        {listType==="links"&&item.linkUrl&&<img className="saved-link-thumb" src={item.linkImage||automaticLinkImage(item.linkUrl)} alt="" loading="lazy" onError={event=>{event.currentTarget.style.display="none"}}/>}
+        {listType==="links"&&item.linkUrl&&<img className="saved-link-thumb" src={item.linkImage||automaticLinkImage(item.linkUrl)} alt={`Förhandsvisning av ${item.name}`} loading="lazy"/>}
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
         {listType==="links"&&item.linkUrl&&<small className="saved-link-domain">{(()=>{try{return new URL(item.linkUrl).hostname.replace(/^www\./,"")}catch{return item.linkUrl}})()}</small>}
         {(item.quantity||item.assignedTo||item.assigneeName||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,(item.assigneeName||item.assignedTo)&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assigneeName||item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
         <>
-          {listType==="links"&&item.linkUrl&&<a className="saved-link-open" href={item.linkUrl} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${item.name}`} title="Öppna länken"><ExternalLink/></a>}
+          {listType==="links"&&item.linkUrl&&<a className="saved-link-open" href={item.linkUrl} target="_blank" rel="noopener noreferrer" aria-label={`Öppna ${item.name}`} title="Öppna länken"><ExternalLink/><span>ÖPPNA</span></a>}
           <button
             className={`like-button flame-button no-hover ${item.likedBy.length ? "has-votes" : ""} ${liked ? "liked" : ""}`}
             aria-label={liked ? "Ta bort din eld" : "Ge en eld"}
@@ -2497,7 +2497,7 @@ function ListPage({
   const normalized = (value: string) =>
     value.trim().replace(/\s+/g, " ").toLocaleLowerCase("sv");
   const suggestionQuery = normalized(name);
-  const itemSuggestions = suggestionQuery.length >= 3
+  const itemSuggestions = list.listType!=="links"&&suggestionQuery.length >= 3
     ? Array.from(
         new Map(
           [list, ...siblingLists]
@@ -2522,6 +2522,10 @@ function ListPage({
       (item) => normalized(item.name) === normalized(cleanName),
     );
     if (existing) {
+      if(list.listType==="links"&&linkUrl){
+        onChange({...list,items:list.items.map(item=>item.id===existing.id?{...item,linkUrl,quantity:quantity.trim(),note:newItemNote.trim()||item.note,linkImage:newLinkImage||item.linkImage}:item)});
+        setName("");setQuantity("");setNewItemNote("");setShowNewItemNote(false);setNewLinkUrl("");setNewLinkImage("");return;
+      }
       if (existing.completed) {
         const restored = {
           ...existing,
@@ -2542,6 +2546,7 @@ function ListPage({
       setQuantity("");
       setNewItemNote("");
       setShowNewItemNote(false);
+      setNewLinkUrl("");setNewLinkImage("");
       return;
     }
     const item: ListItem = {
@@ -2810,7 +2815,7 @@ function ListPage({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Namn"
+              placeholder={list.listType==="links"?"Rubrik":"Namn"}
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
                 e.preventDefault();
@@ -2833,6 +2838,7 @@ function ListPage({
           </span>
           <input
             className={list.listType==="links"?"saved-link-title-input":undefined}
+            aria-label={list.listType==="links"?"Kort text":undefined}
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             onKeyDown={(e) => {

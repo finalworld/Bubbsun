@@ -2500,15 +2500,6 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   text-decoration: underline !important;
 }
 .app-shell .admin-member-list strong { display: inline-flex !important; align-items: center !important; gap: 8px !important; }
-.app-shell .admin-online-dot {
-  width: 10px !important;
-  height: 10px !important;
-  min-width: 10px !important;
-  border-radius: 50% !important;
-  background: #55ad67 !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #55ad67 22%, transparent) !important;
-}
-
 .app-shell .content.list-page { padding-top: 12px !important; }
 .app-shell .list-editor .list-type-picker button:not(.selected) {
   color: var(--theme-text) !important;

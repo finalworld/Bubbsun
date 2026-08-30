@@ -3598,6 +3598,7 @@ html body .app-shell.app-shell button.role-remove-member.role-remove-member {
 .yatzy-library-card{display:block!important;height:100%;align-self:stretch}.yatzy-cover{display:grid;place-items:center;width:100%;margin:-39px 0 0!important;padding-top:39px!important;background:radial-gradient(circle at 25% 18%,#fff9df 0 5%,transparent 6%),linear-gradient(145deg,#2d7652,#123b28)!important}.yatzy-cover:before{content:"⚄  ⚁\A  ⚂  ⚅";white-space:pre;transform:rotate(-8deg);color:#fff7dd;font:900 70px/1.15 Georgia,serif;text-shadow:0 7px 0 #0b271a,7px 9px 15px #071a11;transition:.2s}.yatzy-cover>i{font-style:normal;font-size:27px}.yatzy-library-card:hover .yatzy-cover:before{transform:rotate(3deg) scale(1.05)}
 .game-cover.has-custom-cover{background-position:center!important;background-size:cover!important;background-repeat:no-repeat!important}.yatzy-cover.has-custom-cover{background-image:var(--game-cover-image)!important}.yatzy-cover.has-custom-cover:before{display:none}.admin-games{display:grid;gap:18px}.admin-games>header{display:flex;align-items:center;gap:14px;padding:18px;border:2px solid var(--theme-outline);border-radius:18px;background:var(--theme-paper)}.admin-games>header>svg{width:46px;height:46px;color:var(--theme-accent)}.admin-games h2,.admin-games h3,.admin-games p{margin:0}.admin-games>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.admin-games article{overflow:hidden;border:2px solid var(--theme-outline);border-radius:20px;background:var(--theme-paper);box-shadow:0 5px 0 color-mix(in srgb,var(--theme-outline) 65%,transparent)}.admin-game-preview{height:220px;background-position:center;background-size:cover;background-repeat:no-repeat}.admin-game-preview.yatzy-default{display:grid;place-items:center;background:linear-gradient(145deg,#2d7652,#123b28)}.admin-game-preview.yatzy-default span{color:#fff7dd;font:900 55px/1.15 Georgia,serif;transform:rotate(-7deg);text-align:center}.admin-games article>section{display:grid;gap:7px;padding:18px}.admin-games article>section>small{color:var(--theme-accent);font:900 9px Arial;letter-spacing:1.2px}.admin-games article>section>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.admin-games article label,.admin-games article button{min-height:42px;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border:2px solid var(--theme-outline);border-radius:10px;background:var(--theme-accent);color:#fff;font:900 10px Arial;cursor:pointer}.admin-games article label input{display:none}.admin-games article label svg{width:18px}.admin-games article button.cancel{background:var(--theme-paper);color:var(--theme-text)}.admin-games article button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:720px){.admin-games>div{grid-template-columns:1fr}.admin-game-preview{height:190px}}
 .header-game-wallet{justify-self:end;min-width:190px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.header-game-wallet>span{min-width:0;padding:7px 9px;border:1px solid var(--theme-outline);border-radius:11px;background:var(--theme-paper);text-align:center}.header-game-wallet small,.header-game-wallet strong{display:block;white-space:nowrap}.header-game-wallet small{color:var(--theme-accent);font:900 8px Arial}.header-game-wallet strong{font:900 14px Georgia,serif}
+.header-game-xp{justify-self:end;min-width:190px;display:flex;align-items:center;gap:10px;padding:8px 12px;border:2px solid var(--theme-outline);border-radius:16px;background:var(--theme-paper);color:var(--theme-text);box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 65%,transparent)}.header-game-xp>svg{width:36px;height:36px;padding:8px;border-radius:11px;background:var(--theme-accent);color:var(--theme-paper);fill:#f3c44d}.header-game-xp>span{min-width:110px;display:grid}.header-game-xp small{color:var(--theme-accent);font:900 8px/1.2 Arial;letter-spacing:1px}.header-game-xp strong{font:900 15px/1.2 Georgia,serif}.header-game-xp i{height:5px;margin-top:5px;border-radius:8px;background:color-mix(in srgb,var(--theme-outline) 28%,var(--theme-paper));overflow:hidden}.header-game-xp em{display:block;height:100%;border-radius:inherit;background:var(--theme-accent)}
 .frasse-page{position:relative;width:min(100%,880px);box-sizing:border-box;margin:0 auto;padding:18px 20px 90px;color:var(--theme-text)}.frasse-toolbar{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px}.frasse-toolbar>div{display:flex;gap:7px}.frasse-toolbar button,.frasse-back{min-height:42px;display:flex;align-items:center;gap:7px;padding:8px 12px!important;border:2px solid var(--theme-outline)!important;border-radius:11px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;font-weight:900}.frasse-toolbar svg{width:18px}.frasse-progress{width:100%;display:grid!important;grid-template-columns:82px 1fr;align-items:center;gap:13px;padding:12px!important;border:2px solid var(--theme-outline)!important;border-radius:16px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;text-align:left!important}.frasse-progress>span{display:grid;place-items:center;padding:8px;border-radius:11px;background:var(--theme-accent);color:#fff;font:900 10px Arial}.frasse-progress>span b{font-size:28px}.frasse-progress>div{display:grid;gap:5px}.frasse-progress i,.frasse-jackpot i{height:11px;overflow:hidden;border:1px solid var(--theme-outline);border-radius:999px;background:#0002}.frasse-progress em,.frasse-jackpot em{display:block;height:100%;background:linear-gradient(90deg,var(--theme-accent),#f4bd2a)}.frasse-bonus-row{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:12px 0}.frasse-bonus-row button{min-height:39px;padding:8px 12px!important;border:2px solid var(--theme-outline)!important;border-radius:10px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;font-weight:900}.frasse-bonus-row button.active{background:var(--theme-accent)!important;color:#fff!important}
 .slot-machine{max-width:720px;margin:auto;overflow:hidden;border:7px solid #4b2614;border-radius:30px;background:linear-gradient(135deg,#b22b20,#6e130f);box-shadow:inset 0 0 0 4px #dc7b30,0 12px 0 #2b170d,0 25px 40px #25120855}.slot-machine.gold{filter:drop-shadow(0 0 13px #ffc824)}.slot-machine>header{display:flex;align-items:center;justify-content:space-around;padding:14px;color:#ffe47b;text-align:center;text-shadow:0 3px #50120b}.slot-machine>header div{display:grid}.slot-machine>header b{font:900 34px/1 Georgia,serif}.slot-machine>header strong{font:900 13px Arial;letter-spacing:4px}.frasse-jackpot{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 15px;background:#2b110c;color:#ffe676;font:900 10px Arial}.frasse-reels{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:0 14px;padding:8px;border:5px solid #3b1d10;border-radius:18px;background:#2b170e}.frasse-reels>div{aspect-ratio:1.18;display:grid;place-items:center;align-content:center;overflow:hidden;border:2px solid #c39b69;border-radius:9px;background:radial-gradient(circle,#fffdf1,#ead5a7);color:#351c11}.frasse-reels span{font-size:clamp(38px,8vw,68px)}.frasse-reels small{font:900 8px Arial;text-transform:uppercase}.frasse-reels .rolling{animation:frasseRoll .11s linear infinite;filter:blur(2px)}.frasse-reels .winner{outline:5px solid #fff12f;box-shadow:inset 0 0 20px #ffb400,0 0 17px #fff12f}.frasse-message{min-height:24px;margin:10px 14px 0;padding:9px;border:2px solid #f0b23f;border-radius:9px;background:#2c150d;color:#ffe890;text-align:center;font-weight:900}.frasse-error{margin:7px 14px;padding:8px;border-radius:8px;background:#8f1717;color:#fff;text-align:center}.frasse-controls{display:grid;grid-template-columns:1fr 2fr 1fr;gap:9px;padding:14px}.frasse-controls>*{border:2px solid #e2a63c!important;border-radius:11px!important;background:#fff2c9!important;color:#3d1b0f!important;font-weight:900!important}.frasse-controls label{display:grid;place-items:center;padding:8px}.spin-button{min-height:74px!important;border:5px solid #4c170b!important;background:linear-gradient(#57d936,#148a13)!important;color:#fff!important;font:900 clamp(18px,4vw,31px) Georgia,serif!important}.frasse-server-note{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px}.game-loading{min-height:300px;display:grid;place-items:center;font-weight:900}
 .frasse-modal-backdrop{position:fixed;z-index:900;inset:0;display:grid;place-items:center;padding:16px;background:#1b0d08c9;backdrop-filter:blur(4px)}.frasse-modal{position:relative;width:min(720px,100%);max-height:88dvh;box-sizing:border-box;overflow:auto;padding:28px;border:4px solid var(--theme-outline);border-radius:24px;background:var(--theme-paper);color:var(--theme-text)}.frasse-modal .close{position:absolute;right:12px;top:12px;width:42px;height:42px;border-radius:50%!important;background:var(--theme-accent)!important;color:#fff!important}.frasse-modal h2{display:flex;align-items:center;justify-content:center;gap:8px}.frasse-prizes{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.frasse-prizes>div{display:grid;place-items:center;padding:9px;border:1px solid var(--theme-outline);border-radius:10px}.frasse-prizes b{font-size:33px}.leader-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px}.leader-tabs button{padding:11px}.leader-tabs .active{background:var(--theme-accent)!important;color:#fff!important}.leader-list{display:grid;gap:7px;padding:0;list-style:none}.leader-list li{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:10px;padding:10px;border:1px solid var(--theme-outline);border-radius:12px}.leader-list span{display:grid}.leader-list em{font-style:normal;font-weight:900}.scratch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.scratch-grid button{aspect-ratio:1.5;border-radius:9px!important;background:linear-gradient(135deg,#777,#eee,#888)!important;color:#303030!important;font-weight:900!important}.scratch-grid .scratched{background:var(--theme-paper)!important;color:var(--theme-text)!important}.prestige-button{width:100%;min-height:54px;margin-top:15px;background:#f4bd2a!important}.frasse-confetti{position:fixed;z-index:1000;inset:0;pointer-events:none;overflow:hidden}.frasse-confetti i{position:absolute;left:var(--x);top:-30px;width:13px;height:24px;background:#ffcf24;animation:frasseFall 1.8s ease-out var(--delay) both}
@@ -3606,6 +3607,8 @@ html body .app-shell.app-shell button.role-remove-member.role-remove-member {
 
 /* Frasse v2: originalets riktiga hjul, symbolark och kompakta banditformat. */
 @media(min-width:901px){.app-shell .topbar .topbar-inner:has(.header-game-wallet){grid-template-columns:76px max-content minmax(190px,1fr) auto!important}.app-shell .topbar .topbar-inner:has(.header-game-wallet)>.header-admin-stats{grid-column:3!important;justify-self:end!important;margin-right:18px}.app-shell .topbar .topbar-inner:has(.header-game-wallet)>.header-game-wallet{grid-column:4!important}}
+@media(min-width:901px){.app-shell .topbar .topbar-inner:has(.header-game-xp){grid-template-columns:76px max-content minmax(190px,1fr) auto!important}.app-shell .topbar .topbar-inner:has(.header-game-xp)>.header-game-xp{grid-column:4!important}}
+@media(max-width:680px){.header-game-xp{min-width:112px;padding:5px 7px;gap:6px;border-radius:12px}.header-game-xp>svg{width:27px;height:27px;padding:6px}.header-game-xp>span{min-width:67px}.header-game-xp small{font-size:6px}.header-game-xp strong{font-size:10px}.header-game-xp i{height:3px;margin-top:3px}}
 .frasse-page{width:min(100%,780px);padding-top:8px}.frasse-toolbar{margin-bottom:7px}.frasse-toolbar button{min-height:35px;padding-block:5px!important}.frasse-progress{padding:7px 10px!important}.frasse-progress>span{padding:4px 8px}.frasse-progress>span b{font-size:22px}.frasse-progress i{height:9px}.frasse-progress small{font-size:10px}.frasse-bonus-row{margin:6px 0}.frasse-bonus-row button{min-height:31px;padding:5px 9px!important;font-size:10px}.frasse-paytable-open{display:block;width:100%;margin:0 0 6px;padding:7px!important;border:2px solid var(--theme-outline)!important;border-radius:9px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;font:900 10px Arial!important;letter-spacing:.5px}.slot-machine{max-width:680px;border-width:5px;border-radius:22px}.slot-machine>header{padding:7px}.slot-machine>header b{font:900 13px Arial,sans-serif;letter-spacing:6px}.slot-machine>header strong{font:900 25px Georgia,serif;letter-spacing:2px}.frasse-reels{height:330px;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0 12px;padding:7px;border-width:4px;border-radius:13px;overflow:hidden}.frasse-reel{position:relative;min-width:0;height:100%;overflow:hidden;border:3px solid #9d5d22;border-radius:10px;background:linear-gradient(110deg,#fff8df,#edc17c)}.frasse-strip-cell{height:104px;display:grid;place-items:center}.frasse-symbol,.frasse-symbol-mini{display:block;width:84px;height:84px;border:3px solid #d09b27;border-radius:50%;background-image:url('/beta/games/frasses-enarmade-bandit/frasse-symbols.png');background-size:440% auto;background-repeat:no-repeat;background-color:#090909;box-shadow:0 0 0 2px #ffe58c,3px 4px 0 #392016}.frasse-symbol-mini{width:48px;height:48px}.frasse-reel-strip{position:absolute;left:0;right:0;top:0;animation:frasseReelRoll .75s linear infinite;will-change:transform}.frasse-stopped-column{animation:frasseReelStop .3s cubic-bezier(.2,.9,.25,1.15)}.frasse-reel-shade{position:absolute;z-index:3;left:0;right:0;height:30px;pointer-events:none}.frasse-reel-shade.top{top:0;background:linear-gradient(#3c1c1475,transparent)}.frasse-reel-shade.bottom{bottom:0;background:linear-gradient(transparent,#3c1c1475)}.frasse-reel.is-spinning .frasse-symbol{filter:blur(.7px)}.frasse-message{margin-top:6px;padding:6px;min-height:29px}.frasse-controls{padding:8px 12px 11px}.frasse-controls label{padding:4px}.spin-button{min-height:58px!important}.frasse-server-note{margin:10px 0;font-size:10px}.frasse-milestones{display:grid;gap:7px}.frasse-milestones article{display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;padding:9px;border:1px solid var(--theme-outline);border-radius:10px}.frasse-milestones article>span{font-size:25px}.frasse-milestones article p{margin:2px 0;font-size:11px}.frasse-milestones article em{font:900 9px Arial;font-style:normal;color:var(--theme-accent)}.frasse-milestones .locked{filter:grayscale(1);opacity:.5}.frasse-line-guide{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}.frasse-line-guide article{display:grid;place-items:center;padding:8px 4px;border:1px solid var(--theme-outline);border-radius:9px;text-align:center}.frasse-line-guide span{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:var(--theme-accent);color:#fff;font-weight:900}.frasse-line-guide em{font:800 8px Arial;font-style:normal}.frasse-prizes .frasse-symbol-mini{font-size:0}
 @keyframes frasseReelRoll{from{transform:translateY(-520px)}to{transform:translateY(0)}}@keyframes frasseReelStop{0%{transform:translateY(-38px)}65%{transform:translateY(7px)}100%{transform:translateY(0)}}
 @media(max-width:680px){.frasse-page{padding-top:5px}.frasse-reels{height:270px}.frasse-strip-cell{height:84px}.frasse-symbol{width:68px;height:68px}.slot-machine>header strong{font-size:20px}.frasse-line-guide{grid-template-columns:repeat(2,1fr)}@keyframes frasseReelRoll{from{transform:translateY(-420px)}to{transform:translateY(0)}}}
@@ -3648,6 +3651,125 @@ body .app-shell .modal-backdrop>.modal.budget-editor>.budget-type>button.selecte
   body .app-shell .calendar-page .calendar-week>section>h2{position:relative!important;box-sizing:border-box!important;align-items:center!important;justify-content:flex-start!important;padding:52px 4px 8px!important}
   body .app-shell .calendar-page .calendar-week>section>h2>button.calendar-week-mobile-add{position:absolute!important;inset:9px auto auto 50%!important;left:50%!important;top:9px!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;transform:translateX(-50%)!important;z-index:3!important}
 }
+
+/* Games library heading and Connect Four multiplayer screens. */
+body .app-shell .games-hub-title{align-items:start!important;column-gap:18px!important}
+body .app-shell .games-page-profile{align-self:start!important;margin-top:0!important}
+body .app-shell .games-hub-title h1{margin-top:7px!important;line-height:.98!important}
+body .app-shell .games-hub .game-card-grid{margin-top:6px!important}
+.connect4-mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(100%,760px);margin:18px auto}.connect4-mode-grid>button{display:grid;grid-template-columns:58px minmax(0,1fr) 24px;align-items:center;gap:13px;min-height:126px;padding:18px;border:2px solid var(--theme-outline);border-radius:22px;background:var(--theme-paper);color:var(--theme-text);text-align:left;box-shadow:0 6px 0 color-mix(in srgb,var(--theme-outline) 56%,transparent)}.connect4-mode-grid>button>svg:first-child{box-sizing:border-box;width:56px;height:56px;padding:13px;border-radius:17px;background:color-mix(in srgb,var(--theme-accent) 14%,var(--theme-panel))}.connect4-mode-grid span{display:grid;gap:4px}.connect4-mode-grid small,.connect4-lobby h2{color:var(--theme-accent);font:900 10px Arial;letter-spacing:1.2px}.connect4-mode-grid strong{font:900 24px Georgia}.connect4-mode-grid p{margin:0;font-size:14px}.connect4-lobby{align-content:start}.connect4-match-list,.connect4-friends{display:grid;gap:8px;padding:17px;border:2px solid var(--theme-outline);border-radius:21px;background:var(--theme-panel)}.connect4-match-list h2,.connect4-friends h2{margin:0 0 3px}.connect4-match-list>button,.connect4-friends>button{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:11px;min-height:62px;padding:9px 11px;border:1px solid color-mix(in srgb,var(--theme-outline) 45%,transparent);border-radius:13px;background:var(--theme-paper);color:var(--theme-text);text-align:left}.connect4-match-list>button>svg:first-child{box-sizing:border-box;width:38px;height:38px;padding:9px;border-radius:11px;background:color-mix(in srgb,var(--theme-accent) 15%,transparent);color:var(--theme-accent)}.connect4-match-list span,.connect4-friends span{display:grid;gap:3px}.connect4-match-list small,.connect4-friends small{opacity:.68}.connect4-friends>button>i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;color:#fff;font-style:normal;font-weight:900}.connect4-friends>button>b{color:var(--theme-accent);font:900 10px Arial;letter-spacing:.8px}.connect4-error{margin:0;padding:10px 13px;border:1px solid #b83e4b;border-radius:12px;background:#b83e4b12;color:#9f3340;font-weight:800}.connect4-result .secondary{background:transparent!important;color:#fff!important}
+@media(max-width:700px){body .app-shell .games-hub-title{grid-template-columns:44px minmax(0,1fr)!important;gap:8px!important}body .app-shell .games-hub-title h1{margin-top:3px!important;font-size:clamp(29px,9vw,40px)!important}body .app-shell .games-page-profile{grid-column:1/-1!important;margin-top:0!important}.connect4-mode-grid{grid-template-columns:1fr;gap:10px;margin:7px auto}.connect4-mode-grid>button{grid-template-columns:48px minmax(0,1fr) 20px;min-height:94px;padding:12px}.connect4-mode-grid>button>svg:first-child{width:46px;height:46px;padding:10px}.connect4-mode-grid strong{font-size:20px}.connect4-match-list,.connect4-friends{padding:11px}.connect4-match-list>button,.connect4-friends>button{min-height:56px;padding:7px}}
+
+/* Connect Four: full-width game page with a compact green tabletop board. */
+body .app-shell .content.connect4-page{
+  box-sizing:border-box!important;
+  width:min(calc(100% - 28px),1120px)!important;
+  max-width:1120px!important;
+  min-height:0!important;
+  gap:8px!important;
+  padding:8px 0 10px!important;
+}
+body .app-shell .connect4-page>header{width:100%!important}
+body .app-shell .connect4-table{
+  box-sizing:border-box!important;
+  width:min(100%,calc(100dvh - 205px),720px)!important;
+  margin-inline:auto!important;
+  padding:13px 16px 16px!important;
+  border:3px solid #9f7a52!important;
+  border-radius:27px!important;
+  background:
+    radial-gradient(circle at 28% 18%,#ffffff0b 0 1px,transparent 2px),
+    linear-gradient(145deg,#38553b,#1f3827 64%,#182f21)!important;
+  background-size:13px 13px,auto!important;
+  box-shadow:inset 0 0 0 4px #25442e,inset 0 0 0 6px #b9925f,0 7px 0 #76563d,0 12px 24px #24170d32!important;
+}
+body .app-shell .connect4-status{margin:0 0 4px!important;color:#f5e2b4!important;font-size:18px!important;text-shadow:0 1px #25170e!important}
+body .app-shell .connect4-columns{gap:7px!important;margin-bottom:2px!important;padding-inline:7px!important}
+body .app-shell .connect4-columns button{height:25px!important;color:#c99b57!important}
+body .app-shell .connect4-columns button:hover:not(:disabled){background:#f6e3b118!important}
+body .app-shell .connect4-board{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:none!important;
+  gap:clamp(5px,1vw,9px)!important;
+  margin:0!important;
+  padding:clamp(8px,1.4vw,13px)!important;
+  border:4px solid #ba9160!important;
+  border-radius:20px!important;
+  background:linear-gradient(145deg,#304e35,#213b29)!important;
+  box-shadow:inset 0 0 0 3px #173021,inset 0 0 0 5px #d0ac73,0 4px 0 #17291d!important;
+}
+body .app-shell .connect4-board i{
+  border:2px solid #b78d57!important;
+  background:#f6ecd5!important;
+  box-shadow:inset 0 4px 8px #6d4d2c45,0 1px 0 #f9e8bd!important;
+}
+body .app-shell .connect4-board i.you{border-color:#173c28!important;background:#4f8062!important;box-shadow:inset 0 5px 7px #b9e0c3,0 2px 0 #102c1c!important}
+body .app-shell .connect4-board i.frasse{border-color:#8d651d!important;background:#f7d958!important;box-shadow:inset 0 5px 7px #fff2a7,0 2px 0 #795615!important}
+body .app-shell .connect4-board i.last-move{position:relative;z-index:2;outline:3px solid #fff1a8;outline-offset:2px;animation:connect4-last-move-glow .85s ease-in-out infinite alternate}
+@keyframes connect4-last-move-glow{from{filter:brightness(1.08) drop-shadow(0 0 2px #fff3b3);transform:scale(1.01)}to{filter:brightness(1.28) drop-shadow(0 0 9px #ffd85a);transform:scale(1.07)}}
+@media(prefers-reduced-motion:reduce){body .app-shell .connect4-board i.last-move{animation:none;filter:brightness(1.22) drop-shadow(0 0 7px #ffd85a)}}
+body .app-shell .connect4-result{border-radius:24px!important}
+@media(max-width:700px){
+  body .app-shell .content.connect4-page{width:100%!important;max-width:100%!important;gap:6px!important;padding:6px 8px 8px!important}
+  body .app-shell .connect4-page>header{grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important}
+  body .app-shell .connect4-page>header>button{grid-column:1/-1!important;min-height:38px!important;padding:0 11px!important}
+  body .app-shell .connect4-page>header h1{font-size:29px!important}
+  body .app-shell .connect4-page>header p{font-size:12px!important}
+  body .app-shell .connect4-profile{min-width:128px!important;padding:5px 7px!important}
+  body .app-shell .connect4-table{width:min(100%,calc(100dvh - 240px))!important;padding:9px 8px 10px!important;border-radius:20px!important}
+  body .app-shell .connect4-status{font-size:15px!important}
+  body .app-shell .connect4-columns{gap:4px!important;padding-inline:3px!important}
+  body .app-shell .connect4-columns button{height:20px!important}
+  body .app-shell .connect4-board{gap:4px!important;padding:6px!important;border-width:3px!important;border-radius:13px!important}
+  body .app-shell .connect4-board i{border-width:1px!important}
+}
+
+/* Final phone budget menu: a dedicated, unclipped layout. Keep this last. */
+@media(max-width:700px){
+  body .app-shell .budget-tabs{gap:6px!important;padding:8px!important;overflow:visible!important}
+  body .app-shell .budget-tab-tools{position:relative!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;height:46px!important;min-height:46px!important;overflow:visible!important}
+  body .app-shell .budget-tab-tools .budget-space{position:relative!important;grid-column:1!important;width:100%!important;height:46px!important;overflow:visible!important;z-index:30!important}
+  body .app-shell .budget-tab-tools .calendar-space-button{grid-template-columns:24px minmax(0,1fr) 14px!important;width:100%!important;height:46px!important;min-height:46px!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>svg:first-child,body .app-shell .budget-tab-tools .calendar-space-button>.group-picture{box-sizing:border-box!important;width:23px!important;height:23px!important;min-width:23px!important;padding:2px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span{display:grid!important;min-width:0!important;text-align:left!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span small{font-size:7px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:11px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger{grid-column:2!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;width:100%!important;height:46px!important;margin:0!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger:after{content:"INSTÄLLNINGAR"!important;font:900 9px/1 Arial,sans-serif!important;letter-spacing:.03em!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu{position:absolute!important;top:52px!important;left:0!important;right:auto!important;box-sizing:border-box!important;width:calc(200% + 6px)!important;min-width:0!important;max-width:none!important;padding:6px!important;z-index:100!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button{display:grid!important;grid-template-columns:28px minmax(0,1fr) 18px!important;width:100%!important;min-height:44px!important;padding:6px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:12px!important}
+  body .app-shell .budget-tab-links{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  body .app-shell .budget-tab-links>button{height:40px!important;min-height:40px!important;font-size:10px!important}
+  body .app-shell .budget-tab-links>button:first-child{grid-column:1/-1!important}
+  body .app-shell .budget-tab-links>button:nth-child(4),body .app-shell .budget-tab-links>button:nth-child(5){grid-column:auto!important}
+}
+
+/* Phone-only budget menu, deliberately separate from the desktop toolbar. */
+@media(max-width:700px){
+  body .app-shell .budget-tabs{gap:6px!important;padding:8px!important}
+  body .app-shell .budget-tab-tools{position:relative!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:46px!important;min-height:46px!important;gap:6px!important}
+  body .app-shell .budget-tab-tools .budget-space{position:relative!important;grid-column:1!important;grid-row:1!important;width:100%!important;height:46px!important;min-width:0!important;z-index:30!important}
+  body .app-shell .budget-tab-tools .calendar-space-button{grid-template-columns:24px minmax(0,1fr) 14px!important;height:46px!important;min-height:46px!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>svg:first-child,body .app-shell .budget-tab-tools .calendar-space-button>.group-picture{width:23px!important;height:23px!important;min-width:23px!important;padding:0!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span{display:grid!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span small{font-size:7px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span strong{font-size:11px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger{grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;width:100%!important;height:46px!important;min-width:0!important;margin:0!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger:after{content:"INSTÄLLNINGAR";font:900 9px/1 Arial,sans-serif;letter-spacing:.03em}
+  body .app-shell .budget-tab-tools .calendar-space-menu{position:absolute!important;top:52px!important;left:0!important;right:auto!important;box-sizing:border-box!important;width:calc(200% + 6px)!important;min-width:0!important;max-width:none!important;gap:4px!important;padding:6px!important;z-index:100!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button{display:grid!important;grid-template-columns:28px minmax(0,1fr) 18px!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;min-height:44px!important;padding:6px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:12px!important}
+  body .app-shell .budget-tab-links{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  body .app-shell .budget-tab-links>button{height:40px!important;min-height:40px!important;font-size:10px!important}
+  body .app-shell .budget-tab-links>button:first-child{grid-column:1/-1!important}
+  body .app-shell .budget-tab-links>button:nth-child(4),body .app-shell .budget-tab-links>button:nth-child(5){grid-column:auto!important}
+}
+
+/* Connect Four uses the normal page width; only the actual game stays compact. */
+body .app-shell .content.connect4-page{width:100%!important;max-width:1120px!important}
+body .app-shell .connect4-table{box-sizing:border-box!important;width:min(100%,700px)!important;margin-inline:auto!important}
 
 /* Account detail is a ledger, never a row of compressed cards. */
 body .app-shell .modal-backdrop>.modal.budget-account-detail{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-auto-flow:row!important;align-content:start!important}
@@ -3930,5 +4052,568 @@ body .app-shell .modal .budget-status-picker>button.selected{border-color:var(--
 .budget-calculator{width:min(390px,calc(100vw - 24px));padding:22px!important}.budget-calculator>header{display:flex;align-items:center;gap:12px;margin-bottom:16px}.budget-calculator>header>svg{width:42px;height:42px;padding:9px;border-radius:13px;background:var(--theme-accent);color:var(--theme-bg)}.budget-calculator header small{color:var(--theme-accent);font:900 10px Arial,sans-serif;letter-spacing:.13em}.budget-calculator h2{margin:2px 0 0}.budget-calculator output{display:block;min-height:82px;margin-bottom:12px;padding:18px 14px;border:2px solid var(--theme-outline);border-radius:17px;background:color-mix(in srgb,var(--theme-text) 88%,#000);color:var(--theme-bg);font:900 clamp(30px,10vw,46px)/1.05 Arial,sans-serif;text-align:right;overflow:hidden}.budget-calculator-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.budget-calculator-grid button{min-height:58px;border:1px solid color-mix(in srgb,var(--theme-outline) 65%,transparent);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);font:900 22px Georgia,serif;box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 35%,transparent)}.budget-calculator-grid button:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--theme-outline) 35%,transparent)}.budget-calculator-grid button:nth-child(4n),.budget-calculator-grid .equals,.budget-calculator-grid button.active{background:var(--theme-accent);color:var(--theme-bg)}.budget-calculator-grid .clear{color:#b83e4b}.budget-calculator-grid .zero{grid-column:span 2}.header-calculator svg{width:26px;height:26px}
 .modal.budget-calculator>.budget-calculator-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;justify-content:stretch!important}.modal.budget-calculator>.budget-calculator-grid>button{box-sizing:border-box;width:100%;min-width:0;padding:11px 4px}
 .modal.budget-calculator>header{display:grid;grid-template-columns:42px minmax(0,1fr) 54px;align-items:center}.modal.budget-calculator>header>.modal-x{position:static!important;inset:auto!important;display:grid!important;place-items:center;width:54px!important;height:54px!important;margin:0 0 0 auto!important;padding:0!important;border-radius:13px!important}.budget-calculator output{display:grid!important;gap:5px;align-content:center}.budget-calculator output small{min-height:20px;color:color-mix(in srgb,var(--theme-bg) 72%,transparent);font:700 16px/1.2 Arial,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.budget-calculator output strong{font:900 clamp(30px,10vw,46px)/1.05 Arial,sans-serif}
+@media(max-width:600px){body .app-shell .modal.budget-calculator{box-sizing:border-box!important;width:calc(100vw - 18px)!important;max-width:390px!important;padding:17px 14px!important}body .app-shell .modal.budget-calculator>header{grid-template-columns:40px minmax(0,1fr) 48px!important;gap:9px!important;margin-bottom:12px!important}body .app-shell .modal.budget-calculator>header>div{min-width:0!important;overflow:hidden!important}body .app-shell .modal.budget-calculator>header h2{max-width:100%!important;margin:1px 0 0!important;font-size:clamp(21px,6.4vw,27px)!important;line-height:1!important;letter-spacing:.01em!important;white-space:nowrap!important}body .app-shell .modal.budget-calculator>header small{font-size:8px!important;letter-spacing:.1em!important;white-space:nowrap!important}body .app-shell .modal.budget-calculator>header>svg{box-sizing:border-box!important;width:40px!important;height:40px!important;padding:8px!important}body .app-shell .modal.budget-calculator>header>.modal-x{width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important}}
 @media(min-width:701px){body .app-shell .budget-tabs{height:64px!important;min-height:64px!important;max-height:64px!important;gap:0!important;padding:7px 10px!important;border:1px solid color-mix(in srgb,var(--theme-outline) 28%,transparent)!important;border-radius:12px!important;background:color-mix(in srgb,var(--theme-paper) 94%,var(--theme-panel))!important;box-shadow:0 3px 12px color-mix(in srgb,var(--theme-outline) 9%,transparent)!important}body .app-shell .budget-tab-links{height:50px!important;min-height:50px!important;max-height:50px!important;gap:0!important}body .app-shell .budget-tab-links>button{position:relative;height:50px!important;min-height:50px!important;max-height:50px!important;padding:0 22px!important;border-right:1px solid color-mix(in srgb,var(--theme-outline) 24%,transparent)!important;border-radius:0!important;background:transparent!important;color:color-mix(in srgb,var(--theme-text) 84%,var(--theme-bg))!important;font-size:13px!important}body .app-shell .budget-tab-links>button:first-child{padding-left:14px!important}body .app-shell .budget-tab-links>button.selected{color:var(--theme-accent)!important}body .app-shell .budget-tab-links>button.selected:after{content:"";position:absolute;left:18px;right:18px;bottom:1px;height:2px;border-radius:99px;background:var(--theme-accent)}body .app-shell .budget-tab-links>button:hover{color:var(--theme-accent)!important}body .app-shell .budget-tab-tools{height:50px!important;min-height:50px!important;max-height:50px!important;gap:0!important;padding-left:10px;border-left:1px solid color-mix(in srgb,var(--theme-outline) 24%,transparent)}body .app-shell .budget-tab-tools .budget-space,body .app-shell .budget-tab-tools .calendar-space-button{height:50px!important;min-height:50px!important;max-height:50px!important}body .app-shell .budget-tab-tools .calendar-space-button{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}body .app-shell .budget-tab-tools .budget-settings-trigger{border:0!important;background:transparent!important;box-shadow:none!important}}
 @media(max-width:430px){.about-page .about-team .about-avatar,.about-page .about-team .about-avatar.frasse{width:52px!important;height:52px!important}}
+
+.games-hub{max-width:1120px;margin:0 auto;padding:44px 24px 90px}.games-hub-title{display:flex;align-items:center;gap:18px;margin-bottom:28px}.games-hub-title>svg{width:62px;height:62px;padding:15px;border-radius:18px;background:color-mix(in srgb,var(--theme-accent) 17%,var(--theme-paper));color:var(--theme-text)}.games-hub-title small{font:800 12px/1 system-ui;letter-spacing:2px;color:var(--theme-accent)}.games-hub-title h1{margin:5px 0;font:800 clamp(28px,5vw,52px)/1 var(--font-display,serif)}.yatzy-launch{width:100%;min-height:270px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:28px;padding:38px;border:2px solid var(--theme-outline);border-radius:30px;background:linear-gradient(135deg,var(--theme-paper),color-mix(in srgb,var(--theme-paper) 82%,var(--theme-accent)));color:var(--theme-text);text-align:left;box-shadow:0 10px 0 color-mix(in srgb,var(--theme-outline) 75%,transparent);cursor:pointer}.yatzy-launch small{font:800 11px/1 system-ui;letter-spacing:2px;color:var(--theme-accent)}.yatzy-launch h2{margin:8px 0;font:800 clamp(38px,6vw,68px)/1 var(--font-display,serif)}.yatzy-launch p{max-width:620px;font:600 17px/1.5 system-ui;color:color-mix(in srgb,var(--theme-text) 72%,transparent)}.yatzy-launch>span{font-size:90px}.yatzy-launch>svg{width:34px;height:34px}.yatzy-frame-page{height:calc(100dvh - var(--header-height,96px));min-height:680px;background:var(--theme-bg);overflow:hidden}.yatzy-frame-page iframe{display:block;width:100%;height:100%;border:0;background:var(--theme-bg)}
+@media(max-width:700px){.games-hub{padding:24px 14px 70px}.games-hub-title{align-items:flex-start}.games-hub-title>svg{width:48px;height:48px;padding:12px}.yatzy-launch{min-height:230px;grid-template-columns:1fr auto;padding:25px 20px;gap:12px}.yatzy-launch>span{font-size:56px}.yatzy-launch>svg{display:none}.yatzy-launch p{font-size:14px}.yatzy-frame-page{height:calc(100dvh - 78px);min-height:0}}
+
+/* Nöje som kortbibliotek, i samma täta format som kokboken. */
+.games-hub .game-card-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}.games-hub .game-library-card{min-height:0;border-width:2px!important;border-left:10px solid var(--theme-accent)!important;border-radius:26px!important;box-shadow:0 8px 18px #3a24131c!important}.games-hub .game-cover{min-height:205px}.games-hub .game-card-copy{padding:16px 18px 18px}.games-hub .game-card-copy h2{font-size:29px}.games-hub .game-card-copy p{min-height:42px;margin:8px 0 14px;font-size:14px;line-height:1.4}.games-hub .game-card-copy>strong{font-size:10px}.games-hub .yatzy-cover:before{font-size:58px}
+@media(max-width:899px){.games-hub .game-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.games-hub .game-library-card{border-left-width:8px!important;border-radius:20px!important}.games-hub .game-cover{min-height:142px}.games-hub .yatzy-cover:before{font-size:43px}.games-hub .game-card-copy{padding:11px 12px 13px}.games-hub .game-card-copy h2{font-size:21px}.games-hub .game-card-copy p{min-height:38px;font-size:12px}.games-hub .game-card-copy>strong{font-size:9px}}
+@media(max-width:480px){.games-hub .game-card-grid{grid-template-columns:1fr 1fr}}
+.connect4-cover{display:grid;place-items:center;background:linear-gradient(145deg,#315f50,#173a32)!important}.connect4-cover-board{display:grid;grid-template-columns:repeat(5,34px);gap:6px;padding:13px;border:5px solid #d7aa3d;border-radius:13px;background:#e4b941;transform:rotate(-3deg);box-shadow:0 8px 0 #805c18}.connect4-cover-board i{width:34px;height:34px;border-radius:50%;background:#f7efd9;box-shadow:inset 0 3px 4px #49381d55}.connect4-cover-board i.red{background:#d95050}.connect4-cover-board i.yellow{background:#f7d75b}.connect4-cover>b{position:absolute;z-index:2;right:18px;bottom:14px;display:grid;place-items:center;width:52px;height:52px;border:2px solid #fff3d0;border-radius:50%;background:#2e1d13;color:#fff3d0}.connect4-page{display:grid;gap:18px;max-width:900px;margin:0 auto;padding-top:24px!important;padding-bottom:80px!important}.connect4-page>header{display:flex;align-items:center;gap:24px}.connect4-page>header>button{display:flex;align-items:center;gap:7px;min-height:48px;padding:0 15px;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper);color:var(--theme-text);font-weight:900}.connect4-page>header small{color:var(--theme-accent);font:900 10px Arial;letter-spacing:1.5px}.connect4-page>header h1{margin:3px 0;font-size:clamp(34px,6vw,58px)}.connect4-page>header p{margin:0}.connect4-rewards{display:flex;justify-content:center;gap:10px}.connect4-rewards span{display:grid;min-width:125px;padding:9px 14px;border:1px solid var(--theme-outline);border-radius:999px;background:var(--theme-paper);font:900 9px Arial;text-align:center;letter-spacing:1px}.connect4-rewards b{font-size:18px}.connect4-table{position:relative;padding:22px;border:3px solid var(--theme-outline);border-radius:30px;background:color-mix(in srgb,var(--theme-accent) 18%,var(--theme-panel));box-shadow:0 9px 0 color-mix(in srgb,var(--theme-outline) 72%,transparent)}.connect4-status{margin-bottom:13px;font:900 20px Georgia;text-align:center}.connect4-columns,.connect4-board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px}.connect4-columns{margin-bottom:7px}.connect4-columns button{display:grid;place-items:center;min-width:0;height:34px;border:0;border-radius:9px;background:transparent;color:var(--theme-accent)}.connect4-columns button:hover:not(:disabled){background:color-mix(in srgb,var(--theme-accent) 18%,transparent);transform:translateY(3px)}.connect4-board{padding:14px;border:5px solid #9d721c;border-radius:20px;background:#e2b337;box-shadow:inset 0 0 0 3px #f4d66f,0 7px 0 #725116}.connect4-board i{aspect-ratio:1;border-radius:50%;background:var(--theme-paper);box-shadow:inset 0 5px 7px #4d351d66}.connect4-board i.you{background:#4f8062;box-shadow:inset 0 5px 5px #b9e0c3,0 2px 0 #244c35}.connect4-board i.frasse{background:#f7d958;box-shadow:inset 0 5px 5px #fff2a7,0 2px 0 #9a7118}.connect4-result{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;border-radius:26px;background:#24160dcc;backdrop-filter:blur(3px);color:#fff;text-align:center}.connect4-result strong{font:900 clamp(23px,5vw,38px) Georgia}.connect4-result button{padding:13px 22px;border:2px solid #fff4d6;border-radius:14px;background:var(--theme-accent);color:#fff;font-weight:900}@media(max-width:620px){.connect4-page{padding-inline:10px!important;gap:12px}.connect4-page>header{align-items:flex-start;gap:10px;flex-direction:column}.connect4-page>header h1{font-size:36px}.connect4-page>header p{font-size:13px}.connect4-rewards span{min-width:0;flex:1}.connect4-table{padding:12px 8px;border-radius:22px}.connect4-columns,.connect4-board{gap:5px}.connect4-board{padding:7px;border-width:4px;border-radius:14px}.connect4-status{font-size:17px}.connect4-cover-board{grid-template-columns:repeat(5,23px)}.connect4-cover-board i{width:23px;height:23px}}
+
+/* Budget mobile repair — keep every control readable inside the viewport. */
+@media(max-width:760px){
+  body .app-shell .content.budget-page{padding-inline:10px!important;overflow-x:clip!important}
+  body .app-shell .budget-tabs{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;padding:8px!important;overflow:hidden!important}
+  body .app-shell .budget-tab-tools{display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;width:100%!important;min-width:0!important;order:1!important}
+  body .app-shell .budget-tab-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;min-width:0!important;order:2!important;overflow:visible!important}
+  body .app-shell .budget-tab-links>button{box-sizing:border-box!important;justify-content:center!important;width:100%!important;min-width:0!important;padding:0 5px!important;font-size:11px!important;white-space:nowrap!important}
+
+  body .app-shell .modal-backdrop{box-sizing:border-box!important;padding:8px!important;overflow-x:hidden!important}
+  body .app-shell .modal-backdrop>.modal.budget-transfer-editor{box-sizing:border-box!important;width:100%!important;max-width:100%!important;max-height:calc(100dvh - 16px)!important;gap:13px!important;margin:auto!important;padding:18px 14px!important;overflow-x:hidden!important;overflow-y:auto!important}
+  body .app-shell .budget-transfer-editor>header{min-width:0!important;padding-right:48px!important}
+  body .app-shell .budget-transfer-editor>header>span{flex:0 0 42px;width:42px;height:42px}
+  body .app-shell .budget-transfer-editor>header h2{font-size:clamp(26px,9vw,36px)!important;line-height:.95!important;overflow-wrap:anywhere}
+  body .app-shell .budget-transfer-route{grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;width:100%!important;min-width:0!important}
+  body .app-shell .budget-transfer-route>b{height:18px!important;transform:rotate(90deg)!important}
+  body .app-shell .budget-transfer-account-field,body .app-shell .budget-transfer-account-picker{width:100%!important;min-width:0!important}
+  body .app-shell .budget-transfer-account-trigger{box-sizing:border-box!important;grid-template-columns:38px minmax(0,1fr) 18px!important;grid-template-rows:auto auto!important;width:100%!important;min-width:0!important;padding:9px!important}
+  body .app-shell .budget-transfer-account-trigger>i{grid-column:1;grid-row:1/3}
+  body .app-shell .budget-transfer-account-trigger>span{grid-column:2;grid-row:1;min-width:0!important}
+  body .app-shell .budget-transfer-account-trigger>span>*{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body .app-shell .budget-transfer-account-trigger>em{grid-column:2;grid-row:2;justify-self:start!important;font-size:12px!important;white-space:nowrap}
+  body .app-shell .budget-transfer-account-trigger>svg{grid-column:3;grid-row:1/3}
+  body .app-shell .budget-transfer-editor>.budget-editor-grid{grid-template-columns:minmax(0,1fr)!important;gap:11px!important}
+  body .app-shell .budget-transfer-editor footer{grid-template-columns:minmax(0,1fr)!important}
+
+  body .app-shell .modal-backdrop>.modal.budget-settings-editor{box-sizing:border-box!important;width:100%!important;max-width:100%!important;max-height:calc(100dvh - 16px)!important;gap:13px!important;margin:auto!important;padding:18px 12px!important;overflow-x:hidden!important;overflow-y:auto!important}
+  body .app-shell .budget-settings-editor>header{box-sizing:border-box!important;width:100%!important;padding:4px 50px 4px 0!important}
+  body .app-shell .budget-settings-editor>header>h2{min-width:0!important;font-size:clamp(22px,7vw,30px)!important;line-height:1!important;overflow-wrap:anywhere!important}
+  body .app-shell .budget-settings-explanation{display:block!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:12px!important;font-size:13px!important;line-height:1.45!important}
+  body .app-shell .budget-settings-explanation>strong,body .app-shell .budget-settings-explanation>p,body .app-shell .budget-settings-explanation>small{display:block!important;width:auto!important;margin:0!important;padding:0!important}
+  body .app-shell .budget-settings-explanation>p{margin-top:5px!important}
+  body .app-shell .budget-settings-explanation>small{margin-top:7px!important}
+  body .app-shell .budget-settings-editor>.budget-bank-editor>section{padding:10px!important}
+  body .app-shell .budget-settings-editor>.budget-bank-editor>section>div.budget-account-edit.budget-account-edit-full{position:relative!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important;padding:10px!important}
+  body .app-shell .budget-settings-editor .budget-account-edit-full>select,body .app-shell .budget-settings-editor .budget-account-edit-full>input,body .app-shell .budget-settings-editor .budget-account-edit-full>label{grid-column:1!important;width:100%!important}
+  body .app-shell .budget-settings-editor .budget-account-edit-full>select{padding-right:58px!important}
+  body .app-shell .budget-settings-editor .budget-account-edit-full>button{position:absolute!important;top:10px!important;right:10px!important;grid-column:auto!important;grid-row:auto!important;width:44px!important;min-width:44px!important;height:44px!important}
+}
+
+/* User-provided artwork for the game library. */
+.games-hub .yatzy-cover{background-image:linear-gradient(180deg,transparent 52%,#1711088f),url('/beta/assets/game-yatzy-cover.png')!important;background-position:center 57%!important;background-size:cover!important}
+.games-hub .yatzy-cover:before{display:none!important}
+.games-hub .connect4-cover{background-image:linear-gradient(180deg,transparent 52%,#1711088f),url('/beta/assets/game-connect4-cover.png')!important;background-position:center 46%!important;background-size:cover!important}
+.games-hub .connect4-cover-board{display:none!important}
+
+/* Compact Connect Four layout; XP belongs to the game, not the site header. */
+body .app-shell .content.connect4-page{box-sizing:border-box!important;width:min(calc(100% - 28px),760px)!important;max-width:760px!important;gap:13px!important;padding-top:16px!important}
+.connect4-page>header{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;gap:16px!important}
+.connect4-page>header h1{font-size:clamp(32px,5vw,48px)!important}
+.connect4-profile{display:grid;grid-template-columns:38px minmax(105px,1fr);align-items:center;gap:9px;min-width:170px;padding:8px 12px;border:2px solid var(--theme-outline);border-radius:16px;background:var(--theme-paper);box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 60%,transparent)}
+.connect4-profile>svg{box-sizing:border-box;width:38px;height:38px;padding:8px;border-radius:11px;background:var(--theme-accent);color:#f4ca55;fill:#f4ca55}
+.connect4-profile>span{display:grid;min-width:0}.connect4-profile small{color:var(--theme-accent);font:900 9px Arial;letter-spacing:1px}.connect4-profile strong{font:900 17px Georgia}.connect4-profile i{height:6px;margin-top:4px;border-radius:9px;background:color-mix(in srgb,var(--theme-outline) 22%,transparent);overflow:hidden}.connect4-profile em{display:block;height:100%;border-radius:inherit;background:var(--theme-accent)}
+.connect4-table{padding:15px 18px!important;border-radius:24px!important}.connect4-status{margin-bottom:7px!important;font-size:17px!important}.connect4-columns{margin-bottom:3px!important}.connect4-columns button{height:27px!important}.connect4-board{gap:7px!important;padding:10px!important;max-width:650px;margin-inline:auto}.connect4-result{border-radius:21px!important}
+@media(max-width:700px){body .app-shell .content.connect4-page{width:100%!important;max-width:100%!important;padding-inline:9px!important}.connect4-page>header{grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important}.connect4-page>header>button{grid-column:1/-1}.connect4-profile{min-width:145px;grid-template-columns:34px minmax(84px,1fr);padding:7px 9px}.connect4-profile>svg{width:34px;height:34px}.connect4-profile strong{font-size:15px}.connect4-page>header h1{font-size:32px!important}.connect4-table{padding:10px 7px!important}.connect4-board{gap:4px!important;padding:6px!important}}
+
+/* Equal game-library cards: no clipped badge, no protruding accent rail. */
+body .app-shell .games-hub .game-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch!important}
+body .app-shell .games-hub .game-library-card{display:grid!important;grid-template-rows:230px minmax(0,1fr)!important;height:100%!important;border:2px solid var(--theme-outline)!important;border-left-width:2px!important;border-radius:24px!important;overflow:hidden!important}
+body .app-shell .games-hub .game-cover,body .app-shell .games-hub .yatzy-cover,body .app-shell .games-hub .connect4-cover{box-sizing:border-box!important;width:100%!important;height:230px!important;min-height:230px!important;margin:0!important;padding:0!important;border-radius:0!important}
+body .app-shell .games-hub .game-cover>span{left:18px!important;top:16px!important;margin:0!important}
+body .app-shell .games-hub .yatzy-cover>i,body .app-shell .games-hub .connect4-cover>b{right:18px!important;bottom:16px!important;width:52px!important;height:52px!important;margin:0!important}
+body .app-shell .games-hub .game-card-copy{display:grid!important;grid-template-rows:auto auto minmax(44px,1fr) auto!important;box-sizing:border-box!important;height:100%!important}
+body .app-shell .games-hub .game-card-copy p{min-height:0!important}
+@media(max-width:700px){body .app-shell .games-hub .game-library-card{grid-template-rows:150px minmax(0,1fr)!important;border-radius:18px!important}body .app-shell .games-hub .game-cover,body .app-shell .games-hub .yatzy-cover,body .app-shell .games-hub .connect4-cover{height:150px!important;min-height:150px!important}body .app-shell .games-hub .game-cover>span{left:10px!important;top:10px!important;padding:6px 10px!important;font-size:10px!important}body .app-shell .games-hub .yatzy-cover>i,body .app-shell .games-hub .connect4-cover>b{right:10px!important;bottom:10px!important;width:40px!important;height:40px!important}body .app-shell .games-hub .game-card-copy{grid-template-rows:auto auto minmax(54px,1fr) auto!important}}
+
+body .app-shell .content.connect4-page{gap:8px!important;padding-top:8px!important}
+.connect4-page>header h1{margin:0 0 2px!important}
+.connect4-page>header p{line-height:1.15!important}
+
+.games-hub-title{display:grid!important;grid-template-columns:62px minmax(0,1fr) auto!important;width:100%;align-items:center!important}.games-page-profile{display:grid;grid-template-columns:38px minmax(100px,1fr);align-items:center;gap:9px;min-width:174px;padding:9px 12px;border:2px solid var(--theme-outline);border-radius:16px;background:var(--theme-paper);box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 55%,transparent)}.games-page-profile>svg{box-sizing:border-box;width:38px;height:38px;padding:8px;border-radius:11px;background:var(--theme-accent);color:#f4ca55;fill:#f4ca55}.games-page-profile>span{display:grid;min-width:0}.games-page-profile small{color:var(--theme-accent);font:900 9px Arial;letter-spacing:1px}.games-page-profile strong{font:900 17px Georgia}.games-page-profile i{height:6px;margin-top:4px;border-radius:9px;background:color-mix(in srgb,var(--theme-outline) 22%,transparent);overflow:hidden}.games-page-profile em{display:block;height:100%;border-radius:inherit;background:var(--theme-accent)}@media(max-width:700px){.games-hub-title{grid-template-columns:48px minmax(0,1fr)!important}.games-page-profile{grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:2px}}
+
+/* Compact budget navigation on phones. */
+@media(max-width:700px){
+  body .app-shell .budget-tabs{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:7px!important;width:100%!important;min-height:0!important;height:auto!important;padding:7px!important;border-radius:16px!important}
+  body .app-shell .budget-tab-tools{display:grid!important;grid-template-columns:minmax(0,1fr) 42px!important;align-items:center!important;gap:6px!important;width:100%!important;height:48px!important;min-height:48px!important;order:1!important}
+  body .app-shell .budget-tab-tools .budget-space{box-sizing:border-box!important;width:100%!important;height:48px!important;min-width:0!important;overflow:visible!important}
+  body .app-shell .budget-tab-tools .calendar-space-button{display:grid!important;grid-template-columns:30px minmax(0,1fr) 16px!important;align-items:center!important;gap:7px!important;box-sizing:border-box!important;width:100%!important;height:48px!important;min-height:48px!important;padding:5px 9px!important;border:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent)!important;border-radius:11px!important;background:var(--theme-paper)!important;box-shadow:none!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>svg,body .app-shell .budget-tab-tools .calendar-space-button>.group-icon{box-sizing:border-box!important;width:28px!important;height:28px!important;min-width:28px!important;padding:4px!important;border-radius:8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>span{display:grid!important;min-width:0!important;text-align:left!important;overflow:hidden!important}
+  body .app-shell .budget-tab-tools .calendar-space-button small{font-size:8px!important;line-height:1!important}
+  body .app-shell .budget-tab-tools .calendar-space-button strong{display:block!important;font-size:12px!important;line-height:1.15!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>svg:last-child{width:15px!important;height:15px!important;min-width:15px!important;padding:0!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;min-width:42px!important;margin:0!important;padding:8px!important;border:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent)!important;border-radius:11px!important;background:var(--theme-paper)!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger svg{width:23px!important;height:23px!important}
+  body .app-shell .budget-tab-links{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;width:100%!important;min-width:0!important;height:auto!important;order:2!important;overflow:visible!important}
+  body .app-shell .budget-tab-links>button{display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;min-height:42px!important;height:42px!important;margin:0!important;padding:4px 3px!important;border-radius:9px!important;font:900 9px/1 Arial,sans-serif!important;letter-spacing:.02em!important;white-space:nowrap!important}
+  body .app-shell .budget-tab-links>button svg{width:16px!important;height:16px!important;min-width:16px!important}
+  body .app-shell .budget-tab-links>button b{font-size:19px!important;line-height:1!important}
+  body .app-shell .budget-tab-links>button:nth-child(4){grid-column:1/2!important}
+  body .app-shell .budget-tab-links>button:nth-child(5){grid-column:2/4!important}
+}
+
+/* Definitive phone budget navigation. */
+@media(max-width:700px){
+  body .app-shell .budget-tabs{gap:6px!important;padding:8px!important;overflow:visible!important}
+  body .app-shell .budget-tab-tools{position:relative!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;height:46px!important;min-height:46px!important;overflow:visible!important}
+  body .app-shell .budget-tab-tools .budget-space{position:relative!important;grid-column:1!important;width:100%!important;height:46px!important;overflow:visible!important;z-index:30!important}
+  body .app-shell .budget-tab-tools .calendar-space-button{grid-template-columns:24px minmax(0,1fr) 14px!important;width:100%!important;height:46px!important;min-height:46px!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button>svg:first-child,body .app-shell .budget-tab-tools .calendar-space-button>.group-picture{box-sizing:border-box!important;width:23px!important;height:23px!important;min-width:23px!important;padding:2px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span{display:grid!important;min-width:0!important;text-align:left!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span small{font-size:7px!important}
+  body .app-shell .budget-tab-tools .calendar-space-button span strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:11px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger{grid-column:2!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;box-sizing:border-box!important;width:100%!important;height:46px!important;margin:0!important;padding:5px 8px!important}
+  body .app-shell .budget-tab-tools .budget-settings-trigger:after{content:"INSTÄLLNINGAR"!important;font:900 9px/1 Arial,sans-serif!important;letter-spacing:.03em!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu{position:absolute!important;top:52px!important;left:0!important;right:auto!important;box-sizing:border-box!important;width:calc(200% + 6px)!important;min-width:0!important;max-width:none!important;padding:6px!important;z-index:100!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button{display:grid!important;grid-template-columns:28px minmax(0,1fr) 18px!important;width:100%!important;min-height:44px!important;padding:6px 8px!important}
+  body .app-shell .budget-tab-tools .calendar-space-menu>button strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:12px!important}
+  body .app-shell .budget-tab-links{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  body .app-shell .budget-tab-links>button{height:40px!important;min-height:40px!important;font-size:10px!important}
+  body .app-shell .budget-tab-links>button:first-child{grid-column:1/-1!important}
+  body .app-shell .budget-tab-links>button:nth-child(4),body .app-shell .budget-tab-links>button:nth-child(5){grid-column:auto!important}
+}
+
+/* Final Connect Four geometry and tabletop finish. */
+body .app-shell .content.connect4-page{box-sizing:border-box!important;width:min(calc(100% - 28px),1120px)!important;max-width:1120px!important;min-height:0!important;gap:8px!important;padding:8px 0 10px!important}
+body .app-shell .connect4-page>header{width:100%!important}
+body .app-shell .connect4-table{box-sizing:border-box!important;width:min(100%,calc(100dvh - 205px),720px)!important;margin-inline:auto!important;padding:13px 16px 16px!important;border:3px solid #9f7a52!important;border-radius:27px!important;background:radial-gradient(circle at 28% 18%,#ffffff0b 0 1px,transparent 2px),linear-gradient(145deg,#38553b,#1f3827 64%,#182f21)!important;background-size:13px 13px,auto!important;box-shadow:inset 0 0 0 4px #25442e,inset 0 0 0 6px #b9925f,0 7px 0 #76563d,0 12px 24px #24170d32!important}
+body .app-shell .connect4-status{margin:0 0 4px!important;color:#f5e2b4!important;font-size:18px!important;text-shadow:0 1px #25170e!important}
+body .app-shell .connect4-columns{gap:7px!important;margin-bottom:2px!important;padding-inline:7px!important}
+body .app-shell .connect4-columns button{height:25px!important;color:#c99b57!important}
+body .app-shell .connect4-columns button:hover:not(:disabled){background:#f6e3b118!important}
+body .app-shell .connect4-board{box-sizing:border-box!important;width:100%!important;max-width:none!important;gap:clamp(5px,1vw,9px)!important;margin:0!important;padding:clamp(8px,1.4vw,13px)!important;border:4px solid #ba9160!important;border-radius:20px!important;background:linear-gradient(145deg,#304e35,#213b29)!important;box-shadow:inset 0 0 0 3px #173021,inset 0 0 0 5px #d0ac73,0 4px 0 #17291d!important}
+body .app-shell .connect4-board i{border:2px solid #b78d57!important;background:#f6ecd5!important;box-shadow:inset 0 4px 8px #6d4d2c45,0 1px 0 #f9e8bd!important}
+body .app-shell .connect4-board i.you{border-color:#173c28!important;background:#4f8062!important;box-shadow:inset 0 5px 7px #b9e0c3,0 2px 0 #102c1c!important}
+body .app-shell .connect4-board i.frasse{border-color:#8d651d!important;background:#f7d958!important;box-shadow:inset 0 5px 7px #fff2a7,0 2px 0 #795615!important}
+body .app-shell .connect4-result{border-radius:24px!important}
+@media(max-width:700px){body .app-shell .content.connect4-page{width:100%!important;max-width:100%!important;gap:6px!important;padding:6px 8px 8px!important}body .app-shell .connect4-page>header{grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important}body .app-shell .connect4-page>header>button{grid-column:1/-1!important;min-height:38px!important;padding:0 11px!important}body .app-shell .connect4-page>header h1{font-size:29px!important}body .app-shell .connect4-page>header p{font-size:12px!important}body .app-shell .connect4-profile{min-width:128px!important;padding:5px 7px!important}body .app-shell .connect4-table{width:min(100%,calc(100dvh - 240px))!important;padding:9px 8px 10px!important;border-radius:20px!important}body .app-shell .connect4-status{font-size:15px!important}body .app-shell .connect4-columns{gap:4px!important;padding-inline:3px!important}body .app-shell .connect4-columns button{height:20px!important}body .app-shell .connect4-board{gap:4px!important;padding:6px!important;border-width:3px!important;border-radius:13px!important}body .app-shell .connect4-board i{border-width:1px!important}}
+
+/* Desktop budget toolbar frame. */
+@media(min-width:701px){body .app-shell .budget-tabs{box-sizing:border-box!important;border:2px solid color-mix(in srgb,var(--theme-outline) 82%,#6f4b32)!important;border-radius:18px!important;box-shadow:0 5px 0 color-mix(in srgb,var(--theme-outline) 42%,transparent),0 10px 22px #38231312!important;overflow:visible!important}}
+
+/* Mobile budget navigation inspired by a native banking app. */
+.budget-mobile-shortcuts,.budget-mobile-dock{display:none}
+@media(max-width:700px){
+  body .app-shell .content.budget-page{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+  body .app-shell .budget-page>.budget-tabs{display:none!important}
+  body .app-shell .budget-mobile-shortcuts{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;order:-5;padding:12px 10px;border:2px solid var(--theme-outline);border-radius:18px;background:var(--theme-panel);box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 48%,transparent)}
+  body .app-shell .budget-mobile-shortcuts>button{display:grid;justify-items:center;align-content:center;gap:7px;min-width:0;min-height:78px;padding:7px 3px;border:0;border-radius:13px;background:transparent;color:var(--theme-text);font:900 10px/1 Arial,sans-serif;letter-spacing:.04em}
+  body .app-shell .budget-mobile-shortcuts>button:active{background:color-mix(in srgb,var(--theme-accent) 14%,transparent)}
+  body .app-shell .budget-mobile-shortcuts i{display:grid;place-items:center;width:42px;height:42px;margin:0;border:2px solid color-mix(in srgb,var(--theme-outline) 75%,transparent);border-radius:50%;background:var(--theme-paper);color:var(--theme-accent);font:900 27px/1 Arial,sans-serif;box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 42%,transparent)}
+  body .app-shell .budget-mobile-shortcuts i svg{width:21px;height:21px}
+  body .app-shell .budget-accounts-overview{order:-4}
+  body .app-shell .budget-month-nav{order:initial}
+  body .app-shell .budget-summary{order:-2}
+  body .app-shell .budget-insights{order:-1}
+  body .app-shell .budget-mobile-dock{position:fixed;z-index:4500;left:0;right:0;bottom:0;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch;box-sizing:border-box;min-height:72px;padding:7px 6px calc(7px + env(safe-area-inset-bottom));border-top:2px solid var(--theme-outline);background:color-mix(in srgb,var(--theme-paper) 96%,var(--theme-panel));box-shadow:0 -8px 24px #23160d26}
+  body .app-shell .budget-mobile-dock>button,body .app-shell .budget-mobile-space>button{position:relative;display:grid;justify-items:center;align-content:center;gap:4px;box-sizing:border-box;width:100%;min-width:0;height:58px;padding:5px 2px;border:0;border-radius:11px;background:transparent;color:color-mix(in srgb,var(--theme-text) 68%,transparent);font:900 8px/1 Arial,sans-serif;letter-spacing:.025em}
+  body .app-shell .budget-mobile-dock>button svg,body .app-shell .budget-mobile-space>button svg{width:24px;height:24px}
+  body .app-shell .budget-mobile-dock>button.selected,body .app-shell .budget-mobile-space>button.selected{color:var(--theme-accent);background:color-mix(in srgb,var(--theme-accent) 12%,transparent)}
+  body .app-shell .budget-mobile-dock>button.selected:after{content:"";position:absolute;left:16%;right:16%;bottom:-6px;height:3px;border-radius:9px;background:var(--theme-accent)}
+  body .app-shell .budget-mobile-space{position:relative;min-width:0}
+  body .app-shell .budget-mobile-space-menu{position:absolute;z-index:10;right:-100%;bottom:68px;display:grid;gap:5px;box-sizing:border-box;width:min(92vw,360px);max-height:min(55dvh,420px);padding:8px;overflow:auto;border:2px solid var(--theme-outline);border-radius:17px;background:var(--theme-paper);box-shadow:0 -7px 0 color-mix(in srgb,var(--theme-outline) 48%,transparent),0 -16px 30px #24160d38}
+  body .app-shell .budget-mobile-space-menu:after{content:"";position:absolute;right:36%;bottom:-9px;width:16px;height:16px;border-right:2px solid var(--theme-outline);border-bottom:2px solid var(--theme-outline);background:var(--theme-paper);transform:rotate(45deg)}
+  body .app-shell .budget-mobile-space-menu>button{display:grid;grid-template-columns:34px minmax(0,1fr) 20px;align-items:center;gap:9px;box-sizing:border-box;width:100%;min-height:48px;padding:7px 9px;border:0;border-radius:11px;background:transparent;color:var(--theme-text);text-align:left}
+  body .app-shell .budget-mobile-space-menu>button.selected{background:color-mix(in srgb,var(--theme-accent) 15%,transparent);color:var(--theme-accent)}
+  body .app-shell .budget-mobile-space-menu>button>svg:first-child,body .app-shell .budget-mobile-space-menu>button>.group-icon{width:30px;height:30px}
+  body .app-shell .budget-mobile-space-menu strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+}
+
+/* Final games-library top alignment. */
+body .app-shell .games-hub-title{align-items:start!important;column-gap:18px!important}
+body .app-shell .games-page-profile{align-self:start!important;margin-top:0!important}
+body .app-shell .games-hub-title h1{margin-top:7px!important;line-height:.98!important}
+body .app-shell .games-hub .game-card-grid{margin-top:6px!important}
+@media(max-width:700px){body .app-shell .games-hub-title{grid-template-columns:44px minmax(0,1fr)!important;gap:8px!important}body .app-shell .games-hub-title h1{margin-top:3px!important;font-size:clamp(29px,9vw,40px)!important}body .app-shell .games-page-profile{grid-column:1/-1!important;margin-top:0!important}}
+
+/* Keep artwork-based group icons inside the mobile budget picker avatar slot. */
+@media(max-width:700px){body .app-shell .budget-mobile-space-menu>button>.group-picture{display:block!important;box-sizing:border-box!important;width:30px!important;height:30px!important;min-width:30px!important;max-width:30px!important;min-height:30px!important;max-height:30px!important;margin:0!important;padding:0!important;border-radius:9px!important;object-fit:cover!important;object-position:center!important;overflow:hidden!important}body .app-shell .budget-mobile-space>button>.group-picture{display:block!important;width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;margin:0!important;border-radius:7px!important;object-fit:cover!important}}
+
+.connect4-friend-group{display:grid;gap:7px;padding:10px;border:1px solid color-mix(in srgb,var(--theme-outline) 38%,transparent);border-radius:15px;background:color-mix(in srgb,var(--theme-paper) 62%,transparent)}
+.connect4-friend-group>h3{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:2px 4px 5px;font-size:18px}.connect4-friend-group>h3 small{font:900 9px Arial;letter-spacing:.08em;text-transform:uppercase}
+.connect4-friend-group>button{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:11px;min-height:58px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--theme-outline) 45%,transparent);border-radius:13px;background:var(--theme-paper);color:var(--theme-text);text-align:left}.connect4-friend-group>button>i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;color:#fff;font-style:normal;font-weight:900}.connect4-friend-group>button>b{color:var(--theme-accent);font:900 10px Arial;letter-spacing:.8px}.connect4-friend-group>p{margin:3px 4px 7px;opacity:.7}
+@media(max-width:700px){.connect4-friend-group{padding:7px}.connect4-friend-group>button{min-height:54px;padding:7px}.connect4-friend-group>h3{font-size:16px}}
+
+/* Account details must stay above the fixed budget dock/avatar and retain the
+   compact desktop row structure on narrow screens. */
+body .app-shell .modal-backdrop:has(.budget-account-detail){z-index:10000!important}
+@media(max-width:600px){
+  body .app-shell .modal-backdrop>.modal.budget-account-detail{gap:11px!important;width:calc(100vw - 20px)!important;max-width:430px!important;max-height:calc(100dvh - 24px)!important;padding:16px 14px!important}
+  body .app-shell .budget-account-detail>.modal-x{right:12px!important;top:12px!important;width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;padding:10px!important}
+  body .app-shell .budget-account-detail>header{grid-template-columns:48px minmax(0,1fr) auto!important;gap:10px!important;padding-right:52px!important}
+  body .app-shell .budget-account-detail>header>b{grid-column:3!important;font-size:20px!important;white-space:nowrap!important}
+  body .app-shell .budget-account-detail-summary{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;padding:9px 4px!important}
+  body .app-shell .budget-account-detail-summary strong{text-align:right!important}
+  body .app-shell .budget-account-detail-list>article{grid-template-columns:36px minmax(0,1fr) auto!important;gap:9px!important;padding:11px 3px!important}
+  body .app-shell .budget-account-detail-list>article>b{grid-column:3!important;grid-row:1!important;justify-self:end!important;margin-top:0!important;white-space:nowrap!important}
+  body .app-shell .budget-account-detail-note{padding:10px 12px!important;font-size:12px!important}
+}
+
+/* One canonical desktop frame across the entire application.
+   The header controls and every page share the same 1200px outer edges. */
+@media(min-width:901px){
+  :root{--bubbsun-page-width:1200px;--bubbsun-page-gutter:24px}
+  body .app-shell{
+    width:100%!important;
+    max-width:none!important;
+    margin-inline:0!important;
+  }
+  body .app-shell>.topbar{
+    box-sizing:border-box!important;
+    width:100%!important;
+    max-width:none!important;
+    margin-inline:0!important;
+    padding-inline:0!important;
+  }
+  body .app-shell>.topbar>.topbar-inner{
+    box-sizing:border-box!important;
+    width:min(calc(100% - (2 * var(--bubbsun-page-gutter))),var(--bubbsun-page-width))!important;
+    max-width:var(--bubbsun-page-width)!important;
+    margin-inline:auto!important;
+    padding-inline:0!important;
+  }
+  body .app-shell>.content,
+  body .app-shell>.yatzy-frame-page{
+    box-sizing:border-box!important;
+    width:min(calc(100% - (2 * var(--bubbsun-page-gutter))),var(--bubbsun-page-width))!important;
+    max-width:var(--bubbsun-page-width)!important;
+    margin-inline:auto!important;
+  }
+  body .app-shell>.content.subpage,
+  body .app-shell>.content.detail-page,
+  body .app-shell>.content.note-editor-page,
+  body .app-shell>.content.games-hub,
+  body .app-shell>.content.connect4-page{
+    max-width:var(--bubbsun-page-width)!important;
+  }
+  body .app-shell>.topbar>.topbar-inner>.header-left{justify-self:start!important}
+  body .app-shell>.topbar>.topbar-inner>.header-add-actions,
+  body .app-shell>.topbar>.topbar-inner>.header-add,
+  body .app-shell>.topbar>.topbar-inner>.header-manage,
+  body .app-shell>.topbar>.topbar-inner>.header-spacer{justify-self:end!important}
+
+}
+
+/* Fyra i rad har en 1200px sida, men matchhuvudet hör visuellt ihop med
+   själva spelplanen och ska därför inte dras ut till sidans ytterkanter. */
+@media(min-width:901px){
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header,
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>.connect4-game-actions{
+    box-sizing:border-box!important;
+    width:min(100%,720px)!important;
+    max-width:720px!important;
+    margin-inline:auto!important;
+  }
+}
+
+/* Spelbibliotekets topplista – kort och prispall i stället för en gles tabell. */
+body .app-shell .games-leaderboard{
+  padding:10px;
+  background:color-mix(in srgb,var(--theme-panel) 42%,var(--theme-paper));
+}
+body .app-shell .games-leaderboard>header{
+  margin:0;
+  border:1px solid color-mix(in srgb,var(--theme-outline) 38%,transparent);
+  border-radius:17px;
+  background:color-mix(in srgb,var(--theme-paper) 74%,var(--theme-panel));
+}
+body .app-shell .games-leaderboard ol{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  padding:12px 0 0;
+}
+body .app-shell .games-leaderboard li,
+body .app-shell .games-leaderboard li:nth-child(odd){
+  position:relative;
+  grid-template-columns:46px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  align-content:center;
+  gap:4px 12px;
+  min-height:112px;
+  padding:17px 18px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--theme-outline) 48%,transparent);
+  border-radius:17px;
+  background:var(--theme-paper);
+  box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 28%,transparent);
+}
+body .app-shell .games-leaderboard li::after{
+  content:"";
+  position:absolute;
+  right:-24px;
+  bottom:-34px;
+  width:100px;
+  height:100px;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--theme-accent) 8%,transparent);
+}
+body .app-shell .games-leaderboard li>b{
+  grid-column:1;
+  grid-row:1/3;
+  width:43px;
+  height:43px;
+  box-shadow:inset 0 0 0 2px #fff8;
+  font-size:17px;
+}
+body .app-shell .games-leaderboard li>span{grid-column:2;grid-row:1}
+body .app-shell .games-leaderboard li strong{font-size:19px}
+body .app-shell .games-leaderboard li small{margin-top:3px;font:700 10px/1.2 Arial,sans-serif;letter-spacing:.04em}
+body .app-shell .games-leaderboard li em{grid-column:2;grid-row:2;font-size:18px}
+body .app-shell .games-leaderboard li:nth-child(1){background:linear-gradient(135deg,#fff8df,var(--theme-paper));border-color:#b7903f}
+body .app-shell .games-leaderboard li:nth-child(1)>b{background:#b98b2f;color:#fff9d9}
+body .app-shell .games-leaderboard li:nth-child(2){background:linear-gradient(135deg,#f3f1ec,var(--theme-paper));border-color:#9d9b93}
+body .app-shell .games-leaderboard li:nth-child(2)>b{background:#85857f;color:white}
+body .app-shell .games-leaderboard li:nth-child(3){background:linear-gradient(135deg,#f5e4d6,var(--theme-paper));border-color:#a66f4f}
+body .app-shell .games-leaderboard li:nth-child(3)>b{background:#9d6848;color:#fff5eb}
+body .app-shell .games-leaderboard li.me{outline:3px solid color-mix(in srgb,var(--theme-accent) 55%,transparent);outline-offset:-4px}
+
+@media(max-width:900px){
+  body .app-shell .games-leaderboard{padding:7px}
+  body .app-shell .games-leaderboard ol{grid-template-columns:1fr;gap:8px;padding-top:8px}
+  body .app-shell .games-leaderboard li,
+  body .app-shell .games-leaderboard li:nth-child(odd){grid-template-columns:38px minmax(0,1fr) auto;grid-template-rows:auto;min-height:64px;padding:9px 12px}
+  body .app-shell .games-leaderboard li>b{grid-row:1;width:35px;height:35px;font-size:14px}
+  body .app-shell .games-leaderboard li>span{grid-row:1}
+  body .app-shell .games-leaderboard li em{grid-column:3;grid-row:1;font-size:15px}
+  body .app-shell .games-leaderboard li strong{font-size:16px}
+}
+
+/* Connect Four desktop composition: keep match navigation, title and level
+   visually attached to the board instead of spreading them over 1200px. */
+@media(min-width:901px){
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:16px!important;
+    box-sizing:border-box!important;
+    width:min(100%,720px)!important;
+    margin-inline:auto!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header>button{
+    min-height:42px!important;
+    padding:0 13px!important;
+    white-space:nowrap!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header>div:nth-child(2){
+    min-width:0!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header h1{
+    margin:0!important;
+    font-size:38px!important;
+    line-height:.95!important;
+    white-space:nowrap!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header p{
+    margin-top:4px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:13px!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby) .connect4-profile{
+    min-width:150px!important;
+    padding:7px 9px!important;
+  }
+}
+
+/* Fyra i rad – spellägesval. Håll tillbaka, rubrik, nivå och valkort i en
+   gemensam visuell ram i stället för att sprida dem över hela skärmen. */
+@media(min-width:901px){
+  body .app-shell>.content.connect4-page.connect4-menu{
+    width:min(calc(100% - 48px),1120px)!important;
+    max-width:1120px!important;
+    gap:22px!important;
+    padding-top:24px!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu>header{
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:22px!important;
+    width:100%!important;
+    max-width:1040px!important;
+    margin-inline:auto!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu>header>button{
+    min-height:50px!important;
+    padding-inline:17px!important;
+    white-space:nowrap!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu>header h1{
+    font-size:48px!important;
+    line-height:.95!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:18px!important;
+    width:100%!important;
+    max-width:1040px!important;
+    margin:0 auto!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid>button{
+    grid-template-columns:66px minmax(0,1fr) 28px!important;
+    min-height:150px!important;
+    padding:22px 24px!important;
+    border-radius:24px!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid>button>svg:first-child{
+    width:64px!important;
+    height:64px!important;
+  }
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid strong{font-size:28px!important}
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid p{font-size:15px!important}
+}
+
+@media(max-width:700px){
+  body .app-shell>.content.connect4-page.connect4-menu{align-content:start!important;padding-top:10px!important}
+  body .app-shell>.content.connect4-page.connect4-menu .connect4-mode-grid{width:100%!important;margin-top:4px!important}
+}
+
+/* Gameplay följer sajtens riktiga 1200px-ram. Själva spelbrädet får fortsatt
+   styras av skärmhöjden så att hela matchen ryms utan extra sidscroll. */
+@media(min-width:901px){
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby){
+    width:min(calc(100% - 48px),1200px)!important;
+    max-width:1200px!important;
+  }
+  body .app-shell>.content.connect4-page:not(.connect4-menu):not(.connect4-lobby)>header{
+    width:100%!important;
+    max-width:none!important;
+    margin-inline:0!important;
+  }
+}
+
+/* Hela kolumnen är spelbar, inte bara den lilla pilen. */
+body .app-shell .connect4-play-area{position:relative}
+body .app-shell .connect4-columns>span{display:grid;place-items:center;min-width:0;height:25px;color:#c99b57}
+body .app-shell .connect4-columns>span svg{width:24px;height:24px}
+body .app-shell .connect4-column-hitboxes{
+  position:absolute;
+  z-index:5;
+  inset:0;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:clamp(5px,1vw,9px);
+  padding-inline:clamp(8px,1.4vw,13px);
+  pointer-events:none;
+}
+body .app-shell .connect4-column-hitboxes>button{
+  width:100%;
+  min-width:0;
+  height:100%;
+  padding:0;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  box-shadow:none;
+  cursor:pointer;
+  pointer-events:auto;
+}
+body .app-shell .connect4-column-hitboxes>button:hover:not(:disabled),
+body .app-shell .connect4-column-hitboxes>button:focus-visible{
+  outline:2px solid #f3c66e;
+  outline-offset:-2px;
+  background:linear-gradient(180deg,#f4c75a22,#f4c75a10);
+  box-shadow:inset 0 0 18px #f4c75a20;
+}
+body .app-shell .connect4-column-hitboxes>button:active:not(:disabled){background:#f4c75a2b}
+body .app-shell .connect4-column-hitboxes>button:disabled{cursor:default;pointer-events:none}
+body .app-shell .connect4-play-area.disabled .connect4-column-hitboxes{pointer-events:none}
+body .app-shell .connect4-result{z-index:10}
+@media(max-width:700px){
+  body .app-shell .connect4-columns>span{height:20px}
+  body .app-shell .connect4-columns>span svg{width:19px;height:19px}
+  body .app-shell .connect4-column-hitboxes{gap:4px;padding-inline:6px}
+  body .app-shell .connect4-column-hitboxes>button{border-radius:8px}
+}
+
+/* Spelbibliotekets huvudflikar och gemensamma Strato-topplista. */
+body .app-shell .games-library-tabs{display:flex;align-items:center;gap:7px;width:max-content;margin:-14px 0 12px;padding:5px;border:2px solid var(--theme-outline);border-radius:999px;background:var(--theme-paper)}
+body .app-shell .games-library-tabs>button{display:flex;align-items:center;gap:7px;min-height:40px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--theme-text);font:900 11px/1 Arial,sans-serif;letter-spacing:.08em;cursor:pointer}
+body .app-shell .games-library-tabs>button svg{width:18px;height:18px}
+body .app-shell .games-library-tabs>button.selected{background:var(--theme-accent);color:var(--theme-paper)}
+body .app-shell .games-leaderboard{overflow:hidden;border:2px solid var(--theme-outline);border-radius:25px;background:var(--theme-paper);box-shadow:0 7px 0 color-mix(in srgb,var(--theme-outline) 60%,transparent)}
+body .app-shell .games-leaderboard>header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:20px;padding:22px 25px;background:color-mix(in srgb,var(--theme-accent) 12%,var(--theme-panel))}
+body .app-shell .games-leaderboard>header small{color:var(--theme-accent);font:900 10px/1 Arial,sans-serif;letter-spacing:.16em}
+body .app-shell .games-leaderboard>header h2{margin:3px 0 2px;font:800 34px/1 Georgia,serif}
+body .app-shell .games-leaderboard>header p{margin:0;opacity:.72}
+body .app-shell .games-leaderboard>header nav{display:flex;gap:5px;padding:4px;border:1px solid var(--theme-outline);border-radius:999px;background:var(--theme-paper)}
+body .app-shell .games-leaderboard>header nav button{min-height:34px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--theme-text);font:900 9px/1 Arial,sans-serif;letter-spacing:.04em;cursor:pointer}
+body .app-shell .games-leaderboard>header nav button.selected{background:var(--theme-accent);color:var(--theme-paper)}
+body .app-shell .games-leaderboard ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;padding:0;list-style:none}
+body .app-shell .games-leaderboard li{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;min-height:66px;padding:9px 20px;border-top:1px solid color-mix(in srgb,var(--theme-outline) 34%,transparent)}
+body .app-shell .games-leaderboard li:nth-child(odd){border-right:1px solid color-mix(in srgb,var(--theme-outline) 34%,transparent)}
+body .app-shell .games-leaderboard li>b{display:grid;place-items:center;width:31px;height:31px;border-radius:50%;background:var(--theme-accent);color:var(--theme-paper);font:900 13px Arial,sans-serif}
+body .app-shell .games-leaderboard li>span{display:grid;min-width:0}
+body .app-shell .games-leaderboard li strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px}
+body .app-shell .games-leaderboard li small{opacity:.62;font-size:11px}
+body .app-shell .games-leaderboard li em{color:var(--theme-accent);font:900 17px/1 Georgia,serif;font-style:normal;white-space:nowrap}
+body .app-shell .games-leaderboard li.me{background:color-mix(in srgb,var(--theme-accent) 10%,transparent)}
+body .app-shell .games-leaderboard-empty{display:flex;align-items:center;justify-content:center;gap:9px;min-height:180px;font-weight:800}
+body .app-shell .games-leaderboard-empty svg{width:24px;height:24px}
+body .app-shell .games-leaderboard-empty.error{color:#a33d49}
+@media(max-width:700px){
+  body .app-shell .games-library-tabs{width:100%;box-sizing:border-box;margin:-4px 0 5px}
+  body .app-shell .games-library-tabs>button{flex:1;justify-content:center;padding-inline:8px}
+  body .app-shell .games-leaderboard{border-radius:18px}
+  body .app-shell .games-leaderboard>header{grid-template-columns:1fr;gap:12px;padding:15px}
+  body .app-shell .games-leaderboard>header h2{font-size:28px}
+  body .app-shell .games-leaderboard>header nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-radius:14px}
+  body .app-shell .games-leaderboard>header nav button{border-radius:10px}
+  body .app-shell .games-leaderboard ol{grid-template-columns:1fr}
+  body .app-shell .games-leaderboard li:nth-child(odd){border-right:0}
+  body .app-shell .games-leaderboard li{grid-template-columns:32px minmax(0,1fr) auto;min-height:58px;padding:7px 11px}
+  body .app-shell .games-leaderboard li>b{width:27px;height:27px}
+  body .app-shell .games-leaderboard li strong{font-size:15px}
+  body .app-shell .games-leaderboard li em{font-size:14px}
+}
+
+/* Matchkontroller och reaktioner i Fyra i rad. */
+body .app-shell .connect4-game-actions{display:flex;align-items:center;gap:10px;width:min(100%,720px);margin:0 auto}
+body .app-shell .connect4-game-actions>button,body .app-shell .connect4-react{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 15px;border:2px solid var(--theme-outline);border-radius:999px;background:var(--theme-paper);color:var(--theme-text);font:900 10px/1 Arial,sans-serif;letter-spacing:.08em;cursor:pointer}
+body .app-shell .connect4-react{background:var(--theme-accent);color:var(--theme-paper)}
+body .app-shell .connect4-game-actions svg{width:19px;height:19px}
+body .app-shell .connect4-reaction-control{position:relative;z-index:35}
+body .app-shell .connect4-reaction-dismiss{position:fixed;z-index:40;inset:0;width:100vw;height:100vh;padding:0;border:0;background:transparent}
+body .app-shell .connect4-reaction-picker{position:absolute;z-index:44;left:0;top:calc(100% + 10px);display:grid;grid-template-columns:repeat(3,64px);gap:7px;width:auto;padding:10px;border:2px solid var(--theme-outline);border-radius:17px;background:var(--theme-paper);box-shadow:0 12px 30px color-mix(in srgb,var(--theme-text) 28%,transparent)}
+body .app-shell .connect4-reaction-picker:before{content:"";position:absolute;left:24px;top:-8px;width:13px;height:13px;border-left:2px solid var(--theme-outline);border-top:2px solid var(--theme-outline);background:var(--theme-paper);transform:rotate(45deg)}
+body .app-shell .connect4-reaction-picker>button{display:grid;place-items:center;width:64px;height:64px;padding:4px;overflow:hidden;border:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent);border-radius:13px;background:color-mix(in srgb,var(--theme-panel) 25%,var(--theme-paper));cursor:pointer}
+body .app-shell .connect4-reaction-picker>button:hover{transform:scale(1.06);background:color-mix(in srgb,var(--theme-accent) 18%,var(--theme-paper))}
+body .app-shell .game-reaction-icon{display:block;width:100%;aspect-ratio:1;border-radius:50%;background-image:url('/games/bubb-yatzy/yatzy-reactions-clean-source.png');background-size:442.3% 371%;background-repeat:no-repeat}
+body .app-shell .game-reaction-0{background-position:12.7% 32.7%}body .app-shell .game-reaction-1{background-position:49.6% 32.7%}body .app-shell .game-reaction-2{background-position:86.3% 32.7%}body .app-shell .game-reaction-3{background-position:12.7% 79.6%}body .app-shell .game-reaction-4{background-position:49.6% 79.6%}body .app-shell .game-reaction-5{background-position:86.3% 79.6%}
+body .app-shell .connect4-reaction-bubble{position:absolute;z-index:45;left:calc(100% + 10px);top:-12px;width:66px;padding:5px;border:2px solid var(--theme-outline);border-radius:50% 50% 50% 18px;background:var(--theme-paper);box-shadow:0 9px 24px color-mix(in srgb,var(--theme-text) 25%,transparent);animation:connect4-reaction-pop .28s cubic-bezier(.2,.9,.25,1.25) both}
+@keyframes connect4-reaction-pop{from{opacity:0;transform:translateY(-7px) scale(.65)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:700px){
+  body .app-shell .connect4-game-actions{gap:7px}
+  body .app-shell .connect4-game-actions>button,body .app-shell .connect4-react{min-height:38px;padding-inline:11px;font-size:9px}
+  body .app-shell .connect4-reaction-picker{grid-template-columns:repeat(3,58px);left:0}
+  body .app-shell .connect4-reaction-picker>button{width:58px;height:58px}
+  body .app-shell .connect4-reaction-bubble{left:calc(100% + 7px);width:56px}
+}
+
+/* Definitive desktop rail. Header controls and every page use the same
+   1200px outer edges; this supersedes old 920/1280px page exceptions. */
+@media(min-width:901px){
+  :root{--bubbsun-page-width:1200px;--bubbsun-page-gutter:24px}
+  body .app-shell{width:100%!important;max-width:none!important;margin-inline:0!important}
+  body .app-shell .topbar.text-header-v2{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin-inline:0!important;padding-inline:0!important}
+  body .app-shell .topbar.text-header-v2 .topbar-inner{
+    box-sizing:border-box!important;
+    width:min(calc(100% - (2 * var(--bubbsun-page-gutter))),var(--bubbsun-page-width))!important;
+    max-width:var(--bubbsun-page-width)!important;
+    margin-inline:auto!important;
+    padding-inline:0!important;
+  }
+  body .app-shell>.content,
+  body .app-shell>.yatzy-frame-page{
+    box-sizing:border-box!important;
+    width:min(calc(100% - (2 * var(--bubbsun-page-gutter))),var(--bubbsun-page-width))!important;
+    max-width:var(--bubbsun-page-width)!important;
+    margin-inline:auto!important;
+  }
+}

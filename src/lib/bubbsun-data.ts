@@ -2,12 +2,13 @@ import {
   arrayRemove, arrayUnion, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, orderBy, query, serverTimestamp,
   setDoc, updateDoc, where, limit, writeBatch, type Unsubscribe,
 } from "firebase/firestore";
-import type { User } from "firebase/auth";
-import { db } from "./firebase";
+import { getIdToken, type User } from "firebase/auth";
+import { auth, db } from "./firebase";
 import type { Account, AdminUserCounts, BudgetEntry, BudgetSettings, BubbsunList, BubbsunNote, CalendarEvent, DirectChat, DirectMessage, GlobalPin, Group, JoinRequest, ListItem, Membership, PublicListShare, Recipe, Report, ThemePalette } from "../types";
 
 const numberValue = (value: unknown, fallback = 0) => typeof value === "number" ? value : fallback;
 const textValue = (value: unknown, fallback = "") => typeof value === "string" ? value : fallback;
+const accountValue=(uid:string,d:Record<string,unknown>):Account=>({uid,displayName:textValue(d.displayName,textValue(d.name,"Bubbsun")),activeGroupId:textValue(d.activeGroupId,textValue(d.groupId)),globalTitle:textValue(d.globalTitle),titleColor:numberValue(d.titleColor),supporter:d.supporter===true,supporterTitle:textValue(d.supporterTitle,"lifetime"),supporterGlow:d.supporterGlow!==false,supporterGlowColor:textValue(d.supporterGlowColor,"#ffb532"),themeId:textValue(d.themeId),personalColor:numberValue(d.personalColor,0xff2b7a78),megaSuperBoss:d.megaSuperBoss===true,founder:d.founder===true,suspended:d.suspended===true,hiddenGlobalPinRevision:numberValue(d.hiddenGlobalPinRevision),hiddenGlobalPinId:textValue(d.hiddenGlobalPinId),privacyVersion:numberValue(d.privacyVersion),activitySeenAt:numberValue((d.activitySeenAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.activitySeenAt)),createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.createdAt)),lastActiveAt:numberValue((d.lastActiveAt as {toMillis?:()=>number})?.toMillis?.(),numberValue(d.lastActiveAt)),visitCount:numberValue(d.visitCount),visitLog:Array.isArray(d.visitLog)?d.visitLog.map(value=>numberValue(value)).filter(Boolean).slice(0,10):[]});
 
 export async function ensureAccount(user: User) {
   const ref = doc(db, "users", user.uid);
@@ -18,16 +19,9 @@ export async function ensureAccount(user: User) {
   const previousVisits = Array.isArray(data.visitLog)
     ? data.visitLog.map(value => numberValue(value)).filter(Boolean)
     : [];
-  await setDoc(ref, {
-    uid: user.uid,
-    displayName: textValue(data.displayName, textValue(data.name, user.displayName || "Bubbsun")).slice(0, 35),
-    activeGroupId: textValue(data.activeGroupId, textValue(data.groupId)),
-    schemaVersion: 600,
-    lastActiveAt: serverTimestamp(),
-    visitCount: increment(1),
-    visitLog: [now, ...previousVisits].slice(0, 10),
-    ...(!current.exists() ? { createdAt: serverTimestamp(), ...(invitedBy && invitedBy !== user.uid ? { invitedBy } : {}) } : {}),
-  }, { merge: true });
+  const displayName=textValue(data.displayName,textValue(data.name,user.displayName||"Bubbsun")).slice(0,35),activeGroupId=textValue(data.activeGroupId,textValue(data.groupId));
+  if(!current.exists()||numberValue(data.schemaVersion)<600||!textValue(data.displayName)||Boolean(invitedBy&&invitedBy!==user.uid&&!data.invitedBy))await setDoc(ref,{uid:user.uid,displayName,activeGroupId,schemaVersion:600,...(!current.exists()?{lastActiveAt:serverTimestamp(),visitCount:1,visitLog:[now],createdAt:serverTimestamp(),...(invitedBy&&invitedBy!==user.uid?{invitedBy}:{})}:{})},{merge:true});
+  return accountValue(user.uid,{...data,displayName,activeGroupId,schemaVersion:600,...(!current.exists()?{visitCount:1,visitLog:[now]}:{visitLog:previousVisits})});
 }
 
 let lastPresenceTouch = 0;
@@ -78,18 +72,7 @@ export function watchOnlineUserIds(callback: (ids: Set<string>) => void): Unsubs
 export function watchAccount(uid: string, callback: (account: Account | null) => void): Unsubscribe {
   return onSnapshot(doc(db, "users", uid), snap => {
     if (!snap.exists()) return callback(null);
-    const d = snap.data();
-    callback({
-      uid, displayName: textValue(d.displayName, textValue(d.name, "Bubbsun")),
-      activeGroupId: textValue(d.activeGroupId, textValue(d.groupId)),
-      globalTitle: textValue(d.globalTitle), titleColor: numberValue(d.titleColor),
-      supporter: d.supporter === true, supporterTitle: textValue(d.supporterTitle, "lifetime"), supporterGlow: d.supporterGlow !== false, supporterGlowColor: textValue(d.supporterGlowColor, "#ffb532"), themeId: textValue(d.themeId), personalColor: numberValue(d.personalColor, 0xff2b7a78), megaSuperBoss: d.megaSuperBoss === true,
-      founder: d.founder === true, suspended: d.suspended === true, hiddenGlobalPinRevision: numberValue(d.hiddenGlobalPinRevision), hiddenGlobalPinId:textValue(d.hiddenGlobalPinId), privacyVersion: numberValue(d.privacyVersion),
-      activitySeenAt: numberValue((d.activitySeenAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.activitySeenAt)),
-      createdAt: numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.createdAt)),
-      lastActiveAt: numberValue((d.lastActiveAt as {toMillis?:()=>number})?.toMillis?.(), numberValue(d.lastActiveAt)),
-      visitCount: numberValue(d.visitCount), visitLog: Array.isArray(d.visitLog)?d.visitLog.map(value=>numberValue(value)).filter(Boolean).slice(0,10):[],
-    });
+    callback(accountValue(uid,snap.data()));
   });
 }
 
@@ -114,6 +97,7 @@ export function watchGroupMembers(groupId: string, callback: (members: Membershi
     return { groupId, uid: item.id, displayName: textValue(d.displayName, textValue(d.name)), color: numberValue(d.color), role: textValue(d.role, "member"), order: numberValue(d.order) };
   }).sort((a, b) => a.order - b.order)));
 }
+export async function loadGroupMembers(groupId:string):Promise<Membership[]>{const snap=await getDocs(collection(db,"groups",groupId,"members"));return snap.docs.map(item=>{const d=item.data();return{groupId,uid:item.id,displayName:textValue(d.displayName,textValue(d.name)),color:numberValue(d.color),role:textValue(d.role,"member"),order:numberValue(d.order)}}).sort((a,b)=>a.order-b.order)}
 
 const parseItem = (raw: unknown): ListItem => {
   const d = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
@@ -136,6 +120,7 @@ const parseListDocument = (item:{id:string;data:()=>Record<string,unknown>}, ind
 export function watchPrivateLists(uid:string,callback:(lists:BubbsunList[])=>void):Unsubscribe {
   return onSnapshot(query(collection(db,"users",uid,"privateLists"),orderBy("order","asc")),snap=>callback(snap.docs.map((item,index)=>parseListDocument(item,index))));
 }
+export async function loadPrivateLists(uid:string):Promise<BubbsunList[]>{const snap=await getDocs(query(collection(db,"users",uid,"privateLists"),orderBy("order","asc")));return snap.docs.map((item,index)=>parseListDocument(item,index))}
 
 export function watchAllLists(callback:(lists:BubbsunList[])=>void, onError?:(error:Error)=>void):Unsubscribe {
   return onSnapshot(collectionGroup(db,"lists"),snap=>callback(snap.docs.map((item,index)=>parseListDocument(item,index))),error=>onError?.(error));
@@ -203,10 +188,12 @@ export async function removeList(groupId: string, listId: string) {
 const parseNote=(item:{id:string;data:()=>Record<string,unknown>},index:number):BubbsunNote=>{const d=item.data(),history=Array.isArray(d.history)?d.history.map(raw=>{const x=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{uid:textValue(x.uid),name:textValue(x.name,"Bubbsun"),at:numberValue(x.at)}}).filter(value=>value.at):[];return{id:item.id,title:textValue(d.title,"Namnlös anteckning"),text:textValue(d.text),icon:textValue(d.icon,"idea"),color:numberValue(d.color,0xff2b7a78),order:numberValue(d.order,index),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName),creatorColor:typeof d.creatorColor==="number"?d.creatorColor:undefined,history,createdAt:numberValue((d.createdAt as {toMillis?:()=>number})?.toMillis?.()),updatedAt:numberValue((d.updatedAt as {toMillis?:()=>number})?.toMillis?.())};};
 export function watchNotes(groupId:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"notes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
 export function watchPrivateNotes(uid:string,callback:(notes:BubbsunNote[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateNotes"),orderBy("order","asc")),snap=>callback(snap.docs.map(parseNote)));}
+export async function loadPrivateNotes(uid:string):Promise<BubbsunNote[]>{const snap=await getDocs(query(collection(db,"users",uid,"privateNotes"),orderBy("order","asc")));return snap.docs.map(parseNote)}
 
 const parseCalendarEvent=(item:{id:string;data:()=>Record<string,unknown>}):CalendarEvent=>{const d=item.data(),category=textValue(d.category,"other"),recurrenceType=textValue(d.recurrenceType);return{id:item.id,title:textValue(d.title),date:textValue(d.date),time:textValue(d.time),endTime:textValue(d.endTime),allDay:d.allDay===true,category,mealType:textValue(d.mealType),color:numberValue(d.color),birthYear:numberValue(d.birthYear),recurrenceType:category==="birthday"?"yearly":recurrenceType==="yearly"?"yearly":recurrenceType==="weekly"?"weekly":undefined,recurrenceDays:Array.isArray(d.recurrenceDays)?d.recurrenceDays.filter((value):value is number=>typeof value==="number"):[],recurrenceForever:category==="birthday"||d.recurrenceForever===true,recurrenceUntil:textValue(d.recurrenceUntil),excludedDates:Array.isArray(d.excludedDates)?d.excludedDates.filter((value):value is string=>typeof value==="string"):[],note:textValue(d.note),linkedListIds:Array.isArray(d.linkedListIds)?d.linkedListIds.filter((value):value is string=>typeof value==="string"):[],linkedRecipeIds:Array.isArray(d.linkedRecipeIds)?d.linkedRecipeIds.filter((value):value is string=>typeof value==="string"):[],reminderMinutes:numberValue(d.reminderMinutes),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy)}};
 export function watchCalendarEvents(groupId:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"calendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
 export function watchPrivateCalendarEvents(uid:string,callback:(events:CalendarEvent[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateCalendarEvents"),orderBy("date","asc")),snap=>callback(snap.docs.map(parseCalendarEvent)));}
+export async function loadPrivateCalendarEvents(uid:string):Promise<CalendarEvent[]>{const snap=await getDocs(query(collection(db,"users",uid,"privateCalendarEvents"),orderBy("date","asc")));return snap.docs.map(parseCalendarEvent)}
 export async function saveCalendarEvent(groupId:string,event:CalendarEvent){await setDoc(doc(db,"groups",groupId,"calendarEvents",event.id),event,{merge:true});}
 export async function savePrivateCalendarEvent(uid:string,event:CalendarEvent){await setDoc(doc(db,"users",uid,"privateCalendarEvents",event.id),event,{merge:true});}
 export async function removeCalendarEvent(groupId:string,eventId:string){await deleteDoc(doc(db,"groups",groupId,"calendarEvents",eventId));}
@@ -220,22 +207,30 @@ export async function removeCalendarEventEverywhere(uid:string,event:CalendarEve
   const locations=event.locations?.length?event.locations:[fallbackLocation];
   await Promise.all(locations.map(location=>location==="private"?removePrivateCalendarEvent(uid,event.id):removeCalendarEvent(location,event.id)));
 }
-const parseBudgetEntry=(item:{id:string;data:()=>Record<string,unknown>}):BudgetEntry=>{const d=item.data();return{id:item.id,type:d.type==="income"?"income":"expense",title:textValue(d.title,"Budgetpost"),amount:Math.max(0,numberValue(d.amount)),category:textValue(d.category,"Övrigt"),subcategory:textValue(d.subcategory),accountId:textValue(d.accountId),date:textValue(d.date),recurrence:d.recurrence==="monthly"?"monthly":undefined,note:textValue(d.note),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt)}};
+const parseBudgetEntry=(item:{id:string;data:()=>Record<string,unknown>}):BudgetEntry=>{const d=item.data();return{id:item.id,type:d.type==="income"?"income":d.type==="transfer"?"transfer":"expense",title:textValue(d.title,"Budgetpost"),amount:Math.max(0,numberValue(d.amount)),category:textValue(d.category,"Övrigt"),subcategory:textValue(d.subcategory),accountId:textValue(d.accountId),fromAccountId:textValue(d.fromAccountId),toAccountId:textValue(d.toAccountId),externalRecipient:textValue(d.externalRecipient),date:textValue(d.date),recurrence:d.recurrence==="weekly"?"weekly":d.recurrence==="monthly"?"monthly":undefined,businessDayAdjustment:d.businessDayAdjustment==="next"?"next":d.businessDayAdjustment==="previous"?"previous":undefined,status:d.status==="planned"?"planned":"paid",autoPay:d.autoPay===true,paidAt:numberValue(d.paidAt),note:textValue(d.note),creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt)}};
 export function watchBudgetEntries(groupId:string,callback:(entries:BudgetEntry[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"budgetEntries"),orderBy("date","desc")),snap=>callback(snap.docs.map(parseBudgetEntry)));}
 export function watchPrivateBudgetEntries(uid:string,callback:(entries:BudgetEntry[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateBudgetEntries"),orderBy("date","desc")),snap=>callback(snap.docs.map(parseBudgetEntry)));}
-const budgetEntryForStorage=(entry:BudgetEntry)=>({...entry,subcategory:entry.subcategory||"",recurrence:entry.recurrence||"",note:entry.note||""});
+export async function loadPrivateBudgetEntries(uid:string):Promise<BudgetEntry[]>{const snap=await getDocs(query(collection(db,"users",uid,"privateBudgetEntries"),orderBy("date","desc")));return snap.docs.map(parseBudgetEntry)}
+const budgetEntryForStorage=(entry:BudgetEntry)=>JSON.parse(JSON.stringify({...entry,subcategory:entry.subcategory||"",externalRecipient:entry.externalRecipient||"",recurrence:entry.recurrence||"",status:entry.status||"paid",autoPay:entry.autoPay===true,paidAt:entry.paidAt||0,note:entry.note||""}));
 export async function saveBudgetEntry(groupId:string,entry:BudgetEntry){await setDoc(doc(db,"groups",groupId,"budgetEntries",entry.id),budgetEntryForStorage(entry),{merge:true});}
 export async function savePrivateBudgetEntry(uid:string,entry:BudgetEntry){await setDoc(doc(db,"users",uid,"privateBudgetEntries",entry.id),budgetEntryForStorage(entry),{merge:true});}
 export async function removeBudgetEntry(groupId:string,entryId:string){await deleteDoc(doc(db,"groups",groupId,"budgetEntries",entryId));}
 export async function removePrivateBudgetEntry(uid:string,entryId:string){await deleteDoc(doc(db,"users",uid,"privateBudgetEntries",entryId));}
-const parseBudgetSettings=(data:Record<string,unknown>|undefined):BudgetSettings=>({banks:Array.isArray(data?.banks)?data.banks.flatMap(bank=>{if(!bank||typeof bank!=="object")return[];const value=bank as Record<string,unknown>,name=textValue(value.name).trim(),id=textValue(value.id);if(!id||!name)return[];const accounts=Array.isArray(value.accounts)?value.accounts.flatMap(account=>{if(!account||typeof account!=="object")return[];const item=account as Record<string,unknown>,accountName=textValue(item.name).trim(),accountId=textValue(item.id);return accountId&&accountName?[{id:accountId,name:accountName}]:[]}):[];return[{id,name,accounts}]}):[],updatedAt:numberValue(data?.updatedAt)});
+const parseBudgetSettings=(data:Record<string,unknown>|undefined):BudgetSettings=>({banks:Array.isArray(data?.banks)?data.banks.flatMap(bank=>{if(!bank||typeof bank!=="object")return[];const value=bank as Record<string,unknown>,name=textValue(value.name).trim(),id=textValue(value.id);if(!id||!name)return[];const accounts=Array.isArray(value.accounts)?value.accounts.flatMap(account=>{if(!account||typeof account!=="object")return[];const item=account as Record<string,unknown>,accountName=textValue(item.name).trim(),accountId=textValue(item.id);return accountId&&accountName?[{id:accountId,name:accountName,icon:textValue(item.icon,"wallet"),openingBalance:numberValue(item.openingBalance),reconciledBalance:typeof item.reconciledBalance==="number"?item.reconciledBalance:undefined,reconciledAt:numberValue(item.reconciledAt),linkedGroupId:textValue(item.linkedGroupId)||undefined,linkedAccountId:textValue(item.linkedAccountId)||undefined}]:[]}):[];return[{id,name,accounts}]}):[],defaultAccountId:textValue(data?.defaultAccountId)||undefined,categoryBudgets:data?.categoryBudgets&&typeof data.categoryBudgets==="object"?Object.fromEntries(Object.entries(data.categoryBudgets as Record<string,unknown>).filter(([,value])=>typeof value==="number")) as Record<string,number>: {},savingsGoals:Array.isArray(data?.savingsGoals)?data.savingsGoals.flatMap(raw=>{if(!raw||typeof raw!=="object")return[];const goal=raw as Record<string,unknown>,id=textValue(goal.id),name=textValue(goal.name).trim();return id&&name?[{id,name,target:Math.max(0,numberValue(goal.target)),saved:Math.max(0,numberValue(goal.saved)),accountId:textValue(goal.accountId)}]:[]}):[],updatedAt:numberValue(data?.updatedAt)});
 export function watchBudgetSettings(groupId:string,callback:(settings:BudgetSettings)=>void):Unsubscribe{return onSnapshot(doc(db,"groups",groupId,"budgetSettings","config"),snap=>callback(parseBudgetSettings(snap.data())));}
 export function watchPrivateBudgetSettings(uid:string,callback:(settings:BudgetSettings)=>void):Unsubscribe{return onSnapshot(doc(db,"users",uid,"privateBudgetSettings","config"),snap=>callback(parseBudgetSettings(snap.data())));}
-export async function saveBudgetSettings(groupId:string,settings:BudgetSettings){await setDoc(doc(db,"groups",groupId,"budgetSettings","config"),settings);}
-export async function savePrivateBudgetSettings(uid:string,settings:BudgetSettings){await setDoc(doc(db,"users",uid,"privateBudgetSettings","config"),settings);}
+export async function loadPrivateBudgetSettings(uid:string):Promise<BudgetSettings>{const snap=await getDoc(doc(db,"users",uid,"privateBudgetSettings","config"));return parseBudgetSettings(snap.data())}
+export async function saveBudgetSettings(groupId:string,settings:BudgetSettings){await setDoc(doc(db,"groups",groupId,"budgetSettings","config"),JSON.parse(JSON.stringify(settings)));}
+export async function savePrivateBudgetSettings(uid:string,settings:BudgetSettings){await setDoc(doc(db,"users",uid,"privateBudgetSettings","config"),JSON.parse(JSON.stringify(settings)));}
+export async function resetBudget(groupId:string){const snap=await getDocs(collection(db,"groups",groupId,"budgetEntries")),batch=writeBatch(db);snap.docs.forEach(item=>batch.delete(item.ref));batch.delete(doc(db,"groups",groupId,"budgetSettings","config"));await batch.commit();}
+export async function resetPrivateBudget(uid:string){const snap=await getDocs(collection(db,"users",uid,"privateBudgetEntries")),batch=writeBatch(db);snap.docs.forEach(item=>batch.delete(item.ref));batch.delete(doc(db,"users",uid,"privateBudgetSettings","config"));await batch.commit();}
+const clearBudgetAccountMoney=(account:BudgetSettings["banks"][number]["accounts"][number])=>{const {reconciledBalance:_reconciledBalance,reconciledAt:_reconciledAt,...rest}=account;return{...rest,openingBalance:0}};
+export async function clearBudgetMoney(groupId:string,settings:BudgetSettings){const snap=await getDocs(collection(db,"groups",groupId,"budgetEntries")),batch=writeBatch(db),clean={...settings,banks:settings.banks.map(bank=>({...bank,accounts:bank.accounts.map(clearBudgetAccountMoney)})),updatedAt:Date.now()};snap.docs.forEach(item=>batch.delete(item.ref));batch.set(doc(db,"groups",groupId,"budgetSettings","config"),JSON.parse(JSON.stringify(clean)));await batch.commit();}
+export async function clearPrivateBudgetMoney(uid:string,settings:BudgetSettings){const snap=await getDocs(collection(db,"users",uid,"privateBudgetEntries")),batch=writeBatch(db),clean={...settings,banks:settings.banks.map(bank=>({...bank,accounts:bank.accounts.map(clearBudgetAccountMoney)})),updatedAt:Date.now()};snap.docs.forEach(item=>batch.delete(item.ref));batch.set(doc(db,"users",uid,"privateBudgetSettings","config"),JSON.parse(JSON.stringify(clean)));await batch.commit();}
 const parseRecipe=(item:{id:string;data:()=>Record<string,unknown>;ref?:{path:string}}):Recipe=>{const d=item.data();return{id:textValue(d.id,item.id),title:textValue(d.title,"Namnlöst recept"),category:textValue(d.category),subcategory:textValue(d.subcategory),isPublic:d.isPublic===true,sourcePath:textValue(d.sourcePath,item.ref?.path),locations:Array.isArray(d.locations)?d.locations.filter((value):value is string=>typeof value==="string"&&Boolean(value)):undefined,copiedFromRecipeId:textValue(d.copiedFromRecipeId),originalCreatorId:textValue(d.originalCreatorId),originalCreatorName:textValue(d.originalCreatorName),...(d.originalCreatorColor!==undefined?{originalCreatorColor:numberValue(d.originalCreatorColor)}:{}),publicationLocked:d.publicationLocked===true,sourceUrl:textValue(d.sourceUrl),image:textValue(d.image),servings:Math.max(0,numberValue(d.servings,4)),servingUnit:textValue(d.servingUnit,"portioner"),minutes:Math.max(0,numberValue(d.minutes)),ingredients:Array.isArray(d.ingredients)?d.ingredients.map((raw,index)=>{const value=(raw&&typeof raw==="object"?raw:{}) as Record<string,unknown>;return{id:textValue(value.id,String(index)),amount:textValue(value.amount),unit:textValue(value.unit),name:textValue(value.name),...(value.isHeading===true?{isHeading:true}:{})}}).filter(value=>value.name):[],instructions:textValue(d.instructions),description:textValue(d.description),note:textValue(d.note),linkedListId:textValue(d.linkedListId),linkedRecipeIds:Array.isArray(d.linkedRecipeIds)?d.linkedRecipeIds.filter((value):value is string=>typeof value==="string"):[],dietaryTags:Array.isArray(d.dietaryTags)?d.dietaryTags.filter((value):value is string=>typeof value==="string"):[],creatorId:textValue(d.creatorId),creatorName:textValue(d.creatorName,"Bubbsun"),creatorColor:numberValue(d.creatorColor,0xff2b7a78),createdAt:numberValue(d.createdAt),updatedAt:numberValue(d.updatedAt),updatedBy:textValue(d.updatedBy),...(Array.isArray(d.likedBy)?{likedBy:d.likedBy.filter((value):value is string=>typeof value==="string")}:{})}};
 export function watchRecipes(groupId:string,callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"groups",groupId,"recipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
 export function watchPrivateRecipes(uid:string,callback:(recipes:Recipe[])=>void):Unsubscribe{return onSnapshot(query(collection(db,"users",uid,"privateRecipes"),orderBy("updatedAt","desc")),snap=>callback(snap.docs.map(parseRecipe)));}
+export async function loadPrivateRecipes(uid:string):Promise<Recipe[]>{const snap=await getDocs(query(collection(db,"users",uid,"privateRecipes"),orderBy("updatedAt","desc")));return snap.docs.map(parseRecipe)}
 const publicRecipeId=(sourcePath:string)=>sourcePath.replace(/\//g,"__");
 const publicRecipeKey=(recipe:Recipe)=>recipe.sourcePath||`${recipe.creatorId}:${recipe.id}`;
 const uniquePublicRecipes=(recipes:Recipe[])=>Array.from(recipes.reduce((values,recipe)=>{const key=publicRecipeKey(recipe);const current=values.get(key);if(!current||(recipe.updatedAt||0)>(current.updatedAt||0))values.set(key,recipe);return values},new Map<string,Recipe>()).values()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
@@ -464,10 +459,40 @@ export async function createGroup(account: Account, name: string, iconId: string
 }
 
 export async function requestToJoin(account: Account, code: string) {
-  const normalized = code.trim().toUpperCase(); const lookup = await getDoc(doc(db, "groupCodes", normalized));
-  if (!lookup.exists()) throw new Error("Gruppkoden finns inte."); const groupId = textValue(lookup.data().groupId);
-  const request = { groupId, uid: account.uid, displayName: account.displayName, requestedColor: 0, status: "pending", createdAt: serverTimestamp() };
-  const batch = writeBatch(db); batch.set(doc(db, "groups", groupId, "joinRequests", account.uid), request); batch.set(doc(db, "users", account.uid, "joinRequests", groupId), request); await batch.commit();
+  const rawCode=code.trim().toUpperCase().replace(/[^A-Z2-9]/g,"");
+  const normalized=rawCode.length===8?`${rawCode.slice(0,4)}-${rawCode.slice(4)}`:code.trim().toUpperCase().replace(/\s+/g,"");
+  if(!/^[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(normalized))throw new Error("Kontrollera gruppkoden. Den ska se ut som ABCD-EFGH.");
+  const timeout=<T>(promise:Promise<T>,milliseconds=7000)=>Promise.race<T>([promise,new Promise<T>((_,reject)=>window.setTimeout(()=>reject(new Error("FIRESTORE_TIMEOUT")),milliseconds))]);
+  try{
+    const lookup=await timeout(getDoc(doc(db,"groupCodes",normalized)));
+    if(!lookup.exists())throw new Error("Gruppkoden finns inte.");const groupId=textValue(lookup.data().groupId);
+    if(!groupId)throw new Error("Gruppkoden är skadad. Be gruppens boss skapa en ny gruppkod.");
+    const existing=await timeout(getDoc(doc(db,"users",account.uid,"memberships",groupId)));
+    if(existing.exists())throw new Error("Du är redan medlem i den här gruppen.");
+    const request={groupId,uid:account.uid,displayName:account.displayName,requestedColor:0,status:"pending",createdAt:serverTimestamp()};
+    await timeout(setDoc(doc(db,"groups",groupId,"joinRequests",account.uid),request));
+    try{await timeout(setDoc(doc(db,"users",account.uid,"joinRequests",groupId),request),4000)}catch(error){console.warn("Gruppansökan sparades men kontokopian kunde inte skapas",error)}
+    return;
+  }catch(error){
+    if(error instanceof Error&&error.message!=="FIRESTORE_TIMEOUT")throw error;
+  }
+  const user=auth.currentUser;
+  if(!user)throw new Error("Du behöver logga in igen innan ansökan kan skickas.");
+  const token=await getIdToken(user,true),base="https://firestore.googleapis.com/v1/projects/bubbsan-c3ec7/databases/(default)/documents";
+  const headers={Authorization:`Bearer ${token}`,"Content-Type":"application/json"};
+  const read=async(path:string)=>fetch(`${base}/${path}`,{headers,cache:"no-store"});
+  const lookupResponse=await read(`groupCodes/${encodeURIComponent(normalized)}`);
+  if(lookupResponse.status===404)throw new Error("Gruppkoden finns inte.");
+  if(!lookupResponse.ok)throw new Error("Kunde inte kontrollera gruppkoden. Försök igen.");
+  const lookupData=await lookupResponse.json() as {fields?:{groupId?:{stringValue?:string}}},groupId=lookupData.fields?.groupId?.stringValue||"";
+  if(!groupId)throw new Error("Gruppkoden är skadad. Be gruppens boss skapa en ny gruppkod.");
+  const membershipResponse=await read(`users/${encodeURIComponent(account.uid)}/memberships/${encodeURIComponent(groupId)}`);
+  if(membershipResponse.ok)throw new Error("Du är redan medlem i den här gruppen.");
+  const body=JSON.stringify({fields:{groupId:{stringValue:groupId},uid:{stringValue:account.uid},displayName:{stringValue:account.displayName},requestedColor:{integerValue:"0"},status:{stringValue:"pending"},createdAt:{timestampValue:new Date().toISOString()}}});
+  const write=async(path:string)=>fetch(`${base}/${path}`,{method:"PATCH",headers,body});
+  const primary=await write(`groups/${encodeURIComponent(groupId)}/joinRequests/${encodeURIComponent(account.uid)}`);
+  if(!primary.ok){const detail=await primary.json().catch(()=>null) as {error?:{message?:string}}|null;throw new Error(detail?.error?.message||"Ansökan kunde inte sparas.")}
+  void write(`users/${encodeURIComponent(account.uid)}/joinRequests/${encodeURIComponent(groupId)}`);
 }
 
 export function watchJoinRequests(groupId:string,callback:(items:JoinRequest[])=>void):Unsubscribe {
@@ -476,7 +501,7 @@ export function watchJoinRequests(groupId:string,callback:(items:JoinRequest[])=
 
 export async function decideJoinRequest(groupId:string,request:JoinRequest,approve:boolean,color:number) {
   const batch=writeBatch(db),groupRequest=doc(db,"groups",groupId,"joinRequests",request.uid),userRequest=doc(db,"users",request.uid,"joinRequests",groupId);
-  if(approve){const member={groupId,uid:request.uid,displayName:request.displayName,color,role:"member",order:Date.now(),joinedAt:serverTimestamp()};batch.set(doc(db,"groups",groupId,"members",request.uid),member);batch.set(doc(db,"users",request.uid,"memberships",groupId),member);batch.set(doc(db,"users",request.uid),{activeGroupId:groupId,lastActiveAt:serverTimestamp()},{merge:true});batch.set(doc(db,"groups",groupId),{memberCount:increment(1),updatedAt:serverTimestamp()},{merge:true});}
+  if(approve){const member={groupId,uid:request.uid,displayName:request.displayName,color,role:"member",order:Date.now(),joinedAt:serverTimestamp()};batch.set(doc(db,"groups",groupId,"members",request.uid),member);batch.set(doc(db,"users",request.uid,"memberships",groupId),member);batch.set(doc(db,"groups",groupId),{memberCount:increment(1),updatedAt:serverTimestamp()},{merge:true});}
   batch.delete(groupRequest);batch.delete(userRequest);await batch.commit();
 }
 
@@ -516,6 +541,9 @@ export async function setListFollowing(uid:string,groupId:string,listId:string,f
 
 export function watchFollowedNotes(uid:string,callback:(ids:Set<string>)=>void):Unsubscribe {
   return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback(new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))));
+}
+export function watchFollowedContent(uid:string,callback:(values:{lists:Set<string>;notes:Set<string>})=>void):Unsubscribe {
+  return onSnapshot(collection(db,"users",uid,"notificationPreferences"),snap=>callback({lists:new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind!=="note").map(item=>item.id)),notes:new Set(snap.docs.filter(item=>item.data().following===true&&item.data().kind==="note").map(item=>textValue(item.data().noteId)))}));
 }
 
 export async function setNoteFollowing(uid:string,groupId:string,noteId:string,following:boolean) {

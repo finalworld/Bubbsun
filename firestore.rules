@@ -98,6 +98,10 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if isMega();
     }
+    match /appConfig/gameCards {
+      allow read: if signedIn();
+      allow write: if isMega();
+    }
 
     match /publicRecipes/{recipeId} {
       // Only deliberately published copies live here. Recipe originals remain
@@ -435,6 +439,30 @@ service cloud.firestore {
           && request.resource.data.groupId == resource.data.groupId;
         allow delete: if isMega();
       }
+      match /online/{uid} {
+        allow read: if signedIn();
+        allow create, update, delete: if signedIn() && request.auth.uid == uid;
+      }
+      match /leaderboard/{uid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.bestTotal is number;
+        allow update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.bestTotal is number
+          && request.resource.data.bestTotal >= resource.data.bestTotal;
+        allow delete: if isMega();
+      }
+    }
+
+    match /gameNotifications/{notificationId} {
+      allow read, update, delete: if signedIn() && resource.data.recipientUid == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.actorUid == request.auth.uid
+        && exists(/databases/$(database)/documents/games/bubb-yatzy/matches/$(request.resource.data.matchId))
+        && request.auth.uid in get(/databases/$(database)/documents/games/bubb-yatzy/matches/$(request.resource.data.matchId)).data.participantIds
+        && request.resource.data.recipientUid in get(/databases/$(database)/documents/games/bubb-yatzy/matches/$(request.resource.data.matchId)).data.participantIds;
     }
 
     match /admin/{document=**} {

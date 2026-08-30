@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -9,6 +10,7 @@ import {
 } from "react";
 import {
   Bell,
+  Bot,
   BookOpen,
   Compass,
   CalendarDays,
@@ -19,10 +21,12 @@ import {
   ChevronLeft,
   ChevronRight,
   CirclePlus,
+  Clock3,
   Copy,
   ExternalLink,
   Eye,
   Funnel,
+  Gamepad2,
   Flag,
   Heart,
   Home,
@@ -48,6 +52,8 @@ import {
   Pin,
   Plus,
   Printer,
+  RefreshCw,
+  RotateCcw,
   Search,
   Vegan,
   Bug,
@@ -55,6 +61,7 @@ import {
   ArrowUpDown,
   ArrowLeftRight,
   Settings,
+  Star,
   Trash2,
   ThumbsUp,
   UserCog,
@@ -107,6 +114,13 @@ import {
   leaveGroup,
   markListSeen,
   migratePrivateLists,
+  loadPrivateLists,
+  loadPrivateNotes,
+  loadPrivateCalendarEvents,
+  loadPrivateBudgetEntries,
+  loadPrivateBudgetSettings,
+  loadPrivateRecipes,
+  loadGroupMembers,
   removeGroupMember,
   removeList,
   removePrivateList,
@@ -990,7 +1004,6 @@ function Header({
   glow,
   glowColor,
   tabTitle,
-  onlineCount,
   reportCount,
   notificationCount,
   chatUnreadCount,
@@ -998,6 +1011,7 @@ function Header({
   onOpenReports,
   language,
   wallet,
+  gameXp,
 }: {
   onMenu: () => void;
   onHome: () => void;
@@ -1008,7 +1022,6 @@ function Header({
   glow?: boolean;
   glowColor?: string;
   tabTitle?: string;
-  onlineCount?: number;
   reportCount?: number;
   notificationCount: number;
   chatUnreadCount: number;
@@ -1016,6 +1029,7 @@ function Header({
   onOpenReports?: () => void;
   language: string;
   wallet?: FrasseProgress | null;
+  gameXp?: {xp:number;level:number;levelXp:number;nextLevelXp:number}|null;
 }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -1079,12 +1093,11 @@ function Header({
             </small>
           )}
         </button>
-        {typeof onlineCount === "number" && typeof reportCount === "number" && <div className="header-admin-stats">
-          <button type="button" onClick={onOpenAdmin} title="Visa användare som är online" aria-label={`${onlineCount} online`}><Users/><b>{onlineCount}</b></button>
+        {typeof reportCount === "number" && <div className="header-admin-stats">
           <i aria-hidden="true"/>
           <button type="button" onClick={onOpenReports} title="Visa nya rapporter" aria-label={`${reportCount} nya rapporter`}><Flag/><b>{reportCount}</b></button>
         </div>}
-        {wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "calculator" ? <div className="header-add-actions"><button className="theme-button header-add header-calculator" aria-label="Öppna miniräknaren" title="Miniräknare" onClick={onAdd}><Calculator/></button></div> : mode === "add" ? (
+        {gameXp ? <div className="header-game-xp"><Star/><span><small>NIVÅ {gameXp.level}</small><strong>{gameXp.xp.toLocaleString("sv-SE")} XP</strong><i><em style={{width:`${Math.min(100,gameXp.levelXp/Math.max(1,gameXp.nextLevelXp)*100)}%`}}/></i></span></div> : wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "calculator" ? <div className="header-add-actions"><button className="theme-button header-add header-calculator" aria-label="Öppna miniräknaren" title="Miniräknare" onClick={onAdd}><Calculator/></button></div> : mode === "add" ? (
           <div className="header-add-actions"><button
             className="theme-button header-add"
             aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
@@ -1253,6 +1266,11 @@ function Drawer({
             <button onClick={() => onPage("budget")}>
               <WalletCards />
               <span>Budget</span>
+              <ChevronRight />
+            </button>
+            <button onClick={() => onPage("games")}>
+              <Gamepad2 />
+              <span>Nöje</span>
               <ChevronRight />
             </button>
             <button onClick={() => onPage("people")}>
@@ -1773,12 +1791,13 @@ function GroupSpaceTab({selected,groupName,groupIconId,activeGroupId,memberships
   useEffect(()=>{if(!open)return;const close=(event:PointerEvent)=>{if(!root.current?.contains(event.target as Node))setOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[open]);
   useEffect(()=>{if(!selected)setOpen(false)},[selected]);
   useEffect(()=>{
+    if(!open)return;
     const unsubs=memberships.flatMap(membership=>[
       watchLists(membership.groupId,items=>setCounts(current=>({...current,[membership.groupId]:{lists:items.length,notes:current[membership.groupId]?.notes??0}}))),
       watchNotes(membership.groupId,items=>setCounts(current=>({...current,[membership.groupId]:{lists:current[membership.groupId]?.lists??0,notes:items.length}}))),
     ]);
     return()=>unsubs.forEach(unsubscribe=>unsubscribe());
-  },[memberships]);
+  },[open,memberships.map(value=>value.groupId).join("|")]);
   return <div ref={root} className={`group-space-tab ${selected?"selected has-menu":"group-space-tab-static"} ${open?"menu-open":""}`}>
     <button type="button" className="group-space-main" aria-label={selected?"Byt grupp":"Öppna grupper"} aria-expanded={open} onClick={()=>{if(!memberships.length){setOpen(value=>!value);return}if(!selected){onSelect();return}setOpen(value=>!value)}}>{groupIconId?<GroupIcon id={groupIconId}/>:<Users/>}<span>GRUPP<small>{groupName}</small></span></button>
     {selected&&!!memberships.length&&<button type="button" className="group-space-trigger" aria-label="Byt grupp" aria-expanded={open} onClick={()=>setOpen(value=>!value)}><ChevronDown className={open?"turn":""}/></button>}
@@ -3323,21 +3342,22 @@ function BudgetPage({entries,settings,privateMode,sharedAccountIds,account,membe
   const now=new Date(),[monthOffset,setMonthOffset]=useState(0),[spaceOpen,setSpaceOpen]=useState(false),[settingsOpen,setSettingsOpen]=useState(false),[transferOpen,setTransferOpen]=useState(false),[editingTransfer,setEditingTransfer]=useState<BudgetEntry|undefined>(undefined),[selectedAccountId,setSelectedAccountId]=useState<string|undefined>(undefined),[editing,setEditing]=useState<BudgetEntry|null|undefined>(undefined),[confirmDelete,setConfirmDelete]=useState<BudgetEntry|null>(null),[lastDeleted,setLastDeleted]=useState<BudgetEntry|null>(null),[search,setSearch]=useState(""),[filter,setFilter]=useState<"all"|"income"|"expense"|"transfer"|"planned">("all"),[view,setView]=useState<"overview"|"recurring">("overview"),[createType,setCreateType]=useState<"income"|"expense">("expense");
   useEffect(()=>{const open=()=>setTransferOpen(true);window.addEventListener("bubbsun:new-budget-transfer",open);return()=>window.removeEventListener("bubbsun:new-budget-transfer",open)},[]);
   const monthDate=new Date(now.getFullYear(),now.getMonth()+monthOffset,1),monthKey=`${monthDate.getFullYear()}-${String(monthDate.getMonth()+1).padStart(2,"0")}`,monthNumber=monthDate.getFullYear()*12+monthDate.getMonth(),todayKey=calendarDateKey(now),expandMonth=(targetDate:Date)=>entries.flatMap(entry=>budgetOccurrencesForMonth(entry,targetDate)),monthEntries=expandMonth(monthDate).sort((a,b)=>new Date(`${b.occurrenceDate}T12:00:00`).getTime()-new Date(`${a.occurrenceDate}T12:00:00`).getTime()||(b.entry.createdAt||0)-(a.entry.createdAt||0)),paidEntries=monthEntries.filter(item=>budgetOccurrencePaid(item.entry,item.occurrenceDate,todayKey)),income=paidEntries.filter(item=>item.entry.type==="income").reduce((sum,item)=>sum+item.entry.amount,0),expense=paidEntries.filter(item=>item.entry.type==="expense").reduce((sum,item)=>sum+item.entry.amount,0),previousDate=new Date(monthDate.getFullYear(),monthDate.getMonth()-1,1),previousEntries=expandMonth(previousDate).filter(item=>budgetOccurrencePaid(item.entry,item.occurrenceDate,todayKey)),previousExpense=previousEntries.filter(item=>item.entry.type==="expense").reduce((sum,item)=>sum+item.entry.amount,0),visibleEntries=monthEntries.filter(({entry,occurrenceDate})=>(filter==="all"||(filter==="planned"?!budgetOccurrencePaid(entry,occurrenceDate,todayKey):entry.type===filter))&&`${entry.title} ${entry.category} ${entry.subcategory||""}`.toLocaleLowerCase("sv-SE").includes(search.trim().toLocaleLowerCase("sv-SE"))),activeGroup=groups[account.activeGroupId];
+  const selectedMonthEnd=new Date(monthDate.getFullYear(),monthDate.getMonth()+1,0,23,59,59),balanceEnd=selectedMonthEnd<now?selectedMonthEnd:now,balanceEndKey=calendarDateKey(balanceEnd),datedEntries=entries.filter(entry=>/^\d{4}-\d{2}-\d{2}$/.test(entry.date)),firstEntryDate=datedEntries.length?new Date(`${datedEntries.reduce((first,entry)=>entry.date<first?entry.date:first,datedEntries[0].date)}T12:00:00`):balanceEnd,balanceStart=new Date(firstEntryDate.getFullYear(),firstEntryDate.getMonth(),1),balanceMonths=Math.max(0,Math.min(240,(balanceEnd.getFullYear()-balanceStart.getFullYear())*12+balanceEnd.getMonth()-balanceStart.getMonth())),balanceEntries=Array.from({length:balanceMonths+1},(_,offset)=>new Date(balanceStart.getFullYear(),balanceStart.getMonth()+offset,1)).flatMap(expandMonth).filter(item=>item.occurrenceDate<=balanceEndKey&&budgetOccurrencePaid(item.entry,item.occurrenceDate,todayKey));
   const accountName=(id?:string,externalRecipient?:string)=>externalRecipient?`Utanför Bubbsun · ${externalRecipient}`:id===budgetUnassignedAccountId?"Ej placerat":settings.banks.flatMap(bank=>bank.accounts.map(item=>({id:item.id,label:`${bank.name} · ${item.name}`}))).find(item=>item.id===id)?.label||"Ej valt konto";
-  const budgetAccounts=settings.banks.flatMap(bank=>bank.accounts),budgetAccountIds=new Set(budgetAccounts.map(item=>item.id)),totalOnAccounts=paidEntries.reduce((sum,{entry})=>entry.type==="transfer"?sum+(budgetAccountIds.has(entry.toAccountId||"")?entry.amount:0)-(budgetAccountIds.has(entry.fromAccountId||"")?entry.amount:0):budgetAccountIds.has(entry.accountId||"")?sum+(entry.type==="income"?entry.amount:-entry.amount):sum,budgetAccounts.reduce((sum,item)=>sum+(item.openingBalance||0),0));
+  const budgetAccounts=settings.banks.flatMap(bank=>bank.accounts),budgetAccountIds=new Set(budgetAccounts.map(item=>item.id)),totalOnAccounts=balanceEntries.reduce((sum,{entry})=>entry.type==="transfer"?sum+(budgetAccountIds.has(entry.toAccountId||"")?entry.amount:0)-(budgetAccountIds.has(entry.fromAccountId||"")?entry.amount:0):budgetAccountIds.has(entry.accountId||"")?sum+(entry.type==="income"?entry.amount:-entry.amount):sum,budgetAccounts.reduce((sum,item)=>sum+(item.openingBalance||0),0));
   const upcomingItems=monthEntries.filter(item=>!budgetOccurrencePaid(item.entry,item.occurrenceDate,todayKey)),upcomingExpenses=upcomingItems.filter(item=>item.entry.type==="expense"),upcomingIncomes=upcomingItems.filter(item=>item.entry.type==="income"),upcomingTransfers=upcomingItems.filter(item=>item.entry.type==="transfer");
   const searchQuery=search.trim().toLocaleLowerCase("sv-SE"),matchesBudgetFilter=(entry:BudgetEntry,date:string)=>filter==="all"||(filter==="planned"?!budgetOccurrencePaid(entry,date,todayKey):entry.type===filter),searchMonths=Array.from({length:37},(_,index)=>new Date(now.getFullYear(),now.getMonth()+index-12,1)),allSearchEntries=searchQuery?entries.filter(entry=>`${entry.title} ${entry.category} ${entry.subcategory||""} ${entry.note||""} ${entry.externalRecipient||""}`.toLocaleLowerCase("sv-SE").includes(searchQuery)).flatMap(entry=>entry.recurrence?searchMonths.flatMap(date=>budgetOccurrencesForMonth(entry,date)):[{entry,occurrenceDate:entry.date}]).filter(item=>matchesBudgetFilter(item.entry,item.occurrenceDate)):[],searchGroups=Object.entries(allSearchEntries.reduce<Record<string,Array<{entry:BudgetEntry;occurrenceDate:string}>>>((groups,item)=>{(groups[item.occurrenceDate.slice(0,7)]??=[]).push(item);return groups},{})).sort(([a],[b])=>{const aPast=a<todayKey.slice(0,7),bPast=b<todayKey.slice(0,7);return aPast===bPast?(aPast?b.localeCompare(a):a.localeCompare(b)):aPast?1:-1});
   const renderBudgetRow=({entry,occurrenceDate}:{entry:BudgetEntry;occurrenceDate:string})=>{const paid=budgetOccurrencePaid(entry,occurrenceDate,todayKey),overdue=!paid&&occurrenceDate<todayKey;return <button key={`${entry.id}-${occurrenceDate}`} className={`budget-row ${!paid?"planned":""} ${overdue?"overdue":""}`} onClick={()=>{if(entry.type==="transfer"){setEditingTransfer(entry);setTransferOpen(true)}else setEditing(entry)}}><span className={entry.type}>{entry.type==="transfer"?"⇄":budgetCategoryIcons[entry.category]||(entry.type==="income"?"+":"−")}</span><span><strong>{entry.title}</strong><small>{budgetStatusLabel(entry,paid,overdue)}{entry.type==="transfer"?`${accountName(entry.fromAccountId)} → ${accountName(entry.toAccountId,entry.externalRecipient)}`:<>{entry.category}{entry.subcategory?` · ${entry.subcategory}`:""} · {accountName(entry.accountId)}</>} · {new Intl.DateTimeFormat("sv-SE",{day:"numeric",month:"short"}).format(new Date(`${occurrenceDate}T12:00:00`))}{!privateMode&&<> · {entry.creatorName}</>}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":entry.type==="expense"?"− ":""}{budgetMoney(entry.amount)}</b><ChevronRight/></button>};
   return <section className="content budget-page">
     <nav className="budget-tabs" aria-label="Budgetmeny"><div className="budget-tab-links"><button className={view==="overview"?"selected":""} onClick={()=>setView("overview")}><WalletCards/>ÖVERSIKT</button><button onClick={()=>{setCreateType("income");setEditing(undefined);onCreating(true)}}><b>+</b> INKOMST</button><button onClick={()=>{setCreateType("expense");setEditing(undefined);onCreating(true)}}><b>−</b> UTGIFT</button><button onClick={()=>{setEditingTransfer(undefined);setTransferOpen(true)}}><ArrowLeftRight/> ÖVERFÖR</button><button className={view==="recurring"?"selected":""} onClick={()=>setView("recurring")}><History/> ÅTERKOMMANDE</button></div><div className="budget-tab-tools"><div className="calendar-space-wrap budget-space"><button className="calendar-space-button" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span><small>{privateMode?"PRIVAT":"GRUPP"}</small><strong>{privateMode?"Bara jag":activeGroup?.name||"Välj grupp"}</strong></span><ChevronDown/></button>{spaceOpen&&<div className="calendar-space-menu"><button className={privateMode?"selected":""} onClick={()=>{onMode(true);setSpaceOpen(false)}}><LockKeyhole/><strong>Privat</strong>{privateMode&&<Check/>}</button>{memberships.map(item=><button key={item.groupId} className={!privateMode&&item.groupId===account.activeGroupId?"selected":""} onClick={()=>{onSwitchGroup(item.groupId);setSpaceOpen(false)}}><GroupIcon id={groups[item.groupId]?.iconId}/><strong>{groups[item.groupId]?.name||"Grupp"}</strong>{!privateMode&&item.groupId===account.activeGroupId&&<Check/>}</button>)}</div>}</div><button className="budget-settings-trigger" aria-label="Budgetinställningar" title="Budgetinställningar" onClick={()=>setSettingsOpen(true)}><Settings/></button></div></nav>
+    {view==="overview"&&<nav className="budget-mobile-shortcuts" aria-label="Budgetgenvägar"><button onClick={()=>{setCreateType("income");setEditing(undefined);onCreating(true)}}><i>+</i><span>INKOMST</span></button><button onClick={()=>{setCreateType("expense");setEditing(undefined);onCreating(true)}}><i>−</i><span>UTGIFT</span></button><button onClick={()=>{setEditingTransfer(undefined);setTransferOpen(true)}}><i><ArrowLeftRight/></i><span>ÖVERFÖR</span></button></nav>}
+    <nav className="budget-mobile-dock" aria-label="Budgetnavigering"><button className={view==="overview"?"selected":""} onClick={()=>setView("overview")}><WalletCards/><span>ÖVERSIKT</span></button><button className={view==="recurring"?"selected":""} onClick={()=>setView("recurring")}><History/><span>ÅTERKOMMANDE</span></button><div className="budget-mobile-space"><button className={spaceOpen?"selected":""} aria-label="Välj budgetgrupp" onClick={()=>setSpaceOpen(value=>!value)}>{privateMode?<LockKeyhole/>:<GroupIcon id={activeGroup?.iconId}/>}<span>GRUPP</span></button>{spaceOpen&&<div className="budget-mobile-space-menu"><button className={privateMode?"selected":""} onClick={()=>{onMode(true);setSpaceOpen(false)}}><LockKeyhole/><strong>Privat · Bara jag</strong>{privateMode&&<Check/>}</button>{memberships.map(item=><button key={item.groupId} className={!privateMode&&item.groupId===account.activeGroupId?"selected":""} onClick={()=>{onSwitchGroup(item.groupId);setSpaceOpen(false)}}><GroupIcon id={groups[item.groupId]?.iconId}/><strong>{groups[item.groupId]?.name||"Grupp"}</strong>{!privateMode&&item.groupId===account.activeGroupId&&<Check/>}</button>)}</div>}</div><button onClick={()=>setSettingsOpen(true)}><Settings/><span>INSTÄLLNINGAR</span></button></nav>
     {view==="overview"?<>
-    <nav className="budget-month-nav"><button onClick={()=>setMonthOffset(value=>value-1)} aria-label="Föregående månad"><ChevronLeft/></button><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(monthDate)}</strong><button onClick={()=>setMonthOffset(value=>value+1)} aria-label="Nästa månad"><ChevronRight/></button></nav>
     <div className="budget-summary"><article><small>INKOMSTER</small><strong className="income">+ {budgetMoney(income)}</strong></article><article><small>UTGIFTER</small><strong className="expense">− {budgetMoney(expense)}</strong></article><article className="balance"><small>KVAR PÅ KONTON</small><strong className={totalOnAccounts<0?"expense":"income"}>{budgetMoney(totalOnAccounts)}</strong></article></div>
-    <section className="budget-insights"><article><small>JÄMFÖRT MED FÖRRA MÅNADEN</small><strong className={expense>previousExpense?"expense":"income"}>{expense===previousExpense?"Samma utgifter":`${budgetMoney(Math.abs(expense-previousExpense))} ${expense>previousExpense?"mer":"mindre"}`}</strong></article><article><small>KOMMANDE DENNA MÅNAD</small><strong className="expense">{upcomingExpenses.length} {upcomingExpenses.length===1?"utgift":"utgifter"} · − {budgetMoney(upcomingExpenses.reduce((sum,item)=>sum+item.entry.amount,0))}</strong><span className="income">{upcomingIncomes.length} {upcomingIncomes.length===1?"inkomst":"inkomster"} · + {budgetMoney(upcomingIncomes.reduce((sum,item)=>sum+item.entry.amount,0))}</span>{upcomingTransfers.length>0&&<em>{upcomingTransfers.length} {upcomingTransfers.length===1?"överföring":"överföringar"}</em>}</article></section>
     {Object.values(settings.categoryBudgets||{}).some(Boolean)&&<section className="budget-category-progress"><h2>KATEGORIBUDGET</h2>{Object.entries(settings.categoryBudgets||{}).filter(([,limit])=>limit>0).map(([category,limit])=>{const spent=paidEntries.filter(item=>item.entry.type==="expense"&&item.entry.category===category).reduce((sum,item)=>sum+item.entry.amount,0),percent=Math.min(100,Math.round(spent/limit*100));return <article key={category}><span><b>{budgetCategoryIcons[category]} {category}</b><small>{budgetMoney(spent)} av {budgetMoney(limit)}</small></span><progress max="100" value={percent}/>{spent>limit&&<em>Över budget med {budgetMoney(spent-limit)}</em>}</article>})}</section>}
     {!!settings.savingsGoals?.length&&<section className="budget-goals"><h2>SPARMÅL</h2>{settings.savingsGoals.map(goal=><article key={goal.id}><span><b>🎯 {goal.name}</b><small>{budgetMoney(goal.saved)} av {budgetMoney(goal.target)}</small></span><progress max={goal.target||1} value={goal.saved}/></article>)}</section>}
-    <BudgetAccountOverview settings={settings} entries={paidEntries.map(item=>item.entry)} sharedAccountIds={sharedAccountIds} onSelect={setSelectedAccountId}/><section className={`budget-list${searchQuery?" budget-global-search":""}`}><header className="budget-list-tools"><h2>{searchQuery?"SÖKRESULTAT":"MÅNADENS POSTER"}</h2><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök i hela budgeten…"/><select value={filter} onChange={event=>setFilter(event.target.value as typeof filter)}><option value="all">Alla</option><option value="income">Inkomster</option><option value="expense">Utgifter</option><option value="transfer">Överföringar</option><option value="planned">Planerade</option></select></header>{searchQuery?(searchGroups.length?searchGroups.map(([key,items])=><section className="budget-search-month" key={key}><header><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(new Date(`${key}-01T12:00:00`))}</strong><small>{items.length} {items.length===1?"träff":"träffar"}</small></header>{items.sort((a,b)=>a.occurrenceDate.localeCompare(b.occurrenceDate)).map(renderBudgetRow)}</section>):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3><p>Sökningen gäller alla månader.</p></div>):(visibleEntries.length?visibleEntries.map(renderBudgetRow):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3></div>)}</section></>:<section className="budget-list budget-recurring-list"><header><div><small>AUTOMATISKA POSTER</small><h2>ÅTERKOMMANDE</h2></div><b>{entries.filter(entry=>Boolean(entry.recurrence)).length} st</b></header>{entries.filter(entry=>Boolean(entry.recurrence)).sort((a,b)=>a.date.localeCompare(b.date)).map(entry=><button key={entry.id} className="budget-row" onClick={()=>{if(entry.type==="transfer"){setEditingTransfer(entry);setTransferOpen(true)}else setEditing(entry)}}><span className={entry.type}>{entry.type==="transfer"?"⇄":budgetCategoryIcons[entry.category]||(entry.type==="income"?"+":"−")}</span><span><strong>{entry.title}</strong><small>{entry.type==="transfer"?"Överföring":entry.category} · {entry.recurrence==="weekly"?`varje ${new Intl.DateTimeFormat("sv-SE",{weekday:"long"}).format(new Date(`${entry.date}T12:00:00`))}`:`varje månad den ${Number(entry.date.slice(-2))}:e`}{entry.autoPay?" · betalas automatiskt":""}{!privateMode&&<> · {entry.creatorName}</>}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":entry.type==="expense"?"− ":""}{budgetMoney(entry.amount)}</b><ChevronRight/></button>)}{!entries.some(entry=>Boolean(entry.recurrence))&&<div className="budget-empty"><History/><h3>Inga återkommande poster</h3><p>Markera “Återkommande post” när du skapar en post.</p></div>}</section>}
-    {selectedAccountId&&<BudgetAccountDetail accountId={selectedAccountId} settings={settings} entries={paidEntries} privateMode={privateMode} onClose={()=>setSelectedAccountId(undefined)}/>}
+    <BudgetAccountOverview settings={settings} entries={balanceEntries.map(item=>item.entry)} sharedAccountIds={sharedAccountIds} onSelect={setSelectedAccountId}/><section className="budget-insights"><article><small>JÄMFÖRT MED FÖRRA MÅNADEN</small><strong className={expense>previousExpense?"expense":"income"}>{expense===previousExpense?"Samma utgifter":`${budgetMoney(Math.abs(expense-previousExpense))} ${expense>previousExpense?"mer":"mindre"}`}</strong></article><article><small>KOMMANDE DENNA MÅNAD</small><strong className="expense">{upcomingExpenses.length} {upcomingExpenses.length===1?"utgift":"utgifter"} · − {budgetMoney(upcomingExpenses.reduce((sum,item)=>sum+item.entry.amount,0))}</strong><span className="income">{upcomingIncomes.length} {upcomingIncomes.length===1?"inkomst":"inkomster"} · + {budgetMoney(upcomingIncomes.reduce((sum,item)=>sum+item.entry.amount,0))}</span>{upcomingTransfers.length>0&&<em>{upcomingTransfers.length} {upcomingTransfers.length===1?"överföring":"överföringar"}</em>}</article></section><nav className="budget-month-nav"><button onClick={()=>setMonthOffset(value=>value-1)} aria-label="Föregående månad"><ChevronLeft/></button><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(monthDate)}</strong><button onClick={()=>setMonthOffset(value=>value+1)} aria-label="Nästa månad"><ChevronRight/></button></nav><section className={`budget-list${searchQuery?" budget-global-search":""}`}><header className="budget-list-tools"><h2>{searchQuery?"SÖKRESULTAT":"MÅNADENS POSTER"}</h2><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök i hela budgeten…"/><select value={filter} onChange={event=>setFilter(event.target.value as typeof filter)}><option value="all">Alla</option><option value="income">Inkomster</option><option value="expense">Utgifter</option><option value="transfer">Överföringar</option><option value="planned">Planerade</option></select></header>{searchQuery?(searchGroups.length?searchGroups.map(([key,items])=><section className="budget-search-month" key={key}><header><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(new Date(`${key}-01T12:00:00`))}</strong><small>{items.length} {items.length===1?"träff":"träffar"}</small></header>{items.sort((a,b)=>a.occurrenceDate.localeCompare(b.occurrenceDate)).map(renderBudgetRow)}</section>):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3><p>Sökningen gäller alla månader.</p></div>):(visibleEntries.length?visibleEntries.map(renderBudgetRow):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3></div>)}</section></>:<section className="budget-list budget-recurring-list"><header><div><small>AUTOMATISKA POSTER</small><h2>ÅTERKOMMANDE</h2></div><b>{entries.filter(entry=>Boolean(entry.recurrence)).length} st</b></header>{entries.filter(entry=>Boolean(entry.recurrence)).sort((a,b)=>a.date.localeCompare(b.date)).map(entry=><button key={entry.id} className="budget-row" onClick={()=>{if(entry.type==="transfer"){setEditingTransfer(entry);setTransferOpen(true)}else setEditing(entry)}}><span className={entry.type}>{entry.type==="transfer"?"⇄":budgetCategoryIcons[entry.category]||(entry.type==="income"?"+":"−")}</span><span><strong>{entry.title}</strong><small>{entry.type==="transfer"?"Överföring":entry.category} · {entry.recurrence==="weekly"?`varje ${new Intl.DateTimeFormat("sv-SE",{weekday:"long"}).format(new Date(`${entry.date}T12:00:00`))}`:`varje månad den ${Number(entry.date.slice(-2))}:e`}{entry.autoPay?" · betalas automatiskt":""}{!privateMode&&<> · {entry.creatorName}</>}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":entry.type==="expense"?"− ":""}{budgetMoney(entry.amount)}</b><ChevronRight/></button>)}{!entries.some(entry=>Boolean(entry.recurrence))&&<div className="budget-empty"><History/><h3>Inga återkommande poster</h3><p>Markera “Återkommande post” när du skapar en post.</p></div>}</section>}
+    {selectedAccountId&&<BudgetAccountDetail accountId={selectedAccountId} settings={settings} entries={balanceEntries} privateMode={privateMode} onClose={()=>setSelectedAccountId(undefined)}/>}
     {transferOpen&&<BudgetTransferEditor entry={editingTransfer} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setTransferOpen(false);setEditingTransfer(undefined)}} onDelete={editingTransfer?()=>{setConfirmDelete(editingTransfer);setTransferOpen(false);setEditingTransfer(undefined)}:undefined} onSave={async entry=>{await onSave(entry);setTransferOpen(false);setEditingTransfer(undefined)}}/>}
     {(creating||(editing!==undefined&&editing?.type!=="transfer"))&&<BudgetEditor entry={editing||undefined} initialType={createType} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} privateMode={privateMode} groups={groups} groupBudgetSettings={groupBudgetSettings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}} onReset={async()=>{await onReset();setSettingsOpen(false)}} onClearMoney={async()=>{await onClearMoney();setSettingsOpen(false)}}/>}
     {confirmDelete&&<div className="modal-backdrop"><div className="modal confirm-delete-modal"><Trash2/><h2>TA BORT BUDGETPOSTEN?</h2><p>“{confirmDelete.title}” tas bort. Du kan ångra direkt efteråt.</p><div className="modal-actions"><button onClick={()=>setConfirmDelete(null)}>AVBRYT</button><button className="danger" onClick={async()=>{const removed=confirmDelete;await onDelete(removed);setLastDeleted(removed);setConfirmDelete(null);setEditing(undefined)}}>TA BORT</button></div></div></div>}
@@ -3677,7 +3697,6 @@ function PeoplePage({
   groups,
   language,
   onSelectGroup,
-  onlineUserIds,
 }: {
   account: Account;
   group?: Group;
@@ -3686,7 +3705,6 @@ function PeoplePage({
   groups: Record<string, Group>;
   language: string;
   onSelectGroup: (groupId: string) => void;
-  onlineUserIds: Set<string>;
 }) {
   const [groupDialog, setGroupDialog] = useState<"" | "create" | "join">("");
   const [groupMessage, setGroupMessage] = useState("");
@@ -3694,6 +3712,8 @@ function PeoplePage({
   const [groupOpen, setGroupOpen] = useState(false);
   const [roleMember, setRoleMember] = useState<Membership | null>(null);
   const [copied, setCopied] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [joinMessage, setJoinMessage] = useState("");
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const me = members.find((member) => member.uid === account.uid);
   const role = (me?.role || "").toLowerCase();
@@ -3703,13 +3723,14 @@ function PeoplePage({
     group?.ownerId === account.uid ||
     role.includes("boss") ||
     role.includes("owner");
-  useEffect(
-    () =>
-      group && isBoss
-        ? watchJoinRequests(group.id, setJoinRequests)
-        : undefined,
-    [group?.id, isBoss],
-  );
+  useEffect(()=>{
+    const managed=memberships.filter(item=>{const itemRole=(item.role||"").toLowerCase();return account.megaSuperBoss||account.founder||groups[item.groupId]?.ownerId===account.uid||itemRole.includes("boss")||itemRole.includes("owner")});
+    if(!managed.length){setJoinRequests([]);return}
+    const requestsByGroup=new Map<string,JoinRequest[]>();
+    const emit=()=>setJoinRequests([...requestsByGroup.values()].flat().sort((a,b)=>a.displayName.localeCompare(b.displayName,"sv")));
+    const unsubs=managed.map(item=>watchJoinRequests(item.groupId,requests=>{requestsByGroup.set(item.groupId,requests);emit()}));
+    return()=>unsubs.forEach(unsub=>unsub());
+  },[account.uid,account.megaSuperBoss,account.founder,memberships.map(item=>`${item.groupId}:${item.role}`).join("|"),Object.values(groups).map(item=>`${item.id}:${item.ownerId}`).join("|")]);
   return (
     <section className="content subpage">
       <div className="content-heading">
@@ -3728,18 +3749,18 @@ function PeoplePage({
           <span>{account.globalTitle || "Bubbsun-medlem"}</span>
         </div>
       </div>
-      {group && isBoss && joinRequests.length > 0 && (
+      {joinRequests.length > 0 && (
         <>
           <h2 className="small-heading">VÄNTANDE GRUPPANSÖKNINGAR</h2>
           <div className="join-request-list">
             {joinRequests.map((request) => (
-              <article key={request.uid}>
-                <strong>{request.displayName}</strong>
+              <article key={`${request.groupId}-${request.uid}`}>
+                <strong>{request.displayName}<small>{groups[request.groupId]?.name||"Grupp"}</small></strong>
                 <span>
                   <button
                     onClick={() =>
                       void decideJoinRequest(
-                        group.id,
+                        request.groupId,
                         request,
                         true,
                         colorOptions[members.length % colorOptions.length],
@@ -3752,7 +3773,7 @@ function PeoplePage({
                     className="danger"
                     onClick={() =>
                       void decideJoinRequest(
-                        group.id,
+                        request.groupId,
                         request,
                         false,
                         colorOptions[0],
@@ -3783,7 +3804,6 @@ function PeoplePage({
                 {m.uid === account.uid ? " (du)" : ""}
               </strong>
               <small>{m.role}</small>
-              {m.uid!==account.uid&&<em className={onlineUserIds.has(m.uid)?"person-online":"person-offline"}>{onlineUserIds.has(m.uid)?"ONLINE":"OFFLINE"}</em>}
             </span>
             {account.supporter && m.uid === account.uid ? <b>♥</b> : null}
             {isBoss && m.uid !== account.uid && <UserCog />}
@@ -3999,33 +4019,35 @@ function PeoplePage({
             className="modal"
             onSubmit={async (event) => {
               event.preventDefault();
+              if(joining)return;
+              setJoining(true);
+              setJoinMessage("");
               try {
                 await requestToJoin(
                   account,
                   String(new FormData(event.currentTarget).get("code") || ""),
                 );
-                setGroupMessage(
-                  "Förfrågan skickad. En boss måste godkänna dig innan du väljer färg.",
-                );
-                setGroupDialog("");
+                setJoinMessage("Förfrågan är skickad! Gruppens boss kan nu godkänna dig.");
               } catch (error) {
-                setGroupMessage(
+                setJoinMessage(
                   error instanceof Error
                     ? error.message
                     : "Kunde inte skicka förfrågan.",
                 );
-                setGroupDialog("");
+              } finally {
+                setJoining(false);
               }
             }}
           >
             <h2>GÅ MED I GRUPP</h2>
             <input name="code" autoFocus placeholder="ABCD-EFGH" />
             <p>Efter godkännande väljer du en färg som är ledig i gruppen.</p>
+            {joinMessage&&<p className="success-note" role="status">{joinMessage}</p>}
             <div>
-              <button type="button" className="cancel" onClick={() => setGroupDialog("")}>
-                AVBRYT
+              <button type="button" className="cancel" onClick={() => {setGroupDialog("");setJoinMessage("")}}>
+                {joinMessage?"STÄNG":"AVBRYT"}
               </button>
-              <button>SKICKA</button>
+              <button type="submit" disabled={joining||Boolean(joinMessage)}>{joining?"SKICKAR…":"SKICKA"}</button>
             </div>
           </form>
         </div>
@@ -4797,7 +4819,6 @@ function AdminPage({
   accounts,
   reports,
   palettes,
-  onlineUserIds,
   userCounts,
   publicRecipes,
   messageCount,
@@ -4808,7 +4829,6 @@ function AdminPage({
   accounts: Account[];
   reports: Report[];
   palettes: Record<string, ThemePalette>;
-  onlineUserIds: Set<string>;
   userCounts: Record<string,AdminUserCounts>;
   publicRecipes: Recipe[];
   messageCount: number;
@@ -4917,7 +4937,6 @@ function AdminPage({
               </i>
               <span>
                 <strong>
-                  {onlineUserIds.has(person.uid) && <b className="admin-online-dot" aria-label="Online" />}
                   {person.displayName}
                 </strong>
                 <small
@@ -6055,7 +6074,7 @@ function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,m
   const linkedViewingList=viewing?.linkedListId?lists.find(list=>list.id===viewing.linkedListId):undefined;
   useEffect(()=>{if(!openRecipeId)return;const recipe=recipes.find(value=>value.id===openRecipeId);if(recipe){setViewing(recipe);onRecipeOpened?.()}},[openRecipeId,recipes,onRecipeOpened]);
   useEffect(()=>{setViewing(current=>{if(!current)return current;return recipes.find(recipe=>(current.sourcePath&&recipe.sourcePath===current.sourcePath)||(recipe.id===current.id&&recipe.creatorId===current.creatorId))||current})},[recipes]);
-  useEffect(()=>{const update=(location:string,values:Recipe[])=>setLocationRecipeCounts(current=>({...current,[location]:new Set(values.map(value=>`${value.creatorId}:${value.id}`)).size})),unsubscribers=[watchPrivateRecipes(uid,values=>update("private",values)),...memberships.map(membership=>watchRecipes(membership.groupId,values=>update(membership.groupId,values)))];return()=>unsubscribers.forEach(unsubscribe=>unsubscribe())},[uid,memberships.map(value=>value.groupId).sort().join("|")]);
+  useEffect(()=>{if(!spaceOpen)return;const update=(location:string,values:Recipe[])=>setLocationRecipeCounts(current=>({...current,[location]:new Set(values.map(value=>`${value.creatorId}:${value.id}`)).size})),unsubscribers=[watchPrivateRecipes(uid,values=>update("private",values)),...memberships.map(membership=>watchRecipes(membership.groupId,values=>update(membership.groupId,values)))];return()=>unsubscribers.forEach(unsubscribe=>unsubscribe())},[spaceOpen,uid,memberships.map(value=>value.groupId).sort().join("|")]);
   useEffect(()=>setRecipePage(1),[search,category,subcategory,dietaryFilters.join("|"),sortMode,privateMode,account.activeGroupId]);
   return <section className="content recipes-page">
     <div className="recipe-cookbook-primary"><label className="recipe-cookbook-search"><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept eller skapare"/></label><div className="recipe-scope-wrap">
@@ -6141,14 +6160,64 @@ type ActivityEntry = {
   isOwn: boolean;
 };
 
+type GameLeader={uid:string;displayName:string;xp:number;level:number;gamesPlayed:number;bestTotal:number;yatzyGames:number;connect4Games:number};
+function GamesPage({account,user,profile,onYatzy,onConnect4}:{account:Account;user:User;profile:{xp:number;level:number;levelXp:number;nextLevelXp:number}|null;onYatzy:()=>void;onConnect4:()=>void}){
+  const [tab,setTab]=useState<"games"|"leaders">("games"),[leaderTab,setLeaderTab]=useState<"level"|"yatzy"|"connect4"|"score">("level"),[leaders,setLeaders]=useState<GameLeader[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState("");
+  useEffect(()=>{if(tab!=="leaders"||leaders.length)return;let stopped=false;setLoading(true);setError("");void user.getIdToken().then(token=>fetch("/api/yatzy/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action:"game_leaderboards",displayName:account.displayName})})).then(async response=>{const data=await response.json() as {ok?:boolean;error?:string;leaderboard?:GameLeader[]};if(!response.ok||!data.ok)throw new Error(data.error||"Topplistan kunde inte hämtas.");if(!stopped)setLeaders(data.leaderboard||[])}).catch(reason=>{if(!stopped)setError(reason instanceof Error?reason.message:"Topplistan kunde inte hämtas.")}).finally(()=>{if(!stopped)setLoading(false)});return()=>{stopped=true}},[tab,leaders.length,user,account.displayName]);
+  const ranked=[...leaders].filter(item=>leaderTab!=="score"||item.bestTotal>0).sort((a,b)=>leaderTab==="level"?b.xp-a.xp:leaderTab==="yatzy"?b.yatzyGames-a.yatzyGames||b.bestTotal-a.bestTotal:leaderTab==="connect4"?b.connect4Games-a.connect4Games||b.xp-a.xp:b.bestTotal-a.bestTotal).slice(0,20),metric=(item:GameLeader)=>leaderTab==="level"?`${item.xp.toLocaleString("sv-SE")} XP`:leaderTab==="yatzy"?`${item.yatzyGames} matcher`:leaderTab==="connect4"?`${item.connect4Games} matcher`:`${item.bestTotal} p`;
+  return <section className="content games-hub games-page"><div className="games-hub-title"><Gamepad2/><div><small>NÖJE</small><h1>Små spel med stor Bubbsun-karaktär</h1></div>{profile&&<div className="games-page-profile"><Star/><span><small>NIVÅ {profile.level}</small><strong>{profile.xp.toLocaleString("sv-SE")} XP</strong><i><em style={{width:`${Math.min(100,profile.levelXp/Math.max(1,profile.nextLevelXp)*100)}%`}}/></i></span></div>}</div><nav className="games-library-tabs" aria-label="Spelbibliotek"><button className={tab==="games"?"selected":""} onClick={()=>setTab("games")}><Gamepad2/> SPEL</button><button className={tab==="leaders"?"selected":""} onClick={()=>setTab("leaders")}><Star/> TOPPLISTA</button></nav>{tab==="games"?<div className="game-card-grid"><button className="game-library-card yatzy-library-card" onClick={onYatzy}><div className="game-cover yatzy-cover"><span>SPELA</span><i><ChevronRight/></i></div><div className="game-card-copy"><small>TÄRNINGAR · SINGEL &amp; GRUPP</small><h2>Bubb Yatzy</h2><p>Spela mot AI Frasse eller någon av dina gruppvänner.</p><strong><span>ÖPPNA SPELET</span><ChevronRight/></strong></div></button><button className="game-library-card connect4-library-card" onClick={onConnect4}><div className="game-cover connect4-cover"><span>SPELA</span><div className="connect4-cover-board">{Array.from({length:20},(_,i)=><i key={i} className={i%4===0||i===13?"red":i%3===0?"yellow":""}/>)}</div><b><ChevronRight/></b></div><div className="game-card-copy"><small>SNABBSPEL · AI &amp; MULTIPLAYER</small><h2>Fyra i rad</h2><p>Släpp brickor, blockera motståndaren och få fyra i rad först.</p><strong><span>ÖPPNA SPELET</span><ChevronRight/></strong></div></button></div>:<section className="games-leaderboard"><header><div><small>HELA BUBBSUN</small><h2>Topplistan</h2><p>Nivåer, spelade matcher och bästa Yatzy-resultat.</p></div><nav aria-label="Välj topplista"><button className={leaderTab==="level"?"selected":""} onClick={()=>setLeaderTab("level")}>NIVÅ</button><button className={leaderTab==="yatzy"?"selected":""} onClick={()=>setLeaderTab("yatzy")}>YATZY</button><button className={leaderTab==="connect4"?"selected":""} onClick={()=>setLeaderTab("connect4")}>4 I RAD</button><button className={leaderTab==="score"?"selected":""} onClick={()=>setLeaderTab("score")}>YATZY-POÄNG</button></nav></header>{loading?<div className="games-leaderboard-empty"><LoaderCircle className="spin"/> Hämtar topplistan…</div>:error?<div className="games-leaderboard-empty error">{error}</div>:<ol>{ranked.map((item,index)=><li key={item.uid} className={item.uid===user.uid?"me":""}><b>{index+1}</b><span><strong>{item.displayName}</strong><small>{leaderTab==="level"?`Nivå ${item.level}`:leaderTab==="score"?"Bästa avslutade Yatzy-match":leaderTab==="yatzy"?"Spelade Yatzy-matcher":"Spelade Fyra i rad-matcher"}</small></span><em>{metric(item)}</em></li>)}</ol>}</section>}</section>
+}
+
+type ConnectCell=0|1|2;
+type ConnectMatch={id:string;status:"active"|"finished";participantIds:string[];players:Record<string,{name:string}>;board:ConnectCell[];turnUid:string;winnerUid?:string;draw?:boolean;version:number;rematchId?:string;lastMoveIndex?:number;reaction?:{senderUid:string;icon:number;sentAt:number}|null};
+const connectWinner=(board:ConnectCell[])=>{for(let row=0;row<6;row++)for(let col=0;col<7;col++){const value=board[row*7+col];if(!value)continue;for(const [dr,dc] of [[0,1],[1,0],[1,1],[1,-1]]){let ok=true;for(let n=1;n<4;n++){const r=row+dr*n,c=col+dc*n;if(r<0||r>=6||c<0||c>=7||board[r*7+c]!==value){ok=false;break}}if(ok)return value}}return 0};
+const connectDrop=(board:ConnectCell[],column:number,value:1|2)=>{const next=[...board];for(let row=5;row>=0;row--){const index=row*7+column;if(next[index]===0){next[index]=value;return next}}return null};
+const frasseColumn=(board:ConnectCell[])=>{const valid=[3,2,4,1,5,0,6].filter(col=>Boolean(connectDrop(board,col,2)));for(const col of valid)if(connectWinner(connectDrop(board,col,2)!)===2)return col;for(const col of valid)if(connectWinner(connectDrop(board,col,1)!)===1)return col;const weighted=valid.flatMap(col=>Array.from({length:4-Math.abs(3-col)},()=>col));return weighted[Math.floor(Math.random()*weighted.length)]??valid[0]};
+function ConnectFourPage({account,user,profile,memberships,groups,onBack,onProfile}:{account:Account;user:User;profile:{xp:number;level:number;levelXp:number;nextLevelXp:number}|null;memberships:Membership[];groups:Record<string,Group>;onBack:()=>void;onProfile:(profile:{xp:number;level:number;levelXp:number;nextLevelXp:number})=>void}){
+  const empty=()=>Array<ConnectCell>(42).fill(0),[board,setBoard]=useState<ConnectCell[]>(empty),[lastMoveIndex,setLastMoveIndex]=useState(-1),[turn,setTurn]=useState<1|2>(1),[busy,setBusy]=useState(false),[gameId,setGameId]=useState(()=>crypto.randomUUID()),[screen,setScreen]=useState<"menu"|"ai"|"lobby"|"multi">("menu"),[matches,setMatches]=useState<ConnectMatch[]>([]),[groupPeople,setGroupPeople]=useState<Record<string,Membership[]>>({}),[match,setMatch]=useState<ConnectMatch|null>(null),[error,setError]=useState(""),[reactionOpen,setReactionOpen]=useState(false),[reactionBubble,setReactionBubble]=useState<number|null>(null),rewarded=useRef(false),profiledMatch=useRef(""),seenReaction=useRef(0),reactionTimer=useRef<number|undefined>(undefined);
+  const api=useCallback(async<T,>(action:string,payload:Record<string,unknown>={})=>{const token=await user.getIdToken(),response=await fetch("/api/yatzy/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action,displayName:account.displayName,...payload})}),data=await response.json() as T&{ok?:boolean;error?:string};if(!response.ok||data.ok===false)throw new Error(data.error||"Spelservern svarade inte.");return data},[user,account.displayName]);
+  const remote=screen==="multi"&&match,activeBoard=remote?match.board:board,activeLastMove=remote?match.lastMoveIndex??-1:lastMoveIndex,winner=remote?(match.winnerUid?match.winnerUid===user.uid?1:2:0):connectWinner(board),draw=remote?Boolean(match.draw):!winner&&board.every(Boolean),finished=remote?match.status==="finished":Boolean(winner||draw),myTurn=remote?match.turnUid===user.uid:turn===1,opponentId=remote?match.participantIds.find(id=>id!==user.uid):undefined,opponentName=opponentId?match?.players[opponentId]?.name:"AI Frasse";
+  const refreshProfile=useCallback(async()=>{try{const data=await api<{profile:{xp:number;level:number;levelXp:number;nextLevelXp:number}}>("game_profile");if(data.profile){onProfile(data.profile);localStorage.setItem("bubbsun-yatzy-profile",JSON.stringify(data.profile))}}catch{/* nästa sidbesök försöker igen */}},[api,onProfile]);
+  const loadMatches=useCallback(async()=>{try{const data=await api<{matches:ConnectMatch[]}>("connect4_bootstrap");setMatches(data.matches||[])}catch(reason){setError(reason instanceof Error?reason.message:"Matcher kunde inte hämtas.")}},[api]);
+  useEffect(()=>{if(screen==="lobby")void loadMatches()},[screen,loadMatches]);
+  useEffect(()=>{if(screen!=="lobby")return;let stopped=false;void Promise.all(memberships.map(async membership=>[membership.groupId,await loadGroupMembers(membership.groupId)] as const)).then(values=>{if(!stopped)setGroupPeople(Object.fromEntries(values))}).catch(reason=>{if(!stopped)setError(reason instanceof Error?reason.message:"Gruppvänner kunde inte hämtas.")});return()=>{stopped=true}},[screen,memberships.map(item=>item.groupId).join("|")]);
+  useEffect(()=>{if(screen!=="multi"||!match||match.status!=="active")return;let stopped=false;const matchId=match.id;const sync=async()=>{if(document.visibilityState!=="visible")return;try{const data=await api<{match:ConnectMatch}>("connect4_get",{matchId});if(!stopped)setMatch(current=>current?.id===data.match.id&&current.version!==data.match.version?data.match:current)}catch{/* lugn nästa kontroll */}};const timer=window.setInterval(sync,5000);const visible=()=>{if(document.visibilityState==="visible")void sync()};document.addEventListener("visibilitychange",visible);return()=>{stopped=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visible)}},[screen,match?.id,match?.status,api]);
+  const showReaction=(icon:number)=>{window.clearTimeout(reactionTimer.current);setReactionBubble(icon);reactionTimer.current=window.setTimeout(()=>setReactionBubble(null),4200)};
+  useEffect(()=>()=>window.clearTimeout(reactionTimer.current),[]);
+  useEffect(()=>{const reaction=match?.reaction;if(!reaction||reaction.sentAt===seenReaction.current)return;seenReaction.current=reaction.sentAt;if(reaction.senderUid!==user.uid&&Date.now()-reaction.sentAt<12000)showReaction(reaction.icon)},[match?.reaction?.sentAt,user.uid]);
+  const sendReaction=async(icon:number)=>{setReactionOpen(false);showReaction(icon);if(remote){try{const data=await api<{match:ConnectMatch}>("connect4_reaction",{matchId:match.id,icon});setMatch(data.match)}catch(reason){setError(reason instanceof Error?reason.message:"Reaktionen kunde inte skickas.")}return}window.setTimeout(()=>{const choices=icon===0?[1,3,5]:icon===4?[0,2,5]:[0,1,2,3,4,5].filter(value=>value!==icon);showReaction(choices[Math.floor(Math.random()*choices.length)]??1)},700+Math.random()*900)};
+  useEffect(()=>{if(!match||match.status!=="finished"||profiledMatch.current===match.id)return;profiledMatch.current=match.id;void refreshProfile()},[match?.id,match?.status,refreshProfile]);
+  const restart=()=>{setBoard(empty());setLastMoveIndex(-1);setTurn(1);setBusy(false);setGameId(crypto.randomUUID());rewarded.current=false};
+  useEffect(()=>{if(screen!=="ai"||!finished||rewarded.current)return;rewarded.current=true;void(async()=>{try{const outcome=winner===1?"win":winner===2?"loss":"draw",data=await api<{profile?:{xp:number;level:number;levelXp:number;nextLevelXp:number}}>("connect4_result",{gameId,outcome});if(data.profile){onProfile(data.profile);localStorage.setItem("bubbsun-yatzy-profile",JSON.stringify(data.profile))}}catch(reason){setError(reason instanceof Error?reason.message:"XP kunde inte sparas.")}})()},[screen,finished,winner,gameId,api,onProfile]);
+  const play=async(column:number)=>{if(!myTurn||finished||busy)return;if(remote){setBusy(true);try{const data=await api<{match:ConnectMatch}>("connect4_move",{matchId:match.id,column});setMatch(data.match)}catch(reason){setError(reason instanceof Error?reason.message:"Draget kunde inte sparas.")}finally{setBusy(false)}return}const next=connectDrop(board,column,1);if(!next)return;setBoard(next);setLastMoveIndex(next.findIndex((cell,index)=>cell!==board[index]));if(connectWinner(next)||next.every(Boolean))return;setTurn(2);setBusy(true);window.setTimeout(()=>{const col=frasseColumn(next),after=connectDrop(next,col,2)||next;setBoard(after);setLastMoveIndex(after.findIndex((cell,index)=>cell!==next[index]));setTurn(1);setBusy(false)},520)};
+  const challenge=async(member:Membership)=>{setBusy(true);setError("");try{const data=await api<{match:ConnectMatch}>("connect4_create",{matchId:crypto.randomUUID(),opponentId:member.uid,opponentName:member.displayName});setMatch(data.match);setScreen("multi")}catch(reason){setError(reason instanceof Error?reason.message:"Matchen kunde inte skapas.")}finally{setBusy(false)}};
+  const rematch=async()=>{if(!match)return;setBusy(true);try{const data=await api<{match:ConnectMatch}>("connect4_rematch",{sourceMatchId:match.id,matchId:crypto.randomUUID()});setMatch(data.match);setScreen("multi")}catch(reason){setError(reason instanceof Error?reason.message:"Returmatchen kunde inte startas.")}finally{setBusy(false)}};
+  if(screen==="menu")return <section className="content connect4-page connect4-menu"><header><button onClick={onBack}><ChevronLeft/> SPELBIBLIOTEKET</button><div><h1>Fyra i rad</h1><p>Välj vem du vill möta.</p></div>{profile&&<div className="connect4-profile"><Star/><span><small>NIVÅ {profile.level}</small><strong>{profile.xp.toLocaleString("sv-SE")} XP</strong><i><em style={{width:`${Math.min(100,profile.levelXp/Math.max(1,profile.nextLevelXp)*100)}%`}}/></i></span></div>}</header><div className="connect4-mode-grid"><button onClick={()=>setScreen("ai")}><Bot/><span><small>SPELA DIREKT</small><strong>Mot AI Frasse</strong><p>En snabb match på egen hand.</p></span><ChevronRight/></button><button onClick={()=>setScreen("lobby")}><Users/><span><small>MULTIPLAYER</small><strong>Mot en vän</strong><p>Turbaserat och sparat på Strato.</p></span><ChevronRight/></button></div></section>;
+  if(screen==="lobby")return <section className="content connect4-page connect4-lobby"><header><button onClick={()=>setScreen("menu")}><ChevronLeft/> TILLBAKA</button><div><h1>Välj motståndare</h1><p>Gruppvänner och sparade matcher.</p></div></header>{error&&<p className="connect4-error">{error}</p>}{matches.some(item=>item.status==="active")&&<div className="connect4-match-list"><h2>PÅGÅENDE MATCHER</h2>{matches.filter(item=>item.status==="active").map(item=>{const other=item.participantIds.find(id=>id!==user.uid)||"";return <button key={item.id} onClick={()=>{setMatch(item);setScreen("multi")}}><Clock3/><span><strong>{item.players[other]?.name||"Bubbsun-vän"}</strong><small>{item.turnUid===user.uid?"Din tur":"Väntar på vännen"}</small></span><ChevronRight/></button>})}</div>}<div className="connect4-friends"><h2>UTMANA EN GRUPPVÄN · ALLA DINA GRUPPER</h2>{memberships.map(membership=>{const people=(groupPeople[membership.groupId]||[]).filter(item=>item.uid!==user.uid);return <section className="connect4-friend-group" key={membership.groupId}><h3>{groups[membership.groupId]?.name||"Grupp"}<small>{people.length} {people.length===1?"spelare":"spelare"}</small></h3>{people.map(member=><button disabled={busy} key={`${membership.groupId}-${member.uid}`} onClick={()=>void challenge(member)}><i style={{background:rgbaHex(member.color)}}>{member.displayName.slice(0,1).toUpperCase()}</i><span><strong>{member.displayName}</strong><small>Starta ny match</small></span><b>UTMANA</b></button>)}{!people.length&&<p>Ingen annan spelare i den här gruppen ännu.</p>}</section>})}{!memberships.some(membership=>(groupPeople[membership.groupId]||[]).some(item=>item.uid!==user.uid))&&<p>Det finns ingen annan spelare i dina grupper ännu.</p>}</div>{matches.some(item=>item.status==="finished")&&<div className="connect4-match-list"><h2>AVSLUTADE MATCHER</h2>{matches.filter(item=>item.status==="finished").map(item=>{const other=item.participantIds.find(id=>id!==user.uid)||"";return <button key={item.id} onClick={()=>{setMatch(item);setScreen("multi")}}><Check/><span><strong>{item.players[other]?.name||"Bubbsun-vän"}</strong><small>Visa resultat eller spela retur</small></span><ChevronRight/></button>})}</div>}</section>;
+  return <section className="content connect4-page"><header><button onClick={()=>{if(remote){setMatch(null);setScreen("lobby")}else setScreen("menu")}}><ChevronLeft/> {remote?"MATCHERNA":"SPELLÄGEN"}</button><div><h1>Fyra i rad</h1><p>Du är grön. {opponentName} är gul.</p></div>{profile&&<div className="connect4-profile"><Star/><span><small>NIVÅ {profile.level}</small><strong>{profile.xp.toLocaleString("sv-SE")} XP</strong><i><em style={{width:`${Math.min(100,profile.levelXp/Math.max(1,profile.nextLevelXp)*100)}%`}}/></i></span></div>}</header><div className="connect4-game-actions">{!remote&&<button className="connect4-restart" disabled={busy} onClick={restart}><RotateCcw/> STARTA OM</button>}<div className="connect4-reaction-control">{reactionOpen&&<button className="connect4-reaction-dismiss" aria-label="Stäng reaktioner" onClick={()=>setReactionOpen(false)}/>}<button className="connect4-react" aria-expanded={reactionOpen} onClick={()=>setReactionOpen(open=>!open)}><MessageCircle/> REAGERA</button>{reactionOpen&&<div className="connect4-reaction-picker">{[0,1,2,3,4,5].map(icon=><button key={icon} onClick={()=>void sendReaction(icon)} aria-label={`Skicka reaktion ${icon+1}`}><i className={`game-reaction-icon game-reaction-${icon}`}/></button>)}</div>}{reactionBubble!==null&&<div className="connect4-reaction-bubble"><i className={`game-reaction-icon game-reaction-${reactionBubble}`}/></div>}</div></div>{error&&<p className="connect4-error">{error}</p>}<section className="connect4-table"><div className="connect4-status">{winner===1?"DU VANN!":winner===2?`${opponentName.toUpperCase()} VANN`:draw?"OAVGJORT":myTurn?"DIN TUR":`${opponentName.toUpperCase()}S TUR`}</div><div className={`connect4-play-area ${finished||busy||!myTurn?"disabled":""}`}><div className="connect4-columns" aria-hidden="true">{Array.from({length:7},(_,col)=><span key={col}><ChevronDown/></span>)}</div><div className="connect4-board">{activeBoard.map((cell,index)=>{const own=remote?(cell===1)===(match.participantIds[0]===user.uid):cell===1;const className=[cell===0?"":own?"you":"frasse",cell!==0&&index===activeLastMove?"last-move":""].filter(Boolean).join(" ");return <i key={index} className={className}/>})}</div><div className="connect4-column-hitboxes">{Array.from({length:7},(_,col)=><button key={col} type="button" aria-label={`Släpp brickan i kolumn ${col+1}`} disabled={finished||busy||!myTurn||Boolean(activeBoard[col])} onClick={()=>void play(col)}/>)}</div></div>{finished&&<div className="connect4-result"><strong>{winner===1?"Snyggt spelat! +50 XP":winner===2?`${opponentName} vann. +25 XP`:"Oavgjort! +25 XP"}</strong>{remote?<><button disabled={busy} onClick={()=>void rematch()}>SPELA RETURMATCH</button><button className="secondary" onClick={()=>{setMatch(null);setScreen("lobby")}}>TILL MATCHERNA</button></>:<button onClick={restart}>SPELA IGEN</button>}</div>}</section></section>
+}
+
+function YatzyPage({account,user,memberships,groups,theme}:{account:Account;user:User;memberships:Membership[];groups:Record<string,Group>;theme:{bg:string;paper:string;panel:string;text:string;accent:string;outline:string}}){
+  const iframeRef=useRef<HTMLIFrameElement|null>(null),contextRef=useRef<Record<string,unknown>>({}),[peopleByGroup,setPeopleByGroup]=useState<Record<string,Membership[]>>({}),[frameHeight,setFrameHeight]=useState(900),[requestedMatch]=useState(()=>localStorage.getItem("bubbsun-yatzy-open-match")||"");
+  useEffect(()=>{if(requestedMatch)localStorage.removeItem("bubbsun-yatzy-open-match")},[requestedMatch]);
+  useEffect(()=>{const unsubs=memberships.map(item=>watchGroupMembers(item.groupId,people=>setPeopleByGroup(old=>({...old,[item.groupId]:people}))));return()=>unsubs.forEach(unsub=>unsub())},[memberships.map(item=>item.groupId).join("|")]);
+  const friends=useMemo(()=>{const unique=new Map<string,{uid:string;displayName:string;color:number;groupIds:string[];groupNames:string[]}>();for(const membership of memberships){const groupName=groups[membership.groupId]?.name||"Grupp";for(const person of peopleByGroup[membership.groupId]||[]){if(person.uid===user.uid)continue;const existing=unique.get(person.uid)||{uid:person.uid,displayName:person.displayName,color:person.color,groupIds:[],groupNames:[]};if(!existing.groupIds.includes(membership.groupId))existing.groupIds.push(membership.groupId);if(!existing.groupNames.includes(groupName))existing.groupNames.push(groupName);unique.set(person.uid,existing)}}return [...unique.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName,"sv"))},[memberships,groups,peopleByGroup,user.uid]);
+  contextRef.current={type:"bubbsun:yatzy-context",displayName:account.displayName,activeGroupId:account.activeGroupId,members:friends};
+  const sendContext=()=>iframeRef.current?.contentWindow?.postMessage(contextRef.current,location.origin);
+  useEffect(()=>{sendContext()},[friends,account.displayName,account.activeGroupId]);
+  useEffect(()=>{const receive=(event:MessageEvent)=>{if(event.origin!==location.origin||event.source!==iframeRef.current?.contentWindow)return;if(event.data?.type==="bubbsun:yatzy-ready")sendContext();if(event.data?.type==="bubbsun:yatzy-height"){const height=Math.max(600,Math.min(5000,Number(event.data.height)||900));setFrameHeight(current=>Math.abs(current-height)>2?height:current)}};window.addEventListener("message",receive);return()=>window.removeEventListener("message",receive)},[]);
+  const params=new URLSearchParams({embedded:"1",bg:theme.bg,paper:theme.paper,panel:theme.panel,text:theme.text,accent:theme.accent,outline:theme.outline});if(requestedMatch)params.set("match",requestedMatch);
+  return <section className="yatzy-frame-page" style={{background:theme.bg,height:frameHeight}}><iframe ref={iframeRef} title="Bubb Yatzy" scrolling="no" style={{height:frameHeight}} src={`/games/bubb-yatzy/?${params}`} onLoad={sendContext}/></section>
+}
+
 function NotificationsPage({entries,seenAt,onOpen}:{entries:ActivityEntry[];seenAt:number;onOpen:(entry:ActivityEntry)=>void}) {
   const dateText=(value:number)=>new Intl.DateTimeFormat("sv-SE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value));
   return <section className="content subpage notifications-page">
     <div className="notifications-heading"><Bell/><div><h1>NYTT FÖR DIG</h1><p>Din personliga Bubbsun-logg</p></div></div>
     {entries.length ? <div className="notifications-list">{entries.map(entry=><button key={entry.id} className={entry.at>seenAt&&!entry.isOwn?"unread":""} style={{"--activity-color":rgbaHex(entry.color)} as CSSProperties} onClick={()=>onOpen(entry)}>
-      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":"▣"}</span>
+      <span className="notification-icon">{entry.kind==="list"?"✓":entry.kind==="note"?"✎":entry.kind==="recipe"?"🍲":entry.kind==="game"?"🎲":"▣"}</span>
       <span><small>{entry.detail}</small><strong>{entry.title}</strong><time>{dateText(entry.at)}</time></span>
-      {entry.at>seenAt&&!entry.isOwn&&<b>NYTT</b>}<ChevronRight/>
+      {(entry.kind==="game"||entry.at>seenAt&&!entry.isOwn)&&<b>NYTT</b>}<ChevronRight/>
     </button>)}</div>:<div className="notifications-empty"><Bell/><strong>Inget nytt ännu</strong><span>När något händer i dina listor, anteckningar, recept eller kalender syns det här.</span></div>}
   </section>;
 }
@@ -6166,6 +6235,8 @@ function AuthenticatedApp() {
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
+  const [yatzyProfile,setYatzyProfile]=useState<{xp:number;level:number;levelXp:number;nextLevelXp:number}|null>(()=>{try{return JSON.parse(localStorage.getItem("bubbsun-yatzy-profile")||"null")}catch{return null}});
+  const [yatzyTurns,setYatzyTurns]=useState<Array<{matchId:string;opponentName:string;updatedAt:number}>>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [groups, setGroups] = useState<Record<string, Group>>({});
   const [members, setMembers] = useState<Membership[]>([]);
@@ -6185,7 +6256,7 @@ function AuthenticatedApp() {
   const [privateRecipes,setPrivateRecipes]=useState<Recipe[]>([]);
   const [publicRecipes,setPublicRecipes]=useState<Recipe[]>([]);
   const [privateMode, setPrivateMode] = useState(()=>localStorage.getItem("bubbsun-private-mode")==="true");
-  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","notifications","chat","people","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
+  const [page, setPage] = useState<Page>(()=>{const saved=localStorage.getItem("bubbsun-last-page") as Page|null;return saved&&["lists","notes","calendar","meal-planner","recipes","recipe-discover","budget","games","yatzy","connect4","notifications","chat","people","settings","support","about","help","privacy","feedback","versions","admin"].includes(saved)?saved:"lists"});
   const [selected, setSelected] = useState<BubbsunList | null>(null);
   const [selectedPrivate, setSelectedPrivate] = useState(false);
   const [selectedNote,setSelectedNote]=useState<BubbsunNote|null>(null);
@@ -6228,9 +6299,6 @@ function AuthenticatedApp() {
   >([]);
   const [adminUserCounts,setAdminUserCounts]=useState<Record<string,AdminUserCounts>>({});
   const [adminMessageCount,setAdminMessageCount]=useState(0);
-  const [onlineCount, setOnlineCount] = useState(0);
-  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
-  const [groupOnlineUserIds,setGroupOnlineUserIds]=useState<Set<string>>(new Set());
   const [directChats,setDirectChats]=useState<DirectChat[]>([]);
   const [chatPeer,setChatPeer]=useState<ChatPeer|null>(null);
   const [saveConflict, setSaveConflict] = useState(false);
@@ -6352,9 +6420,10 @@ function AuthenticatedApp() {
         await waitUntilVisible();
         for (let attempt = 0; attempt < 3; attempt += 1) {
           try {
-            await ensureAccount(next);
-            await migratePrivateLists(next.uid, loadPrivate(next.uid));
+            const readyAccount=await ensureAccount(next);
+            setAccount(readyAccount);
             setDatabaseReady(true);
+            const migrationKey=`bubbsun-private-lists-migrated-${next.uid}`;if(!localStorage.getItem(migrationKey))void migratePrivateLists(next.uid,loadPrivate(next.uid)).then(()=>localStorage.setItem(migrationKey,"1")).catch(error=>console.error("Bakgrundsmigreringen av privata listor misslyckades",error));
             return;
           } catch (error) {
             const message =
@@ -6382,16 +6451,15 @@ function AuthenticatedApp() {
       }),
     [],
   );
-  const needsLists=["lists","list","calendar","meal-planner","recipes","recipe-discover","notifications"].includes(page),needsNotes=["notes","note","notifications"].includes(page),needsRecipes=["recipes","recipe-discover","meal-planner","notifications"].includes(page),needsMembers=["lists","list","notes","note","calendar","meal-planner","recipes","notifications","people"].includes(page),needsFollowedContent=["lists","notes","notifications"].includes(page),needsListReadStates=["lists","notifications"].includes(page),isAdminPage=page==="admin";
+  const needsLists=["lists","list","calendar","meal-planner","recipes","recipe-discover","notifications"].includes(page),needsNotes=["notes","note","notifications"].includes(page),needsRecipes=["recipes","recipe-discover","meal-planner","notifications"].includes(page),needsCalendar=["calendar","meal-planner","notifications"].includes(page),needsMembers=["lists","list","notes","note","calendar","meal-planner","recipes","notifications","people"].includes(page),needsFollowedContent=["lists","notes","notifications"].includes(page),needsListReadStates=["lists","notifications"].includes(page),isAdminPage=page==="admin";
   useEffect(()=>user&&databaseReady?watchDirectChats(user.uid,setDirectChats):undefined,[user,databaseReady]);
-  useEffect(()=>needsMembers?watchKnownOnlineUserIds(members.map(member=>member.uid),setGroupOnlineUserIds):undefined,[members,needsMembers]);
-  useEffect(()=>user&&databaseReady&&privateMode&&needsNotes?watchPrivateNotes(user.uid,setPrivateNotes):undefined,[user,databaseReady,privateMode,needsNotes]);
-  useEffect(()=>user&&databaseReady&&privateMode?watchPrivateCalendarEvents(user.uid,setPrivateCalendarEvents):undefined,[user,databaseReady,privateMode]);
-  useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetEntries(user.uid,setPrivateBudgetEntries):undefined,[user,databaseReady,page]);
-  useEffect(()=>user&&databaseReady&&page==="budget"?watchPrivateBudgetSettings(user.uid,setPrivateBudgetSettings):undefined,[user,databaseReady,page]);
+  useEffect(()=>{if(!user||!databaseReady||!privateMode||!needsNotes)return;let stopped=false;void loadPrivateNotes(user.uid).then(values=>{if(!stopped)setPrivateNotes(values)}).catch(error=>console.error("Privata anteckningar kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,privateMode,needsNotes]);
+  useEffect(()=>{if(!user||!databaseReady||!privateMode||!needsCalendar)return;let stopped=false;void loadPrivateCalendarEvents(user.uid).then(values=>{if(!stopped)setPrivateCalendarEvents(values)}).catch(error=>console.error("Privat kalender kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,privateMode,needsCalendar]);
+  useEffect(()=>{if(!user||!databaseReady||page!=="budget")return;let stopped=false;void loadPrivateBudgetEntries(user.uid).then(values=>{if(!stopped)setPrivateBudgetEntries(values)}).catch(error=>console.error("Privat budget kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,page]);
+  useEffect(()=>{if(!user||!databaseReady||page!=="budget")return;let stopped=false;void loadPrivateBudgetSettings(user.uid).then(value=>{if(!stopped)setPrivateBudgetSettings(value)}).catch(error=>console.error("Privata budgetinställningar kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,page]);
   useEffect(()=>{if(!databaseReady||page!=="budget")return;const ids=memberships.map(item=>item.groupId),unsubs=ids.map(groupId=>watchBudgetSettings(groupId,settings=>setGroupBudgetSettings(old=>({...old,[groupId]:settings}))));setGroupBudgetSettings(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,memberships,page]);
   useEffect(()=>{if(!databaseReady||page!=="budget"||!privateMode)return;const membershipIds=new Set(memberships.map(item=>item.groupId)),ids=Array.from(new Set(privateBudgetSettings.banks.flatMap(bank=>bank.accounts.flatMap(item=>item.linkedGroupId&&membershipIds.has(item.linkedGroupId)?[item.linkedGroupId]:[])))),unsubs=ids.map(groupId=>watchBudgetEntries(groupId,entries=>setGroupBudgetEntries(old=>({...old,[groupId]:entries}))));setGroupBudgetEntries(old=>Object.fromEntries(Object.entries(old).filter(([id])=>ids.includes(id))));return()=>unsubs.forEach(unsub=>unsub())},[databaseReady,page,privateMode,memberships,privateBudgetSettings]);
-  useEffect(()=>user&&databaseReady&&privateMode&&needsRecipes?watchPrivateRecipes(user.uid,setPrivateRecipes):undefined,[user,databaseReady,privateMode,needsRecipes]);
+  useEffect(()=>{if(!user||!databaseReady||!privateMode||!needsRecipes)return;let stopped=false;void loadPrivateRecipes(user.uid).then(values=>{if(!stopped)setPrivateRecipes(values)}).catch(error=>console.error("Privata recept kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,privateMode,needsRecipes]);
   useEffect(()=>user&&databaseReady&&["recipes","recipe-discover"].includes(page)?watchPublicRecipes(setPublicRecipes):undefined,[user,databaseReady,page]);
   useEffect(()=>{if(!user||!databaseReady||!["recipes","recipe-discover"].includes(page)||recipePublicationsReconciledFor.current===user.uid)return;recipePublicationsReconciledFor.current=user.uid;void reconcileRecipePublications(user.uid).catch(error=>{recipePublicationsReconciledFor.current="";console.error("Kunde inte städa offentliga recept",error)})},[user,databaseReady,page]);
   useEffect(
@@ -6399,35 +6467,6 @@ function AuthenticatedApp() {
       user && databaseReady ? watchAccount(user.uid, setAccount) : undefined,
     [user, databaseReady],
   );
-  useEffect(() => {
-    if (!user || !databaseReady) return;
-    const touch = () => {
-      if (document.visibilityState === "visible") void touchPresence(user.uid);
-    };
-    touch();
-    const timer = window.setInterval(touch, 3 * 60 * 1000);
-    document.addEventListener("visibilitychange", touch);
-    window.addEventListener("focus", touch);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", touch);
-      window.removeEventListener("focus", touch);
-    };
-  }, [user, databaseReady]);
-  useEffect(() => {
-    if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) {
-      setOnlineCount(0);
-      return;
-    }
-    return watchOnlineCount(setOnlineCount);
-  }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
-  useEffect(() => {
-    if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) {
-      setOnlineUserIds(new Set());
-      return;
-    }
-    return watchOnlineUserIds(setOnlineUserIds);
-  }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
   useEffect(
     () =>
       user && databaseReady
@@ -6435,13 +6474,7 @@ function AuthenticatedApp() {
         : undefined,
     [user, databaseReady],
   );
-  useEffect(
-    () =>
-      user && databaseReady && needsLists
-        ? watchPrivateLists(user.uid, setPrivateLists)
-        : undefined,
-    [user, databaseReady, needsLists],
-  );
+  useEffect(()=>{if(!user||!databaseReady||!needsLists)return;let stopped=false;void loadPrivateLists(user.uid).then(values=>{if(!stopped)setPrivateLists(values)}).catch(error=>console.error("Privata listor kunde inte hämtas",error));return()=>{stopped=true}},[user?.uid,databaseReady,needsLists]);
   useEffect(() => {
     const unsubs = memberships.map((m) =>
       watchGroup(m.groupId, (g) =>
@@ -6458,7 +6491,7 @@ function AuthenticatedApp() {
   useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsMembers)return;return watchGroupMembers(account.activeGroupId,setMembers)},[account?.activeGroupId,privateMode,needsMembers]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsLists)return;return watchLists(account.activeGroupId,setLists)},[account?.activeGroupId,privateMode,needsLists]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsNotes)return;return watchNotes(account.activeGroupId,setNotes);},[account?.activeGroupId,privateMode,needsNotes]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsCalendar){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode,needsCalendar]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode,page]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetSettings(account.activeGroupId,setBudgetSettings);},[account?.activeGroupId,privateMode,page]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsRecipes)return;return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode,needsRecipes]);
@@ -6514,16 +6547,15 @@ function AuthenticatedApp() {
   }, [account?.megaSuperBoss, account?.founder]);
   useEffect(() => {
     if ((!account?.megaSuperBoss && !account?.founder)||!isAdminPage) return;
-    const a=watchAllAccounts(setAllAccounts),b=watchReports(setReports),c=watchAllLists(setAllAdminLists),d=watchAllPrivateLists(setAllAdminPrivateLists);
-    return()=>{a();b();c();d()};
+    const a=watchAllAccounts(setAllAccounts),b=watchReports(setReports);
+    setAllAdminLists([]);setAllAdminPrivateLists([]);
+    return()=>{a();b()};
   }, [account?.megaSuperBoss, account?.founder,isAdminPage]);
   useEffect(()=>{
-    if((!account?.megaSuperBoss&&!account?.founder)||!isAdminPage)return;
-    return watchAdminUserCounts(allAccounts.map(item=>item.uid),setAdminUserCounts);
-  },[account?.megaSuperBoss,account?.founder,isAdminPage,allAccounts.map(item=>item.uid).join("|")]);
+    setAdminUserCounts({});
+  },[account?.megaSuperBoss,account?.founder,isAdminPage]);
   useEffect(()=>{
-    if((!account?.megaSuperBoss&&!account?.founder)||!isAdminPage)return;
-    return watchTotalDirectMessageCount(setAdminMessageCount);
+    setAdminMessageCount(0);
   },[account?.megaSuperBoss,account?.founder,isAdminPage]);
   useEffect(() => {
     localStorage.setItem("bubbsun-theme", themeId);
@@ -6602,6 +6634,8 @@ function AuthenticatedApp() {
     "--theme-brand-suffix": activeTheme.brandSuffix || activeTheme.text,
     "--theme-calendar-event-bg": activeTheme.calendarEventBackground || activeTheme.paper,
   } as CSSProperties;
+
+  useEffect(()=>{const receive=(event:MessageEvent)=>{if(event.origin!==location.origin||event.data?.type!=="bubbsun:yatzy-profile")return;const value=event.data.profile;if(!value)return;const profile={xp:Math.max(0,Number(value.xp)||0),level:Math.max(1,Number(value.level)||1),levelXp:Math.max(0,Number(value.levelXp)||0),nextLevelXp:Math.max(1,Number(value.nextLevelXp)||200)};setYatzyProfile(profile);localStorage.setItem("bubbsun-yatzy-profile",JSON.stringify(profile))};window.addEventListener("message",receive);return()=>window.removeEventListener("message",receive)},[]);
 
   useEffect(() => {
     void getRedirectResult(auth).catch((error) => {
@@ -6953,6 +6987,28 @@ function AuthenticatedApp() {
   const activeBudgetSettings=privateMode?hydratedPrivateBudgetSettings:budgetSettings;
   const activeRecipes=privateMode?privateRecipes:recipes;
   const syncedActiveRecipes=useMemo(()=>mergePublicRecipeLikes(activeRecipes,publicRecipes),[activeRecipes,publicRecipes]);
+  useEffect(()=>{
+    if(!user||!account||page==="yatzy"){setYatzyTurns([]);return}
+    let stopped=false;
+    const check=async()=>{
+      if(document.visibilityState!=="visible")return;
+      try{
+        const token=await user.getIdToken();
+        const response=await fetch("/api/yatzy/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action:"turn_status"})});
+        const data=await response.json() as {ok?:boolean;turns?:Array<{matchId:string;opponentName:string;updatedAt:number}>};
+        if(!stopped&&data.ok&&Array.isArray(data.turns))setYatzyTurns(data.turns);
+      }catch{/* Nästa lugna kontroll försöker igen. */}
+    };
+    void check();
+    const timer=window.setInterval(()=>void check(),60000);
+    const visible=()=>{if(document.visibilityState==="visible")void check()};
+    document.addEventListener("visibilitychange",visible);
+    return()=>{stopped=true;window.clearInterval(timer);document.removeEventListener("visibilitychange",visible)};
+  },[user?.uid,account?.displayName,page]);
+  useEffect(()=>{
+    if(!user||!account||page!=="games")return;
+    let stopped=false;void (async()=>{try{const token=await user.getIdToken(),response=await fetch("/api/yatzy/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action:"game_profile",displayName:account.displayName})}),data=await response.json() as {ok?:boolean;profile?:{xp:number;level:number;levelXp:number;nextLevelXp:number}};if(!stopped&&data.ok&&data.profile){setYatzyProfile(data.profile);localStorage.setItem("bubbsun-yatzy-profile",JSON.stringify(data.profile))}}catch{}})();return()=>{stopped=true};
+  },[user?.uid,account?.displayName,page]);
   const activitySeenAt=account?.activitySeenAt??Date.now();
   const activityEntries=useMemo<ActivityEntry[]>(()=>{
     if(!account)return[];
@@ -6963,9 +7019,10 @@ function AuthenticatedApp() {
     const noteEntries=activeNotes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const latest=value.history?.[0],actor=latest?.uid||value.creatorId,action=(value.history?.length||0)>1?"ändrade anteckningen":"skapade anteckningen",actorName=privateMode?account.displayName:(latest?.name||memberName(actor));return{id:`note-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"note" as const,title:value.title,detail:`${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const calendarEntries=activeCalendarEvents.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade kalenderposten":"ändrade kalenderposten";return{id:`calendar-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"calendar" as const,title:value.title,detail:`${calendarCategory(value.category).icon||"📅"} ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
     const recipeEntries=activeRecipes.filter(value=>Boolean(value.updatedAt||value.createdAt)).map(value=>{const actor=value.updatedBy||value.creatorId,actorName=privateMode?account.displayName:memberName(actor),created=Math.abs((value.updatedAt||value.createdAt)-(value.createdAt||0))<10000,action=created?"skapade receptet":"ändrade receptet";return{id:`recipe-${privateMode?"private":account.activeGroupId}-${value.id}-${value.updatedAt||value.createdAt}`,kind:"recipe" as const,title:value.title,detail:`🍲 ${actorName} ${action}`,at:value.updatedAt||value.createdAt||0,color:privateMode?fallbackColor:memberColor(actor),isPrivate:privateMode,targetId:value.id,isOwn:privateMode||actor===user?.uid}});
-    return [...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
-  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members]);
-  const notificationCount=activityEntries.filter(value=>value.at>activitySeenAt&&!value.isOwn).length;
+    const gameEntries=yatzyTurns.map(value=>({id:`game-${value.matchId}-${value.updatedAt}`,kind:"game" as const,title:`Din tur mot ${value.opponentName}`,detail:"Bubb Yatzy väntar på ditt kast",at:value.updatedAt,color:fallbackColor,isPrivate:false,targetId:value.matchId,isOwn:false}));
+    return [...gameEntries,...listEntries,...noteEntries,...calendarEntries,...recipeEntries].sort((a,b)=>b.at-a.at).slice(0,60);
+  },[account,user?.uid,visibleLists,activeNotes,activeCalendarEvents,activeRecipes,privateMode,members,yatzyTurns]);
+  const notificationCount=activityEntries.filter(value=>value.kind!=="game"&&value.at>activitySeenAt&&!value.isOwn).length+yatzyTurns.length;
   const chatUnreadCount=directChats.filter(chat=>chat.lastSenderId!==user?.uid&&chat.lastMessageAt>(chat.readAt?.[user?.uid||""]||0)).length;
   useEffect(()=>{const unread=notificationCount+chatUnreadCount;document.title=`${unread>0?`(${unread}) `:""}Bubbsun – listor med karaktär`;return()=>{document.title="Bubbsun – listor med karaktär"}},[notificationCount,chatUnreadCount]);
   useEffect(()=>{if(user&&account&&!account.activitySeenAt)void savePreferences(user.uid,{activitySeenAt:Date.now()})},[user,account]);
@@ -6995,10 +7052,10 @@ function AuthenticatedApp() {
     };
     void check();const timer=window.setInterval(()=>void check(),30000);return()=>window.clearInterval(timer);
   },[activeCalendarEvents,privateMode,account?.activeGroupId,user?.uid]);
-  const persistCalendarEvent=async(event:CalendarEvent,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time||"",endTime:event.endTime||"",allDay:Boolean(event.allDay),category:event.category||"",mealType:event.mealType||"",color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays||[],recurrenceForever:Boolean(event.recurrenceForever),recurrenceUntil:event.recurrenceUntil||"",excludedDates:event.excludedDates||[],note:event.note||"",linkedListIds:event.linkedListIds||[],linkedRecipeIds:event.linkedRecipeIds||[],reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid,locations};await syncCalendarEventLocations(user.uid,complete,previous,locations)};
-  const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;await removeCalendarEventEverywhere(user.uid,event,privateMode?"private":account.activeGroupId)};
-  const persistBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;const aliases=new Map(linkedBudgetAccounts.map(item=>[item.id,item])),used=[entry.accountId,entry.fromAccountId,entry.toAccountId].flatMap(id=>id&&aliases.has(id)?[aliases.get(id)!]:[]),targetGroups=new Set(used.map(item=>item.linkedGroupId!));if(privateMode&&(entry.sourceGroupId||targetGroups.size)){if(targetGroups.size>1){window.alert("En överföring kan inte gå mellan två länkade konton från olika grupper.");return}const groupId=entry.sourceGroupId||[...targetGroups][0],translate=(id?:string)=>id&&aliases.get(id)?.linkedAccountId||id,{sourceGroupId:_sourceGroupId,...stored}=entry;await saveBudgetEntry(groupId,{...stored,accountId:translate(entry.accountId),fromAccountId:translate(entry.fromAccountId),toAccountId:translate(entry.toAccountId)});return}const complete={...entry};if(privateMode)await savePrivateBudgetEntry(user.uid,complete);else if(account.activeGroupId)await saveBudgetEntry(account.activeGroupId,complete)};
-  const deleteBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;if(privateMode&&entry.sourceGroupId)await removeBudgetEntry(entry.sourceGroupId,entry.id);else if(privateMode)await removePrivateBudgetEntry(user.uid,entry.id);else if(account.activeGroupId)await removeBudgetEntry(account.activeGroupId,entry.id)};
+  const persistCalendarEvent=async(event:CalendarEvent,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete:CalendarEvent={id:event.id,title:event.title,date:event.date,time:event.time||"",endTime:event.endTime||"",allDay:Boolean(event.allDay),category:event.category||"",mealType:event.mealType||"",color:event.color||account.personalColor||colorOptions[0],birthYear:event.birthYear||0,recurrenceType:event.recurrenceType||"",recurrenceDays:event.recurrenceDays||[],recurrenceForever:Boolean(event.recurrenceForever),recurrenceUntil:event.recurrenceUntil||"",excludedDates:event.excludedDates||[],note:event.note||"",linkedListIds:event.linkedListIds||[],linkedRecipeIds:event.linkedRecipeIds||[],reminderMinutes:event.reminderMinutes||0,creatorId:event.creatorId||user.uid,creatorName:event.creatorName||account.displayName,createdAt:event.createdAt||Date.now(),updatedAt:Date.now(),updatedBy:user.uid,locations};await syncCalendarEventLocations(user.uid,complete,previous,locations);setPrivateCalendarEvents(current=>locations.includes("private")?[...current.filter(item=>item.id!==complete.id),complete].sort((a,b)=>a.date.localeCompare(b.date)):previous.includes("private")?current.filter(item=>item.id!==complete.id):current)};
+  const deleteCalendarEvent=async(event:CalendarEvent)=>{if(!user||!account)return;await removeCalendarEventEverywhere(user.uid,event,privateMode?"private":account.activeGroupId);setPrivateCalendarEvents(current=>current.filter(item=>item.id!==event.id))};
+  const persistBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;const aliases=new Map(linkedBudgetAccounts.map(item=>[item.id,item])),used=[entry.accountId,entry.fromAccountId,entry.toAccountId].flatMap(id=>id&&aliases.has(id)?[aliases.get(id)!]:[]),targetGroups=new Set(used.map(item=>item.linkedGroupId!));if(privateMode&&(entry.sourceGroupId||targetGroups.size)){if(targetGroups.size>1){window.alert("En överföring kan inte gå mellan två länkade konton från olika grupper.");return}const groupId=entry.sourceGroupId||[...targetGroups][0],translate=(id?:string)=>id&&aliases.get(id)?.linkedAccountId||id,{sourceGroupId:_sourceGroupId,...stored}=entry;await saveBudgetEntry(groupId,{...stored,accountId:translate(entry.accountId),fromAccountId:translate(entry.fromAccountId),toAccountId:translate(entry.toAccountId)});return}const complete={...entry};if(privateMode){await savePrivateBudgetEntry(user.uid,complete);setPrivateBudgetEntries(current=>[complete,...current.filter(item=>item.id!==complete.id)].sort((a,b)=>b.date.localeCompare(a.date)))}else if(account.activeGroupId)await saveBudgetEntry(account.activeGroupId,complete)};
+  const deleteBudgetEntry=async(entry:BudgetEntry)=>{if(!user||!account)return;if(privateMode&&entry.sourceGroupId)await removeBudgetEntry(entry.sourceGroupId,entry.id);else if(privateMode){await removePrivateBudgetEntry(user.uid,entry.id);setPrivateBudgetEntries(current=>current.filter(item=>item.id!==entry.id))}else if(account.activeGroupId)await removeBudgetEntry(account.activeGroupId,entry.id)};
   const persistBudgetSettings=async(settings:BudgetSettings)=>{if(!user||!account)return;if(privateMode){
     const previousAccounts=privateBudgetSettings.banks.flatMap(bank=>bank.accounts),nextAccounts=settings.banks.flatMap(bank=>bank.accounts),previousById=new Map(previousAccounts.map(item=>[item.id,item])),nextById=new Map(nextAccounts.map(item=>[item.id,item]));
     const newlyLinked=nextAccounts.filter(item=>item.linkedGroupId&&item.linkedAccountId&&(!previousById.get(item.id)?.linkedGroupId||previousById.get(item.id)?.linkedGroupId!==item.linkedGroupId||previousById.get(item.id)?.linkedAccountId!==item.linkedAccountId));
@@ -7007,7 +7064,7 @@ function AuthenticatedApp() {
     await Promise.all([...sourceUpdates].map(([groupId,value])=>saveBudgetSettings(groupId,value)));
     for(const alias of newlyLinked){const translate=(id?:string)=>id===alias.id?alias.linkedAccountId:id;for(const entry of privateBudgetEntries.filter(item=>item.accountId===alias.id||item.fromAccountId===alias.id||item.toAccountId===alias.id)){await saveBudgetEntry(alias.linkedGroupId!,{...entry,accountId:translate(entry.accountId),fromAccountId:translate(entry.fromAccountId),toAccountId:translate(entry.toAccountId)});await removePrivateBudgetEntry(user.uid,entry.id)}}
     for(const previous of newlyUnlinked){const translate=(id?:string)=>id===previous.linkedAccountId?previous.id:id;for(const entry of (groupBudgetEntries[previous.linkedGroupId!]||[]).filter(item=>item.accountId===previous.linkedAccountId||item.fromAccountId===previous.linkedAccountId||item.toAccountId===previous.linkedAccountId)){await savePrivateBudgetEntry(user.uid,{...entry,accountId:translate(entry.accountId),fromAccountId:translate(entry.fromAccountId),toAccountId:translate(entry.toAccountId)})}}
-    await savePrivateBudgetSettings(user.uid,settings)
+    await savePrivateBudgetSettings(user.uid,settings);setPrivateBudgetSettings(settings)
   }else if(account.activeGroupId)await saveBudgetSettings(account.activeGroupId,settings)};
   useEffect(()=>{
     const hasLegacyBank=privateBudgetSettings.banks.some(bank=>bank.id==="linked-group-accounts"||bank.name.trim().toLocaleLowerCase("sv-SE")==="delade gruppkonton");
@@ -7015,10 +7072,10 @@ function AuthenticatedApp() {
     legacyBudgetAccountMigrationRef.current=true;
     void persistBudgetSettings(normalizedPrivateBudgetSettings).catch(()=>{legacyBudgetAccountMigrationRef.current=false});
   },[databaseReady,user,page,privateMode,privateBudgetSettings,normalizedPrivateBudgetSettings]);
-  const resetActiveBudget=async()=>{if(!user||!account)return;if(privateMode)await resetPrivateBudget(user.uid);else if(account.activeGroupId)await resetBudget(account.activeGroupId)};
-  const clearActiveBudgetMoney=async()=>{if(!user||!account)return;if(privateMode)await clearPrivateBudgetMoney(user.uid,activeBudgetSettings);else if(account.activeGroupId)await clearBudgetMoney(account.activeGroupId,activeBudgetSettings)};
-  const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations)};
-  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId)};
+  const resetActiveBudget=async()=>{if(!user||!account)return;if(privateMode){await resetPrivateBudget(user.uid);setPrivateBudgetEntries([]);setPrivateBudgetSettings({banks:[],categoryBudgets:{},savingsGoals:[],updatedAt:Date.now()})}else if(account.activeGroupId)await resetBudget(account.activeGroupId)};
+  const clearActiveBudgetMoney=async()=>{if(!user||!account)return;if(privateMode){await clearPrivateBudgetMoney(user.uid,activeBudgetSettings);setPrivateBudgetEntries([]);setPrivateBudgetSettings({...activeBudgetSettings,banks:activeBudgetSettings.banks.map(bank=>({...bank,accounts:bank.accounts.map(account=>({...account,openingBalance:0,reconciledBalance:undefined,reconciledAt:undefined}))})),updatedAt:Date.now()})}else if(account.activeGroupId)await clearBudgetMoney(account.activeGroupId,activeBudgetSettings)};
+  const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations);setPrivateRecipes(current=>locations.includes("private")?[complete,...current.filter(item=>item.id!==complete.id)]:previous.includes("private")?current.filter(item=>item.id!==complete.id):current)};
+  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId);setPrivateRecipes(current=>current.filter(item=>item.id!==recipe.id))};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>{
     if(!user)return;
@@ -7046,7 +7103,7 @@ function AuthenticatedApp() {
     else await saveRecipe(targetLocation,copied);
   };
   const openNote=(note:BubbsunNote,isPrivate=privateMode)=>{setSelectedNote(note);setSelectedNotePrivate(isPrivate);window.history.pushState({bubbsunPage:"note",noteId:note.id,privateNote:isPrivate,privateMode:isPrivate},"");setPage("note");if(!window.matchMedia("(min-width: 900px)").matches)setMenuOpen(false);setListToolsOpen(false);};
-  const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate)await savePrivateNote(user.uid,complete);else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
+  const persistNote=async(note:BubbsunNote,isPrivate=selectedNotePrivate):Promise<boolean>=>{if(!user||!account)return false;const changed=note.title!==selectedNote?.title||note.text!==selectedNote?.text||note.icon!==selectedNote?.icon||note.color!==selectedNote?.color;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:note.creatorId||user.uid,creatorName:note.creatorName||account.displayName,creatorColor:note.creatorColor??account.personalColor,history:changed?[entry,...(note.history||[])].slice(0,20):note.history||[]};try{if(isPrivate){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>current.map(item=>item.id===complete.id?complete:item))}else if(account.activeGroupId)await saveNote(account.activeGroupId,complete);else return false;setSelectedNote(complete);return true;}catch(error){console.error("Could not save note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");return false;}};
   const createNote=async(note:BubbsunNote)=>{if(!user||!account)return;const entry={uid:user.uid,name:account.displayName,at:Date.now()},complete={...note,creatorId:user.uid,creatorName:account.displayName,creatorColor:account.personalColor,history:[entry],order:activeNotes.length};try{if(privateMode){await savePrivateNote(user.uid,complete);setPrivateNotes(current=>[...current,complete]);}else if(account.activeGroupId){await saveNote(account.activeGroupId,complete);setNotes(current=>[...current,complete]);}else return;setAddingNote(false);openNote(complete,privateMode);}catch(error){console.error("Could not create note",error);window.alert("Anteckningen kunde inte sparas. Försök igen.");}};
   const reorderNotes=async(from:number,to:number)=>{if(!user)return;const changed=arrayMove(activeNotes,from,to).map((note,index)=>({...note,order:index}));if(privateMode){setPrivateNotes(changed);await Promise.all(changed.map(note=>savePrivateNote(user.uid,note)));}else if(account?.activeGroupId){setNotes(changed);await Promise.all(changed.map(note=>saveNote(account.activeGroupId,note)));}};
 
@@ -7077,6 +7134,7 @@ function AuthenticatedApp() {
   if (!account) {
     const loadingTheme =
       themes.find((item) => item.id === themeId) || themes[0];
+    if(loginError)return <main className="login-page"><img src="/assets/bubbsun-logo.png" alt="Bubbsun" className="login-logo"/><section className="login-card"><h1>KUNDE INTE LADDA BUBBSUN</h1><p>{loginError}</p><p>Om Firebase-kvoten är slut kan innehållet inte hämtas förrän kvoten är tillgänglig igen. Ingen information har raderats.</p><button onClick={()=>location.reload()}><RefreshCw/> FÖRSÖK IGEN</button><button className="cancel" onClick={()=>void signOut(auth)}>LOGGA UT</button></section></main>;
     return (
       <main
         className="loading-page bubbsun-loading"
@@ -7140,7 +7198,6 @@ function AuthenticatedApp() {
         onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "budget" ? setBudgetCalculatorOpen(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "budget" ? "calculator" : page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
-        onlineCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? onlineCount : undefined}
         reportCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? reports.filter(report=>report.status==="new").length : undefined}
         notificationCount={notificationCount}
         chatUnreadCount={chatUnreadCount}
@@ -7152,7 +7209,11 @@ function AuthenticatedApp() {
         onOpenReports={account.megaSuperBoss || account.founder?()=>{setAdminStartTab("reports");navigate("admin")}:undefined}
         language={language}
         wallet={null}
+        gameXp={null}
       />
+      {page === "games" && <GamesPage account={account} user={user} profile={yatzyProfile} onYatzy={()=>navigate("yatzy")} onConnect4={()=>navigate("connect4")}/>}
+      {page === "yatzy" && <YatzyPage account={account} user={user} memberships={memberships} groups={groups} theme={activeTheme}/>}
+      {page === "connect4" && <ConnectFourPage account={account} user={user} profile={yatzyProfile} memberships={memberships} groups={groups} onBack={()=>navigate("games")} onProfile={setYatzyProfile}/>} 
       {page === "lists" && (
         <ListsPage
           lists={lists}
@@ -7232,7 +7293,7 @@ function AuthenticatedApp() {
         />
       )}
       {page === "notes" && <NotesPage notes={activeNotes} privateMode={privateMode} groupName={groupName} groupIconId={activeGroup?.iconId} activeGroupId={account.activeGroupId} memberships={memberships} groups={groups} resolveCreatorColor={note=>privateMode?(account.personalColor??colorOptions[0]):(members.find(member=>member.uid===note.creatorId)?.color??note.creatorColor??account.personalColor??colorOptions[0])} followedNoteIds={followedNoteIds} onMode={value=>{setPrivateMode(value);setSelectedNote(null)}} onSwitchGroup={async id=>{await switchGroup(user.uid,id);setPrivateMode(false)}} onLists={()=>navigate("lists")} onHelp={()=>navigate("help")} onOpen={note=>openNote(note)} onReorder={(from,to)=>void reorderNotes(from,to)} />}
-      {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} creator={selectedNotePrivate?{name:account.displayName,color:account.personalColor??selectedNote.creatorColor??colorOptions[0]}:(()=>{const member=members.find(value=>value.uid===selectedNote.creatorId);return member?{name:member.displayName,color:member.color}:undefined})()} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} toolsOpen={listToolsOpen} onToolsOpen={setListToolsOpen} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate)await removePrivateNote(user.uid,selectedNote.id);else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
+      {page === "note" && selectedNote && <NoteEditorPage note={selectedNote} creator={selectedNotePrivate?{name:account.displayName,color:account.personalColor??selectedNote.creatorColor??colorOptions[0]}:(()=>{const member=members.find(value=>value.uid===selectedNote.creatorId);return member?{name:member.displayName,color:member.color}:undefined})()} follow={!selectedNotePrivate&&account.activeGroupId?{uid:user.uid,groupId:account.activeGroupId}:undefined} toolsOpen={listToolsOpen} onToolsOpen={setListToolsOpen} onBack={()=>navigate("notes")} onSave={note=>persistNote(note)} onDelete={async()=>{if(selectedNotePrivate){await removePrivateNote(user.uid,selectedNote.id);setPrivateNotes(current=>current.filter(item=>item.id!==selectedNote.id))}else if(account.activeGroupId)await removeNote(account.activeGroupId,selectedNote.id);navigate("notes")}}/>}
       {page === "calendar" && <CalendarPage
         events={activeCalendarEvents.filter(event=>event.category!=="meal-plan")}
         lists={visibleLists}
@@ -7280,6 +7341,11 @@ function AuthenticatedApp() {
       )}
       {page === "chat"&&<ChatPage account={account} chats={directChats} memberships={memberships} groups={groups} language={language} onOpen={setChatPeer}/>}
       {page === "notifications" && <NotificationsPage entries={activityEntries} seenAt={notificationPageSeenAt??activitySeenAt} onOpen={entry=>{
+        if(entry.kind==="game"){
+          localStorage.setItem("bubbsun-yatzy-open-match",entry.targetId);
+          navigate("yatzy");
+          return;
+        }
         setPrivateMode(entry.isPrivate);
         if(entry.kind==="list"){
           const list=(entry.isPrivate?privateLists:lists).find(value=>value.id===entry.targetId);
@@ -7305,7 +7371,6 @@ function AuthenticatedApp() {
           memberships={memberships}
           groups={groups}
           language={language}
-          onlineUserIds={groupOnlineUserIds}
           onSelectGroup={async id=>{if(id===account.activeGroupId)return;await switchGroup(user.uid,id);setPrivateMode(false)}}
         />
       )}
@@ -7347,7 +7412,6 @@ function AuthenticatedApp() {
           accounts={allAccounts}
           reports={reports}
           palettes={themePalettes}
-          onlineUserIds={onlineUserIds}
           userCounts={adminUserCounts}
           publicRecipes={publicRecipes}
           messageCount={adminMessageCount}

@@ -4778,34 +4778,34 @@ html body .app-shell.app-shell section.content.detail-page.links-detail-page .it
   grid-template-columns:minmax(0,1fr)!important;
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{
-  position:relative!important;grid-template-columns:7px minmax(0,1fr) 72px 38px!important;min-height:136px!important;padding:0!important;
+  position:relative!important;grid-template-columns:7px minmax(0,1fr) 64px 38px!important;height:84px!important;min-height:84px!important;padding:0!important;
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-owner{grid-column:1!important;z-index:6!important}
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.check-button{
-  position:absolute!important;z-index:7!important;left:25px!important;top:50%!important;transform:translateY(-50%)!important;width:34px!important;height:34px!important;margin:0!important;background:color-mix(in srgb,var(--theme-paper) 88%,transparent)!important;
+  position:absolute!important;z-index:7!important;left:22px!important;top:50%!important;transform:translateY(-50%)!important;width:30px!important;height:30px!important;margin:0!important;background:color-mix(in srgb,var(--theme-paper) 88%,transparent)!important;
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-copy{
   grid-column:2!important;grid-row:1!important;align-self:stretch!important;display:grid!important;
-  grid-template-columns:minmax(132px,34%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;
-  min-height:132px!important;margin:0!important;padding:0!important;gap:2px 20px!important;overflow:hidden!important;text-align:left!important;
+  grid-template-columns:minmax(150px,32%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;
+  height:80px!important;min-height:80px!important;margin:0!important;padding:0!important;gap:1px 20px!important;overflow:hidden!important;text-align:left!important;
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-thumb{
-  grid-column:1!important;grid-row:1/5!important;align-self:stretch!important;width:100%!important;height:100%!important;min-height:132px!important;margin:0!important;
+  grid-column:1!important;grid-row:1/5!important;align-self:stretch!important;width:100%!important;height:80px!important;min-height:80px!important;margin:0!important;
   border:0!important;border-right:1px solid var(--theme-outline)!important;border-radius:0!important;box-shadow:none!important;background:var(--theme-panel)!important;object-fit:cover!important;object-position:top center!important;
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line{grid-column:2!important;grid-row:2!important;align-self:end!important;margin:0!important}
-html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{font-size:25px!important;line-height:1.05!important;text-align:left!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{font-size:22px!important;line-height:1.05!important;text-align:left!important}
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-domain{grid-column:2!important;grid-row:3!important;align-self:start!important;margin:0!important;font-size:15px!important;text-align:left!important}
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-description,html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-note-marker,html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.like-button{display:none!important}
-html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{grid-column:3!important;grid-row:1!important;justify-self:center!important;width:56px!important;min-width:56px!important;height:56px!important;padding:0!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{grid-column:3!important;grid-row:1!important;justify-self:center!important;width:48px!important;min-width:48px!important;height:48px!important;padding:0!important}
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open span{display:none!important}
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-combined-handle{grid-column:4!important;grid-row:1!important}
 @media(max-width:700px){
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{grid-template-columns:6px minmax(0,1fr) 48px 30px!important;min-height:116px!important}
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.check-button{left:17px!important;width:30px!important;height:30px!important}
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-copy{grid-template-columns:minmax(96px,36%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;min-height:112px!important;gap:1px 10px!important}
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-thumb{min-height:112px!important}
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{font-size:20px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{grid-template-columns:6px minmax(0,1fr) 46px 30px!important;height:76px!important;min-height:76px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.check-button{left:15px!important;width:27px!important;height:27px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-copy{grid-template-columns:minmax(92px,34%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;height:72px!important;min-height:72px!important;gap:1px 9px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-thumb{height:72px!important;min-height:72px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{font-size:18px!important}
   html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-domain{font-size:12px!important}
-  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{width:42px!important;min-width:42px!important;height:46px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{width:40px!important;min-width:40px!important;height:42px!important}
 }

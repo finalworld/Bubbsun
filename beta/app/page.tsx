@@ -2674,7 +2674,7 @@ function ListPage({
     await setListFollowing(uid, groupId, list.id, next);
   };
   return (
-    <section className={`content detail-page ${list.type==="links"?"links-detail-page":""}`}>
+    <section className={`content detail-page ${list.listType==="links"?"links-detail-page":""}`}>
       <div
         className="detail-title hanging-list-tab"
         role="button"

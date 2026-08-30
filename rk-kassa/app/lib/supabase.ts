@@ -1,12 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-
-export const supabase = createClient(
-  "https://hqqkvkrkozrcjxeljwqg.supabase.co",
-    "sb_publishable_glRT-nHMVHqmZsuYpm41PQ_k5OW5PXg",
-);
-
 type Ref = { collection: string; id: string };
 type CollectionRef = { collection: string };
+type ApiDoc = { id: string; data: Record<string, unknown> };
+
 export const firestore = {};
 export const doc = (_db: unknown, collectionName: string, id: string): Ref => ({ collection: collectionName, id });
 export const collection = (_db: unknown, collectionName: string): CollectionRef => ({ collection: collectionName });
@@ -15,52 +10,45 @@ export const categoryStateRef = doc(firestore, "rk-kassa", "categories");
 export const cashierStateRef = doc(firestore, "rk-kassa", "cashiers");
 export const salesCollectionRef = collection(firestore, "kassa-sales");
 
-const mapTable = (name: string) => name === "medlemmar" ? "rk_members" : name === "kassa-sales" ? "rk_sales" : name === "rk-kassa" ? "rk_state" : name;
-const tableForRef = (reference: Ref) => reference.collection === "rk-kassa" && reference.id === "categories" ? "rk_categories" : reference.collection === "rk-kassa" && reference.id === "cashiers" ? "rk_cashiers" : mapTable(reference.collection);
-const idForRef = (reference: Ref) => reference.collection === "rk-kassa" && (reference.id === "categories" || reference.id === "cashiers") ? "main" : reference.id;
-const keyForRef = (reference: Ref) => reference.collection === "medlemmar" ? "username" : "id";
-const fromRow = (collectionName: string, row: Record<string, unknown> | null) => {
-  if (!row) return undefined;
-  if (collectionName === "medlemmar") return { name: row.name || row.username, passwordHash: row.password_hash, admin: row.is_admin, createdAt: row.created_at };
-  if (collectionName === "kassa-sales") return { id: Number(row.id), time: row.sale_time, payment: row.payment, lines: row.lines, kind: row.kind, reason: row.reason, cashier: row.cashier };
-  if (collectionName === "rk-kassa") return row.items ? { items: row.items } : row.cashiers ? { cashiers: row.cashiers, currentCashierId: row.current_cashier_id } : (row.data || {}) as Record<string, unknown>;
-  return row;
+const endpoint = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/`;
+const request = async <T>(payload: Record<string, unknown>) => {
+  const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const data = await response.json().catch(() => ({})) as T & { ok?: boolean; error?: string };
+  if (!response.ok || data.ok === false) throw new Error(data.error || "Databasen svarar inte.");
+  return data;
 };
-const toRow = (reference: Ref, value: Record<string, unknown>) => {
-  if (reference.collection === "medlemmar") return { username: reference.id, name: value.name || reference.id, password_hash: value.passwordHash, is_admin: value.admin, created_at: new Date().toISOString() };
-  if (reference.collection === "kassa-sales") return { id: Number(reference.id), sale_time: value.time, payment: value.payment, lines: value.lines, kind: value.kind || "sale", reason: value.reason || null, cashier: value.cashier || null, created_at: new Date(Number(reference.id)).toISOString() };
-  if (reference.collection === "rk-kassa") return reference.id === "categories" ? { id: "main", items: value.items || [], updated_at: new Date().toISOString() } : reference.id === "cashiers" ? { id: "main", cashiers: value.cashiers || [], current_cashier_id: value.currentCashierId || null, updated_at: new Date().toISOString() } : { id: reference.id, data: value, updated_at: new Date().toISOString() };
-  return { id: reference.id, ...value, updated_at: new Date().toISOString() };
-};
-
+export async function login(username: string, passwordHash: string) { return request<{ user: { id: string; username: string; role: "admin" | "cashier" } }>({ action: "login", username, passwordHash }); }
+export async function logout() { await request({ action: "logout" }); }
+export async function importLegacyData() {
+  // Körs bara vid första inloggningen mot den tomma Strato-databasen. Därefter
+  // stoppar servern automatiskt fler importer.
+  const legacy = createClient("https://hqqkvkrkozrcjxeljwqg.supabase.co", "sb_publishable_glRT-nHMVHqmZsuYpm41PQ_k5OW5PXg");
+  const [members, state, categories, cashiers, sales] = await Promise.all([
+    legacy.from("rk_members").select("*"), legacy.from("rk_state").select("*").eq("id", "shared-state").maybeSingle(), legacy.from("rk_categories").select("*").eq("id", "main").maybeSingle(), legacy.from("rk_cashiers").select("*").eq("id", "main").maybeSingle(), legacy.from("rk_sales").select("*"),
+  ]);
+  const mapMember = (row: Record<string, unknown>) => ({ id: String(row.username), data: { name: row.name || row.username, passwordHash: row.password_hash, admin: row.is_admin, createdAt: row.created_at } });
+  const docs = [
+    state.data ? { id: "shared-state", data: (state.data.data || {}) as Record<string, unknown> } : null,
+    categories.data ? { id: "categories", data: { items: categories.data.items || [] } } : null,
+    cashiers.data ? { id: "cashiers", data: { cashiers: cashiers.data.cashiers || [], currentCashierId: cashiers.data.current_cashier_id || null } } : null,
+  ].filter(Boolean);
+  const mappedSales = (sales.data || []).map((row) => ({ id: String(row.id), data: { id: Number(row.id), time: row.sale_time, payment: row.payment, lines: row.lines, kind: row.kind, reason: row.reason, cashier: row.cashier, sessionId: row.session_id } }));
+  await request({ action: "import-legacy", members: (members.data || []).map(mapMember), documents: docs, sales: mappedSales });
+}
 export async function getDoc(reference: Ref) {
-  const { data, error } = await supabase.from(tableForRef(reference)).select("*").eq(keyForRef(reference), idForRef(reference)).maybeSingle();
-  if (error) throw error;
-  const mapped = fromRow(reference.collection, data);
-  return { exists: () => Boolean(mapped), data: () => mapped };
+  const data = await request<{ data: Record<string, unknown> | null }>({ action: "doc", collection: reference.collection, id: reference.id });
+  return { id: reference.id, exists: () => Boolean(data.data), data: () => data.data || undefined };
 }
 export async function getDocs(reference: CollectionRef) {
-  const { data, error } = await supabase.from(mapTable(reference.collection)).select("*");
-  if (error) throw error;
-  return { docs: (data || []).map((row) => ({ id: String(row.username || row.id), data: () => fromRow(reference.collection, row) })) };
+  const data = await request<{ docs: ApiDoc[] }>({ action: "docs", collection: reference.collection });
+  return { docs: (data.docs || []).map((item) => ({ id: item.id, data: () => item.data })) };
 }
-export async function setDoc(reference: Ref, value: Record<string, unknown>, options?: { merge?: boolean }) {
-  let payload = value;
-  if (options?.merge) {
-    const existing = await getDoc(reference);
-    payload = { ...(existing.exists() ? existing.data() : {}), ...value };
-  }
-  const { error } = await supabase.from(tableForRef(reference)).upsert(toRow(reference, payload));
-  if (error) throw error;
-}
-export async function deleteDoc(reference: Ref) {
-  const { error } = await supabase.from(tableForRef(reference)).delete().eq(keyForRef(reference), idForRef(reference));
-  if (error) throw error;
-}
+export async function setDoc(reference: Ref, value: Record<string, unknown>, options?: { merge?: boolean }) { await request({ action: "set", collection: reference.collection, id: reference.id, value, merge: Boolean(options?.merge) }); }
+export async function deleteDoc(reference: Ref) { await request({ action: "delete", collection: reference.collection, id: reference.id }); }
+
+// En enda surfplatta använder kassan: inga upprepade 15-sekundersläsningar.
 export function onSnapshot(reference: Ref | CollectionRef, success: (value: { data: () => Record<string, unknown> | undefined; docs: Array<{ id: string; data: () => Record<string, unknown> }> }) => void, failure?: () => void) {
-  const load = async () => { try {
-    if ("id" in reference) { const value = await getDoc(reference); success({ data: value.data, docs: [] }); }
-    else { const value = await getDocs(reference); success({ data: () => undefined, docs: value.docs }); }
-  } catch { failure?.(); } };
-  void load(); const timer = window.setInterval(load, 15000); return () => window.clearInterval(timer);
+  void (async () => { try { if ("id" in reference) { const value = await getDoc(reference); success({ data: value.data, docs: [] }); } else { const value = await getDocs(reference); success({ data: () => undefined, docs: value.docs }); } } catch { failure?.(); } })();
+  return () => undefined;
 }
+import { createClient } from "@supabase/supabase-js";

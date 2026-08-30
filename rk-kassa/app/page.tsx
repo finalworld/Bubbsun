@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { cashierStateRef, categoryStateRef, collection, deleteDoc, doc, firestore, getDoc, getDocs, kassaStateRef, onSnapshot, salesCollectionRef, setDoc } from "./lib/supabase";
+import { cashierStateRef, categoryStateRef, collection, deleteDoc, doc, firestore, getDoc, getDocs, importLegacyData, kassaStateRef, login, logout, onSnapshot, salesCollectionRef, setDoc } from "./lib/supabase";
 
 type Subcategory = { id: string; name: string; staticPrice?: number };
 type Product = { id: number; name: string; icon: number; color: string; subcategories: Subcategory[]; image?: string; hidden?: boolean };
@@ -472,30 +472,11 @@ export default function Home() {
     try {
       const username = loginUsername.trim().toLowerCase();
       if (!username || !loginPassword) return;
-      const reference = memberRef(username);
-      let member = await getDoc(reference);
       const hash = await passwordHash(username, loginPassword);
-      if (!member.exists() && username === INITIAL_ADMIN.username && hash === INITIAL_ADMIN.passwordHash) {
-        await setDoc(reference, { name: username, passwordHash: hash, admin: true, mainAdmin: true, createdAt: Date.now() });
-        member = await getDoc(reference);
-      }
-      if (!member.exists() || member.data().passwordHash !== hash) {
-        setAuthError("Inloggningen gick inte. Kontrollera användarnamn och lösenord.");
-        return;
-      }
-      const loggedIn: AuthUser = { id: member.id, username: String(member.data().name ?? username), role: member.data().admin ? "admin" : "cashier" };
-      const loginAt = Date.now();
-      try {
-        const currentState = await getDoc(kassaStateRef);
-        const savedLog = currentState.exists() ? (currentState.data().userLoginLog as Record<string, number> | undefined) || {} : {};
-        const nextLog = { ...savedLog, [username]: loginAt };
-        const savedEvents = currentState.exists() ? (currentState.data().loginEvents as LoginEvent[] | undefined) || Object.entries(savedLog).map(([name, at]) => ({ username: name, at })) : [];
-        const nextEvents = [...savedEvents, { username, at: loginAt }].slice(-20);
-        await setDoc(kassaStateRef, { userLoginLog: nextLog, loginEvents: nextEvents, updatedAt: loginAt }, { merge: true });
-        setUserLoginLog(nextLog);
-        setLoginEvents(nextEvents);
-      } catch {
-        // The login itself must still work if the activity log is temporarily offline.
+      const result = await login(username, hash);
+      const loggedIn: AuthUser = result.user;
+      if (username === INITIAL_ADMIN.username) {
+        try { await importLegacyData(); } catch { /* den gamla databasen kan redan vara tom eller avstängd */ }
       }
       sessionStorage.setItem("rk-kassa-user", JSON.stringify(loggedIn));
       setHasLoadedRemote(false);
@@ -509,6 +490,7 @@ export default function Home() {
   };
 
   const doLogout = async () => {
+    try { await logout(); } catch { /* lokal utloggning ska alltid fungera */ }
     sessionStorage.removeItem("rk-kassa-user");
     setUser(null);
     setHasLoadedRemote(false);

@@ -68,7 +68,7 @@ jobs:
           SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
         run: |
           if [ -d rk-kassa/api ]; then
-            RK_API_UPLOAD='mirror --reverse --delete --ignore-time --no-perms rk-kassa/api/ public/rk/api/'
+            RK_API_UPLOAD='mirror --reverse --delete --exclude rk-kassa-db.php --ignore-time --no-perms rk-kassa/api/ public/rk/api/'
           else
             RK_API_UPLOAD='# RK API saknas i denna version; lämna serverns kopia orörd.'
           fi

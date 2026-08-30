@@ -2811,7 +2811,16 @@ function ListPage({
       </div></div>}
       <div className={`add-panel ${["wishlist","packing","orders"].includes(list.listType||"") ? "add-panel-stacked-select" : ""} ${list.listType==="cleaning" ? "add-panel-cleaning" : ""} ${list.listType==="home" ? "add-panel-homefix" : ""} ${list.listType==="links" ? "add-panel-links" : ""}`}>
         <h2>LÄGG TILL</h2>
-        <div className={showNewItemNote?"has-add-note":""}>
+        {list.listType==="links"&&<div className="saved-link-composer">
+          <div className="saved-link-composer-fields">
+            <label><span>RUBRIK</span><input value={name} onChange={event=>setName(event.target.value)} placeholder="Vad vill du spara?"/></label>
+            <label><span>LÄNK</span><input type="url" inputMode="url" value={newLinkUrl} onChange={event=>setNewLinkUrl(event.target.value)} placeholder="https://…"/></label>
+            <label className="saved-link-composer-text"><span>TEXT <small>VALFRITT</small></span><textarea value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv något om länken…"/></label>
+            <div className="saved-link-composer-actions"><label className={linkImageBusy?"busy":""}><ImagePlus/>{linkImageBusy?"KOMPRIMERAR…":newLinkImage?"BYT EGEN BILD":"VÄLJ EGEN BILD"}<input type="file" accept="image/*" disabled={linkImageBusy} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;setLinkImageBusy(true);try{setNewLinkImage(await compressLinkImage(file))}finally{setLinkImageBusy(false)}}}/></label>{newLinkImage&&<button type="button" className="saved-link-use-auto" onClick={()=>setNewLinkImage("")}>ANVÄND SIDBILD</button>}<button type="button" className="saved-link-save" disabled={!name.trim()||!cleanLinkUrl(newLinkUrl)} onClick={()=>add()}><Check/> SPARA LÄNK</button></div>
+          </div>
+          <figure className="saved-link-composer-preview">{(newLinkImage||cleanLinkUrl(newLinkUrl))?<img src={newLinkImage||automaticLinkImage(cleanLinkUrl(newLinkUrl))} alt="Förhandsvisning av sidan"/>:<div><ImagePlus/><span>FÖRHANDSVISNING</span><small>Sidbilden visas här</small></div>}</figure>
+        </div>}
+        {list.listType!=="links"&&<div className={showNewItemNote?"has-add-note":""}>
           <span className="autocomplete-wrap">
             <input
               value={name}
@@ -2859,7 +2868,7 @@ function ListPage({
             {list.listType!=="links"&&<button type="button" className={showNewItemNote?"active":""} aria-label={showNewItemNote?"Dölj anteckning":"Lägg till anteckning"} aria-pressed={showNewItemNote} onClick={()=>setShowNewItemNote(value=>!value)}><NotebookPen/></button>}
             <button type="button" aria-label="Lägg till" onClick={() => add()}><Check /></button>
           </span>
-        </div>
+        </div>}
       </div>
       {selecting && (
         <div

@@ -66,7 +66,14 @@ function import_legacy(PDO $pdo, array $data): void {
 }
 
 try {
-    $pdo=db(); $data=body(); $action=(string)($_GET['action']??$data['action']??'');
+    $data=body(); $action=(string)($_GET['action']??$data['action']??'');
+    // This intentionally exposes only a database driver code for setup diagnostics,
+    // never the host, username, password, or exception text.
+    if ($action==='health') {
+        try { db(); reply(['ok'=>true,'database'=>'connected']); }
+        catch (PDOException $e) { reply(['ok'=>false,'database'=>'unavailable','code'=>(string)$e->getCode()],503); }
+    }
+    $pdo=db();
     if ($action==='login') login($pdo,$data);
     if ($action==='logout') { session_start_safe(); session_destroy(); reply(['ok'=>true]); }
     if ($action==='import-legacy') import_legacy($pdo,$data);

@@ -4873,6 +4873,29 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
 .saved-link-preview-button{display:block!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}.saved-link-preview-button:disabled{opacity:1!important}.saved-link-preview-button.editable{cursor:zoom-in!important}.saved-link-preview-button .saved-link-new-preview{margin:0!important}.link-crop-backdrop{z-index:120!important}.link-crop-modal{width:min(92vw,430px);max-height:calc(100vh - 28px);overflow:auto;padding:20px;border:2px solid var(--theme-outline);border-radius:20px;background:var(--theme-panel);color:var(--theme-text);box-shadow:0 18px 55px #0008}.link-crop-modal h2{margin:0 0 14px;text-align:center}.link-crop-viewport{width:min(70vw,260px);aspect-ratio:1/1.414;margin:0 auto 15px;overflow:hidden;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper)}.link-crop-viewport img{width:100%;height:100%;object-fit:contain;transform-origin:center;user-select:none;pointer-events:none}.link-crop-modal>label{display:grid;grid-template-columns:125px 1fr;align-items:center;gap:10px;margin:10px 0;font:800 11px Arial,sans-serif}.link-crop-modal input[type="range"]{width:100%;accent-color:var(--theme-accent)}.link-crop-modal>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.link-crop-modal button{min-height:48px;border:2px solid var(--theme-outline);border-radius:11px;background:var(--theme-accent);color:#fff;font-weight:900}.link-crop-modal button.cancel{background:#b15e61}@media(max-width:520px){.link-crop-modal{padding:15px}.link-crop-modal>label{grid-template-columns:1fr;gap:4px}.link-crop-viewport{width:min(62vw,230px)}}
 .link-crop-backdrop>.link-crop-modal{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-panel,#e3c99d)!important;color:var(--theme-text,#342318)!important}.link-crop-backdrop .link-crop-viewport{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-paper,#fff8e9)!important}.link-crop-backdrop .link-crop-modal button{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-accent,#587556)!important}.link-crop-backdrop .link-crop-modal button.cancel{background:#b15e61!important}
 
+/* New-link form uses the same compact preview size as an opened link editor. */
+@media(min-width:701px){
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links>div{
+    grid-template-rows:54px 121px 54px!important;min-height:253px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{
+    height:187px!important;min-height:187px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    align-self:center!important;justify-self:center!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;
+  }
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{height:88px!important;min-height:88px!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important;
+  }
+}
+
 /* Move items: compact chooser and identical target buttons, including the first. */
 body .app-shell .modal.move-item-modal{box-sizing:border-box!important;width:min(calc(100vw - 32px),720px)!important;max-height:min(86dvh,700px)!important;padding:24px!important;overflow:hidden!important}
 body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;max-height:min(55dvh,390px)!important;padding-right:6px!important;overflow-y:auto!important}

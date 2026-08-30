@@ -30,6 +30,39 @@ function schema(PDO $pdo): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS rk_documents (collection_name VARCHAR(64) NOT NULL, document_id VARCHAR(120) NOT NULL, payload LONGTEXT NOT NULL, updated_at BIGINT NOT NULL, PRIMARY KEY (collection_name, document_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $pdo->exec("CREATE TABLE IF NOT EXISTS rk_sales (id BIGINT UNSIGNED PRIMARY KEY, sale_time VARCHAR(64) NOT NULL, payment VARCHAR(32) NOT NULL, lines_json LONGTEXT NOT NULL, kind VARCHAR(16) NOT NULL DEFAULT 'sale', reason TEXT NULL, cashier VARCHAR(120) NULL, session_id VARCHAR(120) NULL, created_at BIGINT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
+function firebase_value(mixed $value): mixed {
+    if (!is_array($value)) return null;
+    foreach (['stringValue','integerValue','doubleValue','booleanValue','timestampValue','referenceValue','bytesValue'] as $key) if (array_key_exists($key,$value)) return $key==='integerValue' ? (int)$value[$key] : $value[$key];
+    if (array_key_exists('nullValue',$value)) return null;
+    if (isset($value['arrayValue'])) return array_map('firebase_value', $value['arrayValue']['values'] ?? []);
+    if (isset($value['mapValue'])) { $out=[]; foreach(($value['mapValue']['fields'] ?? []) as $key=>$item) $out[$key]=firebase_value($item); return $out; }
+    return null;
+}
+function firebase_document(string $path): ?array {
+    $key='AIzaSyCKeSgETR8ELP39fDpMt5mZzYcJSn_UFII';
+    $url='https://firestore.googleapis.com/v1/projects/rk-kassa/databases/(default)/documents/'.$path.'?key='.$key;
+    $raw=@file_get_contents($url); $json=is_string($raw) ? json_decode($raw,true) : null;
+    if (!is_array($json) || !isset($json['fields'])) return null;
+    $out=[]; foreach($json['fields'] as $field=>$value) $out[$field]=firebase_value($value); return $out;
+}
+function firebase_members(): array {
+    $key='AIzaSyCKeSgETR8ELP39fDpMt5mZzYcJSn_UFII';
+    $url='https://firestore.googleapis.com/v1/projects/rk-kassa/databases/(default)/documents/medlemmar?key='.$key;
+    $raw=@file_get_contents($url); $json=is_string($raw) ? json_decode($raw,true) : null; $out=[];
+    foreach(($json['documents'] ?? []) as $document) { $data=[]; foreach(($document['fields'] ?? []) as $field=>$value) $data[$field]=firebase_value($value); $data['_id']=basename((string)($document['name'] ?? '')); $out[]=$data; }
+    return $out;
+}
+function migrate_firebase(PDO $pdo): array {
+    $state=firebase_document('rk-kassa/shared-state'); $categories=firebase_document('rk-kassa/categories'); $cashiers=firebase_document('rk-kassa/cashiers'); $members=firebase_members();
+    if (!$state && !$categories && !$cashiers && !$members) fail('Kunde inte läsa den gamla Firebase-datan.',502);
+    $saveDoc=$pdo->prepare('INSERT INTO rk_documents(collection_name,document_id,payload,updated_at) VALUES(?,?,?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),updated_at=VALUES(updated_at)'); $now=(int)round(microtime(true)*1000);
+    if ($state) $saveDoc->execute(['rk-kassa','shared-state',json_encode($state,JSON_UNESCAPED_UNICODE),$now]);
+    $categoryItems=$categories['items'] ?? $state['categories'] ?? null; if (is_array($categoryItems)) $saveDoc->execute(['rk-kassa','categories',json_encode(['items'=>$categoryItems],JSON_UNESCAPED_UNICODE),$now]);
+    $cashierData=$cashiers ?: ['cashiers'=>$state['cashiers'] ?? [],'currentCashierId'=>$state['currentCashierId'] ?? null]; if (!empty($cashierData['cashiers'])) $saveDoc->execute(['rk-kassa','cashiers',json_encode($cashierData,JSON_UNESCAPED_UNICODE),$now]);
+    $insertMember=$pdo->prepare('INSERT INTO rk_members(username,name,password_hash,is_admin,is_main_admin,created_at) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name),password_hash=VALUES(password_hash),is_admin=VALUES(is_admin),is_main_admin=VALUES(is_main_admin)'); foreach($members as $member) { $username=strtolower((string)($member['username'] ?? $member['_id'] ?? '')); $hash=(string)($member['passwordHash'] ?? ''); if($username!=='' && preg_match('/^[a-f0-9]{64}$/',$hash)) $insertMember->execute([$username,(string)($member['name'] ?? $username),$hash,(int)!empty($member['admin']),$username==='finalworld'?1:0,(int)($member['createdAt'] ?? $now)]); }
+    $insertSale=$pdo->prepare("INSERT INTO rk_sales(id,sale_time,payment,lines_json,kind,reason,cashier,session_id,created_at) VALUES(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE sale_time=VALUES(sale_time),payment=VALUES(payment),lines_json=VALUES(lines_json),kind=VALUES(kind),reason=VALUES(reason),cashier=VALUES(cashier),session_id=VALUES(session_id)"); $sales=0; foreach(($state['sales'] ?? []) as $sale) { if(!is_array($sale) || empty($sale['id'])) continue; $insertSale->execute([(int)$sale['id'],(string)($sale['time'] ?? ''),(string)($sale['payment'] ?? ''),json_encode($sale['lines'] ?? [],JSON_UNESCAPED_UNICODE),(string)($sale['kind'] ?? 'sale'),$sale['reason'] ?? null,$sale['cashier'] ?? null,$sale['sessionId'] ?? null,(int)$sale['id']]); $sales++; }
+    return ['sales'=>$sales,'members'=>count($members),'categories'=>is_array($categoryItems)?count($categoryItems):0];
+}
 function session_start_safe(): void { if (session_status() === PHP_SESSION_NONE) { session_name('rk_kassa'); session_set_cookie_params(['httponly'=>true, 'secure'=>(!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'), 'samesite'=>'Lax', 'path'=>'/rk/']); session_start(); } }
 function user(): array { session_start_safe(); $name = $_SESSION['rk_user'] ?? null; if (!is_string($name) || $name === '') fail('Du måste logga in igen.', 401); $s = db()->prepare('SELECT username,name,is_admin,is_main_admin FROM rk_members WHERE username=?'); $s->execute([$name]); $row = $s->fetch(); if (!$row) fail('Kontot finns inte längre.', 401); return $row; }
 function require_admin(): array { $u = user(); if (!(bool)$u['is_admin']) fail('Endast administratörer har behörighet.', 403); return $u; }

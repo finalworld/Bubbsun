@@ -3362,7 +3362,7 @@ function BudgetPage({entries,settings,privateMode,sharedAccountIds,account,membe
     <BudgetAccountOverview settings={settings} entries={balanceEntries.map(item=>item.entry)} sharedAccountIds={sharedAccountIds} onSelect={setSelectedAccountId}/><section className="budget-insights"><article><small>JÄMFÖRT MED FÖRRA MÅNADEN</small><strong className={expense>previousExpense?"expense":"income"}>{expense===previousExpense?"Samma utgifter":`${budgetMoney(Math.abs(expense-previousExpense))} ${expense>previousExpense?"mer":"mindre"}`}</strong></article><article><small>KOMMANDE DENNA MÅNAD</small><strong className="expense">{upcomingExpenses.length} {upcomingExpenses.length===1?"utgift":"utgifter"} · − {budgetMoney(upcomingExpenses.reduce((sum,item)=>sum+item.entry.amount,0))}</strong><span className="income">{upcomingIncomes.length} {upcomingIncomes.length===1?"inkomst":"inkomster"} · + {budgetMoney(upcomingIncomes.reduce((sum,item)=>sum+item.entry.amount,0))}</span>{upcomingTransfers.length>0&&<em>{upcomingTransfers.length} {upcomingTransfers.length===1?"överföring":"överföringar"}</em>}</article></section><nav className="budget-month-nav"><button onClick={()=>setMonthOffset(value=>value-1)} aria-label="Föregående månad"><ChevronLeft/></button><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(monthDate)}</strong><button onClick={()=>setMonthOffset(value=>value+1)} aria-label="Nästa månad"><ChevronRight/></button></nav><section className={`budget-list${searchQuery?" budget-global-search":""}`}><header className="budget-list-tools"><h2>{searchQuery?"SÖKRESULTAT":"MÅNADENS POSTER"}</h2><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök i hela budgeten…"/><select value={filter} onChange={event=>setFilter(event.target.value as typeof filter)}><option value="all">Alla</option><option value="income">Inkomster</option><option value="expense">Utgifter</option><option value="transfer">Överföringar</option><option value="planned">Planerade</option></select></header>{searchQuery?(searchGroups.length?searchGroups.map(([key,items])=><section className="budget-search-month" key={key}><header><strong>{new Intl.DateTimeFormat("sv-SE",{month:"long",year:"numeric"}).format(new Date(`${key}-01T12:00:00`))}</strong><small>{items.length} {items.length===1?"träff":"träffar"}</small></header>{items.sort((a,b)=>a.occurrenceDate.localeCompare(b.occurrenceDate)).map(renderBudgetRow)}</section>):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3><p>Sökningen gäller alla månader.</p></div>):(visibleEntries.length?visibleEntries.map(renderBudgetRow):<div className="budget-empty"><WalletCards/><h3>Inga poster matchar</h3></div>)}</section></>:<section className="budget-list budget-recurring-list"><header><div><small>AUTOMATISKA POSTER</small><h2>ÅTERKOMMANDE</h2></div><b>{entries.filter(entry=>Boolean(entry.recurrence)).length} st</b></header>{entries.filter(entry=>Boolean(entry.recurrence)).sort((a,b)=>a.date.localeCompare(b.date)).map(entry=><button key={entry.id} className="budget-row" onClick={()=>{if(entry.type==="transfer"){setEditingTransfer(entry);setTransferOpen(true)}else setEditing(entry)}}><span className={entry.type}>{entry.type==="transfer"?"⇄":budgetCategoryIcons[entry.category]||(entry.type==="income"?"+":"−")}</span><span><strong>{entry.title}</strong><small>{entry.type==="transfer"?"Överföring":entry.category} · {entry.recurrence==="weekly"?`varje ${new Intl.DateTimeFormat("sv-SE",{weekday:"long"}).format(new Date(`${entry.date}T12:00:00`))}`:`varje månad den ${Number(entry.date.slice(-2))}:e`}{entry.autoPay?" · betalas automatiskt":""}{!privateMode&&<> · {entry.creatorName}</>}</small></span><b className={entry.type}>{entry.type==="income"?"+ ":entry.type==="expense"?"− ":""}{budgetMoney(entry.amount)}</b><ChevronRight/></button>)}{!entries.some(entry=>Boolean(entry.recurrence))&&<div className="budget-empty"><History/><h3>Inga återkommande poster</h3><p>Markera “Återkommande post” när du skapar en post.</p></div>}</section>}
     {selectedAccountId&&<BudgetAccountDetail accountId={selectedAccountId} settings={settings} entries={balanceEntries} privateMode={privateMode} onClose={()=>setSelectedAccountId(undefined)}/>}
     {transferOpen&&<BudgetTransferEditor entry={editingTransfer} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setTransferOpen(false);setEditingTransfer(undefined)}} onDelete={editingTransfer?()=>{setConfirmDelete(editingTransfer);setTransferOpen(false);setEditingTransfer(undefined)}:undefined} onSave={async entry=>{await onSave(entry);setTransferOpen(false);setEditingTransfer(undefined)}}/>}
-    {(creating||(editing!==undefined&&editing?.type!=="transfer"))&&<BudgetEditor entry={editing||undefined} initialType={createType} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} privateMode={privateMode} groups={groups} groupBudgetSettings={groupBudgetSettings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}} onReset={async()=>{await onReset();setSettingsOpen(false)}} onClearMoney={async()=>{await onClearMoney();setSettingsOpen(false)}}/>}
+    {(creating||(editing!==undefined&&editing?.type!=="transfer"))&&<BudgetEditor entry={editing||undefined} initialType={createType} settings={settings} entries={monthEntries.map(item=>item.entry)} monthKey={monthKey} account={account} onClose={()=>{setEditing(undefined);onCreating(false)}} onMonthlyBudget={()=>{setEditing(undefined);onCreating(false);setSettingsOpen(true)}} onSave={async entry=>{await onSave(entry);setEditing(undefined);onCreating(false)}} onDelete={editing?()=>setConfirmDelete(editing):undefined}/>} {settingsOpen&&<BudgetSettingsEditor settings={settings} privateMode={privateMode} groups={groups} groupBudgetSettings={groupBudgetSettings} onClose={()=>setSettingsOpen(false)} onSave={async value=>{await onSaveSettings(value);setSettingsOpen(false)}} onReset={async()=>{await onReset();setSettingsOpen(false)}} onClearMoney={async()=>{await onClearMoney();setSettingsOpen(false)}}/>}
     {confirmDelete&&<div className="modal-backdrop budget-delete-confirm"><div className="modal confirm-delete-modal"><Trash2/><h2>TA BORT BUDGETPOSTEN?</h2><p>“{confirmDelete.title}” tas bort. Du kan ångra direkt efteråt.</p><div className="modal-actions"><button onClick={()=>setConfirmDelete(null)}>AVBRYT</button><button className="danger" onClick={async()=>{const removed=confirmDelete;await onDelete(removed);setLastDeleted(removed);setConfirmDelete(null);setEditing(undefined)}}>TA BORT</button></div></div></div>}
     {lastDeleted&&<aside className="budget-undo">Posten “{lastDeleted.title}” togs bort.<button onClick={async()=>{await onSave(lastDeleted);setLastDeleted(null)}}>ÅNGRA</button><button aria-label="Stäng" onClick={()=>setLastDeleted(null)}><X/></button></aside>}
   </section>;
@@ -3415,6 +3415,7 @@ function BudgetEditor({
   monthKey,
   account,
   onClose,
+  onMonthlyBudget,
   onSave,
   onDelete,
 }: {
@@ -3425,6 +3426,7 @@ function BudgetEditor({
   monthKey: string;
   account: Account;
   onClose: () => void;
+  onMonthlyBudget: () => void;
   onSave: (entry: BudgetEntry) => Promise<void>;
   onDelete?: () => void;
 }) {
@@ -3454,6 +3456,7 @@ function BudgetEditor({
     [frequency, setFrequency] = useState<"monthly" | "weekly">(entry?.recurrence || "monthly"),
     [businessDayAdjustment, setBusinessDayAdjustment] = useState<"" | "previous" | "next">(entry?.businessDayAdjustment || ""),
     [status, setStatus] = useState<"planned" | "paid">(entry?.status || "paid"),
+    [creationChoice,setCreationChoice]=useState<"paid"|"planned"|null>(entry?(entry.status==="planned"?"planned":"paid"):null),
     [autoPay, setAutoPay] = useState(entry?.autoPay === true),
     [note, setNote] = useState(entry?.note || ""),
     [busy, setBusy] = useState(false);
@@ -3485,6 +3488,8 @@ function BudgetEditor({
             <h2>{entry ? "REDIGERA POST" : "NY BUDGETPOST"}</h2>
           </div>
         </header>
+        {!entry&&creationChoice===null&&<div className="budget-creation-choices"><h3>VAD VILL DU LÄGGA IN?</h3><button type="button" onClick={()=>{setStatus("paid");setCreationChoice("paid")}}><span className="budget-choice-icon">✓</span><span><strong>Vanlig post</strong><small>Något som redan är betalt eller mottaget.</small></span><ChevronRight/></button><button type="button" onClick={()=>{setStatus("planned");setCreationChoice("planned")}}><span className="budget-choice-icon">◷</span><span><strong>Planerad post</strong><small>En kommande räkning, inkomst eller annan utgift.</small></span><ChevronRight/></button><button type="button" onClick={onMonthlyBudget}><span className="budget-choice-icon">◎</span><span><strong>Budget för månaden</strong><small>Till exempel 5 000 kr till mat – köp dras av efter hand.</small></span><ChevronRight/></button></div>}
+        {(entry||creationChoice!==null)&&<>
         <div className="budget-type">
           <button
             type="button"
@@ -3564,7 +3569,7 @@ function BudgetEditor({
         </label>
         {recurring&&<label className="budget-frequency">HUR OFTA?<select value={frequency} onChange={event=>setFrequency(event.target.value as "monthly"|"weekly")}><option value="monthly">Varje månad</option><option value="weekly">Varje vecka</option></select><small>{frequency==="weekly"?`Sker varje ${new Intl.DateTimeFormat("sv-SE",{weekday:"long"}).format(new Date(`${date}T12:00:00`))}.`:"Sker samma datum varje månad."}</small></label>}
         {recurring&&type==="income"&&<label className="budget-frequency">OM DATUMET INTE ÄR EN ARBETSDAG<select value={businessDayAdjustment} onChange={event=>setBusinessDayAdjustment(event.target.value as ""|"previous"|"next")}><option value="">Behåll datumet</option><option value="previous">Flytta till föregående arbetsdag</option><option value="next">Flytta till nästa arbetsdag</option></select><small>Tar hänsyn till helger och svenska röda dagar.</small></label>}
-        {recurring&&status==="planned"&&<label className="budget-recurring budget-auto-pay"><input type="checkbox" checked={autoPay} onChange={event=>setAutoPay(event.target.checked)}/><span><strong>{type==="income"?"Registrera automatiskt på datumet":"Genomför automatiskt på datumet"}</strong><small>{type==="income"?"Inkomsten räknas som mottagen och saldot ändras automatiskt den dagen.":"Posten räknas som betald och saldot ändras automatiskt den dagen."}</small></span></label>}
+        {status==="planned"&&<label className="budget-recurring budget-auto-pay"><input type="checkbox" checked={autoPay} onChange={event=>setAutoPay(event.target.checked)}/><span><strong>{type==="income"?"Registrera automatiskt på datumet":"Flytta automatiskt till betald på datumet"}</strong><small>{type==="income"?"Inkomsten räknas som mottagen och saldot ändras automatiskt den dagen.":"Utgiften dras från kontot på valt datum. Lämna av om du vill registrera den själv."}</small></span></label>}
         {Boolean(entry?.recurrence) && (
           <p className="budget-series-note">
             Ändringar här gäller hela den återkommande serien.
@@ -3613,7 +3618,7 @@ function BudgetEditor({
                   recurrence: recurring ? frequency : undefined,
                   businessDayAdjustment: recurring && type === "income" ? businessDayAdjustment || undefined : undefined,
                   status,
-                  autoPay: recurring && status === "planned" && autoPay,
+                  autoPay: status === "planned" && autoPay,
                   paidAt: status === "paid" ? (entry?.paidAt || Date.now()) : undefined,
                   note: note.trim(),
                   creatorId: entry?.creatorId || account.uid,
@@ -3630,6 +3635,7 @@ function BudgetEditor({
             {busy ? "SPARAR…" : "SPARA"}
           </button>
         </footer>
+        </>}
       </section>
     </div>
   );

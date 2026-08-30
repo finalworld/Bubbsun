@@ -73,8 +73,10 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          mkdir -p private
-          put -O private kassun-db.json
+          # Skydda konfigurationsfilen innan den laddas upp. Den kan läsas av
+          # PHP men aldrig hämtas via webben.
+          put -O public/loppis/api dist/loppis/api/.htaccess
+          put -O public/loppis/api kassun-db.json
           # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
           # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
           # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan
@@ -91,6 +93,7 @@ jobs:
           put -O public/loppis dist/loppis/index.html
           # RK Kassa ligger i webbplatsens public/rk.
           mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          mirror --reverse --delete --ignore-time --no-perms rk-kassa/api/ public/rk/api/
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.
           put -O public/rk rk-kassa/dist/index.html

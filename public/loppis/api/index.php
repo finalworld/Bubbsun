@@ -27,7 +27,7 @@ function now_iso(): string { return gmdate('c'); }
 function database(): PDO {
     static $db = null;
     if ($db instanceof PDO) return $db;
-    $configPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . 'kassun-db.json';
+    $configPath = __DIR__ . DIRECTORY_SEPARATOR . 'kassun-db.json';
     $config = is_file($configPath) ? json_decode((string)file_get_contents($configPath), true) : null;
     if (!is_array($config) || empty($config['host']) || empty($config['name']) || empty($config['user']) || !isset($config['password'])) reply(['ok' => false, 'error' => 'Databaskopplingen saknas'], 500);
     $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', $config['host'], $config['name']);

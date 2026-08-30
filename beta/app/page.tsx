@@ -2296,7 +2296,7 @@ function SortableItemRow({
         transition: sortable.transition,
         "--item-swipe-x":`${swipeOffset}px`,
       }}
-      className={`item-row ${item.completed ? "done" : ""} ${sortable.isDragging ? "dragging" : ""} ${swiping ? "swiping" : ""} ${Math.abs(swipeOffset)>=70 ? "swipe-ready" : ""}`}
+      className={`item-row ${item.completed ? "done" : ""} ${sortable.isDragging ? "dragging" : ""} ${swiping ? "swiping" : ""} ${Math.abs(swipeOffset)>=70 ? "swipe-ready" : ""} ${listType==="links"?"saved-link-row":""}`}
       onPointerDown={startSwipe}
       onPointerMove={moveSwipe}
       onPointerUp={endSwipe}
@@ -2354,7 +2354,7 @@ function SortableItemRow({
         </>
       )}
     </div>
-    {expanded&&!selecting&&<div id={`item-editor-${item.id}`} className={`item-inline-editor ${flashUnsaved?"flash-unsaved":""}`}>
+    {expanded&&!selecting&&<div id={`item-editor-${item.id}`} className={`item-inline-editor ${flashUnsaved?"flash-unsaved":""} ${listType==="links"?"saved-link-editor":""}`}>
       <label>Namn<input value={draftName} onChange={event=>{setDraftName(event.target.value);onDirtyChange(true)}} /></label>
       {listType!=="links"&&<label>Mängd (valfritt)<input value={draftQuantity} onChange={event=>{setDraftQuantity(event.target.value);onDirtyChange(true)}} /></label>}
       <label className="item-note-field">Anteckning (valfritt)<textarea value={draftNote} onChange={event=>{setDraftNote(event.target.value);onDirtyChange(true)}} placeholder="Skriv en anteckning…" /></label>
@@ -2848,7 +2848,7 @@ function ListPage({
             placeholder="Mängd (valfritt)"
           />}
           {list.listType==="links"&&<textarea className="saved-link-text-input" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en text om länken (valfritt)…"/>}
-          {list.listType==="links"&&<><input className="saved-link-url-input" type="url" inputMode="url" value={newLinkUrl} onChange={event=>setNewLinkUrl(event.target.value)} placeholder="Klistra in länken här…"/><div className="saved-link-image-choice"><span>{newLinkImage?"Egen bild vald":"En stående sidbild hämtas automatiskt"}</span><label className={linkImageBusy?"busy":""}><ImagePlus/>{linkImageBusy?"KOMPRIMERAR…":"VÄLJ EGEN BILD"}<input type="file" accept="image/*" disabled={linkImageBusy} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;setLinkImageBusy(true);try{setNewLinkImage(await compressLinkImage(file))}finally{setLinkImageBusy(false)}}}/></label>{newLinkImage&&<button type="button" onClick={()=>setNewLinkImage("")}>ANVÄND AUTOMATISK</button>}</div>{(newLinkImage||cleanLinkUrl(newLinkUrl))&&<img className="saved-link-new-preview" src={newLinkImage||automaticLinkImage(cleanLinkUrl(newLinkUrl))} alt="Förhandsvisning av sidan"/>}</>}
+          {list.listType==="links"&&<><input className="saved-link-url-input" type="url" inputMode="url" value={newLinkUrl} onChange={event=>setNewLinkUrl(event.target.value)} placeholder="Klistra in länken här…"/><div className="saved-link-image-choice"><span>{newLinkImage?"Egen bild vald":"En stående sidbild hämtas automatiskt"}</span><label className={linkImageBusy?"busy":""}><ImagePlus/>{linkImageBusy?"KOMPRIMERAR…":"VÄLJ EGEN BILD"}<input type="file" accept="image/*" disabled={linkImageBusy} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;setLinkImageBusy(true);try{setNewLinkImage(await compressLinkImage(file))}finally{setLinkImageBusy(false)}}}/></label>{newLinkImage&&<button type="button" onClick={()=>setNewLinkImage("")}>ANVÄND AUTOMATISK</button>}</div>{(newLinkImage||cleanLinkUrl(newLinkUrl))?<img className="saved-link-new-preview" src={newLinkImage||automaticLinkImage(cleanLinkUrl(newLinkUrl))} alt="Förhandsvisning av sidan"/>:<div className="saved-link-empty-preview"><ImagePlus/><span>INGEN BILD ÄN</span></div>}</>}
           {list.listType==="packing"&&<select value={assignedTo} onChange={event=>setAssignedTo(event.target.value)}><option value="">För alla</option>{(list.packPeople||[]).map(person=><option key={person}>{person}</option>)}</select>}
           {list.listType==="home"&&<div className="homefix-quick-fields"><select aria-label="Plats" value={homeFixPlace} onChange={event=>setHomeFixPlace(event.target.value)}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select><select aria-label="Prioritet" value={homeFixPriority} onChange={event=>setHomeFixPriority(event.target.value)}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></div>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}

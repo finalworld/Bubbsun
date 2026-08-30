@@ -4781,6 +4781,29 @@ html body .app-shell.app-shell section.content.detail-page.links-detail-page .it
   html body .app-shell.app-shell section.content.detail-page.links-detail-page .items-list{grid-template-columns:minmax(0,1fr)!important}
 }
 
+/* Stable preview column: heading, image and image picker stay together. */
+html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{content:none!important}
+@media(min-width:701px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{grid-template-columns:minmax(0,1fr) 132px!important;grid-template-rows:auto auto auto auto!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{
+    grid-column:2!important;grid-row:1/4!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important;width:132px!important;min-width:0!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{color:var(--theme-accent)!important;font:800 13px/1.2 Arial,sans-serif!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview{
+    position:static!important;display:block!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;margin:0!important;border:1px solid var(--theme-outline)!important;border-radius:10px!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{
+    position:static!important;display:flex!important;justify-content:center!important;width:132px!important;min-height:42px!important;box-sizing:border-box!important;margin:0!important;padding:7px 8px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{grid-column:1/3!important;grid-row:4!important}
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{display:flex!important;flex-direction:column!important;align-items:center!important;gap:9px!important;width:100%!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{color:var(--theme-accent)!important;font:800 13px/1.2 Arial,sans-serif!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview{position:static!important;width:96px!important;height:136px!important;min-height:136px!important;margin:0!important;object-fit:cover!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{position:static!important;width:max-content!important;margin:0!important}
+}
+
 /* Open saved links stay inside their normal desktop grid cell. */
 @media(min-width:701px){
   html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){
@@ -4844,3 +4867,4 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved
   html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-domain{font-size:12px!important}
   html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{width:40px!important;min-width:40px!important;height:42px!important}
 }
+html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{content:none!important;display:none!important}

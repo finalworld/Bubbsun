@@ -67,6 +67,11 @@ jobs:
           SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
           SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
         run: |
+          if [ -d rk-kassa/api ]; then
+            RK_API_UPLOAD='mirror --reverse --delete --ignore-time --no-perms rk-kassa/api/ public/rk/api/'
+          else
+            RK_API_UPLOAD='# RK API saknas i denna version; lämna serverns kopia orörd.'
+          fi
           lftp <<EOF
           set sftp:auto-confirm yes
           set net:timeout 30
@@ -93,7 +98,7 @@ jobs:
           put -O public/loppis dist/loppis/index.html
           # RK Kassa ligger i webbplatsens public/rk.
           mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
-          mirror --reverse --delete --ignore-time --no-perms rk-kassa/api/ public/rk/api/
+          $RK_API_UPLOAD
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.
           put -O public/rk rk-kassa/dist/index.html

@@ -32,6 +32,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Saved links editor — desktop layout follows the approved two-column mockup. */
 @media (min-width:1001px){
+  html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){
+    grid-column:1/-1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
   html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{
     display:grid!important;
     grid-template-columns:minmax(0,3fr) minmax(300px,2fr)!important;
@@ -41,6 +46,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     padding:30px 34px 26px!important;
     border-top:0!important;
     align-items:start!important;
+    background-image:linear-gradient(to right,transparent calc(60% + 15px),color-mix(in srgb,var(--theme-outline) 38%,transparent) calc(60% + 15px),color-mix(in srgb,var(--theme-outline) 38%,transparent) calc(60% + 16px),transparent calc(60% + 16px))!important;
   }
   html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{
     content:"Förhandsvisning";

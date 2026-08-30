@@ -2317,6 +2317,7 @@ function SortableItemRow({
         {listType==="links"&&item.linkUrl&&<img className="saved-link-thumb" src={item.linkImage||automaticLinkImage(item.linkUrl)} alt={`Förhandsvisning av ${item.name}`} loading="lazy"/>}
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
         {listType==="links"&&item.linkUrl&&<small className="saved-link-domain">{(()=>{try{return new URL(item.linkUrl).hostname.replace(/^www\./,"")}catch{return item.linkUrl}})()}</small>}
+        {listType==="links"&&item.note&&<small className="saved-link-description">{item.note}</small>}
         {(item.quantity||item.assignedTo||item.assigneeName||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,(item.assigneeName||item.assignedTo)&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assigneeName||item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>
       {!selecting && (
@@ -2355,7 +2356,7 @@ function SortableItemRow({
     </div>
     {expanded&&!selecting&&<div id={`item-editor-${item.id}`} className={`item-inline-editor ${flashUnsaved?"flash-unsaved":""}`}>
       <label>Namn<input value={draftName} onChange={event=>{setDraftName(event.target.value);onDirtyChange(true)}} /></label>
-      <label>Mängd (valfritt)<input value={draftQuantity} onChange={event=>{setDraftQuantity(event.target.value);onDirtyChange(true)}} /></label>
+      {listType!=="links"&&<label>Mängd (valfritt)<input value={draftQuantity} onChange={event=>{setDraftQuantity(event.target.value);onDirtyChange(true)}} /></label>}
       <label className="item-note-field">Anteckning (valfritt)<textarea value={draftNote} onChange={event=>{setDraftNote(event.target.value);onDirtyChange(true)}} placeholder="Skriv en anteckning…" /></label>
       {listType==="links"&&<><label>Länk<input type="url" inputMode="url" value={draftLinkUrl} onChange={event=>{setDraftLinkUrl(event.target.value);onDirtyChange(true)}} placeholder="https://…" /></label><label className="saved-link-upload"><ImagePlus/> Byt bild<input type="file" accept="image/*" onChange={async event=>{const file=event.target.files?.[0];if(file){setDraftLinkImage(await compressLinkImage(file));onDirtyChange(true)}}}/></label>{(draftLinkImage||cleanLinkUrl(draftLinkUrl))&&<img className="saved-link-edit-preview" src={draftLinkImage||automaticLinkImage(cleanLinkUrl(draftLinkUrl))} alt="Förhandsvisning"/>}</>}
       {listType==="packing"&&<label>Vem ska ha med den?<select value={draftAssignedTo} onChange={event=>{setDraftAssignedTo(event.target.value);onDirtyChange(true)}}><option value="">Alla</option>{(packPeople||[]).map(person=><option key={person}>{person}</option>)}</select></label>}
@@ -2836,9 +2837,7 @@ function ListPage({
               </span>
             )}
           </span>
-          <input
-            className={list.listType==="links"?"saved-link-title-input":undefined}
-            aria-label={list.listType==="links"?"Kort text":undefined}
+          {list.listType!=="links"&&<input
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
             onKeyDown={(e) => {
@@ -2846,17 +2845,18 @@ function ListPage({
               e.preventDefault();
               add();
             }}
-            placeholder={list.listType==="links"?"Kort text (valfritt)":"Mängd (valfritt)"}
-          />
+            placeholder="Mängd (valfritt)"
+          />}
+          {list.listType==="links"&&<textarea className="saved-link-text-input" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en text om länken (valfritt)…"/>}
           {list.listType==="links"&&<><input className="saved-link-url-input" type="url" inputMode="url" value={newLinkUrl} onChange={event=>setNewLinkUrl(event.target.value)} placeholder="Klistra in länken här…"/><div className="saved-link-image-choice"><span>{newLinkImage?"Egen bild vald":"En stående sidbild hämtas automatiskt"}</span><label className={linkImageBusy?"busy":""}><ImagePlus/>{linkImageBusy?"KOMPRIMERAR…":"VÄLJ EGEN BILD"}<input type="file" accept="image/*" disabled={linkImageBusy} onChange={async event=>{const file=event.target.files?.[0];if(!file)return;setLinkImageBusy(true);try{setNewLinkImage(await compressLinkImage(file))}finally{setLinkImageBusy(false)}}}/></label>{newLinkImage&&<button type="button" onClick={()=>setNewLinkImage("")}>ANVÄND AUTOMATISK</button>}</div>{(newLinkImage||cleanLinkUrl(newLinkUrl))&&<img className="saved-link-new-preview" src={newLinkImage||automaticLinkImage(cleanLinkUrl(newLinkUrl))} alt="Förhandsvisning av sidan"/>}</>}
           {list.listType==="packing"&&<select value={assignedTo} onChange={event=>setAssignedTo(event.target.value)}><option value="">För alla</option>{(list.packPeople||[]).map(person=><option key={person}>{person}</option>)}</select>}
           {list.listType==="home"&&<div className="homefix-quick-fields"><select aria-label="Plats" value={homeFixPlace} onChange={event=>setHomeFixPlace(event.target.value)}><option value="">Välj plats</option>{homeFixPlaces.map(place=><option key={place}>{place}</option>)}</select><select aria-label="Prioritet" value={homeFixPriority} onChange={event=>setHomeFixPriority(event.target.value)}>{homeFixPriorities.map(value=><option key={value}>{value}</option>)}</select></div>}
           {list.listType==="orders"&&<select value={itemStatus} onChange={event=>setItemStatus(event.target.value)}><option value="">Status</option><option>Beställt</option><option>På gång</option><option>Skickat</option><option>Levererat</option><option>Klart</option></select>}
           {list.listType==="wishlist"&&<select value={priority} onChange={event=>setPriority(event.target.value)}><option>Låg</option><option>Normal</option><option>Hög</option><option>Dröm</option></select>}
           {list.listType==="cleaning"&&<div className="cleaning-quick-fields"><select aria-label="Rum" value={cleaningRoom} onChange={event=>setCleaningRoom(event.target.value)}><option value="">Välj rum</option>{cleaningRooms.map(room=><option key={room}>{room}</option>)}</select><select aria-label="Ansvarig" value={cleaningAssignee} onChange={event=>setCleaningAssignee(event.target.value)}><option value="">Ingen särskild</option>{members.map(member=><option key={member.uid} value={member.uid}>{member.displayName}</option>)}</select><select aria-label="Upprepas" value={cleaningRecurrence} onChange={event=>setCleaningRecurrence(event.target.value)}><option value="">Ingen upprepning</option>{cleaningRecurrences.map(value=><option key={value}>{value}</option>)}</select></div>}
-          {showNewItemNote&&<textarea className="new-item-note" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en anteckning (valfritt)…" autoFocus/>}
+          {list.listType!=="links"&&showNewItemNote&&<textarea className="new-item-note" value={newItemNote} onChange={event=>setNewItemNote(event.target.value)} placeholder="Skriv en anteckning (valfritt)…" autoFocus/>}
           <span className="add-panel-actions">
-            <button type="button" className={showNewItemNote?"active":""} aria-label={showNewItemNote?"Dölj anteckning":"Lägg till anteckning"} aria-pressed={showNewItemNote} onClick={()=>setShowNewItemNote(value=>!value)}><NotebookPen/></button>
+            {list.listType!=="links"&&<button type="button" className={showNewItemNote?"active":""} aria-label={showNewItemNote?"Dölj anteckning":"Lägg till anteckning"} aria-pressed={showNewItemNote} onClick={()=>setShowNewItemNote(value=>!value)}><NotebookPen/></button>}
             <button type="button" aria-label="Lägg till" onClick={() => add()}><Check /></button>
           </span>
         </div>

@@ -27,34 +27,35 @@ function now_iso(): string { return gmdate('c'); }
 function database(): PDO {
     static $db = null;
     if ($db instanceof PDO) return $db;
-    $dir = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'private';
-    if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) reply(['ok' => false, 'error' => 'Kunde inte skapa datamappen'], 500);
-    $db = new PDO('sqlite:' . $dir . DIRECTORY_SEPARATOR . 'kassun.sqlite');
+    $configPath = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . 'kassun-db.json';
+    $config = is_file($configPath) ? json_decode((string)file_get_contents($configPath), true) : null;
+    if (!is_array($config) || empty($config['host']) || empty($config['name']) || empty($config['user']) || !isset($config['password'])) reply(['ok' => false, 'error' => 'Databaskopplingen saknas'], 500);
+    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', $config['host'], $config['name']);
+    $db = new PDO($dsn, $config['user'], $config['password'], [PDO::ATTR_EMULATE_PREPARES => false]);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-    $db->exec('PRAGMA journal_mode=WAL');
-    $db->exec('PRAGMA foreign_keys=ON');
     $db->exec('CREATE TABLE IF NOT EXISTS accounts (
-        id TEXT PRIMARY KEY, username TEXT NOT NULL, username_lower TEXT NOT NULL UNIQUE,
-        role TEXT NOT NULL DEFAULT "user", active INTEGER NOT NULL DEFAULT 1,
-        password_hash TEXT, legacy_hash TEXT, legacy_salt TEXT, created_at TEXT NOT NULL
-    )');
+        id VARCHAR(64) PRIMARY KEY, username VARCHAR(190) NOT NULL, username_lower VARCHAR(190) NOT NULL UNIQUE,
+        role VARCHAR(20) NOT NULL DEFAULT \'user\', active TINYINT(1) NOT NULL DEFAULT 1,
+        password_hash VARCHAR(255), legacy_hash VARCHAR(255), legacy_salt VARCHAR(255), created_at VARCHAR(40) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $db->exec('CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1,
-        photo TEXT NOT NULL DEFAULT "", created_at TEXT NOT NULL
-    )');
+        id VARCHAR(64) PRIMARY KEY, name VARCHAR(190) NOT NULL, active TINYINT(1) NOT NULL DEFAULT 1,
+        photo LONGTEXT NOT NULL, created_at VARCHAR(40) NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $db->exec('CREATE TABLE IF NOT EXISTS occasions (
-        id TEXT PRIMARY KEY, name TEXT NOT NULL, date TEXT NOT NULL DEFAULT "",
-        starting_cash REAL NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1,
-        created_at TEXT NOT NULL, ended_at TEXT
-    )');
+        id VARCHAR(64) PRIMARY KEY, name VARCHAR(190) NOT NULL, date VARCHAR(16) NOT NULL DEFAULT \'\',
+        starting_cash DECIMAL(12,2) NOT NULL DEFAULT 0, active TINYINT(1) NOT NULL DEFAULT 1,
+        created_at VARCHAR(40) NOT NULL, ended_at VARCHAR(40)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $db->exec('CREATE TABLE IF NOT EXISTS sales (
-        id TEXT PRIMARY KEY, item TEXT NOT NULL, price REAL NOT NULL DEFAULT 0,
-        payment TEXT NOT NULL, seller_id TEXT NOT NULL, seller_name TEXT NOT NULL,
-        occasion_id TEXT NOT NULL, date TEXT NOT NULL DEFAULT "", kind TEXT,
-        refunded INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
-        updated_at TEXT, refunded_at TEXT
-    )');
+        id VARCHAR(64) PRIMARY KEY, item VARCHAR(255) NOT NULL, price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        payment VARCHAR(20) NOT NULL, seller_id VARCHAR(64) NOT NULL, seller_name VARCHAR(190) NOT NULL,
+        occasion_id VARCHAR(64) NOT NULL, date VARCHAR(16) NOT NULL DEFAULT \'\', kind VARCHAR(30),
+        refunded TINYINT(1) NOT NULL DEFAULT 0, created_at VARCHAR(40) NOT NULL,
+        updated_at VARCHAR(40), refunded_at VARCHAR(40),
+        INDEX idx_sales_occasion (occasion_id), INDEX idx_sales_seller (seller_id), INDEX idx_sales_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     $count = (int)$db->query('SELECT COUNT(*) FROM accounts')->fetchColumn();
     if ($count === 0) {
         $stmt = $db->prepare('INSERT INTO accounts (id,username,username_lower,role,active,password_hash,created_at) VALUES (?,?,?,?,?,?,?)');
@@ -100,11 +101,11 @@ function verify_password(array $account, string $password): bool {
 }
 
 function state_payload(PDO $db, array $account): array {
-    $users = array_map(fn($r) => ['id'=>$r['id'],'name'=>$r['name'],'active'=>(bool)$r['active'],'photo'=>$r['photo'],'createdAt'=>$r['created_at']], $db->query('SELECT * FROM users ORDER BY name COLLATE NOCASE')->fetchAll());
+    $users = array_map(fn($r) => ['id'=>$r['id'],'name'=>$r['name'],'active'=>(bool)$r['active'],'photo'=>$r['photo'],'createdAt'=>$r['created_at']], $db->query('SELECT * FROM users ORDER BY name')->fetchAll());
     $occasions = array_map(fn($r) => ['id'=>$r['id'],'name'=>$r['name'],'date'=>$r['date'],'startingCash'=>(float)$r['starting_cash'],'active'=>(bool)$r['active'],'createdAt'=>$r['created_at'],'endedAt'=>$r['ended_at']], $db->query('SELECT * FROM occasions ORDER BY created_at DESC')->fetchAll());
     $sales = array_map(fn($r) => ['id'=>$r['id'],'item'=>$r['item'],'price'=>(float)$r['price'],'payment'=>$r['payment'],'sellerId'=>$r['seller_id'],'sellerName'=>$r['seller_name'],'occasionId'=>$r['occasion_id'],'date'=>$r['date'],'kind'=>$r['kind'],'refunded'=>(bool)$r['refunded'],'createdAt'=>$r['created_at'],'updatedAt'=>$r['updated_at'],'refundedAt'=>$r['refunded_at']], $db->query('SELECT * FROM sales ORDER BY created_at DESC')->fetchAll());
     $accounts = [];
-    if ($account['role'] === 'admin') $accounts = array_map('public_account', $db->query('SELECT * FROM accounts ORDER BY username COLLATE NOCASE')->fetchAll());
+    if ($account['role'] === 'admin') $accounts = array_map('public_account', $db->query('SELECT * FROM accounts ORDER BY username')->fetchAll());
     return ['ok'=>true,'account'=>public_account($account),'accounts'=>$accounts,'users'=>$users,'occasions'=>$occasions,'sales'=>$sales];
 }
 
@@ -113,7 +114,7 @@ try {
     $action = (string)($_GET['action'] ?? 'session');
     $data = input();
 
-    if ($action === 'health') reply(['ok'=>true,'database'=>'sqlite']);
+    if ($action === 'health') reply(['ok'=>true,'database'=>'mariadb']);
     if ($action === 'session') {
         $account = session_account($db);
         reply(['ok'=>true,'account'=>$account ? public_account($account) : null]);
@@ -147,7 +148,7 @@ try {
         if ($existing > 0) reply(['ok'=>false,'error'=>'Kassun är redan importerad'], 409);
         $db->beginTransaction();
         try {
-            $accountStmt = $db->prepare('INSERT OR IGNORE INTO accounts (id,username,username_lower,role,active,password_hash,legacy_hash,legacy_salt,created_at) VALUES (?,?,?,?,?,NULL,?,?,?)');
+            $accountStmt = $db->prepare('INSERT IGNORE INTO accounts (id,username,username_lower,role,active,password_hash,legacy_hash,legacy_salt,created_at) VALUES (?,?,?,?,?,NULL,?,?,?)');
             foreach (($data['accounts'] ?? []) as $r) $accountStmt->execute([(string)$r['id'],(string)$r['username'],(string)$r['usernameLower'],(string)($r['role'] ?? 'user'),($r['active'] ?? true)?1:0,(string)($r['passwordHash'] ?? ''),(string)($r['salt'] ?? ''),(string)($r['createdAt'] ?? now_iso())]);
             $userStmt = $db->prepare('INSERT INTO users (id,name,active,photo,created_at) VALUES (?,?,?,?,?)');
             foreach (($data['users'] ?? []) as $r) $userStmt->execute([(string)$r['id'],(string)$r['name'],($r['active'] ?? true)?1:0,(string)($r['photo'] ?? ''),(string)($r['createdAt'] ?? now_iso())]);

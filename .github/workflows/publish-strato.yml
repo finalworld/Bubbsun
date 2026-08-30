@@ -51,6 +51,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes lftp
 
+      - name: Förbered Kassuns databaskoppling
+        env:
+          KASSUN_DB_HOST: ${{ secrets.KASSUN_DB_HOST }}
+          KASSUN_DB_NAME: ${{ secrets.KASSUN_DB_NAME }}
+          KASSUN_DB_USER: ${{ secrets.KASSUN_DB_USER }}
+          KASSUN_DB_PASSWORD: ${{ secrets.KASSUN_DB_PASSWORD }}
+        run: |
+          node -e 'const fs=require("fs");fs.writeFileSync("kassun-db.json",JSON.stringify({host:process.env.KASSUN_DB_HOST,name:process.env.KASSUN_DB_NAME,user:process.env.KASSUN_DB_USER,password:process.env.KASSUN_DB_PASSWORD}))'
+
       - name: Ladda upp till Strato
         env:
           SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
@@ -64,6 +73,8 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          mkdir -p private
+          put -O private kassun-db.json
           # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
           # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
           # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan

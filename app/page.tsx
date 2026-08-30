@@ -99,7 +99,6 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
-import { disableNetwork, enableNetwork } from "firebase/firestore";
 import { auth, db } from "../src/lib/firebase";
 import {
   acceptPrivacy,
@@ -6510,16 +6509,6 @@ function AuthenticatedApp() {
     () => (databaseReady ? watchGlobalPin(setGlobalPin) : undefined),
     [databaseReady],
   );
-  useEffect(()=>{
-    if(!user||!databaseReady)return;
-    let pauseTimer:number|undefined;
-    const resume=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=undefined;void enableNetwork(db).catch(()=>{})};
-    const pause=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=window.setTimeout(()=>{pauseTimer=undefined;void disableNetwork(db).catch(()=>{})},2500)};
-    const visibility=()=>document.visibilityState==="visible"?resume():pause();
-    const pageHide=()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);pauseTimer=undefined;void disableNetwork(db).catch(()=>{})};
-    document.addEventListener("visibilitychange",visibility);window.addEventListener("pagehide",pageHide);window.addEventListener("pageshow",resume);visibility();
-    return()=>{if(pauseTimer!==undefined)window.clearTimeout(pauseTimer);document.removeEventListener("visibilitychange",visibility);window.removeEventListener("pagehide",pageHide);window.removeEventListener("pageshow",resume);void enableNetwork(db).catch(()=>{})};
-  },[user?.uid,databaseReady]);
   useEffect(()=>user&&databaseReady&&needsFollowedContent?watchFollowedContent(user.uid,values=>{setFollowedListIds(values.lists);setFollowedNoteIds(values.notes)}):undefined,[user,databaseReady,needsFollowedContent]);
   useEffect(
     () => user&&databaseReady&&needsListReadStates?watchListReadStates(user.uid,setListReadAt):undefined,

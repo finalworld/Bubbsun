@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { cashierStateRef, categoryStateRef, collection, deleteDoc, doc, firestore, getDoc, getDocs, importLegacyData, kassaStateRef, login, logout, onSnapshot, salesCollectionRef, setDoc } from "./lib/supabase";
+import { cashierStateRef, categoryStateRef, collection, database, deleteDoc, doc, getDoc, getDocs, kassaStateRef, login, logout, onSnapshot, salesCollectionRef, setDoc } from "./lib/database";
 
 type Subcategory = { id: string; name: string; staticPrice?: number };
 type Product = { id: number; name: string; icon: number; color: string; subcategories: Subcategory[]; image?: string; hidden?: boolean };
@@ -33,14 +33,13 @@ const money = (value: number) => `${new Intl.NumberFormat("sv-SE").format(value)
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Rensa", "0", "⌫"];
 const PENDING_SALES_KEY = "rk-kassa-pending-sales";
 const PENDING_CASHIERS_KEY = "rk-kassa-pending-cashiers";
-const LEGACY_FIREBASE_CATEGORY_URL = "https://firestore.googleapis.com/v1/projects/rk-kassa/databases/(default)/documents/rk-kassa/categories?key=AIzaSyCKeSgETR8ELP39fDpMt5mZzYcJSn_UFII";
 const dayKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const sessionIdForDate = (date: Date) => `${dayKey(date)}-pass-${date.getTime()}`;
 const saleTotal = (sale: Sale) => (sale.kind === "refund" ? -1 : 1) * sale.lines.reduce((sum, line) => sum + line.price * (line.qty || 1), 0);
 const dayLabel = (key: string) => new Intl.DateTimeFormat("sv-SE", { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date(`${key}T12:00:00`));
 const normalizeSubcategories = (items: Array<string | Subcategory> = []): Subcategory[] => items.map((item) => typeof item === "string" ? { id: item.toLowerCase().replace(/\s+/g, "-"), name: item } : item);
 const INITIAL_ADMIN = { username: "finalworld", passwordHash: "246c892dfd8141fbcc6bb50900ac30ec9ea0097931a44b77cef5dbc6d4d1b37b" };
-const memberRef = (username: string) => doc(firestore, "medlemmar", username.toLowerCase().trim());
+const memberRef = (username: string) => doc(database, "medlemmar", username.toLowerCase().trim());
 const passwordHash = async (username: string, password: string) => {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${username.toLowerCase().trim()}:${password}`));
   return Array.from(new Uint8Array(bytes)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -134,7 +133,6 @@ export default function Home() {
   const whooshAudio = useRef<AudioContext | null>(null);
   const saleWhoosh = useRef<HTMLAudioElement | null>(null);
   const hasSeparateCategoryState = useRef(false);
-  const legacyCategoryRecoveryAttempted = useRef(false);
   const hasSeparateSalesState = useRef(false);
   const hasSeparateCashierState = useRef(false);
   const hasInitializedLastSale = useRef(false);
@@ -290,9 +288,9 @@ export default function Home() {
         cashiers?: Cashier[]; currentCashierId?: number;
       } | undefined;
       if (state?.sales && !hasSeparateSalesState.current) {
-        // A completed sale must never disappear just because Firebase is
+        // A completed sale must never disappear just because the database is
         // temporarily unavailable. Keep the local, queued purchases in view
-        // until Firebase has accepted them.
+        // temporarily unreachable.
         const pendingRaw = localStorage.getItem(PENDING_SALES_KEY);
         const pending = pendingRaw ? JSON.parse(pendingRaw) as Sale[] : [];
         const savedRaw = localStorage.getItem("rk-kassa-sales");
@@ -322,7 +320,7 @@ export default function Home() {
     if (!user) return;
     return onSnapshot(categoryStateRef, (snapshot) => {
       const items = snapshot.data()?.items as Product[] | undefined;
-      if (!items?.length) { void restoreLegacyCategories(); return; }
+      if (!items?.length) return;
       hasSeparateCategoryState.current = true;
       setProducts(items.map((product) => ({ ...product, subcategories: normalizeSubcategories(product.subcategories) })));
     });
@@ -459,7 +457,7 @@ export default function Home() {
   const isHeadAdmin = user?.username.toLowerCase() === INITIAL_ADMIN.username;
 
   const loadUsers = async () => {
-    const snapshot = await getDocs(collection(firestore, "medlemmar"));
+    const snapshot = await getDocs(collection(database, "medlemmar"));
     setUsers(snapshot.docs.map((item) => ({ id: item.id, username: String(item.data().name ?? item.id), role: item.data().admin ? "admin" : "cashier", isActive: true, lastLoginAt: userLoginLog[item.id.toLowerCase()] })).sort((a, b) => a.username.localeCompare(b.username, "sv")));
   };
 
@@ -475,9 +473,6 @@ export default function Home() {
       const hash = await passwordHash(username, loginPassword);
       const result = await login(username, hash);
       const loggedIn: AuthUser = result.user;
-      if (username === INITIAL_ADMIN.username) {
-        try { await importLegacyData(); } catch { /* den gamla databasen kan redan vara tom eller avstängd */ }
-      }
       sessionStorage.setItem("rk-kassa-user", JSON.stringify(loggedIn));
       setHasLoadedRemote(false);
       setUser(loggedIn);
@@ -597,17 +592,17 @@ export default function Home() {
     const writes: Promise<void>[] = [];
     after.forEach((sale, id) => {
       if (JSON.stringify(before.get(id)) !== JSON.stringify(sale)) {
-        writes.push(setDoc(doc(firestore, "kassa-sales", String(id)), sale));
+        writes.push(setDoc(doc(database, "kassa-sales", String(id)), sale));
       }
     });
     before.forEach((_sale, id) => {
-      if (!after.has(id)) writes.push(deleteDoc(doc(firestore, "kassa-sales", String(id))));
+      if (!after.has(id)) writes.push(deleteDoc(doc(database, "kassa-sales", String(id))));
     });
     await Promise.all(writes);
   }
 
   async function persistSales(next: Sale[]) {
-    // Save first on the device. This makes a sale durable even if Firebase is
+    // Save first on the device. This makes a sale durable even if the database is
     // offline or has temporarily reached its write quota.
     storeSalesOnThisDevice(next, false);
     try {
@@ -626,10 +621,10 @@ export default function Home() {
       if (!pendingRaw) return;
       try {
         const pending = JSON.parse(pendingRaw) as Sale[];
-        await Promise.all(pending.map((sale) => setDoc(doc(firestore, "kassa-sales", String(sale.id)), sale)));
+        await Promise.all(pending.map((sale) => setDoc(doc(database, "kassa-sales", String(sale.id)), sale)));
         storeSalesOnThisDevice(pending, false);
       } catch {
-        // Firebase may be offline or rate limited. We deliberately keep the
+        // The database may be offline temporarily. We deliberately keep the
         // queue and only retry on a later focus/online event.
       }
     };
@@ -712,37 +707,6 @@ export default function Home() {
     const synced = await persistSales(next);
     if (!synced) window.alert("Återbetalningen är sparad på den här enheten och synkas när databasen är tillgänglig igen.");
     setRefundOpen(false); setHistoryDay(todayKey); setView("history");
-  }
-
-  async function restoreLegacyCategories() {
-    if (legacyCategoryRecoveryAttempted.current) return;
-    legacyCategoryRecoveryAttempted.current = true;
-    try {
-      const response = await fetch(LEGACY_FIREBASE_CATEGORY_URL);
-      if (!response.ok) return;
-      const document = await response.json() as { fields?: Record<string, unknown> };
-      const decode = (value: any): any => {
-        if (!value) return undefined;
-        if ("stringValue" in value) return value.stringValue;
-        if ("integerValue" in value) return Number(value.integerValue);
-        if ("doubleValue" in value) return Number(value.doubleValue);
-        if ("booleanValue" in value) return value.booleanValue;
-        if ("nullValue" in value) return null;
-        if ("arrayValue" in value) return (value.arrayValue.values || []).map(decode);
-        if ("mapValue" in value) return Object.fromEntries(Object.entries(value.mapValue.fields || {}).map(([key, item]) => [key, decode(item)]));
-        return undefined;
-      };
-      const legacyItems = decode(document.fields?.items) as Product[] | undefined;
-      if (!legacyItems?.length) return;
-      const recovered = legacyItems.map((product, index) => ({ ...product, icon: Number(product.icon) % 54, color: product.color || PASTEL_COLORS[index % PASTEL_COLORS.length], subcategories: normalizeSubcategories(product.subcategories) }));
-      await persistCategories(recovered);
-      setProducts(recovered);
-      localStorage.setItem("rk-kassa-categories", JSON.stringify(recovered));
-      window.alert("Dina tidigare kategorier har återställts.");
-    } catch {
-      // Firebase's old database is currently rate limited. A later page load
-      // retries once without touching the new Supabase data.
-    }
   }
 
   async function persistCategories(next: Product[]) {
@@ -845,7 +809,7 @@ export default function Home() {
     try {
       await setDoc(cashierStateRef, { cashiers: next, currentCashierId: selectedId, updatedAt: Date.now() });
     } catch {
-      // Do not let an old Firebase snapshot erase cashiers that were just
+      // Do not let a delayed database response erase cashiers that were just
       // created. They remain safely stored on this device until sync works.
       storeCashiersOnThisDevice(next, selectedId, true);
       window.alert("Kassörerna är sparade på den här enheten och synkas automatiskt när databasen är tillgänglig igen.");
@@ -864,7 +828,7 @@ export default function Home() {
         storeCashiersOnThisDevice(pending, selectedId, false);
       } catch {
         // Keep the local queue intact. A retry happens after the app regains
-        // network/focus, without hammering a temporarily limited Firebase.
+        // network/focus, without hammering the database.
       }
     };
     const onOnline = () => { void retryWhenBack(); };

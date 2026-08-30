@@ -4712,7 +4712,7 @@ body .app-shell .connect4-game-actions>button,body .app-shell .connect4-react{di
 body .app-shell .connect4-react{background:var(--theme-accent);color:var(--theme-paper)}
 body .app-shell .connect4-game-actions svg{width:19px;height:19px}
 body .app-shell .connect4-reaction-control{position:relative;z-index:35}
-body .app-shell .connect4-reaction-dismiss{position:fixed;z-index:40;inset:0;width:100vw;height:100vh;padding:0;border:0;background:transparent}
+body .app-shell .connect4-reaction-dismiss{position:fixed!important;z-index:40!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 body .app-shell .connect4-reaction-picker{position:absolute;z-index:44;left:0;top:calc(100% + 10px);display:grid;grid-template-columns:repeat(3,64px);gap:7px;width:auto;padding:10px;border:2px solid var(--theme-outline);border-radius:17px;background:var(--theme-paper);box-shadow:0 12px 30px color-mix(in srgb,var(--theme-text) 28%,transparent)}
 body .app-shell .connect4-reaction-picker:before{content:"";position:absolute;left:24px;top:-8px;width:13px;height:13px;border-left:2px solid var(--theme-outline);border-top:2px solid var(--theme-outline);background:var(--theme-paper);transform:rotate(45deg)}
 body .app-shell .connect4-reaction-picker>button{display:grid;place-items:center;width:64px;height:64px;padding:4px;overflow:hidden;border:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent);border-radius:13px;background:color-mix(in srgb,var(--theme-panel) 25%,var(--theme-paper));cursor:pointer}

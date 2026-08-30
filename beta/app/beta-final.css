@@ -4775,7 +4775,10 @@ body .app-shell .saved-link-editor{padding:16px!important;grid-template-columns:
 
 /* Saved link card — image panel, centered title/domain, no note preview. */
 html body .app-shell.app-shell section.content.detail-page.links-detail-page .items-list{
-  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page.links-detail-page .items-list{grid-template-columns:minmax(0,1fr)!important}
 }
 html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{
   position:relative!important;grid-template-columns:7px minmax(0,1fr) 64px 38px!important;height:84px!important;min-height:84px!important;padding:0!important;

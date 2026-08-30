@@ -97,7 +97,9 @@ jobs:
           # cacheversioner. Ersätt den alltid så mobilen laddar senaste appen.
           put -O public/loppis dist/loppis/index.html
           # RK Kassa ligger i webbplatsens public/rk.
-          mirror --reverse --delete --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          # API:t har en privat databasfil som inte får rensas när statiska
+          # byggfiler byts ut. Gamla hashade filer är ofarliga och kan ligga kvar.
+          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
           $RK_API_UPLOAD
           # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
           # borttagna JavaScript-filer med tidigare innehållshash.

@@ -4245,6 +4245,7 @@ body .app-shell .modal-backdrop:has(.budget-account-detail){z-index:10000!import
 body .app-shell .modal-backdrop:has(.budget-editor),
 body .app-shell .modal-backdrop:has(.budget-transfer-editor),
 body .app-shell .modal-backdrop:has(.budget-settings-editor){z-index:10000!important}
+body .app-shell .modal-backdrop.budget-delete-confirm{z-index:11000!important}
 @media(max-width:600px){
   body .app-shell .modal-backdrop>.modal.budget-account-detail{gap:11px!important;width:calc(100vw - 20px)!important;max-width:430px!important;max-height:calc(100dvh - 24px)!important;padding:16px 14px!important}
   body .app-shell .budget-account-detail>.modal-x{right:12px!important;top:12px!important;width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;padding:10px!important}

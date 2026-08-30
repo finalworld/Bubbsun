@@ -2321,7 +2321,7 @@ function SortableItemRow({
       <button className="item-copy" onClick={()=>!selecting&&onRequestExpand()} aria-expanded={expanded}>
         {listType==="links"&&item.linkUrl&&<img className="saved-link-thumb" src={item.linkImage||automaticLinkImage(item.linkUrl)} alt={`Förhandsvisning av ${item.name}`} loading="lazy"/>}
         <span className="item-title-line">{item.note&&<NotebookPen className="item-note-marker" aria-label="Har anteckning" />}<strong>{item.name}</strong>{isNew&&<em className="new-badge item-new-badge">NYTT</em>}</span>
-        {listType==="links"&&item.linkUrl&&<small className="saved-link-domain">{(()=>{try{return new URL(item.linkUrl).hostname.replace(/^www\./,"")}catch{return item.linkUrl}})()}</small>}
+        {listType==="links"&&item.note&&<small className="saved-link-domain saved-link-note-line">{item.note.split(/\r?\n/)[0]}</small>}
         {listType==="links"&&item.note&&<small className="saved-link-description">{item.note}</small>}
         {(item.quantity||item.assignedTo||item.assigneeName||item.status||item.room||item.recurrence||item.taskType||item.dueDate||((listType==="wishlist"||listType==="home")&&item.priority)) && <small>{[item.quantity,item.room&&(listType==="home"?`Plats: ${item.room}`:`Rum: ${item.room}`),item.taskType&&`Typ: ${item.taskType}`,(item.assigneeName||item.assignedTo)&&(listType==="cleaning"||listType==="home"?`Ansvarig: ${item.assigneeName||item.assignedTo}`:`Till: ${item.assignedTo}`),item.recurrence&&`Upprepas: ${item.recurrence}`,item.status,(listType==="wishlist"||listType==="home")&&item.priority&&`Prioritet: ${item.priority}`,item.dueDate&&`Senast ${shortDate(item.dueDate)}`].filter(Boolean).join(" · ")}</small>}
       </button>

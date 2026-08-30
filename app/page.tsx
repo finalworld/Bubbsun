@@ -122,6 +122,8 @@ import {
   loadPrivateBudgetSettings,
   loadPrivateRecipes,
   loadPublicRecipes,
+  loadRecipes,
+  loadRecipeViewCount,
   loadGroupMembers,
   removeGroupMember,
   removeList,
@@ -5508,7 +5510,7 @@ function RecipeLikeCount({recipe}:{recipe:Recipe}){
 function RecipeUniqueViews({recipe,uid}:{recipe:Recipe;uid:string}){
   const [count,setCount]=useState(0),owner=recipe.creatorId===uid;
   useEffect(()=>{
-    if(owner)return watchRecipeViewCount(recipe,uid,setCount);
+    if(owner){let stopped=false;void loadRecipeViewCount(recipe,uid).then(value=>{if(!stopped)setCount(value)}).catch(error=>console.error("Receptvisningar kunde inte hämtas",error));return()=>{stopped=true}}
     void recordRecipeView(recipe,uid).catch(error=>console.error("Kunde inte registrera receptvisningen",error));
   },[recipe.creatorId,recipe.id,uid,owner]);
   return owner?<div className="recipe-unique-views" title="En visning per inloggad användare"><Eye/><strong>{count}</strong><span>UNIKA VISNINGAR</span></div>:null;
@@ -6076,7 +6078,7 @@ function RecipesPage({recipes,lists,privateMode,account,uid,memberships,groups,m
   const linkedViewingList=viewing?.linkedListId?lists.find(list=>list.id===viewing.linkedListId):undefined;
   useEffect(()=>{if(!openRecipeId)return;const recipe=recipes.find(value=>value.id===openRecipeId);if(recipe){setViewing(recipe);onRecipeOpened?.()}},[openRecipeId,recipes,onRecipeOpened]);
   useEffect(()=>{setViewing(current=>{if(!current)return current;return recipes.find(recipe=>(current.sourcePath&&recipe.sourcePath===current.sourcePath)||(recipe.id===current.id&&recipe.creatorId===current.creatorId))||current})},[recipes]);
-  useEffect(()=>{if(!spaceOpen)return;const update=(location:string,values:Recipe[])=>setLocationRecipeCounts(current=>({...current,[location]:new Set(values.map(value=>`${value.creatorId}:${value.id}`)).size})),unsubscribers=[watchPrivateRecipes(uid,values=>update("private",values)),...memberships.map(membership=>watchRecipes(membership.groupId,values=>update(membership.groupId,values)))];return()=>unsubscribers.forEach(unsubscribe=>unsubscribe())},[spaceOpen,uid,memberships.map(value=>value.groupId).sort().join("|")]);
+  useEffect(()=>{if(!spaceOpen)return;let stopped=false;const update=(location:string,values:Recipe[])=>{if(!stopped)setLocationRecipeCounts(current=>({...current,[location]:new Set(values.map(value=>`${value.creatorId}:${value.id}`)).size}))};void loadPrivateRecipes(uid).then(values=>update("private",values));memberships.forEach(membership=>void loadRecipes(membership.groupId).then(values=>update(membership.groupId,values)));return()=>{stopped=true}},[spaceOpen,uid,memberships.map(value=>value.groupId).sort().join("|")]);
   useEffect(()=>setRecipePage(1),[search,category,subcategory,dietaryFilters.join("|"),sortMode,privateMode,account.activeGroupId]);
   return <section className="content recipes-page">
     <div className="recipe-cookbook-primary"><label className="recipe-cookbook-search"><Search/><input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Sök recept eller skapare"/></label><div className="recipe-scope-wrap">
@@ -6496,7 +6498,7 @@ function AuthenticatedApp() {
   useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsCalendar){setCalendarEvents([]);return;}return watchCalendarEvents(account.activeGroupId,setCalendarEvents);},[account?.activeGroupId,privateMode,needsCalendar]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetEntries(account.activeGroupId,setBudgetEntries);},[account?.activeGroupId,privateMode,page]);
   useEffect(()=>{if(!account?.activeGroupId||privateMode||page!=="budget")return;return watchBudgetSettings(account.activeGroupId,setBudgetSettings);},[account?.activeGroupId,privateMode,page]);
-  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsRecipes)return;return watchRecipes(account.activeGroupId,setRecipes);},[account?.activeGroupId,privateMode,needsRecipes]);
+  useEffect(()=>{if(!account?.activeGroupId||privateMode||!needsRecipes)return;let stopped=false;void loadRecipes(account.activeGroupId).then(values=>{if(!stopped)setRecipes(values)}).catch(error=>console.error("Grupprecept kunde inte hämtas",error));return()=>{stopped=true}},[account?.activeGroupId,privateMode,needsRecipes]);
   useEffect(() => {
     if (user && privateListsLoadedFor.current === user.uid)
       localStorage.setItem(
@@ -7086,8 +7088,8 @@ function AuthenticatedApp() {
   },[databaseReady,user,page,privateMode,privateBudgetSettings,normalizedPrivateBudgetSettings]);
   const resetActiveBudget=async()=>{if(!user||!account)return;if(privateMode){await resetPrivateBudget(user.uid);setPrivateBudgetEntries([]);setPrivateBudgetSettings({banks:[],categoryBudgets:{},savingsGoals:[],updatedAt:Date.now()})}else if(account.activeGroupId)await resetBudget(account.activeGroupId)};
   const clearActiveBudgetMoney=async()=>{if(!user||!account)return;if(privateMode){await clearPrivateBudgetMoney(user.uid,activeBudgetSettings);setPrivateBudgetEntries([]);setPrivateBudgetSettings({...activeBudgetSettings,banks:activeBudgetSettings.banks.map(bank=>({...bank,accounts:bank.accounts.map(account=>({...account,openingBalance:0,reconciledBalance:undefined,reconciledAt:undefined}))})),updatedAt:Date.now()})}else if(account.activeGroupId)await clearBudgetMoney(account.activeGroupId,activeBudgetSettings)};
-  const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations);setPrivateRecipes(current=>locations.includes("private")?[complete,...current.filter(item=>item.id!==complete.id)]:previous.includes("private")?current.filter(item=>item.id!==complete.id):current)};
-  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId);setPrivateRecipes(current=>current.filter(item=>item.id!==recipe.id))};
+  const persistRecipe=async(recipe:Recipe,targetLocations:string[]=[],previousLocations:string[]=[])=>{if(!user||!account)return;const sourceLocation=privateMode?"private":account.activeGroupId,locations=targetLocations?.length?targetLocations:[sourceLocation],previous=previousLocations?.length?previousLocations:[sourceLocation],complete={...recipe,locations,updatedAt:Date.now(),updatedBy:user.uid};await syncRecipeLocations(user.uid,complete,previous,locations);setPrivateRecipes(current=>locations.includes("private")?[complete,...current.filter(item=>item.id!==complete.id)]:previous.includes("private")?current.filter(item=>item.id!==complete.id):current);if(account.activeGroupId){setRecipes(current=>locations.includes(account.activeGroupId)?[complete,...current.filter(item=>item.id!==complete.id)]:previous.includes(account.activeGroupId)?current.filter(item=>item.id!==complete.id):current)}};
+  const deleteRecipe=async(recipe:Recipe)=>{if(!user||!account)return;await removeRecipeEverywhere(user.uid,recipe,privateMode?"private":account.activeGroupId);setPrivateRecipes(current=>current.filter(item=>item.id!==recipe.id));setRecipes(current=>current.filter(item=>item.id!==recipe.id))};
   const addRecipeToList=async(recipe:Recipe,listId:string)=>{if(!user||!account)return;const source=(privateMode?privateLists:lists).find(list=>list.id===listId);if(!source)return;const createdAt=Date.now(),newItems:ListItem[]=recipe.ingredients.filter(ingredient=>!ingredient.isHeading).map((ingredient,index)=>({id:crypto.randomUUID(),name:ingredient.name,quantity:[ingredient.amount,ingredient.unit].filter(Boolean).join(" "),ownerId:user.uid,completed:false,createdAt:createdAt+index,completedAt:null,likedBy:[],note:`Från receptet ${recipe.title}`}));const next={...source,items:[...source.items,...newItems]};if(privateMode){setPrivateLists(current=>current.map(list=>list.id===next.id?next:list));await savePrivateList(user.uid,next)}else if(account.activeGroupId){setLists(current=>current.map(list=>list.id===next.id?next:list));await saveList(account.activeGroupId,next,user.uid)}};
   const createRecipeIngredientList=async(recipe:Recipe,targetLocation:string,ingredientIds:string[])=>{
     if(!user)return;

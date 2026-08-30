@@ -17,6 +17,28 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 
 /* Saved links beta — isolated layout, intentionally independent of standard list grids. */
+@media (max-width:1000px) and (pointer:coarse){
+  html body .app-shell section.content.detail-page div.add-panel.add-panel-links>div{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;gap:11px!important;min-height:0!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{grid-column:1!important;grid-row:auto!important;width:100%!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{grid-column:1!important;grid-row:auto!important;width:100%!important;height:54px!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{grid-column:1!important;grid-row:auto!important;display:block!important;width:100%!important;min-height:54px!important}
+  html body .app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{display:flex!important;width:100%!important;height:54px!important;box-sizing:border-box!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{grid-column:1!important;grid-row:auto!important;width:100%!important;height:120px!important;min-height:120px!important;resize:vertical!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{grid-column:1!important;grid-row:auto!important;justify-self:center!important;align-self:auto!important;width:108px!important;height:153px!important;max-height:153px!important;margin:2px auto!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{grid-column:1!important;grid-row:auto!important;position:static!important;display:grid!important;grid-template-columns:1fr!important;justify-self:stretch!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important}
+  html body .app-shell section.content.detail-page .add-panel-links .add-panel-actions>button:last-child{position:static!important;display:grid!important;place-items:center!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important;border-radius:12px!important}
+  html body .app-shell section.content.detail-page .saved-link-row{grid-template-columns:6px 36px minmax(0,1fr) 44px 30px!important;min-height:116px!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.like-button{display:none!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.item-copy{grid-column:3!important;grid-template-columns:76px minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;align-content:center!important;min-height:112px!important;gap:2px 9px!important;padding-right:7px!important}
+  html body .app-shell section.content.detail-page .saved-link-row .saved-link-thumb{grid-column:1!important;grid-row:1/4!important;width:76px!important;height:112px!important;min-height:112px!important;object-fit:cover!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.saved-link-open{grid-column:4!important;width:40px!important;min-width:40px!important;height:42px!important;padding:0!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.saved-link-open span{display:none!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.item-combined-handle{grid-column:5!important}
+  html body .app-shell section.content.detail-page .saved-link-editor{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;width:auto!important;padding:14px!important;gap:10px!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>label:first-child,html body .app-shell section.content.detail-page .saved-link-editor>.item-note-field,html body .app-shell section.content.detail-page .saved-link-editor>label:has(input[type="url"]),html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-upload,html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-edit-preview,html body .app-shell section.content.detail-page .saved-link-editor>div:last-child{grid-column:1!important;grid-row:auto!important;width:100%!important;box-sizing:border-box!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-upload{width:100%!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-edit-preview{justify-self:center!important;width:108px!important;height:153px!important;min-height:153px!important;max-height:153px!important;margin:2px auto!important;border:1px solid var(--theme-outline)!important;border-radius:9px!important;object-fit:cover!important}
+}
 html body .app-shell section.content.detail-page div.add-panel.add-panel-links>div{display:grid!important;grid-template-columns:repeat(14,minmax(0,1fr))!important;grid-template-rows:54px 220px 54px!important;gap:12px!important;min-height:352px!important;align-items:stretch!important}
 html body .app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{grid-column:1/7!important;grid-row:1!important;width:100%!important;min-width:0!important}
 html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{grid-column:7/11!important;grid-row:1!important;width:100%!important;height:54px!important;min-width:0!important;box-sizing:border-box!important}

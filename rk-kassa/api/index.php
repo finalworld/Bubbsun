@@ -11,7 +11,9 @@ function fail(string $message, int $status = 400): never { reply(['ok' => false,
 function body(): array { $raw = file_get_contents('php://input'); if ($raw === false || $raw === '') return []; $data = json_decode($raw, true); if (!is_array($data)) fail('Ogiltig begäran.'); return $data; }
 function config(): array {
     $file = __DIR__ . '/rk-kassa-db.php';
-    if (!is_file($file)) fail('RK Kassa är inte ansluten till databasen ännu.', 503);
+    // Stratos WebFTP kan lägga filen som en länk i webbträdet. file_exists
+    // fungerar för både vanliga filer och den typen av länk.
+    if (!file_exists($file)) fail('RK Kassa är inte ansluten till databasen ännu.', 503);
     $config = require $file;
     if (!is_array($config) || !isset($config['host'], $config['database'], $config['user'], $config['password'])) fail('RK Kassa-databasen saknar inställningar.', 503);
     return $config;

@@ -4896,6 +4896,42 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
   }
 }
 
+/* Mobile new-link layout: fields first, preview left and image/save actions stacked right. */
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links>div{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:54px 54px 112px 136px!important;
+    gap:12px!important;min-height:0!important;align-items:stretch!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{
+    grid-column:1/3!important;grid-row:1!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{
+    grid-column:1/3!important;grid-row:2!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{
+    grid-column:1/3!important;grid-row:3!important;width:100%!important;height:112px!important;min-height:112px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    grid-column:1!important;grid-row:4!important;align-self:stretch!important;justify-self:center!important;
+    width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{
+    grid-column:2!important;grid-row:4!important;align-self:start!important;width:100%!important;min-height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{
+    width:100%!important;max-width:none!important;height:54px!important;justify-content:center!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{
+    grid-column:2!important;grid-row:4!important;align-self:end!important;justify-self:stretch!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links .add-panel-actions>button:last-child{
+    width:100%!important;min-width:0!important;height:54px!important;
+  }
+}
+
 /* Move items: compact chooser and identical target buttons, including the first. */
 body .app-shell .modal.move-item-modal{box-sizing:border-box!important;width:min(calc(100vw - 32px),720px)!important;max-height:min(86dvh,700px)!important;padding:24px!important;overflow:hidden!important}
 body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;max-height:min(55dvh,390px)!important;padding-right:6px!important;overflow-y:auto!important}

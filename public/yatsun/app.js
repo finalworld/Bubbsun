@@ -64,7 +64,19 @@ function totals(scores){const upperTotal=upper.reduce((sum,_,index)=>sum+(scores
 
 function buildScorecard(){$("#upper-score").innerHTML="";$("#lower-score").innerHTML="";categories.forEach((category)=>{const tr=document.createElement("tr");tr.innerHTML=`<th>${category.label}</th><td><button class="score-choice" data-id="${category.id}" disabled>—</button></td><td class="ai-score" data-ai-id="${category.id}">—</td>`;(category.upper?$("#upper-score"):$("#lower-score")).appendChild(tr);tr.querySelector("button").addEventListener("click",()=>chooseScore(category.id));});}
 function displayScore(category,score){if(score===null||score===undefined)return"—";if(!category.upper)return String(score);const base=3*Number(category.id[1]),delta=score-base;return`${delta>=0?"+":""}${delta}`;}
-function updateSuggestions(){categories.forEach((category)=>{const button=$(`[data-id="${category.id}"]`),aiCell=$(`[data-ai-id="${category.id}"]`);if(!button)return;if(category.id in playerScores){button.textContent=displayScore(category,playerScores[category.id]);button.disabled=true;button.closest("tr").classList.add("scored");}else{const preview=rolls?scoreCategory(category.id,dice.map((d)=>d.value)):null;button.textContent=displayScore(category,preview);button.disabled=!rolls||busy;}aiCell.textContent=displayScore(category,aiScores[category.id]);aiCell.classList.toggle("filled",category.id in aiScores);});const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#grand-total").textContent=total.total;$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;}
+function updateSuggestions(){
+  const values=dice.map((d)=>d.value),previews=[];
+  categories.forEach((category)=>{
+    const button=$(`[data-id="${category.id}"]`),aiCell=$(`[data-ai-id="${category.id}"]`),row=button?.closest("tr");
+    if(!button)return;
+    row.classList.remove("scored","preview","best-preview");
+    if(category.id in playerScores){button.textContent=displayScore(category,playerScores[category.id]);button.disabled=true;row.classList.add("scored");}
+    else{const preview=rolls?scoreCategory(category.id,values):null;button.textContent=preview===null?"—":String(preview);button.disabled=!rolls||busy;if(preview!==null){row.classList.add("preview");previews.push({row,score:preview});}}
+    aiCell.textContent=displayScore(category,aiScores[category.id]);aiCell.classList.toggle("filled",category.id in aiScores);
+  });
+  if(previews.length){const best=Math.max(...previews.map((item)=>item.score));if(best>0)previews.filter((item)=>item.score===best).forEach((item)=>item.row.classList.add("best-preview"));}
+  const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#grand-total").textContent=total.total;$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;
+}
 function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});scatterDice();rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollButton.querySelector("small").textContent=`${3-rolls} kast kvar`;rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";rollButton.disabled=rolls===3;}
 function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollNumber.textContent="1";rollButton.disabled=false;rollButton.querySelector("small").textContent="3 kast kvar";rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));

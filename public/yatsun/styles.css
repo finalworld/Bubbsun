@@ -44,3 +44,22 @@ body.playing{height:100dvh;overflow:hidden;background:#f1eafb}body.playing main{
 @keyframes bubb-cube-tumble{0%{transform:rotateX(var(--spin-x)) rotateY(var(--spin-y)) rotateZ(190deg)}42%{transform:rotateX(-420deg) rotateY(510deg) rotateZ(-145deg)}72%{transform:rotateX(165deg) rotateY(-130deg) rotateZ(42deg)}100%{transform:var(--landing)}}
 @keyframes bubb-cube-shadow{0%{opacity:.06;transform:scale(.3) translateX(80px)}38%{opacity:.2;transform:scale(.55)}70%{opacity:.34;transform:scale(.72)}100%{opacity:1;transform:scale(.9)}}
 @media(max-width:680px){.game-shell .die.die-3d{width:58px;height:73px}.die-3d .die-travel,.die-3d .die-result{left:6px;top:6px;width:48px;height:48px}.die-3d .die-result{border-radius:10px}.die-3d .die-result .pip{width:8px;height:8px}.die-3d .cube-face{border-radius:10px}.die-3d .cube-face .pip{width:8px;height:8px}.die-3d .face-1{transform:translateZ(24px)}.die-3d .face-2{transform:rotateY(90deg) translateZ(24px)}.die-3d .face-3{transform:rotateX(90deg) translateZ(24px)}.die-3d .face-4{transform:rotateX(-90deg) translateZ(24px)}.die-3d .face-5{transform:rotateY(-90deg) translateZ(24px)}.die-3d .face-6{transform:rotateY(180deg) translateZ(24px)}.die-3d .die-shadow{left:9px;top:48px;width:42px;height:12px}}
+
+/* Tätare och tydligare protokoll i samma formspråk som Bubb Yatzy. */
+.game-shell .score-panel{margin:8px 8px 8px 0;border:3px solid #9b7357;border-radius:22px;background:#fff7e9;box-shadow:0 7px 0 #9b7357;overflow:hidden}
+.game-shell .score-panel>header{min-height:58px;padding:10px 15px;border:0;background:#302014;color:#fff}
+.game-shell .score-panel>header small{color:#f3d58f}.game-shell .score-panel h2{color:#fff}.game-shell .score-panel>header>strong{color:#f3d58f}
+.game-shell .score-scroll{padding:9px 9px 12px;background:#fff7e9;scrollbar-color:#9b7357 #f1dfc3}
+.game-shell .score-scroll table{margin:0 0 8px;border:1px solid #d5b996;border-radius:15px;border-collapse:separate;border-spacing:0;overflow:hidden;background:#fff9ed;color:#241b18}
+.game-shell .score-scroll thead th{height:28px;padding:7px 8px 5px;background:#516b50;color:#fff8df;font-size:9px;letter-spacing:1px}
+.game-shell .score-scroll tbody tr{border:0}.game-shell .score-scroll tbody tr+tr>*{border-top:1px solid #e2cdb1}
+.game-shell .score-scroll tbody th,.game-shell .score-scroll tbody td{height:31px;padding:3px 8px;background:#fff9ed;font-size:12px}
+.game-shell .score-scroll tbody th{font-weight:850}.game-shell .score-scroll tbody td{width:64px;font-weight:900}
+.game-shell .score-choice{min-width:42px;width:auto;padding:3px 9px;border-radius:10px;background:transparent;color:#506f58;font-size:15px;line-height:1.15}
+.game-shell .preview .score-choice{background:transparent;color:#506f58}.game-shell .preview .score-choice:hover{background:#e4eddf;transform:scale(1.05)}
+.game-shell .best-preview .score-choice{background:#506f58;color:#fff;box-shadow:0 0 0 4px #ffe27a,0 3px 0 #2f4938}
+.game-shell .scored .score-choice,.game-shell .ai-score.filled{display:inline-block;min-width:39px;padding:4px 8px;border-radius:10px;background:#506f58;color:#fff;text-align:center;box-shadow:0 3px 0 #344a37}
+.game-shell .summary{background:#eee9d8}.game-shell .summary th,.game-shell .summary td{background:#eee9d8!important;color:#506f58;font-weight:900}
+.game-shell .summary tr:first-child>*{border-top:3px solid #77785b!important}
+.game-shell .opponent-total{margin:3px 0 0;padding:10px 12px;border:1px solid #e1b694;border-radius:13px;background:#ffddc8;color:#241b18}.game-shell .opponent-total span{text-transform:uppercase;font-weight:900;letter-spacing:.7px}.game-shell .opponent-total b{font-size:18px}
+@media(max-width:900px){.game-shell .score-panel{margin:0;border-width:3px 0 0;border-radius:0;box-shadow:none}.game-shell .score-scroll{padding:10px}}

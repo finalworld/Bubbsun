@@ -174,7 +174,7 @@ async function aiTurn(){
   }
   $(".turn-heading h2").textContent=`${name} väljer…`;
   await humanPause(950,1650);
-  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),difficulty=Math.min(1,.45+profile.unlocked*.0055),ranked=open.map((category)=>{const score=scoreCategory(category.id,values);return{category,score,value:aiCategoryValue(category,score,values)+(Math.random()-.5)*(1-difficulty)*7};}).sort((a,b)=>b.value-a.value),strongMade=ranked.filter(({category,score})=>score>0&&["l8","l3","l6","l5","l4"].includes(category.id)).sort((a,b)=>b.value-a.value)[0],pick=strongMade||ranked[0];
+  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),valueCounts=counts(values),difficulty=Math.min(1,.45+profile.unlocked*.0055),ranked=open.map((category)=>{const score=scoreCategory(category.id,values);return{category,score,value:aiCategoryValue(category,score,values)+(Math.random()-.5)*(1-difficulty)*7};}).sort((a,b)=>b.value-a.value),strongMade=ranked.filter(({category,score})=>score>0&&["l8","l3","l6","l5","l4"].includes(category.id)).sort((a,b)=>b.value-a.value)[0],madeUpper=ranked.filter(({category})=>category.upper&&valueCounts[Number(category.id[1])]>=3).sort((a,b)=>b.score-a.score)[0],pick=strongMade||madeUpper||ranked[0];
   aiScores[pick.category.id]=pick.score;
   lastScore={who:"ai",id:pick.category.id};
   updateSuggestions();

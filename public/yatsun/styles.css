@@ -134,8 +134,8 @@ body.playing .game-shell .ai-reaction{top:18px}
 .game-shell .score-panel{margin-top:4px}
 
 /* Slutfixar: hover får aldrig ändra kubens landningsvinkel. */
-.game-shell .die.die-3d:not(.rolling):hover{filter:drop-shadow(0 10px 10px #18372940);transform:translate(calc(-50% + var(--x)),calc(-54% + var(--y))) rotate(var(--rot)) scale(1.025)}
-.game-shell .die.die-3d.held:not(.rolling):hover{filter:drop-shadow(0 0 10px #ffc45d);transform:translate(calc(-50% + var(--x)),calc(-63% + var(--y))) rotate(var(--rot)) scale(1.025)}
+.game-shell .die.die-3d:not(.rolling):hover{filter:drop-shadow(0 10px 10px #18372940);transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--rot))}
+.game-shell .die.die-3d.held:not(.rolling):hover{filter:drop-shadow(0 0 10px #ffc45d);transform:translate(calc(-50% + var(--x)),calc(-61% + var(--y))) rotate(var(--rot))}
 .game-shell .die.die-3d:not(.rolling):hover .die-cube{transform:var(--landing)}
 
 /* Samma poängbricka för båda spelarna, utan en andra kapsel runt AI-poängen. */

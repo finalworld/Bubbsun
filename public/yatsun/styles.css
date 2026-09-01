@@ -171,10 +171,10 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .game-shell .scored .score-choice,.game-shell .score-section-block .ai-score.filled span{position:absolute!important;left:50%;top:calc(50% - 2px);margin:0!important;transform:translate(-50%,-50%)}
 
 /* Riktig glTF-tärning; CSS-kuben visas endast tills WebGL-modellen är redo. */
-.die-3d .die-model{position:absolute;inset:-8px;width:96px;height:96px;display:block;opacity:0;pointer-events:none;transition:opacity .14s ease;filter:drop-shadow(0 8px 5px #173a2a55)}
+.die-3d .die-model{position:absolute;inset:-32px;width:144px;height:144px;display:block;opacity:0;pointer-events:none;transition:opacity .14s ease;filter:drop-shadow(0 8px 5px #173a2a55)}
 .die-3d .die-model.ready{opacity:1}.die-3d .die-cube.model-ready{visibility:hidden!important}
 .game-shell .die.die-3d.held .die-model{filter:drop-shadow(0 0 7px #ffc94f) drop-shadow(0 8px 5px #173a2a55)}
-@media(max-width:680px){.die-3d .die-model{inset:-6px;width:60px;height:60px}}
+@media(max-width:680px){.die-3d .die-model{inset:-21px;width:90px;height:90px}}
 
 /* Smalare sektionsrygg ger mer plats åt namn och poäng. */
 .score-section-block{grid-template-columns:40px 1fr}

@@ -33,8 +33,8 @@ function disposeDieViews(){activeDieViews.forEach((view)=>{view.stopped=true;vie
 async function mountDieModel(canvas,fallback,value,rolling,index){
   try{
     const source=await dieModelPromise;if(!canvas.isConnected)return;
-    const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.64,.64,.64,-.64,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
-    renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(96,96,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
+    const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.96,.96,.96,-.96,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
+    renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(144,144,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
     const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),settledScale=1.06/Math.max(size.x,size.y,size.z),rollingScale=.78/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(rolling?rollingScale:settledScale);scene.add(model);
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
     const target=dieOrientations[value],view={renderer,stopped:false};activeDieViews.push(view);canvas.classList.add("ready");fallback.classList.add("model-ready");

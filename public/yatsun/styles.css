@@ -124,8 +124,8 @@ body.playing .site-header .chat-button{width:46px;height:46px}
 body.playing .site-header .reaction-picker{position:absolute;top:55px;right:0;width:370px}
 body.playing .site-header .player-reaction{position:absolute;top:55px;right:0;left:auto}
 body.playing .game-shell .dice-tray{inset:10px 16px 92px}
-body.playing .game-shell .ai-reaction{top:18px}
-@media(max-width:680px){body.playing .site-header .turn-heading{gap:5px;margin-right:0}body.playing .site-header .turn-heading>div:first-child{min-width:76px}body.playing .site-header .turn-heading small{font-size:7px;letter-spacing:.7px}body.playing .site-header .turn-heading h2{font-size:14px}body.playing .site-header .chat-button{width:38px;height:38px}body.playing .site-header .chat-glyph{width:27px;height:21px}body.playing .site-header .reaction-picker{position:fixed;top:auto;right:10px;bottom:12px;width:auto}body.playing .game-shell .dice-tray{inset:8px 8px 82px}}
+body.playing .site-header .ai-reaction{position:absolute;top:55px!important;right:62px!important;left:auto!important;transform-origin:90% 0}
+@media(max-width:680px){body.playing .site-header .turn-heading{gap:5px;margin-right:0}body.playing .site-header .turn-heading>div:first-child{min-width:76px}body.playing .site-header .turn-heading small{font-size:7px;letter-spacing:.7px}body.playing .site-header .turn-heading h2{font-size:14px}body.playing .site-header .chat-button{width:38px;height:38px}body.playing .site-header .chat-glyph{width:27px;height:21px}body.playing .site-header .reaction-picker{position:fixed;top:auto;right:10px;bottom:12px;width:auto}body.playing .site-header .ai-reaction{top:46px!important;right:43px!important}body.playing .game-shell .dice-tray{inset:8px 8px 82px}}
 
 .game-shell .final-total tr>*{height:38px!important;border-top:3px solid #77785b!important;background:#eee9d8!important;color:#241b18;font-size:15px!important}
 .game-shell .final-total th{letter-spacing:.7px}

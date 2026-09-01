@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=701111111" />
+    <link rel="stylesheet" href="./styles.css?v=701111111111" />
   </head>
   <body>
     <header class="site-header">
@@ -59,13 +59,17 @@
             <div class="avatar peach">AI</div>
             <div><small>MOTSTÅNDARE 1/100</small><strong>Maj-Britt Blixt</strong><span>Nybörjare</span></div>
           </article>
-          <button class="back-button back-to-modes" type="button">← Till spellägen</button>
+          <div class="match-actions">
+            <button id="restart-match" type="button">↻ Starta om</button>
+            <button id="end-match" type="button">Avsluta match</button>
+          </div>
+          <button id="test-yatsun" class="test-yatsun" type="button">✦ YATSUN!</button>
         </aside>
 
         <section class="table-area">
           <div class="turn-heading">
             <div><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
-            <div class="turn-tools"><p id="roll-hint">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button">💬 CHAT</button></div>
+            <div class="turn-tools"><p id="roll-hint" class="hidden">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button" aria-label="Öppna reaktioner"><span class="chat-glyph" aria-hidden="true"></span></button></div>
           </div>
           <div id="reaction-bubble-player" class="reaction-bubble player-reaction hidden"><i></i></div>
           <div id="reaction-bubble-ai" class="reaction-bubble ai-reaction hidden"><i></i></div>
@@ -78,30 +82,28 @@
             <div class="tray-shadow"></div>
           </div>
           <button id="roll-button" class="roll-button" type="button">
-            <span>⚄</span><b>KASTA TÄRNINGARNA</b><small>3 kast kvar</small>
+            <span class="roll-die-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>KASTA TÄRNINGARNA</b><small>3 kast kvar</small>
           </button>
         </section>
 
         <aside class="score-panel">
-          <header><div><small>PROTOKOLL</small><h2>Gästspelare</h2></div><strong><span id="grand-total">0</span> <small>p</small></strong></header>
+          <h2 class="hidden">Gästspelare</h2><div class="score-card-head"><span>KOMBINATION</span><b>DU</b><b class="ai-name">AI</b></div>
           <div class="score-scroll">
-            <table>
-              <thead><tr><th>ÖVRE DELEN</th><th>DU</th><th class="ai-name">AI</th></tr></thead>
-              <tbody id="upper-score"></tbody>
-              <tbody class="summary">
+            <section class="score-section-block upper-block"><strong>ÖVRE DELEN</strong><table>
+              <tbody id="upper-score"></tbody><tbody class="summary">
                 <tr><th>Summa</th><td id="upper-total">0</td><td id="ai-upper-total">0</td></tr>
-                <tr><th>Bonus vid 63</th><td id="bonus">—</td><td id="ai-bonus">—</td></tr>
               </tbody>
-            </table>
-            <table>
-              <thead><tr><th>UNDRE DELEN</th><th>DU</th><th class="ai-name">AI</th></tr></thead>
+            </table></section>
+            <section class="score-section-block lower-block"><strong>UNDRE DELEN</strong><table>
               <tbody id="lower-score"></tbody>
-            </table>
-            <div class="opponent-total"><span>Totalt</span><strong><b id="player-total-small">0</b> – <b id="ai-total">0</b> p</strong></div>
+            </table></section>
+            <div class="opponent-total"><span><b>TOTALT</b><small>Övre <i id="upper-total-note">0</i> · Bonus <i id="bonus">0</i></small></span><strong><b id="player-total-small">0</b><b id="ai-total">0</b></strong></div>
           </div>
         </aside>
       </section>
     </main>
+
+    <div id="yatsun-celebration" class="yatsun-celebration hidden" aria-live="polite"><canvas></canvas><div><small>FEM LIKA!</small><strong>YATSUN!</strong><span>✦</span></div></div>
 
     <div id="result-modal" class="result-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
       <article><span id="result-icon">🏆</span><small>MATCHEN ÄR KLAR</small><h2 id="result-title">Du vann!</h2><p id="result-copy"></p><div class="result-scores"><b id="result-player">0</b><span>–</span><b id="result-ai">0</b></div><button id="play-again" type="button">SPELA IGEN</button><button class="back-to-modes subtle" type="button">TILL SPELLÄGEN</button></article>
@@ -120,6 +122,6 @@
       </article>
     </div>
 
-    <script type="module" src="./app.js?v=701111111"></script>
+    <script type="module" src="./app.js?v=701111111111"></script>
   </body>
 </html>

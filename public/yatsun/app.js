@@ -83,6 +83,7 @@ function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finish
 function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});scatterDice();rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";setRollButtonState();}
 function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
+const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));
 const reactionPositions=[[0,0],[33.333,0],[66.667,0],[100,0],[0,100],[33.333,100],[66.667,100],[100,100]];
 function reactionStyle(element,id){const [x,y]=reactionPositions[id];element.style.backgroundPosition=`${x}% ${y}%`;}
 function showReaction(who,id){const bubble=$(who==="ai"?"#reaction-bubble-ai":"#reaction-bubble-player"),icon=bubble.querySelector("i");reactionStyle(icon,id);bubble.classList.remove("hidden");clearTimeout(bubble.hideTimer);bubble.hideTimer=setTimeout(()=>bubble.classList.add("hidden"),2600);}
@@ -93,7 +94,37 @@ function triggerYatsun(){
   const start=performance.now();function frame(now){if(layer.celebrationRun!==run)return;context.clearRect(0,0,innerWidth,innerHeight);particles.forEach((p)=>{p.vx*=p.drag;p.vy=p.vy*p.drag+p.gravity;p.x+=p.vx;p.y+=p.vy;p.rotation+=p.spin;context.save();context.translate(p.x,p.y);context.rotate(p.rotation);context.fillStyle=p.color;if(p.ribbon){context.beginPath();context.moveTo(-p.width,0);context.bezierCurveTo(-p.width/2,-p.height,p.width/2,p.height,p.width,0);context.lineWidth=3;context.strokeStyle=p.color;context.stroke();}else context.fillRect(-p.width/2,-p.height/2,p.width,p.height);context.restore();});if(now-start<5600)requestAnimationFrame(frame);else layer.classList.add("hidden");}requestAnimationFrame(frame);
 }
 async function chooseScore(id){if(!rolls||busy||id in playerScores)return;const chosen=scoreCategory(id,dice.map((d)=>d.value));playerScores[id]=chosen;if(id==="l8"&&chosen===50)triggerYatsun();busy=true;updateSuggestions();saveMatch();await aiTurn();if(Object.keys(playerScores).length===categories.length){finishMatch();return;}busy=false;resetTurn();saveMatch();}
-async function aiTurn(){rollButton.disabled=true;$(".turn-heading h2").textContent=`${opponentName()} kastar`;rollHint.textContent="Datorn spelar sin egen tur…";dice.forEach((d)=>d.held=false);for(let round=1;round<=3;round++){playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});scatterDice();rollNumber.textContent=String(round);renderDice(true);await delay(720);const target=[1,2,3,4,5,6].map((value)=>({value,count:dice.filter((d)=>d.value===value).length,weight:value/15})).sort((a,b)=>(b.count+b.weight)-(a.count+a.weight))[0].value;dice.forEach((die)=>die.held=die.value===target);renderDice();await delay(220);}const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),ranked=open.map((category)=>({category,score:scoreCategory(category.id,values)})).sort((a,b)=>b.score-a.score),difficulty=Math.min(1,.32+profile.unlocked*.0068),mistake=Math.random()>difficulty,pick=mistake&&ranked.length>2?ranked[Math.floor(Math.random()*Math.min(4,ranked.length))]:ranked[0];aiScores[pick.category.id]=pick.score;updateSuggestions();showReaction("ai",pick.score>=25?[0,1,2,6][Math.floor(Math.random()*4)]:pick.score===0?[4,5,7][Math.floor(Math.random()*3)]:Math.random()<.5?3:6);await delay(650);}
+async function aiTurn(){
+  const name=opponentName();
+  rollButton.disabled=true;
+  rollHint.textContent="Motståndaren spelar sin tur…";
+  dice.forEach((d)=>d.held=false);
+  await humanPause(650,1100);
+  for(let round=1;round<=3;round++){
+    $(".turn-heading h2").textContent=`${name} kastar…`;
+    await humanPause(round===1?450:750,round===1?850:1350);
+    playDiceSound();
+    dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});
+    scatterDice();
+    rollNumber.textContent=String(round);
+    renderDice(true);
+    await delay(1650);
+    $(".turn-heading h2").textContent=`${name} funderar…`;
+    await humanPause(850,1550);
+    const target=[1,2,3,4,5,6].map((value)=>({value,count:dice.filter((d)=>d.value===value).length,weight:value/15})).sort((a,b)=>(b.count+b.weight)-(a.count+a.weight))[0].value;
+    dice.forEach((die)=>die.held=die.value===target);
+    renderDice();
+    await humanPause(450,800);
+    if(dice.every((die)=>die.held))break;
+  }
+  $(".turn-heading h2").textContent=`${name} väljer…`;
+  await humanPause(950,1650);
+  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),ranked=open.map((category)=>({category,score:scoreCategory(category.id,values)})).sort((a,b)=>b.score-a.score),difficulty=Math.min(1,.32+profile.unlocked*.0068),mistake=Math.random()>difficulty,pick=mistake&&ranked.length>2?ranked[Math.floor(Math.random()*Math.min(4,ranked.length))]:ranked[0];
+  aiScores[pick.category.id]=pick.score;
+  updateSuggestions();
+  showReaction("ai",pick.score>=25?[0,1,2,6][Math.floor(Math.random()*4)]:pick.score===0?[4,5,7][Math.floor(Math.random()*3)]:Math.random()<.5?3:6);
+  await humanPause(900,1300);
+}
 function restoreDice(saved){saved?.forEach((value,index)=>Object.assign(dice[index],value));}
 function startGame(){const saved=loadMatch();playerScores=saved?.playerScores||{};aiScores=saved?.aiScores||{};rolls=saved?.rolls||0;busy=false;restoreDice(saved?.dice);buildScorecard();if(!saved)resetTurn();else{renderDice();rollNumber.textContent=String(Math.max(1,rolls));rollButton.disabled=rolls>=3;rollButton.querySelector("small").textContent=`${3-rolls} kast kvar`;rollHint.textContent=rolls?"Fortsätt där du slutade.":"Kasta alla fem tärningarna.";}const name=opponentName(saved?.opponentLevel||profile.unlocked);$$(".player-card")[0].querySelector("strong").textContent=authDisplayName;$$(".player-card")[0].querySelector("span").textContent=`Nivå ${profile.unlocked} · ${profile.soloXp} XP`;$(".score-panel h2").textContent=authDisplayName;$$('.ai-name').forEach((cell)=>cell.textContent=name.split(" ")[0]);$$(".player-card")[1].querySelector("strong").textContent=name;$$(".player-card")[1].querySelector("small").textContent=`MOTSTÅNDARE ${saved?.opponentLevel||profile.unlocked}/100`;$("#result-modal").classList.add("hidden");$(".turn-heading h2").textContent="Din tur!";showScreen("#game-screen");updateSuggestions();saveMatch();}
 function finishMatch(){const player=totals(playerScores).total,ai=totals(aiScores).total,won=player>ai,draw=player===ai,reward=won?100:draw?75:0;clearMatch();profile.soloXp+=reward;if(won&&profile.unlocked<100)profile.unlocked++;saveProfile();updateProfileUi();$("#result-icon").textContent=won?"🏆":draw?"🤝":"🎲";$("#result-title").textContent=won?"Du vann!":draw?"Oavgjort!":"Nästa gång tar du det!";$("#result-copy").textContent=won?`+100 Singel-XP. Nästa motståndare är ${opponentName()}.`:draw?"+75 Singel-XP.":"Ingen XP den här gången.";$("#result-player").textContent=player;$("#result-ai").textContent=ai;$("#result-modal").classList.remove("hidden");busy=false;}

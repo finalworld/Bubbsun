@@ -135,7 +135,7 @@ function updateSuggestions(){
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
 function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";setRollButtonState();}
-function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
+function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));
 const reactionPositions=[[0,0],[33.333,0],[66.667,0],[100,0],[0,100],[33.333,100],[66.667,100],[100,100]];
@@ -150,6 +150,7 @@ function triggerYatsun(){
 async function chooseScore(id){if(!rolls||busy||id in playerScores)return;const chosen=scoreCategory(id,dice.map((d)=>d.value));playerScores[id]=chosen;lastScore={who:"player",id};if(id==="l8"&&chosen===50)triggerYatsun();busy=true;updateSuggestions();saveMatch();await aiTurn();if(Object.keys(playerScores).length===categories.length){finishMatch();return;}busy=false;resetTurn();saveMatch();}
 async function aiTurn(){
   const name=opponentName();
+  rollButton.classList.add("hidden");
   rollButton.disabled=true;
   rollHint.textContent="Motståndaren spelar sin tur…";
   dice.forEach((d)=>d.held=false);

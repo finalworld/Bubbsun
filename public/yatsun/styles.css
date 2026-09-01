@@ -21,3 +21,22 @@ body.playing{height:100dvh;overflow:hidden;background:#f1eafb}body.playing main{
 .game-shell .roll-button{position:absolute;z-index:5;left:50%;bottom:118px;margin:0;transform:translateX(-50%)}
 .game-shell .roll-button:hover{transform:translateX(-50%) translateY(-1px)}
 @media(max-width:680px){.game-shell .roll-button{bottom:103px}}
+
+/* Samma tärningskonstruktion som Bubb Yatzy: en tydlig resultatsida efter landning. */
+.game-shell .die.die-3d{position:absolute;left:50%;top:42%;width:96px;height:112px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;perspective:700px;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--rot));transition:filter .18s,transform .28s}
+.game-shell .die.die-3d:hover{transform:translate(calc(-50% + var(--x)),calc(-54% + var(--y))) rotate(var(--rot))}
+.game-shell .die.die-3d.held{filter:none;transform:translate(calc(-50% + var(--x)),calc(-61% + var(--y))) rotate(var(--rot))}
+.die-3d .die-travel{position:absolute;left:8px;top:7px;width:80px;height:80px;transform-style:preserve-3d;transform:translate(0,0)}
+.die-3d .die-cube{position:absolute;inset:0;width:auto;height:auto;display:block;transform-style:preserve-3d;transform:var(--landing);transition:transform .24s cubic-bezier(.2,.75,.25,1.25)}
+.die-3d .cube-face{position:absolute;inset:0;display:grid;place-items:center;border:2px solid #3e2e1f29;border-radius:16px;background:linear-gradient(145deg,#fffdf7 0%,#f7efdd 68%,#d8ceb8 100%);box-shadow:inset 5px 5px 10px #fffc,inset -5px -6px 10px #5b452b24;backface-visibility:hidden}
+.die-3d .cube-face .pip{position:absolute;width:13px;height:13px;border-radius:50%;background:#153b29;box-shadow:inset 2px 2px 2px #00000061,0 1px #fff}
+.die-3d .face-1{transform:translateZ(40px)}.die-3d .face-2{transform:rotateY(90deg) translateZ(40px)}.die-3d .face-3{transform:rotateX(90deg) translateZ(40px)}.die-3d .face-4{transform:rotateX(-90deg) translateZ(40px)}.die-3d .face-5{transform:rotateY(-90deg) translateZ(40px)}.die-3d .face-6{transform:rotateY(180deg) translateZ(40px)}
+.die-3d .die-shadow{position:absolute;left:15px;top:76px;width:70px;height:18px;border-radius:50%;background:#0f1d1459;filter:blur(7px);transform:scale(.9)}
+.game-shell .die.die-3d.held .cube-face{background:linear-gradient(145deg,#fff9df 0%,#f4e6b5 68%,#cfbd83 100%);border-color:#f3c44d;box-shadow:inset 5px 5px 10px #ffffffbf,inset -5px -6px 10px #5b452b29,0 0 0 2px #f3c44d59}
+.game-shell .die.die-3d.held .die-shadow{background:#eeb82a8c}
+.die-3d:not(.rolling) .cube-face:not(.result-face){visibility:hidden}
+.game-shell .die.die-3d.rolling{animation:none}.die-3d.rolling .die-travel{animation:bubb-cube-travel 1.34s var(--roll-delay) cubic-bezier(.12,.68,.18,1) both}.die-3d.rolling .die-cube{animation:bubb-cube-tumble 1.34s var(--roll-delay) cubic-bezier(.12,.72,.21,1) both}.die-3d.rolling .die-shadow{animation:bubb-cube-shadow 1.34s var(--roll-delay) ease-out both}
+@keyframes bubb-cube-travel{0%{transform:translate3d(var(--enter-x),var(--enter-y),0)}38%{transform:translate3d(var(--cross-x),var(--cross-y),0)}63%{transform:translate3d(var(--bounce-x),var(--bounce-y),0)}76%{transform:translate(13px,-17px)}86%{transform:translate(-7px,8px)}94%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}}
+@keyframes bubb-cube-tumble{0%{transform:rotateX(var(--spin-x)) rotateY(var(--spin-y)) rotateZ(190deg)}42%{transform:rotateX(-420deg) rotateY(510deg) rotateZ(-145deg)}72%{transform:rotateX(165deg) rotateY(-130deg) rotateZ(42deg)}100%{transform:var(--landing)}}
+@keyframes bubb-cube-shadow{0%{opacity:.06;transform:scale(.3) translateX(80px)}38%{opacity:.2;transform:scale(.55)}70%{opacity:.34;transform:scale(.72)}100%{opacity:1;transform:scale(.9)}}
+@media(max-width:680px){.game-shell .die.die-3d{width:58px;height:73px}.die-3d .die-travel{left:6px;top:6px;width:48px;height:48px}.die-3d .cube-face{border-radius:10px}.die-3d .cube-face .pip{width:8px;height:8px}.die-3d .face-1{transform:translateZ(24px)}.die-3d .face-2{transform:rotateY(90deg) translateZ(24px)}.die-3d .face-3{transform:rotateX(90deg) translateZ(24px)}.die-3d .face-4{transform:rotateX(-90deg) translateZ(24px)}.die-3d .face-5{transform:rotateY(-90deg) translateZ(24px)}.die-3d .face-6{transform:rotateY(180deg) translateZ(24px)}.die-3d .die-shadow{left:9px;top:48px;width:42px;height:12px}}

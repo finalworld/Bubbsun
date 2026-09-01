@@ -91,3 +91,16 @@ body.playing .site-header .nav-link{display:none}.game-shell{background:transpar
 @media(max-width:900px){.game-shell .score-panel{align-self:stretch;margin:0;border-width:4px 0 0;border-radius:0}.game-shell .score-scroll{padding:8px}.game-shell .dice-tray{inset:53px 8px 8px}.game-shell .roll-button{right:20px;bottom:25px}.test-yatsun{display:none}}
 @media(max-width:680px){.reaction-picker{left:10px;right:10px;width:auto;padding:15px}.reaction-picker>div{gap:9px}.reaction-bubble{right:7px!important;top:55px!important}.game-shell .roll-button{right:14px;bottom:18px;min-width:220px;min-height:62px}.score-section-block{grid-template-columns:42px 1fr}.score-section-block>strong{font-size:9px}}
 .yatsun-celebration>div{animation-duration:5.2s}
+
+/* A landed die keeps the same cube used during the roll, but settles almost
+   face-on so its value is unmistakable and the side faces form one solid edge. */
+.game-shell .die.die-3d{perspective:1100px}
+.die-3d .cube-face:not(.face-1){border-radius:3px;border-color:#c8bea9}
+.die-3d .face-2,.die-3d .face-5{background:linear-gradient(90deg,#e0d6c1,#fffaf0)}
+.die-3d .face-3,.die-3d .face-4{background:linear-gradient(180deg,#fffaf0,#ddd2bc)}
+.die-3d .face-6{background:#e4dac5}
+.game-shell .die.die-3d.held .die-cube{transform:var(--landing)}
+.die-3d:not(.rolling) .cube-face:not(.face-1){visibility:hidden}
+.die-3d:not(.rolling) .face-1{box-shadow:inset 5px 5px 10px #fffc,inset -5px -6px 10px #5b452b24,0 7px 0 #c8bda8,0 13px 15px #18372959}
+.game-shell .die.die-3d.held:not(.rolling) .face-1{box-shadow:inset 5px 5px 10px #ffffffbf,inset -5px -6px 10px #5b452b29,0 0 0 2px #f3c44d59,0 7px 0 #cfb76e,0 13px 15px #18372959}
+@media(max-width:680px){.die-3d .cube-face:not(.face-1){border-radius:2px}}

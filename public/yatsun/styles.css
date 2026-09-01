@@ -151,3 +151,8 @@ body.playing .game-shell .roll-button{right:36px;bottom:112px}
 .reaction-option{aspect-ratio:3/4}
 .reaction-bubble{width:100px;height:132px}
 @media(max-width:680px){.reaction-bubble{width:82px;height:108px}}
+
+.game-shell .score-section-block .ai-score.filled span{min-width:38px;min-height:0;padding:3px 7px;border-radius:10px;font-size:14px;line-height:1.15}
+body.playing .game-shell .roll-button{right:52px;bottom:130px}
+@media(max-width:900px){body.playing .game-shell .roll-button{right:32px;bottom:108px}}
+@media(max-width:680px){body.playing .game-shell .roll-button{right:24px;bottom:102px}}

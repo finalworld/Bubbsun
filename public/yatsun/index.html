@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=3" />
   </head>
   <body>
     <header class="site-header">
@@ -17,8 +17,8 @@
         <nav aria-label="Huvudmeny">
           <button class="nav-link active" type="button">Spela</button>
           <button class="nav-link" type="button">Topplista</button>
-          <button class="profile-button" type="button" aria-label="Öppna din profil">
-            <span>GS</span><b>Gästspelare</b>
+          <button id="profile-button" class="profile-button" type="button" aria-label="Logga in eller öppna din profil">
+            <span id="profile-avatar">GS</span><b id="profile-name">Logga in</b>
           </button>
         </nav>
       </div>
@@ -101,6 +101,19 @@
       <article><span id="result-icon">🏆</span><small>MATCHEN ÄR KLAR</small><h2 id="result-title">Du vann!</h2><p id="result-copy"></p><div class="result-scores"><b id="result-player">0</b><span>–</span><b id="result-ai">0</b></div><button id="play-again" type="button">SPELA IGEN</button><button class="back-to-modes subtle" type="button">TILL SPELLÄGEN</button></article>
     </div>
 
-    <script src="./app.js"></script>
+    <div id="login-modal" class="result-backdrop login-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <article>
+        <button id="close-login" class="modal-close" type="button" aria-label="Stäng">×</button>
+        <img class="login-logo" src="./yatsun-logo.png" alt="" />
+        <small>ETT KONTO FÖR BUBBSUN & YATSUN</small>
+        <h2 id="login-title">Spara ditt spel</h2>
+        <p id="login-copy">Logga in med samma Google-konto som på Bubbsun. Är du redan inloggad där känns du igen automatiskt.</p>
+        <button id="google-login" class="google-button" type="button"><b>G</b> FORTSÄTT MED GOOGLE</button>
+        <button id="logout-button" class="subtle hidden" type="button">LOGGA UT</button>
+        <p id="login-error" class="login-error" role="alert"></p>
+      </article>
+    </div>
+
+    <script type="module" src="./app.js?v=3"></script>
   </body>
 </html>

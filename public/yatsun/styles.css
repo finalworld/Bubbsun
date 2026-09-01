@@ -113,3 +113,17 @@ body.playing .site-header .nav-link{display:none}.game-shell{background:transpar
 .game-shell .score-section-block .ai-score.filled{display:table-cell;padding:3px 5px;text-align:center}
 .game-shell .score-section-block .ai-score.filled span{display:inline-grid;min-width:40px;min-height:25px;place-items:center;margin:auto;padding:2px 8px}
 .score-section-block{margin-bottom:10px}
+
+/* Matchstatusen hör ihop med spelaren och ligger därför i toppfältet. */
+.site-header .turn-heading{display:none}
+body.playing .site-header nav{position:relative;margin-left:auto}
+body.playing .site-header .turn-heading{position:relative;display:flex;width:auto;height:auto;align-items:center;gap:14px;margin-right:6px;padding:0}
+body.playing .site-header .turn-heading>div:first-child{min-width:112px;text-align:right}
+body.playing .site-header .turn-heading small{display:block;margin:0 0 2px;color:#506b50;font-size:9px;line-height:1}
+body.playing .site-header .turn-heading h2{margin:0;font-size:19px;line-height:1}
+body.playing .site-header .chat-button{width:46px;height:46px}
+body.playing .site-header .reaction-picker{position:absolute;top:55px;right:0;width:370px}
+body.playing .site-header .player-reaction{position:absolute;top:55px;right:0;left:auto}
+body.playing .game-shell .dice-tray{inset:10px 16px 92px}
+body.playing .game-shell .ai-reaction{top:18px}
+@media(max-width:680px){body.playing .site-header .turn-heading{gap:5px;margin-right:0}body.playing .site-header .turn-heading>div:first-child{min-width:76px}body.playing .site-header .turn-heading small{font-size:7px;letter-spacing:.7px}body.playing .site-header .turn-heading h2{font-size:14px}body.playing .site-header .chat-button{width:38px;height:38px}body.playing .site-header .chat-glyph{width:27px;height:21px}body.playing .site-header .reaction-picker{position:fixed;top:auto;right:10px;bottom:12px;width:auto}body.playing .game-shell .dice-tray{inset:8px 8px 82px}}

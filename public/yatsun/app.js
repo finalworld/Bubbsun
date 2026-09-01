@@ -3,6 +3,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signO
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as Matter from "https://cdn.jsdelivr.net/npm/matter-js@0.20.0/+esm";
 
 const firebaseApp = initializeApp({apiKey:"AIzaSyBuJP3imBBQZ7CWJzUhosSbyEhi_Z0lgj8",authDomain:"bubbsan-c3ec7.firebaseapp.com",projectId:"bubbsan-c3ec7",storageBucket:"bubbsan-c3ec7.firebasestorage.app",messagingSenderId:"999127046153",appId:"1:999127046153:web:4ddd2814db25f691d800d8"});
 const auth = getAuth(firebaseApp), firestore = getFirestore(firebaseApp);
@@ -39,7 +40,7 @@ async function mountDieModel(canvas,fallback,value,rolling,index){
     const target=dieOrientations[value],view={renderer,stopped:false};activeDieViews.push(view);canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
     if(!rolling){model.rotation.set(...target);render();return;}
-    const start=performance.now(),duration=1500,spinX=(5+index)*Math.PI*2,spinY=(6+index%3)*Math.PI*2,spinZ=(3+index%2)*Math.PI*2;
+    const start=performance.now(),duration=2700,spinX=(7+index)*Math.PI*2,spinY=(8+index%3)*Math.PI*2,spinZ=(4+index%2)*Math.PI*2;
     const frame=(now)=>{if(view.stopped||!canvas.isConnected)return;const t=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-t,3),remaining=1-ease;model.rotation.set(target[0]+spinX*remaining,target[1]+spinY*remaining,target[2]+spinZ*remaining);render();if(t<1)requestAnimationFrame(frame);};requestAnimationFrame(frame);
   }catch(error){console.warn("3D-tärningen kunde inte laddas",error);}
 }
@@ -61,25 +62,45 @@ function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen"].forEac
 function renderDice(animate=false) {
   disposeDieViews();
   diceRoot.innerHTML="";
-  const trayBox=diceRoot.getBoundingClientRect(),trayWidth=trayBox.width||800,trayHeight=trayBox.height||500;
+  const trayBox=diceRoot.getBoundingClientRect(),trayWidth=trayBox.width||800,trayHeight=trayBox.height||500,rollingButtons=[];
   dice.forEach((die,index)=>{
     const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span"),canvas=document.createElement("canvas");
     button.type="button";
     button.className=`die die-3d${die.held?" held":""}${animate&&!die.held?" rolling":""}`;
     shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
-    const landLeft=[13,31,50,69,87][index],landTop=15+(die.value*19+index*27)%47,restAngle=(die.value*13+index*17)%29-14;
-    button.style.setProperty("--land-left",`${landLeft}%`);button.style.setProperty("--land-top",`${landTop}%`);button.style.setProperty("--rest-angle",`${restAngle}deg`);
-    const finalX=trayWidth*landLeft/100,finalY=trayHeight*landTop/100,startY=trayHeight*(.42+(index-2)*.025),impactLeft=[.07,.12,.06,.15,.09][index],impactTop=[.24,.76,.42,.12,.87][index],reboundLeft=[.46,.72,.58,.79,.64][index],reboundTop=[.62,.34,.78,.53,.23][index],direction=index%2?-1:1;
-    button.style.setProperty("--enter-x",`${trayWidth*1.06-finalX}px`);button.style.setProperty("--enter-y",`${startY-finalY}px`);button.style.setProperty("--impact-x",`${trayWidth*impactLeft-finalX}px`);button.style.setProperty("--impact-y",`${trayHeight*impactTop-finalY}px`);button.style.setProperty("--rebound-x",`${trayWidth*reboundLeft-finalX}px`);button.style.setProperty("--rebound-y",`${trayHeight*reboundTop-finalY}px`);button.style.setProperty("--settle-x",`${direction*(18+index*2)}px`);button.style.setProperty("--settle-y",`${index%2?-13:15}px`);button.style.setProperty("--spin-x",`${direction*(900+index*210)}deg`);button.style.setProperty("--spin-y",`${(index%2?-1:1)*(1080+index*150)}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");button.style.setProperty("--roll-delay",`${index*38}ms`);
+    const restAngle=die.rot||0,x=trayWidth/2+die.x,y=trayHeight/2+die.y;
+    button.style.left=`${x}px`;button.style.top=`${y}px`;button.style.setProperty("--rest-angle",`${restAngle}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");
     button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
     travel.append(cube,canvas);button.append(shadow,travel);
-    if(animate&&!die.held)setTimeout(()=>button.classList.remove("rolling"),1600);
+    if(animate&&!die.held)rollingButtons.push({button,die,index});
     button.addEventListener("click",()=>{if(!rolls||busy)return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die.value,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
-  if(animate){hideSuggestions();suggestionTimer=setTimeout(updateSuggestions,1600);}else updateSuggestions();
+  if(animate){hideSuggestions();runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
+}
+function runDicePhysics(entries,width,height){
+  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?46:70,wall=60;
+  const walls=[Bodies.rectangle(width/2,-wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(width/2,height+wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(-wall/2,height/2,wall,height+wall*2,{isStatic:true}),Bodies.rectangle(width+wall/2,height/2,wall,height+wall*2,{isStatic:true})];
+  const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
+  dice.forEach((die,index)=>{
+    const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-80],[-62,-40],[0,0],[-62,40],[0,80]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;
+    const body=Bodies.rectangle(startX,startY,size,size,{label:`die-${die.id}`,isStatic:!active,chamfer:{radius:size*.16},restitution:.68,friction:.13,frictionStatic:.28,frictionAir:.015,density:.0022,angle:(die.rot||0)*Math.PI/180});
+    body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.height=0;body.verticalVelocity=active?5.2+Math.random()*1.8:0;bodies.push(body);
+    if(active){Body.setVelocity(body,{x:-8-Math.random()*2.5,y:(index-2)*1.45+(Math.random()-.5)*1.2});Body.setAngularVelocity(body,(Math.random()-.5)*.34);}
+  });
+  Composite.add(engine.world,[...walls,...bodies]);
+  const start=performance.now(),fixedStep=1000/60,maxDuration=3200;
+  function frame(now){
+    Engine.update(engine,fixedStep);
+    bodies.forEach((body)=>{if(body.isStatic||!body.button)return;body.height+=body.verticalVelocity;body.verticalVelocity-=.42;if(body.height<0){body.height=0;body.verticalVelocity=Math.abs(body.verticalVelocity)*.43;if(body.verticalVelocity<.55)body.verticalVelocity=0;}const angle=body.angle*180/Math.PI;body.button.style.left=`${body.position.x}px`;body.button.style.top=`${body.position.y}px`;body.button.style.setProperty("--rest-angle",`${angle}deg`);body.button.style.transform=`translate(-50%,-50%) translateY(${-body.height}px) rotate(${angle}deg)`;});
+    const moving=bodies.some((body)=>!body.isStatic&&(body.speed>.22||Math.abs(body.angularSpeed)>.012||body.height>.2));
+    if(now-start<maxDuration&&(now-start<1450||moving)){requestAnimationFrame(frame);return;}
+    bodies.forEach((body)=>{if(body.isStatic)return;body.die.x=Math.round(body.position.x-width/2);body.die.y=Math.round(body.position.y-height/2);body.die.rot=Math.round(body.angle*180/Math.PI)%360;if(body.button){body.button.style.transform="";body.button.classList.remove("rolling");}});
+    Composite.clear(engine.world,false);Engine.clear(engine);saveMatch();updateSuggestions();
+  }
+  requestAnimationFrame(frame);
 }
 function scatterDice(){
   const compact=window.innerWidth<680,candidates=compact?[[-112,-48],[-56,-48],[0,-48],[56,-48],[112,-48],[-112,32],[-56,32],[0,32],[56,32],[112,32]]:[[-210,-92],[-105,-92],[0,-92],[105,-92],[210,-92],[-210,44],[-105,44],[0,44],[105,44],[210,44]],minimum=compact?66:112,occupied=dice.filter((die)=>die.held).map((die)=>[die.x,die.y]);
@@ -106,7 +127,7 @@ function updateSuggestions(){
   const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;setRollButtonState();if(aiScores.l8===50&&!aiYatsunCelebrated){aiYatsunCelebrated=true;triggerYatsun();}
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
-function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});scatterDice();rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";setRollButtonState();}
+function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";setRollButtonState();}
 function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));

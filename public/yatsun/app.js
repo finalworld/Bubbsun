@@ -21,7 +21,7 @@ const firstNames = ["Maj-Britt", "Bertil", "Gunilla", "Stig", "Agneta", "Kent", 
 const lastNames = ["Blixt", "Kastrull", "Gurka", "Fjäder", "Bång", "Plommon", "Vims", "Sjöbris", "Kotte", "Rullgardin", "Nypon", "Dunder", "Fluff", "Krans", "Månskensson", "Sprätt", "Tjoff", "Hallon", "Virvel", "Socker"];
 const pipPositions = { 1:[[50,50]],2:[[27,27],[73,73]],3:[[27,27],[50,50],[73,73]],4:[[27,27],[73,27],[27,73],[73,73]],5:[[27,27],[73,27],[50,50],[27,73],[73,73]],6:[[27,23],[73,23],[27,50],[73,50],[27,77],[73,77]] };
 const cubeLanding={1:"rotateX(0deg) rotateY(0deg)",2:"rotateY(-90deg)",3:"rotateX(-90deg)",4:"rotateX(90deg)",5:"rotateY(90deg)",6:"rotateY(180deg)"};
-let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false;
+let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false, suggestionTimer = 0;
 
 function profileKey() { return `yatsun-profile-${authUser?.uid||"guest"}`; }
 function loadProfile() { try { return { soloXp:0, unlocked:1, ...JSON.parse(localStorage.getItem(profileKey())||"{}") }; } catch { return { soloXp:0, unlocked:1 }; } }
@@ -54,7 +54,8 @@ function renderDice(animate=false) {
     button.addEventListener("click",()=>{if(!rolls||busy)return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
     diceRoot.appendChild(button);
   });
-  updateSuggestions();
+  clearTimeout(suggestionTimer);
+  if(animate){hideSuggestions();suggestionTimer=setTimeout(updateSuggestions,1600);}else updateSuggestions();
 }
 function scatterDice(){
   const compact=window.innerWidth<680,candidates=compact?[[-112,-48],[-56,-48],[0,-48],[56,-48],[112,-48],[-112,32],[-56,32],[0,32],[56,32],[112,32]]:[[-210,-92],[-105,-92],[0,-92],[105,-92],[210,-92],[-210,44],[-105,44],[0,44],[105,44],[210,44]],minimum=compact?66:112,occupied=dice.filter((die)=>die.held).map((die)=>[die.x,die.y]);
@@ -67,6 +68,7 @@ function totals(scores){const upperTotal=upper.reduce((sum,_,index)=>sum+(scores
 
 function buildScorecard(){$("#upper-score").innerHTML="";$("#lower-score").innerHTML="";const symbols=["⚀","⚁","⚂","⚃","⚄","⚅","◉","❖","◆","▦","⌁","⌁","⌂","?","★"];categories.forEach((category,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<th><i>${symbols[index]}</i><span>${category.label}</span></th><td><button class="score-choice" data-id="${category.id}" disabled>—</button></td><td class="ai-score" data-ai-id="${category.id}">—</td>`;(category.upper?$("#upper-score"):$("#lower-score")).appendChild(tr);const button=tr.querySelector("button");button.addEventListener("click",()=>chooseScore(category.id));tr.addEventListener("click",(event)=>{if(event.target!==button&&!button.disabled)button.click();});});}
 function displayScore(category,score){if(score===null||score===undefined)return"—";if(!category.upper)return String(score);const base=3*Number(category.id[1]),delta=score-base;return delta===0?"✓":`${delta>0?"+":""}${delta}`;}
+function hideSuggestions(){categories.forEach((category)=>{if(category.id in playerScores)return;const button=$(`[data-id="${category.id}"]`),row=button?.closest("tr");if(!button)return;button.textContent="—";button.disabled=true;button.removeAttribute("title");row.classList.remove("preview","best-preview","zero-preview");});}
 function updateSuggestions(){
   const values=dice.map((d)=>d.value),previews=[];
   categories.forEach((category)=>{

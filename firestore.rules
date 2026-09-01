@@ -1,21 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Enkel privat loppiskassa. Avsiktligt öppen för den som hittar adressen.
-    match /loppisUsers/{userId} {
-      allow read, write: if true;
-    }
-    match /loppisOccasions/{occasionId} {
-      allow read, write: if true;
-    }
-    match /loppisSales/{saleId} {
-      allow read, write: if true;
-    }
-    // Kassuns enkla, fristående konton. Lösenorden lagras endast som
-    // saltade PBKDF2-hashar; aldrig som läsbar text.
-    match /loppisAccounts/{accountId} {
-      allow read, write: if true;
-    }
     function signedIn() {
       return request.auth != null
         && (!exists(/databases/$(database)/documents/users/$(request.auth.uid))

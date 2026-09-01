@@ -1,6 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const firebaseApp = initializeApp({apiKey:"AIzaSyBuJP3imBBQZ7CWJzUhosSbyEhi_Z0lgj8",authDomain:"bubbsan-c3ec7.firebaseapp.com",projectId:"bubbsan-c3ec7",storageBucket:"bubbsan-c3ec7.firebasestorage.app",messagingSenderId:"999127046153",appId:"1:999127046153:web:4ddd2814db25f691d800d8"});
 const auth = getAuth(firebaseApp), firestore = getFirestore(firebaseApp);
@@ -22,6 +24,25 @@ const lastNames = ["Blixt", "Kastrull", "Gurka", "Fjäder", "Bång", "Plommon", 
 const pipPositions = { 1:[[50,50]],2:[[27,27],[73,73]],3:[[27,27],[50,50],[73,73]],4:[[27,27],[73,27],[27,73],[73,73]],5:[[27,27],[73,27],[50,50],[27,73],[73,73]],6:[[27,23],[73,23],[27,50],[73,50],[27,77],[73,77]] };
 const cubeLanding={1:"rotateX(0deg) rotateY(0deg)",2:"rotateY(-90deg)",3:"rotateX(-90deg)",4:"rotateX(90deg)",5:"rotateY(90deg)",6:"rotateY(180deg)"};
 let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false, suggestionTimer = 0;
+const dieOrientations={1:[-Math.PI/2,0,0],2:[0,-Math.PI/2,0],3:[0,0,0],4:[0,Math.PI,0],5:[0,Math.PI/2,0],6:[Math.PI/2,0,0]};
+const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
+let activeDieViews=[];
+
+function disposeDieViews(){activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
+async function mountDieModel(canvas,fallback,value,rolling,index){
+  try{
+    const source=await dieModelPromise;if(!canvas.isConnected)return;
+    const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.64,.64,.64,-.64,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
+    renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(96,96,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
+    const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1.06/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(scale);scene.add(model);
+    scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
+    const target=dieOrientations[value],view={renderer,stopped:false};activeDieViews.push(view);canvas.classList.add("ready");fallback.classList.add("model-ready");
+    const render=()=>renderer.render(scene,camera);
+    if(!rolling){model.rotation.set(...target);render();return;}
+    const start=performance.now(),duration=1500,spinX=(5+index)*Math.PI*2,spinY=(6+index%3)*Math.PI*2,spinZ=(3+index%2)*Math.PI*2;
+    const frame=(now)=>{if(view.stopped||!canvas.isConnected)return;const t=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-t,3),remaining=1-ease;model.rotation.set(target[0]+spinX*remaining,target[1]+spinY*remaining,target[2]+spinZ*remaining);render();if(t<1)requestAnimationFrame(frame);};requestAnimationFrame(frame);
+  }catch(error){console.warn("3D-tärningen kunde inte laddas",error);}
+}
 
 function profileKey() { return `yatsun-profile-${authUser?.uid||"guest"}`; }
 function loadProfile() { try { return { soloXp:0, unlocked:1, ...JSON.parse(localStorage.getItem(profileKey())||"{}") }; } catch { return { soloXp:0, unlocked:1 }; } }
@@ -38,21 +59,22 @@ function updateProfileUi() { const level=Math.min(100,profile.unlocked), xp=prof
 function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen"].forEach((selector)=>$(selector).classList.toggle("hidden",selector!==id)); document.body.classList.toggle("playing",id==="#game-screen"); window.scrollTo({top:0,behavior:"smooth"}); }
 
 function renderDice(animate=false) {
+  disposeDieViews();
   diceRoot.innerHTML="";
   dice.forEach((die,index)=>{
-    const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span");
+    const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span"),canvas=document.createElement("canvas");
     button.type="button";
     button.className=`die die-3d${die.held?" held":""}${animate&&!die.held?" rolling":""}`;
-    shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";
+    shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
     const landLeft=[13,31,50,69,87][index],landTop=15+(die.value*19+index*27)%47,restAngle=(die.value*13+index*17)%29-14;
     button.style.setProperty("--land-left",`${landLeft}%`);button.style.setProperty("--land-top",`${landTop}%`);button.style.setProperty("--rest-angle",`${restAngle}deg`);
     button.style.setProperty("--enter-x",`${index%2?-620:620}px`);button.style.setProperty("--enter-y",`${[-72,68,-48,78,-30][index]}px`);button.style.setProperty("--cross-x",`${index%2?190:-190}px`);button.style.setProperty("--cross-y",`${[-42,39,-29,47,-18][index]}px`);button.style.setProperty("--bounce-x",`${index%2?24:-24}px`);button.style.setProperty("--bounce-y",`${[-20,19,-14,22,-9][index]}px`);button.style.setProperty("--spin-x",`${(index%2?-1:1)*(900+index*210)}deg`);button.style.setProperty("--spin-y",`${(index%2?-1:1)*(1080+index*150)}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");button.style.setProperty("--roll-delay",`${index*52}ms`);
     button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
-    travel.appendChild(cube);button.append(shadow,travel);
+    travel.append(cube,canvas);button.append(shadow,travel);
     if(animate&&!die.held)setTimeout(()=>button.classList.remove("rolling"),1600);
     button.addEventListener("click",()=>{if(!rolls||busy)return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
-    diceRoot.appendChild(button);
+    diceRoot.appendChild(button);mountDieModel(canvas,cube,die.value,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
   if(animate){hideSuggestions();suggestionTimer=setTimeout(updateSuggestions,1600);}else updateSuggestions();

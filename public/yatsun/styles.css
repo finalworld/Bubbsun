@@ -164,7 +164,7 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 @keyframes latest-score-glow{from{filter:brightness(1);box-shadow:0 3px 0 #344a37,0 0 6px 2px #ffd84db8,0 0 13px 5px #ffe47770,0 0 22px 8px #fff0a33d}to{filter:brightness(1.08);box-shadow:0 3px 0 #344a37,0 0 9px 4px #ffd84de6,0 0 20px 9px #ffe477a3,0 0 34px 14px #fff0a35c}}
 
 /* Poängbrickorna ska ha samma fria yta över och under samt luft mot högerkanten. */
-.game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:34px!important;padding-top:1px!important;padding-bottom:5px!important;vertical-align:middle!important}
+.game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:32px!important;padding-top:0!important;padding-bottom:4px!important;vertical-align:middle!important}
 .game-shell .score-section-block tbody td{width:66px!important;padding-left:7px!important;padding-right:7px!important}
 .game-shell .score-section-block tbody td:last-child{width:70px!important;padding-right:11px!important}
 
@@ -173,3 +173,7 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .die-3d .die-model.ready{opacity:1}.die-3d .die-cube.model-ready{visibility:hidden!important}
 .game-shell .die.die-3d.held .die-model{filter:drop-shadow(0 0 7px #ffc94f) drop-shadow(0 8px 5px #173a2a55)}
 @media(max-width:680px){.die-3d .die-model{inset:-6px;width:60px;height:60px}}
+
+/* Smalare sektionsrygg ger mer plats åt namn och poäng. */
+.score-section-block{grid-template-columns:40px 1fr}
+@media(max-width:680px){.score-section-block{grid-template-columns:34px 1fr}}

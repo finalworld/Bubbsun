@@ -161,3 +161,8 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .game-shell .scored .score-choice.scratched,.game-shell .ai-score.filled span.scratched{position:relative;background:linear-gradient(145deg,#d94b46,#ad302f)!important;color:transparent!important;box-shadow:0 3px 0 #762322!important}
 .game-shell .scratched:after{content:"";position:absolute;width:25px;height:6px;border:2px solid #812725;border-radius:999px;background:#ffe2c8;transform:rotate(-42deg);box-shadow:0 1px 0 #fff8}
 .game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{box-shadow:0 0 0 5px #ffe27a,0 3px 0 #344a37!important}
+
+/* Poängbrickorna ska ha samma fria yta över och under samt luft mot högerkanten. */
+.game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:38px!important;padding-top:5px!important;padding-bottom:5px!important;vertical-align:middle!important}
+.game-shell .score-section-block tbody td{width:66px!important;padding-left:7px!important;padding-right:7px!important}
+.game-shell .score-section-block tbody td:last-child{width:70px!important;padding-right:11px!important}

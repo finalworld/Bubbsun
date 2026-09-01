@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f1ff" />
+    <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
+    <title>Yatsun – Yatzy med karaktär</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./" aria-label="Yatsun startsida">
+          <img src="./yatsun-logo.png" alt="Yatsun" />
+        </a>
+        <nav aria-label="Huvudmeny">
+          <button class="nav-link active" type="button">Spela</button>
+          <button class="nav-link" type="button">Topplista</button>
+          <button class="profile-button" type="button" aria-label="Öppna din profil">
+            <span>GS</span><b>Gästspelare</b>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="welcome-strip">
+        <div>
+          <small>SVENSK YATZY · 1–4 SPELARE</small>
+          <h1>Kasta. Chansa. Jubla.</h1>
+          <p>Spela en hel match mot din första motståndare och klättra vidare genom 100 nivåer.</p>
+        </div>
+        <a href="https://www.bubbsun.se" target="_blank" rel="noreferrer">
+          Ett litet spel från <strong>Bubbsun.se</strong> ↗
+        </a>
+      </section>
+
+      <section id="mode-screen" class="mode-screen">
+        <article class="mode-card solo-card"><span class="mode-icon">⚄</span><small>100 MOTSTÅNDARE</small><h2>Singelplayer</h2><p>Börja mot Maj-Britt Blixt och lås upp en ny svensk Yatsun-profil för varje seger.</p><div class="xp-preview"><span><b>Singelnivå 1</b><small>0 / 100 XP</small></span><i><em></em></i></div><button id="start-solo" type="button">SPELA MOT MAJ-BRITT →</button></article>
+        <article class="mode-card multi-card"><span class="mode-icon">♟</span><small>2–4 SPELARE · LIVE</small><h2>Multiplayer</h2><p>Skapa ett offentligt spel eller en privat match som kompisarna ansluter till med kod.</p><div class="xp-preview"><span><b>Multiplayernivå 1</b><small>0 / 100 XP</small></span><i><em></em></i></div><button id="open-multi" type="button">ÖPPNA SPELLISTAN →</button></article>
+        <aside class="coming-panel"><b>På väg i nästa steg</b><span>Google-inloggning</span><span>Profil & galna avatarer</span><span>Vänner & full statistik</span><span>MariaDB & P2P-livematcher</span></aside>
+      </section>
+
+      <section id="lobby-screen" class="lobby-screen hidden">
+        <header><div><small>MULTIPLAYER</small><h2>Hitta ett Yatsun-bord</h2><p>Publika spel uppdateras när du trycker på knappen.</p></div><button id="refresh-games" type="button">↻ UPPDATERA</button></header>
+        <div class="lobby-layout"><div class="open-games"><div class="empty-lobby"><span>♟</span><h3>Inga publika spel ännu</h3><p>Skapa det första bordet eller anslut med en privat kod.</p></div></div><aside><button type="button" disabled>＋ SKAPA PUBLIKT SPEL</button><label>PRIVAT SPELKOD<input maxlength="6" placeholder="ABC123" /></label><button type="button" disabled>ANSLUT MED KOD</button><small>Onlinekopplingen aktiveras när Yatsuns serverdel är inkopplad.</small></aside></div>
+        <button class="back-to-modes" type="button">← Till spellägen</button>
+      </section>
+
+      <section id="game-screen" class="game-shell hidden" aria-label="Yatsun spelplan">
+        <aside class="players-panel">
+          <div class="match-label"><span></span> SINGELMATCH</div>
+          <article class="player-card current">
+            <div class="avatar mint">DU</div>
+            <div><small>DIN TUR</small><strong>Gästspelare</strong><span>Nivå 1 · 0 XP</span></div>
+          </article>
+          <article class="player-card">
+            <div class="avatar peach">AI</div>
+            <div><small>MOTSTÅNDARE 1/100</small><strong>Maj-Britt Blixt</strong><span>Nybörjare</span></div>
+          </article>
+          <button class="back-button back-to-modes" type="button">← Till spellägen</button>
+        </aside>
+
+        <section class="table-area">
+          <div class="turn-heading">
+            <div><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
+            <p id="roll-hint">Kasta alla fem tärningarna.</p>
+          </div>
+          <div class="dice-tray" aria-label="Tärningsbricka">
+            <div id="dice" class="dice-row"></div>
+            <div class="tray-shadow"></div>
+          </div>
+          <button id="roll-button" class="roll-button" type="button">
+            <span>⚄</span><b>KASTA TÄRNINGARNA</b><small>3 kast kvar</small>
+          </button>
+        </section>
+
+        <aside class="score-panel">
+          <header><div><small>PROTOKOLL</small><h2>Gästspelare</h2></div><strong><span id="grand-total">0</span> <small>p</small></strong></header>
+          <div class="score-scroll">
+            <table>
+              <thead><tr><th>ÖVRE DELEN</th><th>±</th><th>POÄNG</th></tr></thead>
+              <tbody id="upper-score"></tbody>
+              <tbody class="summary">
+                <tr><th>Summa</th><td id="upper-delta">−63</td><td id="upper-total">0</td></tr>
+                <tr><th>Bonus vid 63</th><td></td><td id="bonus">—</td></tr>
+              </tbody>
+            </table>
+            <table>
+              <thead><tr><th>UNDRE DELEN</th><th></th><th>POÄNG</th></tr></thead>
+              <tbody id="lower-score"></tbody>
+            </table>
+            <div class="opponent-total"><span>Maj-Britt Blixt</span><strong><b id="ai-total">0</b> p</strong></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <div id="result-modal" class="result-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <article><span id="result-icon">🏆</span><small>MATCHEN ÄR KLAR</small><h2 id="result-title">Du vann!</h2><p id="result-copy"></p><div class="result-scores"><b id="result-player">0</b><span>–</span><b id="result-ai">0</b></div><button id="play-again" type="button">SPELA IGEN</button><button class="back-to-modes subtle" type="button">TILL SPELLÄGEN</button></article>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

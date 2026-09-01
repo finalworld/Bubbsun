@@ -146,3 +146,8 @@ body.playing .game-shell .ai-reaction{top:18px}
 body.playing .game-shell .roll-button{right:36px;bottom:112px}
 @media(max-width:900px){body.playing .game-shell .roll-button{right:20px;bottom:96px}}
 @media(max-width:680px){body.playing .game-shell .roll-button{right:14px;bottom:90px}}
+
+/* Varje figur i originalarket är 3:4, inte kvadratisk. */
+.reaction-option{aspect-ratio:3/4}
+.reaction-bubble{width:100px;height:132px}
+@media(max-width:680px){.reaction-bubble{width:82px;height:108px}}

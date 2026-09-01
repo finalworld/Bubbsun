@@ -35,13 +35,13 @@ async function mountDieModel(canvas,fallback,value,rolling,index){
     const source=await dieModelPromise;if(!canvas.isConnected)return;
     const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.64,.64,.64,-.64,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(96,96,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
-    const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1.06/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(scale);scene.add(model);
+    const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),settledScale=1.06/Math.max(size.x,size.y,size.z),rollingScale=.78/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(rolling?rollingScale:settledScale);scene.add(model);
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
     const target=dieOrientations[value],view={renderer,stopped:false};activeDieViews.push(view);canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
     if(!rolling){model.rotation.set(...target);render();return;}
-    const start=performance.now(),duration=2700,spinX=(7+index)*Math.PI*2,spinY=(8+index%3)*Math.PI*2,spinZ=(4+index%2)*Math.PI*2;
-    const frame=(now)=>{if(view.stopped||!canvas.isConnected)return;const t=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-t,3),remaining=1-ease;model.rotation.set(target[0]+spinX*remaining,target[1]+spinY*remaining,target[2]+spinZ*remaining);render();if(t<1)requestAnimationFrame(frame);};requestAnimationFrame(frame);
+    const start=performance.now(),duration=2450,spinX=(3.2+index*.45)*Math.PI*2,spinY=(3.8+index%3*.5)*Math.PI*2,spinZ=(1.8+index%2*.45)*Math.PI*2;
+    const frame=(now)=>{if(view.stopped||!canvas.isConnected)return;const t=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-t,3),remaining=1-ease,currentScale=rollingScale+(settledScale-rollingScale)*ease;model.scale.setScalar(currentScale);model.rotation.set(target[0]+spinX*remaining,target[1]+spinY*remaining,target[2]+spinZ*remaining);render();if(t<1)requestAnimationFrame(frame);};requestAnimationFrame(frame);
   }catch(error){console.warn("3D-tärningen kunde inte laddas",error);}
 }
 
@@ -81,20 +81,20 @@ function renderDice(animate=false) {
   if(animate){hideSuggestions();runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
 }
 function runDicePhysics(entries,width,height){
-  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?46:70,wall=60;
+  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?54:84,wall=60;
   const walls=[Bodies.rectangle(width/2,-wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(width/2,height+wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(-wall/2,height/2,wall,height+wall*2,{isStatic:true}),Bodies.rectangle(width+wall/2,height/2,wall,height+wall*2,{isStatic:true})];
   const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
   dice.forEach((die,index)=>{
-    const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-80],[-62,-40],[0,0],[-62,40],[0,80]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;
+    const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-size*1.05],[-size*.9,-size*.55],[0,0],[-size*.9,size*.55],[0,size*1.05]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;
     const body=Bodies.rectangle(startX,startY,size,size,{label:`die-${die.id}`,isStatic:!active,chamfer:{radius:size*.16},restitution:.68,friction:.13,frictionStatic:.28,frictionAir:.015,density:.0022,angle:(die.rot||0)*Math.PI/180});
-    body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.height=0;body.verticalVelocity=active?5.2+Math.random()*1.8:0;bodies.push(body);
-    if(active){Body.setVelocity(body,{x:-8-Math.random()*2.5,y:(index-2)*1.45+(Math.random()-.5)*1.2});Body.setAngularVelocity(body,(Math.random()-.5)*.34);}
+    body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.height=0;body.verticalVelocity=active?3.8+Math.random()*1.1:0;bodies.push(body);
+    if(active){Body.setVelocity(body,{x:-8-Math.random()*2.5,y:(index-2)*1.45+(Math.random()-.5)*1.2});Body.setAngularVelocity(body,(Math.random()-.5)*.2);}
   });
   Composite.add(engine.world,[...walls,...bodies]);
   const start=performance.now(),fixedStep=1000/60,maxDuration=3200;
   function frame(now){
     Engine.update(engine,fixedStep);
-    bodies.forEach((body)=>{if(body.isStatic||!body.button)return;body.height+=body.verticalVelocity;body.verticalVelocity-=.42;if(body.height<0){body.height=0;body.verticalVelocity=Math.abs(body.verticalVelocity)*.43;if(body.verticalVelocity<.55)body.verticalVelocity=0;}const angle=body.angle*180/Math.PI;body.button.style.left=`${body.position.x}px`;body.button.style.top=`${body.position.y}px`;body.button.style.setProperty("--rest-angle",`${angle}deg`);body.button.style.transform=`translate(-50%,-50%) translateY(${-body.height}px) rotate(${angle}deg)`;});
+    bodies.forEach((body)=>{if(body.isStatic||!body.button)return;body.height+=body.verticalVelocity;body.verticalVelocity-=.58;if(body.height<0){body.height=0;body.verticalVelocity=Math.abs(body.verticalVelocity)*.32;if(body.verticalVelocity<.5)body.verticalVelocity=0;}const angle=body.angle*180/Math.PI;body.button.style.left=`${body.position.x}px`;body.button.style.top=`${body.position.y}px`;body.button.style.setProperty("--rest-angle",`${angle}deg`);body.button.style.transform=`translate(-50%,-50%) translateY(${-body.height}px) rotate(${angle}deg)`;});
     const moving=bodies.some((body)=>!body.isStatic&&(body.speed>.22||Math.abs(body.angularSpeed)>.012||body.height>.2));
     if(now-start<maxDuration&&(now-start<1450||moving)){requestAnimationFrame(frame);return;}
     bodies.forEach((body)=>{if(body.isStatic)return;body.die.x=Math.round(body.position.x-width/2);body.die.y=Math.round(body.position.y-height/2);body.die.rot=Math.round(body.angle*180/Math.PI)%360;if(body.button){body.button.style.transform="";body.button.classList.remove("rolling");}});

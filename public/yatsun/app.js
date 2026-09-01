@@ -61,6 +61,7 @@ function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen"].forEac
 function renderDice(animate=false) {
   disposeDieViews();
   diceRoot.innerHTML="";
+  const trayBox=diceRoot.getBoundingClientRect(),trayWidth=trayBox.width||800,trayHeight=trayBox.height||500;
   dice.forEach((die,index)=>{
     const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span"),canvas=document.createElement("canvas");
     button.type="button";
@@ -68,7 +69,8 @@ function renderDice(animate=false) {
     shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
     const landLeft=[13,31,50,69,87][index],landTop=15+(die.value*19+index*27)%47,restAngle=(die.value*13+index*17)%29-14;
     button.style.setProperty("--land-left",`${landLeft}%`);button.style.setProperty("--land-top",`${landTop}%`);button.style.setProperty("--rest-angle",`${restAngle}deg`);
-    button.style.setProperty("--enter-x",`${index%2?-620:620}px`);button.style.setProperty("--enter-y",`${[-72,68,-48,78,-30][index]}px`);button.style.setProperty("--cross-x",`${index%2?190:-190}px`);button.style.setProperty("--cross-y",`${[-42,39,-29,47,-18][index]}px`);button.style.setProperty("--bounce-x",`${index%2?24:-24}px`);button.style.setProperty("--bounce-y",`${[-20,19,-14,22,-9][index]}px`);button.style.setProperty("--spin-x",`${(index%2?-1:1)*(900+index*210)}deg`);button.style.setProperty("--spin-y",`${(index%2?-1:1)*(1080+index*150)}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");button.style.setProperty("--roll-delay",`${index*52}ms`);
+    const finalX=trayWidth*landLeft/100,finalY=trayHeight*landTop/100,startY=trayHeight*(.42+(index-2)*.025),impactLeft=[.07,.12,.06,.15,.09][index],impactTop=[.24,.76,.42,.12,.87][index],reboundLeft=[.46,.72,.58,.79,.64][index],reboundTop=[.62,.34,.78,.53,.23][index],direction=index%2?-1:1;
+    button.style.setProperty("--enter-x",`${trayWidth*1.06-finalX}px`);button.style.setProperty("--enter-y",`${startY-finalY}px`);button.style.setProperty("--impact-x",`${trayWidth*impactLeft-finalX}px`);button.style.setProperty("--impact-y",`${trayHeight*impactTop-finalY}px`);button.style.setProperty("--rebound-x",`${trayWidth*reboundLeft-finalX}px`);button.style.setProperty("--rebound-y",`${trayHeight*reboundTop-finalY}px`);button.style.setProperty("--settle-x",`${direction*(18+index*2)}px`);button.style.setProperty("--settle-y",`${index%2?-13:15}px`);button.style.setProperty("--spin-x",`${direction*(900+index*210)}deg`);button.style.setProperty("--spin-y",`${(index%2?-1:1)*(1080+index*150)}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");button.style.setProperty("--roll-delay",`${index*38}ms`);
     button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
     travel.append(cube,canvas);button.append(shadow,travel);

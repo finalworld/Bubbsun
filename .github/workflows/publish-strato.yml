@@ -60,6 +60,7 @@ jobs:
           KASSUN_DB_PASSWORD: ${{ secrets.KASSUN_DB_PASSWORD }}
         run: |
           node -e 'const fs=require("fs");fs.writeFileSync("kassun-db.json",JSON.stringify({host:process.env.KASSUN_DB_HOST,name:process.env.KASSUN_DB_NAME,user:process.env.KASSUN_DB_USER,password:process.env.KASSUN_DB_PASSWORD}))'
+          node -e 'const fs=require("fs");fs.writeFileSync("yatsun-db.json",JSON.stringify({host:"database-502132677.webspace-host.com",name:"dbs16080702",user:"dbu4703673",password:process.env.KASSUN_DB_PASSWORD}))'
 
       - name: Ladda upp till Strato
         env:
@@ -89,6 +90,10 @@ jobs:
           # ändras trots samma filstorlek. bubbsun.se är i Strato kopplad till
           # undermappen public, medan SFTP-kontot öppnas en nivå ovanför den.
           mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
+          # Yatsun använder samma hemliga Strato-lösenord men en egen MariaDB.
+          # Konfigurationen laddas separat och blockeras av API-mappens .htaccess.
+          put -O public/yatsun/api dist/yatsun/api/.htaccess
+          put -O public/yatsun/api yatsun-db.json
           # lftp kan hoppa över dolda filer vid spegling. Den här styr
           # webbappens routning och måste därför alltid ersätta den gamla.
           put -O public dist/.htaccess

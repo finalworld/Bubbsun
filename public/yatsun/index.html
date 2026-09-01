@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=3" />
+    <link rel="stylesheet" href="./styles.css?v=4" />
   </head>
   <body>
     <header class="site-header">
@@ -65,7 +65,13 @@
         <section class="table-area">
           <div class="turn-heading">
             <div><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
-            <p id="roll-hint">Kasta alla fem tärningarna.</p>
+            <div class="turn-tools"><p id="roll-hint">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button">💬 CHAT</button></div>
+          </div>
+          <div id="reaction-bubble-player" class="reaction-bubble player-reaction hidden"><i></i></div>
+          <div id="reaction-bubble-ai" class="reaction-bubble ai-reaction hidden"><i></i></div>
+          <div id="reaction-picker" class="reaction-picker hidden" aria-label="Välj en reaktion">
+            <header><b>Skicka en reaktion</b><button id="close-chat" type="button" aria-label="Stäng chatten">×</button></header>
+            <div id="reaction-options"></div>
           </div>
           <div class="dice-tray" aria-label="Tärningsbricka">
             <div id="dice" class="dice-row"></div>
@@ -80,18 +86,18 @@
           <header><div><small>PROTOKOLL</small><h2>Gästspelare</h2></div><strong><span id="grand-total">0</span> <small>p</small></strong></header>
           <div class="score-scroll">
             <table>
-              <thead><tr><th>ÖVRE DELEN</th><th>±</th><th>POÄNG</th></tr></thead>
+              <thead><tr><th>ÖVRE DELEN</th><th>DU</th><th class="ai-name">AI</th></tr></thead>
               <tbody id="upper-score"></tbody>
               <tbody class="summary">
-                <tr><th>Summa</th><td id="upper-delta">−63</td><td id="upper-total">0</td></tr>
-                <tr><th>Bonus vid 63</th><td></td><td id="bonus">—</td></tr>
+                <tr><th>Summa</th><td id="upper-total">0</td><td id="ai-upper-total">0</td></tr>
+                <tr><th>Bonus vid 63</th><td id="bonus">—</td><td id="ai-bonus">—</td></tr>
               </tbody>
             </table>
             <table>
-              <thead><tr><th>UNDRE DELEN</th><th></th><th>POÄNG</th></tr></thead>
+              <thead><tr><th>UNDRE DELEN</th><th>DU</th><th class="ai-name">AI</th></tr></thead>
               <tbody id="lower-score"></tbody>
             </table>
-            <div class="opponent-total"><span>Maj-Britt Blixt</span><strong><b id="ai-total">0</b> p</strong></div>
+            <div class="opponent-total"><span>Totalt</span><strong><b id="player-total-small">0</b> – <b id="ai-total">0</b> p</strong></div>
           </div>
         </aside>
       </section>
@@ -114,6 +120,6 @@
       </article>
     </div>
 
-    <script type="module" src="./app.js?v=3"></script>
+    <script type="module" src="./app.js?v=4"></script>
   </body>
 </html>

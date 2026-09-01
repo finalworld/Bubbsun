@@ -169,6 +169,7 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .game-shell .score-section-block tbody td:last-child{width:70px!important;padding-right:11px!important}
 .game-shell .score-section-block tbody td{position:relative}
 .game-shell .scored .score-choice,.game-shell .score-section-block .ai-score.filled span{position:absolute!important;left:50%;top:calc(50% - 2px);margin:0!important;transform:translate(-50%,-50%)}
+.game-shell tr[data-category="l4"] th>span,.game-shell tr[data-category="l5"] th>span{display:inline-block;white-space:normal;font-size:10px;line-height:.82;vertical-align:middle}
 
 /* Riktig glTF-tärning; CSS-kuben visas endast tills WebGL-modellen är redo. */
 .die-3d .die-model{position:absolute;inset:-32px;width:144px;height:144px;display:block;opacity:0;pointer-events:none;transition:opacity .14s ease;filter:drop-shadow(0 8px 5px #173a2a55)}

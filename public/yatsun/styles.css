@@ -63,3 +63,17 @@ body.playing{height:100dvh;overflow:hidden;background:#f1eafb}body.playing main{
 .game-shell .summary tr:first-child>*{border-top:3px solid #77785b!important}
 .game-shell .opponent-total{margin:3px 0 0;padding:10px 12px;border:1px solid #e1b694;border-radius:13px;background:#ffddc8;color:#241b18}.game-shell .opponent-total span{text-transform:uppercase;font-weight:900;letter-spacing:.7px}.game-shell .opponent-total b{font-size:18px}
 @media(max-width:900px){.game-shell .score-panel{margin:0;border-width:3px 0 0;border-radius:0;box-shadow:none}.game-shell .score-scroll{padding:10px}}
+
+/* Slutlig spelvy: samma betydelse ska aldrig ha två olika färgspråk. */
+.game-shell .score-panel{border-color:#9a7257;box-shadow:0 7px 0 #9a7257}.game-shell .score-scroll{overflow:hidden;padding:7px 8px 9px}
+.game-shell .score-scroll table{margin-bottom:6px}.game-shell .score-scroll thead th{height:25px;padding:5px 7px 4px}.game-shell .score-scroll tbody th,.game-shell .score-scroll tbody td{height:27px;padding:2px 7px}
+.game-shell .score-scroll tbody td{width:57px}.game-shell .score-choice{min-width:36px;padding:2px 7px;font-size:14px}
+.game-shell .preview{cursor:pointer}.game-shell .preview:hover>*{background:#f1f3df!important}.game-shell .zero-preview .score-choice{color:#9a9782;font-weight:750}.game-shell .zero-preview:hover>*{background:#f4eadb!important}
+.game-shell .best-preview>*{background:#fff7d7!important}.game-shell .best-preview .score-choice{background:transparent;color:#365943;box-shadow:none}.game-shell .best-preview .score-choice:after{content:"★";margin-left:5px;color:#d69d27;font-size:9px;vertical-align:2px}
+.game-shell .scored .score-choice{min-width:38px;background:#506f58;color:#fff;box-shadow:0 3px 0 #344a37}.game-shell .ai-score.filled{display:table-cell;min-width:0;padding:2px 7px;background:#fff9ed;color:inherit;box-shadow:none}.game-shell .ai-score.filled span{display:inline-block;min-width:34px;padding:3px 7px;border-radius:9px;background:#6d765c;color:#fff;text-align:center;box-shadow:0 2px 0 #4d5541}
+.game-shell .summary th,.game-shell .summary td{height:26px!important}.game-shell .opponent-total{min-height:46px;margin-top:2px;padding:8px 11px}
+.game-shell .roll-button{min-width:270px;border:2px solid #dfc47d;background:#506f58;color:#fffbe9;box-shadow:0 6px 0 #304936}.game-shell .roll-button>span{font-family:Georgia,"Times New Roman",serif;color:#f6d46e}.game-shell .roll-button small{color:#dce8d7}.game-shell .roll-button:disabled{opacity:1;border-color:#c9bfae;background:#7b766d;color:#eee9df;box-shadow:0 5px 0 #59554f}.game-shell .roll-button:disabled>span{color:#f0d27d}
+.game-shell .chat-button{border-color:#b4c7ad;background:#fffaf0;color:#506f58}.game-shell .turn-heading small{color:#506f58}
+@media(max-width:900px){.game-shell .score-scroll{overflow:visible}.game-shell .score-panel{box-shadow:none}}
+
+@media(min-width:901px){.game-shell .score-scroll table{margin-bottom:3px}.game-shell .score-scroll tbody th,.game-shell .score-scroll tbody td{height:24px;padding-top:1px;padding-bottom:1px;font-size:11px}.game-shell .score-scroll thead th{height:23px;padding-top:4px;padding-bottom:3px}.game-shell .summary th,.game-shell .summary td{height:23px!important}.game-shell .opponent-total{min-height:40px;padding:6px 10px}.game-shell .score-scroll thead th:not(:first-child){white-space:nowrap;font-size:8px;letter-spacing:.4px}}

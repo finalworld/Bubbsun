@@ -109,6 +109,13 @@ function scatterDice(){
 function playDiceSound(){diceSound.currentTime=0;void diceSound.play().catch(()=>{});}
 function counts(values){const result=Array(7).fill(0);values.forEach((value)=>result[value]++);return result;}
 function scoreCategory(id,values){const c=counts(values),sum=values.reduce((a,b)=>a+b,0),groups=c.slice(1).map((amount,value)=>({amount,value:value+1})).filter((g)=>g.amount);if(id[0]==="u"){const value=Number(id[1]);return c[value]*value;}if(id==="l0"){const pairs=groups.filter((g)=>g.amount>=2).map((g)=>g.value);return pairs.length?Math.max(...pairs)*2:0;}if(id==="l1"){const pairs=groups.filter((g)=>g.amount>=2).map((g)=>g.value).sort((a,b)=>b-a);return pairs.length>=2?(pairs[0]+pairs[1])*2:0;}if(id==="l2"){const group=groups.filter((g)=>g.amount>=3).sort((a,b)=>b.value-a.value)[0];return group?group.value*3:0;}if(id==="l3"){const group=groups.filter((g)=>g.amount>=4).sort((a,b)=>b.value-a.value)[0];return group?group.value*4:0;}if(id==="l4")return[1,2,3,4,5].every((value)=>c[value]===1)?15:0;if(id==="l5")return[2,3,4,5,6].every((value)=>c[value]===1)?20:0;if(id==="l6"){const pair=groups.find((g)=>g.amount===2),three=groups.find((g)=>g.amount===3);return pair&&three?pair.value*2+three.value*3:0;}if(id==="l7")return sum;if(id==="l8")return groups.some((g)=>g.amount===5)?50:0;return 0;}
+function aiCategoryValue(category,score,values){
+  const id=category.id,c=counts(values),sum=values.reduce((total,value)=>total+value,0);
+  if(score===0){const scratchCost={l8:34,l5:24,l4:22,l6:20,l3:18,l1:15,l2:12,l0:8,l7:26};return-(scratchCost[id]??Number(id[1])*3);}
+  if(id==="l8")return 140;if(id==="l3")return 92+score;if(id==="l6")return 82+score;if(id==="l5"||id==="l4")return 76+score;if(id==="l1")return 48+score;if(id==="l2")return 38+score;if(id==="l0")return 25+score;if(id==="l7")return sum-8;
+  const face=Number(id[1]),amount=c[face],target=face*3,bonusPressure=totals(aiScores).upperTotal<63?1:0;
+  return score-(target-score)*1.15+(amount>=3?24:0)+(amount>=4?16:0)+bonusPressure*face*.7;
+}
 function totals(scores){const upperTotal=upper.reduce((sum,_,index)=>sum+(scores[`u${index+1}`]??0),0),bonus=upperTotal>=63?50:0,lowerTotal=lower.reduce((sum,_,index)=>sum+(scores[`l${index}`]??0),0);return{upperTotal,bonus,total:upperTotal+bonus+lowerTotal};}
 
 function buildScorecard(){$("#upper-score").innerHTML="";$("#lower-score").innerHTML="";const symbols=["⚀","⚁","⚂","⚃","⚄","⚅","◉","❖","◆","▦","⌁","⌁","⌂","?","★"];categories.forEach((category,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<th><i>${symbols[index]}</i><span>${category.label}</span></th><td><button class="score-choice" data-id="${category.id}" disabled>—</button></td><td class="ai-score" data-ai-id="${category.id}">—</td>`;(category.upper?$("#upper-score"):$("#lower-score")).appendChild(tr);const button=tr.querySelector("button");button.addEventListener("click",()=>chooseScore(category.id));tr.addEventListener("click",(event)=>{if(event.target!==button&&!button.disabled)button.click();});});}
@@ -166,7 +173,7 @@ async function aiTurn(){
   }
   $(".turn-heading h2").textContent=`${name} väljer…`;
   await humanPause(950,1650);
-  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),ranked=open.map((category)=>({category,score:scoreCategory(category.id,values)})).sort((a,b)=>b.score-a.score),difficulty=Math.min(1,.32+profile.unlocked*.0068),mistake=Math.random()>difficulty,pick=mistake&&ranked.length>2?ranked[Math.floor(Math.random()*Math.min(4,ranked.length))]:ranked[0];
+  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),difficulty=Math.min(1,.45+profile.unlocked*.0055),ranked=open.map((category)=>{const score=scoreCategory(category.id,values);return{category,score,value:aiCategoryValue(category,score,values)+(Math.random()-.5)*(1-difficulty)*7};}).sort((a,b)=>b.value-a.value),strongMade=ranked.filter(({category,score})=>score>0&&["l8","l3","l6","l5","l4"].includes(category.id)).sort((a,b)=>b.value-a.value)[0],pick=strongMade||ranked[0];
   aiScores[pick.category.id]=pick.score;
   lastScore={who:"ai",id:pick.category.id};
   updateSuggestions();

@@ -104,3 +104,12 @@ body.playing .site-header .nav-link{display:none}.game-shell{background:transpar
 .die-3d:not(.rolling) .face-1{box-shadow:inset 5px 5px 10px #fffc,inset -5px -6px 10px #5b452b24,0 7px 0 #c8bda8,0 13px 15px #18372959}
 .game-shell .die.die-3d.held:not(.rolling) .face-1{box-shadow:inset 5px 5px 10px #ffffffbf,inset -5px -6px 10px #5b452b29,0 0 0 2px #f3c44d59,0 7px 0 #cfb76e,0 13px 15px #18372959}
 @media(max-width:680px){.die-3d .cube-face:not(.face-1){border-radius:2px}}
+
+/* Protokollet: fasta poängkolumner och lugnare radavstånd. */
+.game-shell .score-section-block table{table-layout:fixed}
+.game-shell .score-section-block tbody td{width:58px;height:30px;padding:3px 5px;text-align:center;vertical-align:middle}
+.game-shell .score-section-block tbody th{height:30px;padding-top:3px;padding-bottom:3px}
+.game-shell .score-section-block .score-choice{display:inline-grid;place-items:center;margin:auto}
+.game-shell .score-section-block .ai-score.filled{display:table-cell;padding:3px 5px;text-align:center}
+.game-shell .score-section-block .ai-score.filled span{display:inline-grid;min-width:40px;min-height:25px;place-items:center;margin:auto;padding:2px 8px}
+.score-section-block{margin-bottom:10px}

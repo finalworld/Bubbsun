@@ -86,9 +86,9 @@ function runDicePhysics(entries,width,height){
   const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
   dice.forEach((die,index)=>{
     const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-size*1.05],[-size*.9,-size*.55],[0,0],[-size*.9,size*.55],[0,size*1.05]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;
-    const body=Bodies.rectangle(startX,startY,size,size,{label:`die-${die.id}`,isStatic:!active,chamfer:{radius:size*.16},restitution:.68,friction:.13,frictionStatic:.28,frictionAir:.015,density:.0022,angle:(die.rot||0)*Math.PI/180});
+    const body=Bodies.rectangle(startX,startY,size,size,{label:`die-${die.id}`,isStatic:!active,chamfer:{radius:size*.16},restitution:.68,friction:.13,frictionStatic:.28,frictionAir:.018,density:.0022,angle:(die.rot||0)*Math.PI/180});
     body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.height=0;body.verticalVelocity=active?3.8+Math.random()*1.1:0;bodies.push(body);
-    if(active){Body.setVelocity(body,{x:-8-Math.random()*2.5,y:(index-2)*1.45+(Math.random()-.5)*1.2});Body.setAngularVelocity(body,(Math.random()-.5)*.2);}
+    if(active){const throwStrength=[4.3,7.8,5.6,9.2,6.7][index]*(.9+Math.random()*.2);Body.setVelocity(body,{x:-throwStrength,y:(index-2)*1.25+(Math.random()-.5)*1.5});Body.setAngularVelocity(body,(Math.random()-.5)*.2);}
   });
   Composite.add(engine.world,[...walls,...bodies]);
   const start=performance.now(),fixedStep=1000/60,maxDuration=3200;

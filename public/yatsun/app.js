@@ -68,7 +68,8 @@ function renderDice(animate=false) {
     button.type="button";
     button.className=`die die-3d${die.held?" held":""}${animate&&!die.held?" rolling":""}`;
     shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
-    const restAngle=die.rot||0,x=trayWidth/2+die.x,y=trayHeight/2+die.y;
+    const restAngle=die.rot||0,visualRadius=window.innerWidth<680?34:54,x=Math.min(trayWidth-visualRadius,Math.max(visualRadius,trayWidth/2+die.x)),y=Math.min(trayHeight-visualRadius,Math.max(visualRadius,trayHeight/2+die.y));
+    die.x=Math.round(x-trayWidth/2);die.y=Math.round(y-trayHeight/2);
     button.style.left=`${x}px`;button.style.top=`${y}px`;button.style.setProperty("--rest-angle",`${restAngle}deg`);button.style.setProperty("--landing","rotateX(0deg) rotateY(0deg)");
     button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
@@ -81,8 +82,8 @@ function renderDice(animate=false) {
   if(animate){hideSuggestions();runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
 }
 function runDicePhysics(entries,width,height){
-  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?54:84,wall=60;
-  const walls=[Bodies.rectangle(width/2,-wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(width/2,height+wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(-wall/2,height/2,wall,height+wall*2,{isStatic:true}),Bodies.rectangle(width+wall/2,height/2,wall,height+wall*2,{isStatic:true})];
+  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?54:84,boundary=window.innerWidth<680?8:12,wall=60;
+  const walls=[Bodies.rectangle(width/2,boundary-wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(width/2,height-boundary+wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(boundary-wall/2,height/2,wall,height+wall*2,{isStatic:true}),Bodies.rectangle(width-boundary+wall/2,height/2,wall,height+wall*2,{isStatic:true})];
   const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
   dice.forEach((die,index)=>{
     const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-size*1.05],[-size*.9,-size*.55],[0,0],[-size*.9,size*.55],[0,size*1.05]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;

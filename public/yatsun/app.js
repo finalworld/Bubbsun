@@ -30,8 +30,9 @@ const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
 let activeDieViews=[];
 
 function disposeDieViews(){activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
-async function mountDieModel(canvas,fallback,value,rolling,index){
+async function mountDieModel(canvas,fallback,die,rolling,index){
   try{
+    const value=die.value;
     const source=await dieModelPromise;if(!canvas.isConnected)return;
     const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.96,.96,.96,-.96,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(144,144,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
@@ -39,7 +40,7 @@ async function mountDieModel(canvas,fallback,value,rolling,index){
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
     const target=dieOrientations[value],physicsToView=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0)),view={renderer,model,stopped:false,render:()=>renderer.render(scene,camera),finishPhysics(){model.scale.setScalar(settledScale);this.render();},sync(quaternion,speed){model.scale.setScalar(rollingScale+(settledScale-rollingScale)*Math.max(0,1-Math.min(1,speed/5)));model.quaternion.set(quaternion.x,quaternion.y,quaternion.z,quaternion.w).premultiply(physicsToView);this.render();}};activeDieViews.push(view);canvas.dieView=view;canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
-    if(!rolling){model.rotation.set(...target);render();return;}
+    if(!rolling){if(die.q){model.quaternion.set(die.q[0],die.q[1],die.q[2],die.q[3]).premultiply(physicsToView);}else model.rotation.set(...target);render();return;}
     render();
   }catch(error){console.warn("3D-tärningen kunde inte laddas",error);}
 }
@@ -51,7 +52,7 @@ function matchKey(){return `yatsun-active-solo-${authUser?.uid||"guest"}`;}
 function loadMatch(){try{return JSON.parse(localStorage.getItem(matchKey())||"null")||remoteMatch;}catch{return remoteMatch;}}
 async function matchApi(action,state){if(!authUser)return null;const token=await authUser.getIdToken(),response=await fetch("./api/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action,state})});if(!response.ok)throw new Error("Matchservern svarade inte.");return response.json();}
 async function loadRemoteMatch(){if(!authUser){remoteMatch=null;return;}try{const data=await matchApi("load_match");remoteMatch=data?.match||null;if(remoteMatch&&!localStorage.getItem(matchKey()))localStorage.setItem(matchKey(),JSON.stringify(remoteMatch));updateContinueUi();}catch(error){console.warn("Kunde inte hämta sparad Yatsun-match",error);}}
-function saveMatch(){if(Object.keys(playerScores).length>=categories.length)return;const state={rolls,playerScores,aiScores,lastScore,dice:dice.map(({value,held,x,y,rot})=>({value,held,x,y,rot})),opponentLevel:profile.unlocked,updatedAt:Date.now()};remoteMatch=state;localStorage.setItem(matchKey(),JSON.stringify(state));updateContinueUi();void matchApi("save_match",state).catch((error)=>console.warn("Matchen sparades lokalt men inte på servern",error));}
+function saveMatch(){if(Object.keys(playerScores).length>=categories.length)return;const state={rolls,playerScores,aiScores,lastScore,dice:dice.map(({value,held,x,y,rot,q})=>({value,held,x,y,rot,q})),opponentLevel:profile.unlocked,updatedAt:Date.now()};remoteMatch=state;localStorage.setItem(matchKey(),JSON.stringify(state));updateContinueUi();void matchApi("save_match",state).catch((error)=>console.warn("Matchen sparades lokalt men inte på servern",error));}
 function clearMatch(){remoteMatch=null;localStorage.removeItem(matchKey());updateContinueUi();void matchApi("delete_match").catch((error)=>console.warn("Kunde inte ta bort servermatchen",error));}
 function updateContinueUi(){const saved=loadMatch(),button=$("#start-solo");if(!button)return;button.textContent=saved?`FORTSÄTT MOT ${opponentName(saved.opponentLevel||profile.unlocked).toLocaleUpperCase("sv-SE")} →`:`SPELA MOT ${opponentName().toLocaleUpperCase("sv-SE")} →`;}
 function opponentName(level=profile.unlocked) { return `${firstNames[(level-1)%firstNames.length]} ${lastNames[(Math.floor((level-1)/firstNames.length)+level-1)%lastNames.length]}`; }
@@ -75,7 +76,7 @@ function renderDice(animate=false) {
     travel.append(cube,canvas);button.append(shadow,travel);
     if(animate&&!die.held)rollingButtons.push({button,die,index});
     button.addEventListener("click",()=>{if(!rolls||busy)return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
-    diceRoot.appendChild(button);mountDieModel(canvas,cube,die.value,animate&&!die.held,index);
+    diceRoot.appendChild(button);mountDieModel(canvas,cube,die,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
   if(animate){hideSuggestions();rollButton.disabled=true;dicePhysicsPromise=runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
@@ -96,10 +97,11 @@ function runDicePhysics(entries,width,height){
   function frame(now){
     world.step(fixedStep);
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
+    if(now-start>1750)bodies.forEach((body)=>{if(body.mass>0&&body.velocity.length()<.34&&body.angularVelocity.length()<.55)body.sleep();});
     const moving=bodies.some((body)=>body.mass>0&&body.sleepState!==CANNON.Body.SLEEPING);
-    if(now-start<maxDuration&&(now-start<1500||moving)){requestAnimationFrame(frame);return;}
+    if(now-start<maxDuration&&(now-start<1350||moving)){requestAnimationFrame(frame);return;}
     const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]];
-    bodies.forEach((body)=>{if(body.mass===0)return;const topFace=faceNormals.map(([value,x,y,z])=>({value,height:body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y})).sort((a,b)=>b.height-a.height)[0];body.die.value=topFace.value;body.die.x=Math.round(body.position.x*pixelsPerUnit);body.die.y=Math.round(body.position.z*pixelsPerUnit);body.die.rot=0;if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${body.die.value}`);body.button.style.left=`${width/2+body.die.x}px`;body.button.style.top=`${height/2+body.die.y}px`;body.button.style.transform="";body.button.classList.remove("rolling");}});
+    bodies.forEach((body)=>{if(body.mass===0)return;const topFace=faceNormals.map(([value,x,y,z])=>({value,height:body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y})).sort((a,b)=>b.height-a.height)[0];body.die.value=topFace.value;body.die.x=Math.round(body.position.x*pixelsPerUnit);body.die.y=Math.round(body.position.z*pixelsPerUnit);body.die.rot=0;body.die.q=[body.quaternion.x,body.quaternion.y,body.quaternion.z,body.quaternion.w];if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${body.die.value}`);body.button.style.left=`${width/2+body.die.x}px`;body.button.style.top=`${height/2+body.die.y}px`;body.button.style.transform="";body.button.classList.remove("rolling");}});
     world.bodies.slice().forEach((body)=>world.removeBody(body));saveMatch();updateSuggestions();resolve();
   }
   requestAnimationFrame(frame);

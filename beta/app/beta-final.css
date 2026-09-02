@@ -4763,6 +4763,16 @@ body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-new-p
 
 body .app-shell .saved-link-row{grid-template-columns:7px 42px minmax(0,1fr) auto 42px 34px!important;min-height:146px!important;padding:0!important}
 body .app-shell .saved-link-row>.item-owner{grid-column:1!important}
+
+/* Header controls belong to the viewport, not to each page's content rail.
+   Keep the menu, logo and create icon on one identical desktop rail everywhere. */
+@media(min-width:901px){
+  body .app-shell .topbar.text-header-v2 .topbar-inner{
+    width:calc(100% - 48px)!important;
+    max-width:none!important;
+    margin-inline:24px!important;
+  }
+}
 body .app-shell .saved-link-row>.check-button{grid-column:2!important}
 body .app-shell .saved-link-row>.item-copy{grid-column:3!important;align-self:stretch!important;display:grid!important;grid-template-columns:118px minmax(0,1fr)!important;grid-template-rows:1fr auto auto!important;gap:3px 16px!important;align-items:center!important;min-height:142px!important;margin:0!important;padding:0 12px 0 0!important;overflow:hidden!important}
 body .app-shell .saved-link-row .saved-link-thumb{grid-column:1!important;grid-row:1/4!important;align-self:stretch!important;width:118px!important;height:100%!important;min-height:142px!important;margin:0!important;border:0!important;border-right:1px solid var(--theme-outline)!important;border-radius:0!important;background:var(--theme-panel)!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important}

@@ -4,6 +4,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
+import { planRestingLayout } from "./dice-resting.mjs";
 
 const firebaseApp = initializeApp({apiKey:"AIzaSyBuJP3imBBQZ7CWJzUhosSbyEhi_Z0lgj8",authDomain:"bubbsan-c3ec7.firebaseapp.com",projectId:"bubbsan-c3ec7",storageBucket:"bubbsan-c3ec7.firebasestorage.app",messagingSenderId:"999127046153",appId:"1:999127046153:web:4ddd2814db25f691d800d8"});
 const auth = getAuth(firebaseApp), firestore = getFirestore(firebaseApp);
@@ -77,7 +78,7 @@ function renderDice(animate=false) {
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
     travel.append(cube,canvas);button.append(shadow,travel);
     if(animate&&!die.held)rollingButtons.push({button,die,index});
-    button.addEventListener("click",()=>{if(!rolls||busy)return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
+    button.addEventListener("click",()=>{if(!rolls||busy||diceRoot.querySelector(".rolling"))return;die.held=!die.held;renderDice();saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
@@ -102,7 +103,7 @@ function runDicePhysics(entries,width,height){
     world.step(fixedStep);
     if(now-start>1050)bodies.forEach((body)=>{
       const elapsed=now-start;if(body.mass===0||now-(body.lastEdgeTip||0)<240||(elapsed<1900&&(body.velocity.length()>.24||body.angularVelocity.length()>.32)))return;
-      if(body.position.y>half+.08&&body.position.y<half*2.3&&Math.abs(body.velocity.y)<.55){const neighbour=bodies.filter((other)=>other!==body&&other.mass>0).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.lastEdgeTip=now;body.wakeUp();body.velocity.set(dx/length*1.05,.32,dz/length*1.05);body.angularVelocity.set(dz/length*1.3,.08,-dx/length*1.3);return;}
+      if(body.position.y>half+.08&&body.position.y<half*2.3&&Math.abs(body.velocity.y)<.55){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.lastEdgeTip=now;body.wakeUp();body.velocity.set(dx/length*1.05,.32,dz/length*1.05);body.angularVelocity.set(dz/length*1.3,.08,-dx/length*1.3);return;}
       const top=faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z))).sort((a,b)=>b.y-a.y)[0];
       if(top.y>=.965)return;
       const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.lastEdgeTip=now;body.wakeUp();body.angularVelocity.set(axis.x*1.45,.04,axis.z*1.45);body.velocity.y=Math.max(body.velocity.y,.14);
@@ -110,8 +111,30 @@ function runDicePhysics(entries,width,height){
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
     const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&body.sleepState!==CANNON.Body.SLEEPING),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.1||alignment(body)<.94));
     if(elapsed<1450||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
-    bodies.forEach((body)=>{if(body.mass===0)return;const topFace=faceNormals.map(([value,x,y,z])=>({value,height:body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y})).sort((a,b)=>b.height-a.height)[0];body.die.value=topFace.value;body.die.x=Math.round(body.position.x*pixelsPerUnit);body.die.y=Math.round(body.position.z*pixelsPerUnit);body.die.rot=0;body.die.q=[body.quaternion.x,body.quaternion.y,body.quaternion.z,body.quaternion.w];if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${body.die.value}`);body.button.style.left=`${width/2+body.die.x}px`;body.button.style.top=`${height/2+body.die.y}px`;body.button.style.transform="";body.button.classList.remove("rolling");}});
-    world.bodies.slice().forEach((body)=>world.removeBody(body));saveMatch();updateSuggestions();resolve();
+    const radius=compact?38:60,obstacle=buttonRect.width&&buttonRect.height?{left:buttonRect.left-trayRect.left-width/2-6,right:buttonRect.right-trayRect.left-width/2+6,top:buttonRect.top-trayRect.top-height/2-6,bottom:buttonRect.bottom-trayRect.top-height/2+6}:null;
+    const layout=planRestingLayout(bodies.map(b=>({id:b.die.id,held:b.mass===0,x:b.position.x*pixelsPerUnit,y:b.position.z*pixelsPerUnit})),{width:width-boundary*2,height:height-boundary*2,radius,obstacle});
+    // Never publish an overlapping result. Keep simulating if the current
+    // viewport cannot accommodate the held dice and the button safely.
+    if(!layout){requestAnimationFrame(frame);return;}
+    const landings=bodies.filter(b=>b.mass>0).map(body=>{
+      const topFace=faceNormals.map(([value,x,y,z])=>({value,normal:body.quaternion.vmult(new CANNON.Vec3(x,y,z))})).sort((a,b)=>b.normal.y-a.normal.y)[0];
+      const correction=new CANNON.Quaternion();correction.setFromVectors(topFace.normal,up);
+      const target=correction.mult(body.quaternion),point=layout.find(p=>p.id===body.die.id);
+      return {body,value:topFace.value,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
+    });
+    const settleStart=now;
+    function settle(time){
+      const progress=Math.min(1,(time-settleStart)/360),ease=progress*progress*(3-2*progress);
+      landings.forEach(({body,from,rotation,target,point})=>{
+        body.position.set(from.x+(point.x/pixelsPerUnit-from.x)*ease,from.y+(half-from.y)*ease,from.z+(point.y/pixelsPerUnit-from.z)*ease);
+        rotation.slerp(target,ease,body.quaternion);
+        if(body.button){body.button.style.left=`${width/2+body.position.x*pixelsPerUnit}px`;body.button.style.top=`${height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7}px`;body.canvas?.dieView?.sync(body.quaternion);}
+      });
+      if(progress<1){requestAnimationFrame(settle);return;}
+      landings.forEach(({body,value,point})=>{body.die.value=value;body.die.x=point.x;body.die.y=point.y;body.die.rot=0;body.die.q=[body.quaternion.x,body.quaternion.y,body.quaternion.z,body.quaternion.w];if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${value}`);body.button.style.transform="";body.button.classList.remove("rolling");}});
+      world.bodies.slice().forEach(body=>world.removeBody(body));saveMatch();updateSuggestions();resolve();
+    }
+    requestAnimationFrame(settle);
   }
   requestAnimationFrame(frame);
   });

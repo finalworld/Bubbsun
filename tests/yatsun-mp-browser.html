@@ -1,0 +1,19 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="/public/yatsun/">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/","https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js":"/tests/yatsun-auth-stub.mjs","https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js":"/tests/yatsun-auth-stub.mjs","https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js":"/tests/yatsun-auth-stub.mjs"}}</script></head><body>
+<script type="module">
+// Exercise the actual app and physics without real accounts or server writes.
+const originalFetch=window.fetch.bind(window),html=await (await originalFetch('./index.html')).text(),parsed=new DOMParser().parseFromString(html,'text/html');
+for(const style of parsed.querySelectorAll('link[rel=stylesheet]'))document.head.append(style.cloneNode());
+document.body.innerHTML=parsed.body.innerHTML;document.body.querySelectorAll('script').forEach(s=>s.remove());
+let room={id:'fixture',revision:0,otherName:'Testmotståndare',a:'mp-fixture-only',b:'other',status:'active',state:{players:['mp-fixture-only','other'],turn:'mp-fixture-only',rolls:0,dice:[1,2,3,4,5],held:[false,false,false,false,false],scores:{'mp-fixture-only':{},other:{}},done:false}};
+window.fetch=async(url,options)=>{if(options?.method!=='POST')return originalFetch(url,options);const q=JSON.parse(options.body);let data={};
+if(q.action==='social_register')data={member:{code:'TEST',uid:'mp-fixture-only'}};
+if(q.action==='social_list')data={friends:[],rooms:[structuredClone(room)],openTables:[]};
+if(q.action==='social_cosmetics')data={completed:0,active:'classic'};
+if(q.action==='room_get')data={room:structuredClone(room)};
+if(q.action==='room_hold'){room.state.held=q.held;room.revision++;data={room:structuredClone(room)};}
+if(q.action==='room_roll'){room.state.rolls++;room.state.held=q.held;room.state.dice=room.state.dice.map((v,i)=>q.held[i]?v:6-i);room.revision++;data={room:structuredClone(room)};}
+return {ok:true,json:async()=>data};};
+await import('/public/yatsun/app.js');
+</script></body></html>

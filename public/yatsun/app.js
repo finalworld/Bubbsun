@@ -71,7 +71,7 @@ function clearMatch(){remoteMatch=null;localStorage.removeItem(matchKey());updat
 function updateContinueUi(){const saved=loadMatch(),button=$("#start-solo");if(!button)return;button.textContent=saved?`FORTSÄTT MOT ${opponentName(saved.opponentLevel||profile.unlocked).toLocaleUpperCase("sv-SE")} →`:`SPELA MOT ${opponentName().toLocaleUpperCase("sv-SE")} →`;}
 function opponentName(level=profile.unlocked) { return `${firstNames[(level-1)%firstNames.length]} ${lastNames[(Math.floor((level-1)/firstNames.length)+level-1)%lastNames.length]}`; }
 function updateProfileUi() { const {level,xp,needed}=playerProgress(),card=$(".solo-card"); card.querySelector(".xp-preview b").textContent=`Spelarnivå ${level}`; card.querySelector(".xp-preview small").textContent=`${xp} / ${needed} XP`; card.querySelector(".xp-preview em").style.width=`${xp/needed*100}%`; updateContinueUi(); }
-function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen","#campaign-screen","#collection-screen","#mp-home-screen","#mp-join-screen"].forEach((selector)=>$(selector)?.classList.toggle("hidden",selector!==id)); document.body.classList.toggle("playing",id==="#game-screen"); window.scrollTo({top:0,behavior:"smooth"}); }
+function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen","#campaign-screen","#collection-screen","#mp-home-screen","#mp-join-screen"].forEach((selector)=>$(selector)?.classList.toggle("hidden",selector!==id)); document.body.classList.toggle("playing",id==="#game-screen");if(id==='#game-screen'&&!online?.active)updateMatchPlayers(false); window.scrollTo({top:0,behavior:"smooth"}); }
 
 function renderDice(animate=false) {
   disposeDieViews();
@@ -95,9 +95,9 @@ function renderDice(animate=false) {
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
-  if(animate){hideSuggestions();rollButton.disabled=true;dicePhysicsPromise=runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
+  if(animate){hideSuggestions();rollButton.disabled=true;dicePhysicsPromise=runDicePhysics(rollingButtons,trayWidth,trayHeight,online?.active?dice.map(d=>d.value):null);}else updateSuggestions();
 }
-function runDicePhysics(entries,width,height){
+function runDicePhysics(entries,width,height,authoritativeValues=null){
   return new Promise((resolve)=>{
   const compact=window.innerWidth<680,pixelsPerUnit=compact?72:92,dieSize=compact?.72:.88,half=dieSize/2,boundary=compact?8:12,boardHalfWidth=(width-boundary*2)/pixelsPerUnit/2,boardHalfDepth=(height-boundary*2)/pixelsPerUnit/2,halfWidth=boardHalfWidth-half,halfDepth=boardHalfDepth-half,world=new CANNON.World({gravity:new CANNON.Vec3(0,-24,0),allowSleep:true}),diceMaterial=new CANNON.Material("dice"),trayMaterial=new CANNON.Material("tray");
   world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=18;world.defaultContactMaterial.friction=.2;world.defaultContactMaterial.restitution=.3;world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,trayMaterial,{friction:.27,restitution:.38,contactEquationStiffness:1e7,contactEquationRelaxation:4}));world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,diceMaterial,{friction:.18,restitution:.32,contactEquationStiffness:1e7,contactEquationRelaxation:4}));
@@ -131,9 +131,12 @@ function runDicePhysics(entries,width,height){
     if(!layout){requestAnimationFrame(frame);return;}
     const landings=bodies.filter(b=>b.mass>0).map(body=>{
       const topFace=faceNormals.map(([value,x,y,z])=>({value,normal:body.quaternion.vmult(new CANNON.Vec3(x,y,z))})).sort((a,b)=>b.normal.y-a.normal.y)[0];
-      const correction=new CANNON.Quaternion();correction.setFromVectors(topFace.normal,up);
+      const resultValue=authoritativeValues?.[body.die.id]??topFace.value;
+      const desiredFace=faceNormals.find(([value])=>value===resultValue);
+      const resultNormal=authoritativeValues?body.quaternion.vmult(new CANNON.Vec3(...desiredFace.slice(1))):topFace.normal;
+      const correction=new CANNON.Quaternion();correction.setFromVectors(resultNormal,up);
       const target=correction.mult(body.quaternion),point=layout.find(p=>p.id===body.die.id);
-      return {body,value:topFace.value,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
+      return {body,value:resultValue,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
     });
     const settleStart=now;
     function settle(time){
@@ -262,21 +265,35 @@ $("#close-chat").addEventListener("click",()=>$("#reaction-picker").classList.ad
 document.addEventListener("pointerdown",(event)=>{const picker=$("#reaction-picker");if(!picker.classList.contains("hidden")&&!picker.contains(event.target)&&!$("#chat-button").contains(event.target))picker.classList.add("hidden");});
 document.addEventListener("keydown",(event)=>{if(event.key==="Escape")$("#reaction-picker").classList.add("hidden");});
 $("#test-yatsun").addEventListener("click",triggerYatsun);
-let lastOnlineReaction=0;
+let lastOnlineReaction=0,onlineSnapshot=null,onlineAnimating=false,queuedOnlineRoom=null;
+function updateMatchPlayers(multiplayer,room=null){
+  const cards=$$('.player-card'),mine=!multiplayer||room.state.turn===authUser.uid,done=multiplayer&&room.state.done;
+  $('.match-label').replaceChildren(document.createElement('span'),document.createTextNode(multiplayer?' MULTIPLAYER':' SINGELMATCH'));
+  cards[0].querySelector('strong').textContent=authDisplayName;
+  cards[0].querySelector('small').textContent=done?'MATCHEN KLAR':mine?'DIN TUR':'DU';
+  cards[0].classList.toggle('current',!done&&mine);cards[1].classList.toggle('current',!done&&!mine);
+  cards[1].querySelector('.avatar').textContent=multiplayer?(room.otherName||'V').slice(0,1).toLocaleUpperCase('sv-SE'):'AI';
+  if(multiplayer){cards[0].querySelector('span').textContent='Spela nu eller fortsätt senare';cards[1].querySelector('strong').textContent=room.otherName||'Vän';cards[1].querySelector('small').textContent=done?'MATCHEN KLAR':mine?'MOTSTÅNDARE':'MOTSTÅNDARENS TUR';cards[1].querySelector('span').textContent='Multiplayer · matchen sparas';}
+  else cards[1].querySelector('span').textContent='Datormotståndare';
+}
 function applyOnlineRoom(room,initial=false,sending=false,force=false){
+  if(onlineAnimating){queuedOnlineRoom={room,initial,sending,force};return;}
   const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||force||onlineRevision!==room.revision;
-  busy=sending||state.done||state.turn!==uid;
+  const rolled=!initial&&onlineSnapshot?.id===room.id&&state.rolls>0&&(state.turn!==onlineSnapshot.turn||state.rolls>onlineSnapshot.rolls);
+  busy=sending||state.done||state.turn!==uid||rolled;
   boardSkin=state.diceSkin||'classic';
   if(initial)lastOnlineReaction=state.reaction?.at||0;
   if(state.reaction&&state.reaction.at>lastOnlineReaction){lastOnlineReaction=state.reaction.at;if(state.reaction.uid!==uid&&Date.now()-state.reaction.at<10000)showReaction('ai',state.reaction.id);}
   if(initial){showScreen('#game-screen');buildScorecard();dice.forEach((d,i)=>{d.x=(i%2?1:-1)*100;d.y=(Math.floor(i/2)-1)*145;d.rot=(i-2)*7;delete d.q;});}
-  if(changed){const previous=lastScore;playerScores=state.scores[uid];aiScores=state.scores[other];rolls=state.rolls;lastScore=state.last?{who:state.last.uid===uid?'player':'ai',id:state.last.id}:null;dice.forEach((d,i)=>{d.value=state.dice[i];d.held=state.held[i];delete d.q;});renderDice();if(!initial&&state.last?.id==='l8'&&state.last.score===50&&(previous?.id!==lastScore.id||previous?.who!==lastScore.who))triggerYatsun();onlineRevision=room.revision;}
+  if(changed){const previous=lastScore;playerScores=state.scores[uid];aiScores=state.scores[other];rolls=state.rolls;lastScore=state.last?{who:state.last.uid===uid?'player':'ai',id:state.last.id}:null;dice.forEach((d,i)=>{if(initial||d.value!==state.dice[i])delete d.q;d.value=state.dice[i];d.held=state.held[i];});if(rolled){onlineAnimating=true;playDiceSound();}renderDice(rolled);if(!initial&&state.last?.id==='l8'&&state.last.score===50&&(previous?.id!==lastScore.id||previous?.who!==lastScore.who))triggerYatsun();onlineRevision=room.revision;onlineSnapshot={id:room.id,turn:state.turn,rolls:state.rolls};}
+  updateMatchPlayers(true,room);
   $$('.ai-name').forEach(cell=>cell.textContent=room.otherName||'Vän');
   $('.turn-heading h2').textContent=state.done?`Klart! ${totals(playerScores).total} – ${totals(aiScores).total}`:sending?'Sparar drag…':state.turn===uid?'Din tur!':`${room.otherName||'Vännen'}s tur`;
   rollNumber.textContent=String(Math.max(1,rolls));rollHint.textContent='Matchen sparas efter varje kast och drag.';
-  $('#restart-match').hidden=true;$('#end-match').textContent='Lämna rummet (sparas)';rollButton.classList.toggle('hidden',busy);updateSuggestions();
+  $('#restart-match').hidden=true;$('#end-match').textContent='Lämna rummet (sparas)';rollButton.classList.toggle('hidden',state.done||state.turn!==uid);updateSuggestions();
+  if(rolled){dicePhysicsPromise.finally(()=>{onlineAnimating=false;const next=queuedOnlineRoom;queuedOnlineRoom=null;if(online?.active)applyOnlineRoom(next?.room||room,false,next?.sending||false,next?.force||false);});}
 }
-online=createSocial({show:showScreen,user:()=>authUser,name:()=>authDisplayName,canEnter:()=>online.active||(!busy&&!diceRoot.querySelector('.rolling')),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;busy=false;rollButton.classList.remove('hidden');$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
+online=createSocial({show:showScreen,user:()=>authUser,name:()=>authDisplayName,canEnter:()=>!onlineAnimating&&(online.active||(!busy&&!diceRoot.querySelector('.rolling'))),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;onlineSnapshot=null;queuedOnlineRoom=null;busy=false;rollButton.classList.remove('hidden');$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
 const journey=createProgression({profile:()=>profile,name:opponentName,avatar:()=>$('#profile-avatar'),show:showScreen,start:()=>{if(online.active)online.leave();startGame();},select:async id=>{const previous=profile.activeSkin,key=profileKey();profile.activeSkin=id;localStorage.setItem(key,JSON.stringify(profile));try{await syncCosmetics(true);}catch(error){if(profileKey()===key){profile.activeSkin=previous;localStorage.setItem(key,JSON.stringify(profile));}throw error;}}});
 const extras=document.createElement('div');extras.className='solo-extras';for(const [label,action] of [['🗺 Kartan',journey.openMap],['🎲 Mina tärningar',journey.openCollection]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;extras.append(b);}$('.solo-card').append(extras);
 for(const [id,label,path,view] of [
@@ -285,7 +302,7 @@ for(const [id,label,path,view] of [
 ]){const b=document.createElement('button');b.id=id;b.className='social-icon';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;b.onclick=()=>online.open(view);$('#profile-button').before(b);}
 onAuthStateChanged(auth,()=>{setTimeout(()=>online.authChanged(),0);});
 $('#open-multi').addEventListener('click',e=>{e.stopImmediatePropagation();online.lobby();},true);
-for(const element of [$('#end-match'),$('#restart-match'),...$$('.back-to-modes'),$('#start-solo'),$('#play-again')])element.addEventListener('click',e=>{if(!online.active)return;online.leave();if(element.id==='end-match'||element.id==='restart-match'){e.stopImmediatePropagation();}},true);
+for(const element of [$('#end-match'),$('#restart-match'),...$$('.back-to-modes'),$('#start-solo'),$('#play-again')])element.addEventListener('click',e=>{if(!online.active)return;if(onlineAnimating){e.stopImmediatePropagation();return;}online.leave();if(element.id==='end-match'||element.id==='restart-match'){e.stopImmediatePropagation();}},true);
 $("#restart-match").addEventListener("click",()=>{if(!confirm("Starta om matchen mot samma motståndare? Alla poäng i den här matchen försvinner."))return;clearMatch();playerScores={};aiScores={};lastScore=null;rolls=0;dice.forEach((die)=>Object.assign(die,{held:false,value:1+Math.floor(Math.random()*6)}));startGame();});
 $("#end-match").addEventListener("click",()=>{if(!confirm("Avsluta matchen? Den sparade matchen och alla poäng i den tas bort."))return;clearMatch();playerScores={};aiScores={};lastScore=null;$("#result-modal").classList.add("hidden");showScreen("#mode-screen");});
 $("#start-solo").addEventListener("click",startGame);$("#open-multi").addEventListener("click",()=>showScreen("#lobby-screen"));$("#refresh-games").addEventListener("click",(event)=>{event.currentTarget.textContent="↻ UPPDATERAR…";setTimeout(()=>event.currentTarget.textContent="↻ UPPDATERA",700);});$$('.back-to-modes').forEach((button)=>button.addEventListener("click",()=>{$("#result-modal").classList.add("hidden");showScreen("#mode-screen");}));$("#play-again").addEventListener("click",startGame);rollButton.addEventListener("click",roll);buildScorecard();renderDice();updateProfileUi();

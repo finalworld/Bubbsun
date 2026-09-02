@@ -41,6 +41,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     max-width:1200px!important;
     margin-inline:auto!important;
   }
+  body .app-shell>.topbar>.topbar-inner>.header-add-actions{
+    transform:translateX(-32px)!important;
+  }
 }
 
 /* Saved links editor — desktop layout follows the approved two-column mockup. */

@@ -30,6 +30,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links .add-panel-actions>button:last-child{position:static!important;display:grid!important;place-items:center!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important}
 }
 
+/* One actual desktop rail for the four main create views. The older list/notes
+   rule is more specific than the generic page frame, so override it explicitly. */
+@media(min-width:901px){
+  body .app-shell>.content.list-page,
+  body .app-shell>.content.notes-page,
+  body .app-shell>.content.calendar-page,
+  body .app-shell>.content.recipes-page{
+    width:min(calc(100% - 48px),1200px)!important;
+    max-width:1200px!important;
+    margin-inline:auto!important;
+  }
+}
+
 /* Saved links editor — desktop layout follows the approved two-column mockup. */
 @media (min-width:1001px){
   html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){

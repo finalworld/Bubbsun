@@ -241,8 +241,8 @@ document.addEventListener("pointerdown",(event)=>{const picker=$("#reaction-pick
 document.addEventListener("keydown",(event)=>{if(event.key==="Escape")$("#reaction-picker").classList.add("hidden");});
 $("#test-yatsun").addEventListener("click",triggerYatsun);
 let lastOnlineReaction=0;
-function applyOnlineRoom(room,initial=false,sending=false){
-  const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||onlineRevision!==room.revision;
+function applyOnlineRoom(room,initial=false,sending=false,force=false){
+  const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||force||onlineRevision!==room.revision;
   busy=sending||state.done||state.turn!==uid;
   if(initial)lastOnlineReaction=state.reaction?.at||0;
   if(state.reaction&&state.reaction.at>lastOnlineReaction){lastOnlineReaction=state.reaction.at;if(state.reaction.uid!==uid&&Date.now()-state.reaction.at<10000)showReaction('ai',state.reaction.id);}
@@ -253,7 +253,7 @@ function applyOnlineRoom(room,initial=false,sending=false){
   rollNumber.textContent=String(Math.max(1,rolls));rollHint.textContent='Matchen sparas efter varje kast och drag.';
   $('#restart-match').hidden=true;$('#end-match').textContent='Lämna rummet (sparas)';rollButton.classList.toggle('hidden',busy);updateSuggestions();
 }
-online=createSocial({user:()=>authUser,name:()=>authDisplayName,canEnter:()=>online.active||(!busy&&!diceRoot.querySelector('.rolling')),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;busy=false;$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
+online=createSocial({user:()=>authUser,name:()=>authDisplayName,canEnter:()=>online.active||(!busy&&!diceRoot.querySelector('.rolling')),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;busy=false;rollButton.classList.remove('hidden');$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
 for(const [id,label,path,view] of [
   ['friends-button','Vänner och matcher','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M16 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0','friends'],
   ['add-friend-button','Lägg till vänner','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M20 6v6 M17 9h6','add']

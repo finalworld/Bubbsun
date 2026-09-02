@@ -35,7 +35,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
     const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '));svg.append(path);board.append(svg);
     points.forEach((point,i)=>{const level=i+1,earned=level<=done,milestone=level%10===0,node=btn(earned?'✓ '+level:String(level),()=>start());node.disabled=level!==current;node.className=`campaign-node ${earned?'complete':''} ${level===current?'current':''} ${milestone?'milestone':''}`;node.style.left=`${point.x/6}%`;node.style.top=`${point.y}px`;node.setAttribute('aria-label',`Motståndare ${level}: ${name(level)}${earned?', besegrad':level===current?', spela nu':', låst'}`);
       if(milestone){const skin=skins[level/10];node.append(el('span',`${earned?'🏅':'⚑'} ${skin.name}`,'checkpoint-label'));}
-      if(level===current){const marker=el('span',done===100?'MÅLET KLARAT!':'DU ÄR HÄR','current-marker');const image=avatar()?.cloneNode(true);if(image){image.removeAttribute('id');marker.prepend(image);}node.append(marker);node.id='campaign-current';}
+      if(level===current){const marker=el('span',done===100?'MÅLET KLARAT!':'DU ÄR HÄR',`current-marker ${point.x>=300?'marker-left':'marker-right'}`);const image=avatar()?.cloneNode(true);if(image){image.removeAttribute('id');marker.prepend(image);}node.append(marker);node.id='campaign-current';}
       board.append(node);
     });show('#campaign-screen');requestAnimationFrame(()=>map.querySelector('#campaign-current').scrollIntoView({block:'center'}));
   }

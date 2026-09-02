@@ -3,6 +3,8 @@
 @media(max-width:500px){.journey-page{padding:10px}.campaign-board{border-width:4px}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.skin-card{padding:18px 8px}.skin-preview{width:78px;height:78px;font-size:60px}}
 
 /* Multiplayer: felt, warm paper and clear turn hierarchy. */
+@media(max-width:500px){.current-marker{width:86px;box-sizing:border-box;white-space:normal;text-align:center}.current-marker img,.current-marker span{width:20px;height:20px;flex-shrink:0}}
+.campaign-node.current{z-index:2}.current-marker{top:50%;bottom:auto;transform:translateY(-50%);pointer-events:none;font-size:10px;padding:7px 8px;gap:4px}.current-marker.marker-left{left:auto;right:calc(100% + 16px)}.current-marker.marker-right{left:calc(100% + 16px);right:auto}.current-marker::after{content:"";position:absolute;top:50%;width:10px;height:10px;background:#fffaf0;transform:translateY(-50%) rotate(45deg)}.current-marker.marker-left::after{right:-4px}.current-marker.marker-right::after{left:-4px}
 .mp-page{max-width:1040px;width:100%;box-sizing:border-box;padding:16px 24px 36px;background:transparent;border-radius:0;color:#293e31}
 .mp-page button{font-weight:750;transition:background .15s,box-shadow .15s;min-height:44px}
 .mp-page button:hover:not(:disabled){background:#36563f;box-shadow:0 4px 12px #29433122}

@@ -211,6 +211,8 @@ $("#logout-button").addEventListener("click",async()=>{await signOut(auth);$("#l
 reactionPositions.forEach((_,id)=>{const button=document.createElement("button");button.type="button";button.className="reaction-option";button.setAttribute("aria-label",`Skicka reaktion ${id+1}`);reactionStyle(button,id);button.addEventListener("click",()=>{showReaction("player",id);$("#reaction-picker").classList.add("hidden");});$("#reaction-options").appendChild(button);});
 $("#chat-button").addEventListener("click",()=>$("#reaction-picker").classList.toggle("hidden"));
 $("#close-chat").addEventListener("click",()=>$("#reaction-picker").classList.add("hidden"));
+document.addEventListener("pointerdown",(event)=>{const picker=$("#reaction-picker");if(!picker.classList.contains("hidden")&&!picker.contains(event.target)&&!$("#chat-button").contains(event.target))picker.classList.add("hidden");});
+document.addEventListener("keydown",(event)=>{if(event.key==="Escape")$("#reaction-picker").classList.add("hidden");});
 $("#test-yatsun").addEventListener("click",triggerYatsun);
 $("#restart-match").addEventListener("click",()=>{if(!confirm("Starta om matchen mot samma motståndare? Alla poäng i den här matchen försvinner."))return;clearMatch();playerScores={};aiScores={};lastScore=null;rolls=0;dice.forEach((die)=>Object.assign(die,{held:false,value:1+Math.floor(Math.random()*6)}));startGame();});
 $("#end-match").addEventListener("click",()=>{if(!confirm("Avsluta matchen? Den sparade matchen och alla poäng i den tas bort."))return;clearMatch();playerScores={};aiScores={};lastScore=null;$("#result-modal").classList.add("hidden");showScreen("#mode-screen");});

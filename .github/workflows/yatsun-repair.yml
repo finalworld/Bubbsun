@@ -13,11 +13,14 @@ jobs:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -qq && sudo apt-get install -y lftp
       - name: Prepare temporary protected probe
+        env:
+          CANDIDATE_HOST: ${{ secrets.KASSUN_DB_HOST }}
         run: |
           token=$(openssl rand -hex 32)
           echo "::add-mask::$token"
           echo "PROBE_TOKEN=$token" >> "$GITHUB_ENV"
-          sed "s/__PROBE_TOKEN__/$token/" scripts/yatsun-db-probe.php > /tmp/yatsun-probe.php
+          export TOKEN="$token"
+          node -e 'const fs=require("fs");fs.writeFileSync("/tmp/yatsun-probe.php",fs.readFileSync("scripts/yatsun-db-probe.php","utf8").replace("__PROBE_TOKEN__",process.env.TOKEN).replace("__CANDIDATE_HOST__",Buffer.from(process.env.CANDIDATE_HOST).toString("base64")))'
       - name: Check only Yatsun database
         env:
           SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}

@@ -150,6 +150,15 @@ body.playing .game-shell .roll-button{right:36px;bottom:112px}
 .reaction-bubble{width:100px;height:132px}
 @media(max-width:680px){.reaction-bubble{width:82px;height:108px}}
 
+/* Tydligare chattikon och reaktionskort mot den ljusa sidhuvudet. */
+.chat-glyph{width:34px;height:27px;border-radius:17px;background:linear-gradient(145deg,#9470c8 0%,#6d48a5 70%,#543681 100%);box-shadow:inset 0 1px 1px #ffffff8c,inset 0 -2px 3px #38225266,0 5px 12px #49326738;transition:transform .16s ease,box-shadow .16s ease}
+.chat-glyph:before{content:"";position:absolute;left:9px;top:11px;width:4px;height:4px;border-radius:50%;background:#fff8e9;box-shadow:7px 0 0 #fff8e9,14px 0 0 #fff8e9}
+.chat-glyph:after{right:3px;bottom:-5px;width:11px;height:11px;background:#543681;clip-path:polygon(0 0,100% 0,100% 100%);filter:drop-shadow(1px 2px 1px #4932672e)}
+.chat-button:hover .chat-glyph{transform:translateY(-1px) scale(1.06);box-shadow:inset 0 1px 1px #ffffff8c,inset 0 -2px 3px #38225266,0 7px 15px #4932674d}
+.reaction-bubble{padding:7px;border:3px solid #7450a8;background:#fff6df;box-shadow:0 5px 0 #50346f,0 16px 34px #3325464d}
+.reaction-bubble i{position:relative;z-index:2;border-radius:16px;background-color:#f4ecfa}
+.reaction-bubble:after{z-index:0;width:22px;height:22px;top:-11px!important;right:14px!important;border:3px solid #7450a8;border-right:0;border-bottom:0;background:#fff6df;clip-path:none;transform:rotate(45deg)}
+
 .game-shell .score-section-block .ai-score.filled span{min-width:38px;min-height:0;padding:3px 7px;border-radius:10px;font-size:14px;line-height:1.15}
 body.playing .game-shell .roll-button{right:52px;bottom:130px}
 @media(max-width:900px){body.playing .game-shell .roll-button{right:32px;bottom:108px}}

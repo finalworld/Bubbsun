@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { planRestingLayout } from "./dice-resting.mjs";
-import { createSocial } from "./social.mjs?v=journey1";
+import { createSocial } from "./social.mjs?v=lounge2";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs';
 let boardSkin='classic';
 let online = null;

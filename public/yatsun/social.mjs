@@ -4,7 +4,10 @@ export function createSocial({user, name, applyRoom, leaveRoom, login, canEnter=
   const title=document.createElement('h2'),error=document.createElement('p');let content=document.createElement('div');error.setAttribute('role','status');
   const mpHome=document.createElement('section'),mpJoin=document.createElement('section');mpHome.id='mp-home-screen';mpJoin.id='mp-join-screen';mpHome.className=mpJoin.className='mp-page hidden';(document.querySelector('main')||document.body).append(mpHome,mpJoin);
   function renderInto(root,fn){const previous=content;content=root;try{fn();}finally{content=previous;}}
-  function pageHeading(root,label){root.replaceChildren();root.append(button('← Tillbaka',()=>show('#mode-screen')));const h=document.createElement('h1');h.textContent=label;root.append(h);const status=document.createElement('p');status.setAttribute('role','status');root.append(status);}
+  function node(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;}
+  function pageHeading(root,label){root.replaceChildren();const back=button(root===mpJoin?'← Multiplayer':'← Till spellägen',root===mpJoin?openLobby:()=>show('#mode-screen'));back.className='mp-back';const hero=node('header','','mp-hero'),copy=node('div','','mp-hero-copy');copy.append(node('span','YATSUN · MULTIPLAYER','mp-eyebrow'),node('h1',label),node('p',root===mpJoin?'En ledig plats. En ny motståndare. Slå dig ner.':'Ett kast nu. Returmatch imorgon. Spela tillsammans, i er egen takt.'));const art=node('div','⚄','mp-hero-die');art.setAttribute('aria-hidden','true');hero.append(copy,art);root.append(back,hero);const status=node('p','','mp-status');status.setAttribute('role','status');root.append(status);}
+  function matchCard(root,name,detail,label,action,kind='waiting'){const card=node('article','',`mp-match mp-${kind}`),avatar=node('span',name.slice(0,1).toLocaleUpperCase('sv-SE'),'mp-avatar'),copy=node('div','','mp-match-copy');avatar.setAttribute('aria-hidden','true');copy.append(node('h3',name),node('p',detail));const b=button(label,action);card.append(avatar,copy,b);root.append(card);}
+  function emptyState(root,title,detail){const box=node('div','','mp-empty');box.append(node('span','◇','mp-empty-icon'),node('h3',title),node('p',detail));root.append(box);}
   const close=document.createElement('button');close.textContent='×';close.className='social-close';close.setAttribute('aria-label','Stäng');close.onclick=()=>dialog.close();dialog.append(close,title,content,error);
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
   let view='friends';
@@ -65,25 +68,24 @@ export function createSocial({user, name, applyRoom, leaveRoom, login, canEnter=
   }
   async function openJoin(){view='lobby';pageHeading(mpJoin,'Join – lediga bord');show('#mp-join-screen');message('Hämtar…');try{await refresh();}catch(e){message(e.message);}}
   function renderHome(openTables){renderInto(mpHome,()=>{
-    pageHeading(mpHome,'Multiplayer');const actions=document.createElement('div');actions.className='mp-actions';actions.append(button('Host – skapa spel',async()=>{await api('room_host');await refresh();}),button('Join – hitta spel',openJoin));mpHome.append(actions);
-    heading('Dina pågående spel');
-    for(const table of openTables)line('Ditt öppna bord · väntar på spelare',[button('Stäng bord',async()=>{await api('room_cancel_open',{id:table.id});await refresh();})]);
-    const active=rooms.filter(r=>r.status==='active');if(!active.length&&!openTables.length)line('Inga pågående spel ännu. Välj Host eller Join.');
-    for(const room of active)line(`${room.otherName} · ${room.state.turn===user().uid?'Din tur':'Motståndarens tur'}`,[button('Fortsätt',()=>enter(room))]);
-    mpHome.append(button('Vänner & inbjudningar',()=>open()));
+    pageHeading(mpHome,'Ditt nästa kast börjar här.');const actions=node('div','','mp-actions');
+    for(const [label,subtitle,icon,fn] of [['Host – skapa spel','Duka fram ett eget bord och låt någon slå sig ner.','+',async()=>{await api('room_host');await refresh();}],['Join – hitta spel','Hitta en ledig plats och möt en ny motståndare.','↗',openJoin]]){const b=button('',fn);b.className='mp-action-card';b.append(node('span',icon,'mp-action-icon'),node('strong',label),node('span',subtitle,'mp-action-description'));actions.append(b);}mpHome.append(actions);
+    const section=node('section','','mp-matches'),top=node('div','','mp-section-heading');const active=rooms.filter(r=>r.status==='active').sort((a,b)=>Number(b.state.turn===user().uid)-Number(a.state.turn===user().uid));top.append(node('h2','Dina pågående spel'),node('span',String(active.length+openTables.length),'mp-count'));section.append(top,node('p','Matcherna sparas. Fortsätt precis där ni slutade.','mp-section-note'));mpHome.append(section);
+    for(const table of openTables)matchCard(section,'Ditt öppna bord','Väntar på en motståndare · 1 av 2 spelare','Stäng bord',async()=>{await api('room_cancel_open',{id:table.id});await refresh();});
+    if(!active.length&&!openTables.length)emptyState(section,'Här väntar dina matcher','Skapa ett bord eller hitta en ledig plats ovanför.');
+    for(const room of active){const mine=room.state.turn===user().uid;matchCard(section,room.otherName,mine?'● Din tur att kasta':'Motståndarens tur · du kan titta in',mine?'Spela →':'Öppna →',()=>enter(room),mine?'your-turn':'waiting');}
+    const footer=node('div','','mp-friends-strip'),copy=node('div');copy.append(node('strong','Hellre en bekant motståndare?'),node('p','Utmana en vän eller svara på en inbjudan.'));footer.append(copy,button('Vänner & inbjudningar',()=>open()));mpHome.append(footer);
   });}
   function renderLobby(tables){
-    pageHeading(mpJoin,'Join – lediga bord');mpJoin.append(button('← Multiplayer',openLobby));
-    heading('Lediga bord');
-    if(!tables.length)line('Inga lediga bord just nu. Skapa det första!');
+    pageHeading(mpJoin,'Slå dig ner vid ett bord.');const top=node('div','','mp-section-heading');top.append(node('h2','Lediga bord'),node('span',`${tables.length} öppna`,'mp-count'),button('↻ Uppdatera',refresh));mpJoin.append(top,node('p','Listan uppdateras automatiskt medan du är här.','mp-section-note'));const list=node('div','','mp-table-list');mpJoin.append(list);
+    if(!tables.length){emptyState(list,'Alla bord är upptagna just nu','Gå tillbaka och skapa ett eget — nästa motståndare kan bli din.');list.append(button('← Skapa ett eget bord',openLobby));}
     for(const table of tables){
       const mine=table.hostUid===user().uid;
-      line(`${table.hostName} · 1 av 2 spelare`,[mine?button('Stäng bord',async()=>{await api('room_cancel_open',{id:table.id});await refresh();}):button('Anslut',async()=>{
+      matchCard(list,table.hostName,mine?'Ditt bord · väntar på spelare':'Ledig plats · 1 av 2 spelare',mine?'Stäng bord':'Anslut →',mine?async()=>{await api('room_cancel_open',{id:table.id});await refresh();}:async()=>{
         if(!canEnter())throw new Error('Vänta tills ditt pågående kast eller datordrag är klart.');
         try{const result=await api('room_join',{id:table.id});enter(result.room);}catch(e){await refresh();throw e;}
-      })]);
+      });
     }
-    content.append(button('Uppdatera listan',refresh));
   }
   setInterval(()=>{if(!document.hidden)refresh().catch(e=>message(e.message));},3000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(e=>message(e.message));});

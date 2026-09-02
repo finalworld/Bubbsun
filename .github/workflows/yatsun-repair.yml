@@ -1,0 +1,54 @@
+name: Yatsun isolated database check
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/bubbsun-current-release]
+    paths: [.github/workflows/yatsun-repair.yml, scripts/yatsun-db-probe.php]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y lftp
+      - name: Prepare temporary protected probe
+        run: |
+          token=$(openssl rand -hex 32)
+          echo "::add-mask::$token"
+          echo "PROBE_TOKEN=$token" >> "$GITHUB_ENV"
+          sed "s/__PROBE_TOKEN__/$token/" scripts/yatsun-db-probe.php > /tmp/yatsun-probe.php
+      - name: Check only Yatsun database
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 20
+          set net:max-retries 1
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          put /tmp/yatsun-probe.php -o public/yatsun/api/_codex-db-probe.php
+          bye
+          EOF
+          curl --fail --silent --show-error --max-time 30 -H "X-Yatsun-Probe: $PROBE_TOKEN" https://www.bubbsun.se/yatsun/api/_codex-db-probe.php
+      - name: Remove temporary probe
+        if: always()
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 20
+          set net:max-retries 1
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          rm -f public/yatsun/api/_codex-db-probe.php
+          bye
+          EOF

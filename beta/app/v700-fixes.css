@@ -445,6 +445,14 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   min-height: 52px !important;
   border-radius: 15px !important;
 }
+.app-shell .topbar.text-header-v2 .header-add > img {
+  display: block !important;
+  width: 66px !important;
+  height: 66px !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+}
 .app-shell .content.list-page,
 .app-shell .content.notes-page {
   width: var(--bubbsun-rail) !important;
@@ -538,6 +546,7 @@ body:not(.at-page-top) .topbar::after { opacity: 1; }
   .app-shell .topbar.text-header-v2 .header-brand-tagline { margin-top: 4px !important; padding-bottom: 4px !important; font-size: 10px !important; }
   .app-shell .topbar.text-header-v2 .supporter-title { margin-top: 4px !important; font-size: 8px !important; }
   .app-shell .topbar.text-header-v2 .header-add { width: 43px !important; height: 43px !important; min-height: 43px !important; border-radius: 12px !important; }
+  .app-shell .topbar.text-header-v2 .header-add > img { width: 55px !important; height: 55px !important; }
   .app-shell .notes-page .note-card { grid-template-columns: 100px minmax(0, 1fr) 32px 24px !important; grid-template-rows: minmax(96px, auto) !important; min-height: 96px !important; }
   .app-shell .notes-page .note-copy { padding: 11px 8px 10px 15px !important; }
 }

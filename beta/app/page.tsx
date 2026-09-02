@@ -1023,6 +1023,7 @@ function Header({
   language,
   wallet,
   gameXp,
+  addIcon,
 }: {
   onMenu: () => void;
   onHome: () => void;
@@ -1041,6 +1042,7 @@ function Header({
   language: string;
   wallet?: FrasseProgress | null;
   gameXp?: {xp:number;level:number;levelXp:number;nextLevelXp:number}|null;
+  addIcon?: "list" | "note" | "recipe" | "calendar";
 }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -1111,10 +1113,10 @@ function Header({
         {gameXp ? <div className="header-game-xp"><Star/><span><small>NIVÅ {gameXp.level}</small><strong>{gameXp.xp.toLocaleString("sv-SE")} XP</strong><i><em style={{width:`${Math.min(100,gameXp.levelXp/Math.max(1,gameXp.nextLevelXp)*100)}%`}}/></i></span></div> : wallet ? <div className="header-game-wallet"><span><small>SALDO</small><strong>{wallet.balance.toLocaleString("sv-SE")} Bb</strong></span><span><small>VALV</small><strong>{wallet.vault.toLocaleString("sv-SE")} Bb</strong></span></div> : mode === "calculator" ? <div className="header-add-actions"><button className="theme-button header-add header-calculator" aria-label="Öppna miniräknaren" title="Miniräknare" onClick={onAdd}><Calculator/></button></div> : mode === "add" ? (
           <div className="header-add-actions"><button
             className="theme-button header-add"
-            aria-label={tabTitle === "Kalender" ? "Ny händelse" : "Skapa en lista"}
+            aria-label={addIcon === "note" ? "Skapa en anteckning" : addIcon === "recipe" ? "Skapa ett recept" : addIcon === "calendar" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}
           >
-            <Plus />
+            {addIcon ? <img src={`/assets/new-icons/create-${addIcon}.png`} alt="" /> : <Plus />}
           </button></div>
         ) : mode === "manage" ? (
           <button
@@ -7240,6 +7242,7 @@ function AuthenticatedApp() {
         onMenu={() => setMenuOpen(open=>!open)}
         onHome={() => navigate(page==="notes"||page==="note"?"notes":page==="calendar"?"calendar":page==="meal-planner"?"meal-planner":page==="recipes"?"recipes":page==="recipe-discover"?"recipe-discover":page==="budget"?"budget":"lists")}
         onAdd={() => page === "notes" ? setAddingNote(true) : page === "calendar" ? setAddingCalendar(true) : page === "meal-planner" ? setAddingMealPlan(true) : page === "recipes" ? setAddingRecipe(true) : page === "budget" ? setBudgetCalculatorOpen(true) : page === "chat" ? window.dispatchEvent(new Event("bubbsun:new-chat")) : setAdding(true)}
+        addIcon={page === "lists" ? "list" : page === "notes" ? "note" : page === "recipes" ? "recipe" : page === "calendar" ? "calendar" : undefined}
         onManage={() => setListToolsOpen((open) => !open)}
         mode={page === "budget" ? "calculator" : page === "lists" || page === "notes" || page === "calendar" || page === "meal-planner" || page === "recipes" || (page === "chat"&&memberships.length>0) ? "add" : page === "list" || page === "note" ? "manage" : "none"}
         reportCount={(account.megaSuperBoss || account.founder)&&isAdminPage ? reports.filter(report=>report.status==="new").length : undefined}

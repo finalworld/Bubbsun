@@ -42,7 +42,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     margin-inline:auto!important;
   }
   body .app-shell>.topbar>.topbar-inner>.header-add-actions{
-    transform:translateX(-32px)!important;
+    transform:translate(-32px,-9px)!important;
   }
 }
 

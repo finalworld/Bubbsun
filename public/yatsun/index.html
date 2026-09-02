@@ -7,6 +7,7 @@
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
     <link rel="stylesheet" href="./styles.css?v=20260903a" />
+    <link rel="stylesheet" href="./social.css?v=20260903a" />
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
   </head>
   <body>
@@ -38,7 +39,7 @@
     <main>
       <section class="welcome-strip">
         <div>
-          <small>SVENSK YATZY · 1–4 SPELARE</small>
+          <small>SVENSK YATZY · SOLO ELLER MED EN VÄN</small>
           <h1>Kasta. Chansa. Jubla.</h1>
           <p>Spela en hel match mot din första motståndare och klättra vidare genom 100 nivåer.</p>
         </div>
@@ -49,8 +50,8 @@
 
       <section id="mode-screen" class="mode-screen">
         <article class="mode-card solo-card"><span class="mode-icon">⚄</span><small>100 MOTSTÅNDARE</small><h2>Singelplayer</h2><p>Börja mot Maj-Britt Blixt och lås upp en ny svensk Yatsun-profil för varje seger.</p><div class="xp-preview"><span><b>Spelarnivå 1</b><small>0 / 100 XP</small></span><i><em></em></i></div><button id="start-solo" type="button">SPELA MOT MAJ-BRITT →</button></article>
-        <article class="mode-card multi-card"><span class="mode-icon">♟</span><small>2–4 SPELARE · LIVE</small><h2>Multiplayer</h2><p>Skapa ett offentligt spel eller en privat match som kompisarna ansluter till med kod.</p><div class="xp-preview"><span><b>Multiplayernivå 1</b><small>0 / 100 XP</small></span><i><em></em></i></div><button id="open-multi" type="button">ÖPPNA SPELLISTAN →</button></article>
-        <aside class="coming-panel"><b>På väg i nästa steg</b><span>Google-inloggning</span><span>Profil & galna avatarer</span><span>Vänner & full statistik</span><span>MariaDB & P2P-livematcher</span></aside>
+        <article class="mode-card multi-card"><span class="mode-icon">♟</span><small>DU OCH EN VÄN · I ER TAKT</small><h2>Multiplayer</h2><p>Utmana en vän. Spela tillsammans nu eller fortsätt med nästa drag en annan dag. Matchen sparas efter varje kast.</p><button id="open-multi" type="button">VÄNNER & MATCHER →</button></article>
+        <aside class="coming-panel"><b>Spela i din takt</b><span>Samma inloggning som Bubbsun</span><span>Lägg till vänner med medlemskod</span><span>Fortsätt matchen när du vill</span><span>Automatiska uppdateringar när ni spelar</span></aside>
       </section>
 
       <section id="lobby-screen" class="lobby-screen hidden">
@@ -126,6 +127,6 @@
       </article>
     </div>
 
-    <script type="module" src="./app.js?v=20260903b"></script>
+    <script type="module" src="./app.js?v=20260903c"></script>
   </body>
 </html>

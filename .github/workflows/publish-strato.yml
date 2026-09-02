@@ -10,9 +10,36 @@ jobs:
   publish:
     name: Bygg och publicera
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: test-only
+          MARIADB_DATABASE: yatsun_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - name: Hämta koden
         uses: actions/checkout@v4
+
+      - name: PHP för Yatsuns servertester
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring
+
+      - name: Testa Yatsuns matchrum före publicering
+        env:
+          YATSUN_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=yatsun_test;charset=utf8mb4
+        run: |
+          php -l public/yatsun/api/index.php
+          php -l public/yatsun/api/social.php
+          php -l public/yatsun/api/room-rules.php
+          php tests/yatsun-rooms.test.php
+          node --test tests/yatsun-dice-resting.test.mjs
 
       - name: Installera pnpm
         uses: pnpm/action-setup@v4

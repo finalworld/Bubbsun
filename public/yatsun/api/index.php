@@ -48,6 +48,10 @@ $action = is_array($input) ? (string) ($input['action'] ?? '') : '';
 $uid = authenticated_uid();
 
 try {
+    if(preg_match('/^(social_|friend_|room_)/',$action)){
+        require_once __DIR__.'/social.php';
+        reply(['ok'=>true]+social_handle(db(),$uid,$action,$input));
+    }
     if ($action === 'load_match') {
         $statement = db()->prepare('SELECT state_json, updated_at FROM yatsun_matches WHERE uid = ?');
         $statement->execute([$uid]);
@@ -73,4 +77,7 @@ try {
 } catch (PDOException $error) {
     error_log('Yatsun database error: ' . $error->getMessage());
     reply(['ok' => false, 'error' => 'Databasen svarar inte just nu.'], 503);
+} catch (RuntimeException $error) {
+    $status=in_array($error->getCode(),[400,403,404,409],true)?$error->getCode():500;
+    reply(['ok'=>false,'error'=>$status===500?'Något gick fel. Försök igen.':$error->getMessage()],$status);
 }

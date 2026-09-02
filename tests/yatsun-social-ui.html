@@ -1,0 +1,18 @@
+<!doctype html><html lang="sv"><meta charset="utf-8"><title>Yatsun social UI fixture</title>
+<link rel="stylesheet" href="/yatsun/social.css">
+<button id="friends-button">Vänner</button><button id="add">Lägg till</button><button id="roll">Kasta</button><button id="leave">Lämna</button><p id="state">Ingen match öppen</p>
+<script>window.addEventListener('error',e=>document.querySelector('#state').textContent=e.message);window.addEventListener('unhandledrejection',e=>document.querySelector('#state').textContent=String(e.reason));</script>
+<script type="module">
+import {createSocial} from '../public/yatsun/social.mjs';
+// Local-only fixture: no real users, tokens or network writes.
+const room={id:'12345678901234567890123456789012',a:'test-a',b:'test-b',otherName:'Testvän',status:'active',revision:1,state:{players:['test-a','test-b'],turn:'test-a',rolls:0,dice:[1,2,3,4,5],held:[false,false,false,false,false],scores:{'test-a':{},'test-b':{}},done:false}};
+window.fetch=async(url,options)=>{const q=JSON.parse(options.body);let data={};
+if(q.action==='social_register')data={member:{uid:'test-a',name:'Testspelare',code:'ABC123ABC123'}};
+else if(q.action==='social_list')data={friends:[{uid:'test-b',name:'Testvän',status:'accepted',seen_at:Date.now()}],rooms:[structuredClone(room)]};
+else if(q.action==='social_search')data={members:[{uid:'test-c',name:'Sökresultat'}]};
+else if(q.action==='room_roll'){room.revision++;room.state.rolls++;room.state.dice=[6,6,6,6,6];data={room:structuredClone(room)};}
+return {ok:true,json:async()=>data};};
+const social=createSocial({user:()=>({uid:'test-a',getIdToken:async()=>'test-only'}),name:()=>'Testspelare',applyRoom:r=>{document.querySelector('#state').textContent=`${r.otherName}: ${r.state.rolls} kast, ${r.state.dice.join(',')}`;},leaveRoom:()=>{document.querySelector('#state').textContent='Rummet lämnat';},login:()=>{}});
+document.querySelector('#friends-button').onclick=()=>social.open();document.querySelector('#add').onclick=()=>social.open('add');document.querySelector('#roll').onclick=()=>social.roll([false,false,false,false,false]);document.querySelector('#leave').onclick=()=>social.leave();
+document.querySelector('#state').textContent='Testet är redo';
+</script></html>

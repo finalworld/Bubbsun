@@ -1,0 +1,50 @@
+export const skins=[
+  ['classic','Original',0,'#fff8e7','#153b2d',0,.5],
+  ['forest','Skog',10,'#63876b','#fff4d2',0,.6],
+  ['ocean','Hav',20,'#368fbc','#f5fcff',0,.3],
+  ['cherry','Körsbär',30,'#b83e59','#fff2df',0,.35],
+  ['amber','Bärnsten',40,'#e7a83e','#472713',.2,.3],
+  ['violet','Ametist',50,'#8055b4','#fff0e0',.15,.3],
+  ['ice','Isblå',60,'#bce5e5','#214e70',.2,.2],
+  ['copper','Koppar',70,'#b97249','#fff4d1',.65,.3],
+  ['midnight','Midnatt',80,'#202c45','#edc36c',.25,.35],
+  ['pearl','Pärlemor',90,'#eedaf3','#694381',.35,.22],
+  ['champion','Mästarguld',100,'#f0c457','#342914',.75,.24]
+].map(([id,name,level,body,pips,metalness,roughness])=>({id,name,level,body,pips,metalness,roughness}));
+export function completedLevels(p){return Math.min(100,Math.max(0,Math.trunc(Number(p.completed)||0),Math.trunc(Number(p.unlocked)||1)-1));}
+export function activeSkin(p){return skins.find(s=>s.id===p.activeSkin&&s.level<=completedLevels(p))||skins[0];}
+export function awardVictory(p,level){const previous=completedLevels(p),completed=Math.max(previous,Math.min(100,level));return {...p,completed,unlocked:Math.min(100,completed+1),newSkin:skins.find(s=>s.level===level&&level>previous)?.name||null};}
+export function skinById(id){return skins.find(s=>s.id===id)||skins[0];}
+export function paintDice(model,skin,THREE){
+  const materials=[];if(skin.id==='classic')return materials;
+  model.traverse(node=>{if(!node.isMesh)return;const tint=original=>{const material=original.clone();material.metalness=skin.metalness;material.roughness=skin.roughness;material.onBeforeCompile=shader=>{shader.uniforms.skinBody={value:new THREE.Color(skin.body)};shader.uniforms.skinPips={value:new THREE.Color(skin.pips)};shader.fragmentShader='uniform vec3 skinBody; uniform vec3 skinPips;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nfloat faceInk=smoothstep(0.12,0.65,dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722))); diffuseColor.rgb=mix(skinPips,skinBody,faceInk);');};material.customProgramCacheKey=()=>skin.id;materials.push(material);return material;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
+  return materials;
+}
+
+export function createProgression({profile,select,start,name,avatar,show}){
+  const map=document.createElement('section'),collection=document.createElement('section');map.id='campaign-screen';collection.id='collection-screen';map.className=collection.className='journey-page hidden';document.querySelector('main').append(map,collection);
+  function el(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;}
+  function btn(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
+  function header(root,title){root.replaceChildren();root.append(btn('← Till spellägen',()=>show('#mode-screen')),el('h1',title));}
+  function openMap(){
+    header(map,'Din väg till 100');const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
+    map.append(el('p','Besegra motståndarna längs vägen. Var tionde seger låser upp ett nytt tärningsset.'));
+    const board=el('div','','campaign-board');map.append(board);
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 600 8100');svg.setAttribute('preserveAspectRatio','none');svg.classList.add('campaign-road');
+    const points=Array.from({length:100},(_,i)=>({x:300+Math.sin(i*Math.PI/6)*185,y:8000-i*80}));
+    const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '));svg.append(path);board.append(svg);
+    points.forEach((point,i)=>{const level=i+1,earned=level<=done,milestone=level%10===0,node=btn(earned?'✓ '+level:String(level),()=>start());node.disabled=level!==current;node.className=`campaign-node ${earned?'complete':''} ${level===current?'current':''} ${milestone?'milestone':''}`;node.style.left=`${point.x/6}%`;node.style.top=`${point.y}px`;node.setAttribute('aria-label',`Motståndare ${level}: ${name(level)}${earned?', besegrad':level===current?', spela nu':', låst'}`);
+      if(milestone){const skin=skins[level/10];node.append(el('span',`${earned?'🏅':'⚑'} ${skin.name}`,'checkpoint-label'));}
+      if(level===current){const marker=el('span',done===100?'MÅLET KLARAT!':'DU ÄR HÄR','current-marker');const image=avatar()?.cloneNode(true);if(image){image.removeAttribute('id');marker.prepend(image);}node.append(marker);node.id='campaign-current';}
+      board.append(node);
+    });show('#campaign-screen');requestAnimationFrame(()=>map.querySelector('#campaign-current').scrollIntoView({block:'center'}));
+  }
+  function openCollection(){
+    header(collection,'Mina tärningar');collection.append(el('p','Samma fysik och chanser – välj din stil. Nya set efter var tionde besegrad motståndare.'));
+    const grid=el('div','','skin-grid');collection.append(grid);const p=profile(),selected=activeSkin(p);
+    for(const skin of skins){const available=skin.level<=completedLevels(p),card=el('article','','skin-card');const preview=el('div','','skin-preview');preview.style.background=skin.body;preview.style.color=skin.pips;for(const [x,y] of [[27,27],[73,27],[50,50],[27,73],[73,73]]){const dot=el('i','','skin-dot');dot.style.left=x+'%';dot.style.top=y+'%';preview.append(dot);}card.append(preview,el('h2',skin.name),el('p',skin.level?`Besegra motståndare ${skin.level}`:'Ditt startset'));
+      const b=btn(!available?'🔒 Låst':skin.id===selected.id?'✓ Aktiv':'Använd',async()=>{b.disabled=true;try{await select(skin.id);openCollection();}catch(e){b.disabled=false;card.append(el('p',e.message));}});b.disabled=!available||skin.id===selected.id;card.append(b);grid.append(card);
+    }show('#collection-screen');
+  }
+  return {openMap,openCollection};
+}

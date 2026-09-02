@@ -1,24 +1,35 @@
 <!doctype html><html lang="sv"><meta charset="utf-8"><title>Yatsun social UI fixture</title>
 <link rel="stylesheet" href="/yatsun/social.css">
+<link rel="stylesheet" href="/yatsun/progression.css"><style>.hidden{display:none!important}body{font:16px system-ui;background:#f7f4ec}main{margin-top:20px}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <button id="friends-button">Vänner</button><button id="add">Lägg till</button><button id="roll">Kasta</button><button id="leave">Lämna</button><p id="state">Ingen match öppen</p>
 <button id="lobby">Multiplayer</button>
+<button id="map">Kartan</button><button id="collection">Mina tärningar</button><button id="styles">3D färgtest</button><p id="requests">Publika listhämtningar: 0</p><main></main>
 <script>window.addEventListener('error',e=>document.querySelector('#state').textContent=e.message);window.addEventListener('unhandledrejection',e=>document.querySelector('#state').textContent=String(e.reason));</script>
 <script type="module">
 import {createSocial} from '../public/yatsun/social.mjs';
+import {createProgression,paintDice,skinById} from '../public/yatsun/progression.mjs';
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+function show(id){document.querySelectorAll('main>section').forEach(e=>e.classList.toggle('hidden','#'+e.id!==id));}
+let p={completed:35,unlocked:36,activeSkin:'forest'},queries=0;
+const journey=createProgression({profile:()=>p,select:id=>{p.activeSkin=id;},start:()=>{document.querySelector('#state').textContent='Spela mot 36';},name:n=>'Testmotståndare '+n,avatar:()=>null,show});
+document.querySelector('#map').onclick=journey.openMap;document.querySelector('#collection').onclick=journey.openCollection;
+document.querySelector('#styles').onclick=async()=>{const source=await new GLTFLoader().loadAsync('/yatsun/assets/3d/D6_A.gltf');for(const id of ['forest','midnight','champion']){const canvas=document.createElement('canvas');document.body.append(canvas);const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});renderer.setSize(180,180);const scene=new THREE.Scene(),model=source.scene.clone(true);const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3());model.scale.setScalar(1/Math.max(size.x,size.y,size.z));paintDice(model,skinById(id),THREE);scene.add(model);scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const light=new THREE.DirectionalLight(0xffffff,4.2);light.position.set(-3,4,5);scene.add(light);const camera=new THREE.PerspectiveCamera(35,1,.1,10);camera.position.set(.5,.6,2.8);camera.lookAt(0,0,0);renderer.render(scene,camera);}};
 // Local-only fixture: no real users, tokens or network writes.
 const room={id:'12345678901234567890123456789012',a:'test-a',b:'test-b',otherName:'Testvän',status:'active',revision:1,state:{players:['test-a','test-b'],turn:'test-a',rolls:0,dice:[1,2,3,4,5],held:[false,false,false,false,false],scores:{'test-a':{},'test-b':{}},done:false}};
 let tables=[{id:'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',hostUid:'test-b',hostName:'Testvärd'}];
-window.fetch=async(url,options)=>{const q=JSON.parse(options.body);let data={};
+const assetFetch=window.fetch.bind(window);
+window.fetch=async(url,options)=>{if(options?.method!=='POST')return assetFetch(url,options);const q=JSON.parse(options.body);let data={};
 if(q.action==='social_register')data={member:{uid:'test-a',name:'Testspelare',code:'ABC123ABC123'}};
-else if(q.action==='social_list')data={friends:[{uid:'test-b',name:'Testvän',status:'accepted',seen_at:Date.now()}],rooms:[structuredClone(room)]};
+else if(q.action==='social_list')data={friends:[{uid:'test-b',name:'Testvän',status:'accepted',seen_at:Date.now()}],rooms:[structuredClone(room)],openTables:tables.filter(t=>t.hostUid==='test-a')};
 else if(q.action==='social_search')data={members:[{uid:'test-c',name:'Sökresultat'}]};
-else if(q.action==='room_lobby')data={tables:structuredClone(tables)};
+else if(q.action==='room_lobby'){queries++;document.querySelector('#requests').textContent='Publika listhämtningar: '+queries;data={tables:structuredClone(tables)};}
 else if(q.action==='room_host'){if(!tables.some(t=>t.hostUid==='test-a'))tables.push({id:'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',hostUid:'test-a',hostName:'Testspelare'});data={id:'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'};}
 else if(q.action==='room_cancel_open')tables=tables.filter(t=>t.id!==q.id);
 else if(q.action==='room_join'){tables=tables.filter(t=>t.id!==q.id);data={room:{...structuredClone(room),otherName:'Testvärd'}};}
 else if(q.action==='room_roll'){room.revision++;room.state.rolls++;room.state.dice=[6,6,6,6,6];data={room:structuredClone(room)};}
 return {ok:true,json:async()=>data};};
-const social=createSocial({user:()=>({uid:'test-a',getIdToken:async()=>'test-only'}),name:()=>'Testspelare',applyRoom:r=>{document.querySelector('#state').textContent=`${r.otherName}: ${r.state.rolls} kast, ${r.state.dice.join(',')}`;},leaveRoom:()=>{document.querySelector('#state').textContent='Rummet lämnat';},login:()=>{}});
+const social=createSocial({show,user:()=>({uid:'test-a',getIdToken:async()=>'test-only'}),name:()=>'Testspelare',applyRoom:r=>{show('#game');document.querySelector('#state').textContent=`${r.otherName}: ${r.state.rolls} kast, ${r.state.dice.join(',')}`;},leaveRoom:()=>{document.querySelector('#state').textContent='Rummet lämnat';},login:()=>{}});
 document.querySelector('#friends-button').onclick=()=>social.open();document.querySelector('#add').onclick=()=>social.open('add');document.querySelector('#roll').onclick=()=>social.roll([false,false,false,false,false]);document.querySelector('#leave').onclick=()=>social.leave();
 document.querySelector('#lobby').onclick=()=>social.lobby();
 document.querySelector('#state').textContent='Testet är redo';

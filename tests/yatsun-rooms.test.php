@@ -64,3 +64,14 @@ check($call('alice','room_get',['id'=>$public['id']])['room']['state']===$joined
 $cancel=$call('bob','room_host');$call('bob','room_cancel_open',['id'=>$cancel['id']]);
 rejects(fn()=>$call('eve','room_join',['id'=>$cancel['id']]),409);
 echo "Public lobby host, join, privacy and cancellation tests passed\n";
+$look=$call('alice','social_cosmetics',['completed'=>9]);check($look['active']==='classic','Default cosmetics');
+rejects(fn()=>$call('alice','social_cosmetics',['completed'=>9,'active'=>'forest']),403);
+$look=$call('alice','social_cosmetics',['completed'=>10,'active'=>'forest']);check($look['active']==='forest','Milestone unlock');
+check($call('alice','social_cosmetics',['completed'=>0])['completed']===10,'Unlock survives older device');
+rejects(fn()=>$call('alice','social_cosmetics',['completed'=>101]),400);
+rejects(fn()=>$call('alice','social_cosmetics',['active'=>'bad']),403);
+$publicRoom=$call('alice','room_get',['id'=>$public['id']])['room'];
+$cast=$call('alice','room_roll',['id'=>$public['id'],'revision'=>$publicRoom['revision']])['room'];check($cast['state']['diceSkin']==='forest','Server stamps caster skin');
+$scored=$call('alice','room_score',['id'=>$public['id'],'revision'=>$cast['revision'],'category'=>'l7'])['room'];check($scored['state']['diceSkin']==='forest','Score and turn change preserve visible dice skin');
+$cast2=$call('eve','room_roll',['id'=>$public['id'],'revision'=>$scored['revision']])['room'];check($cast2['state']['diceSkin']==='classic','Next caster changes displayed skin');
+echo "Cosmetic unlock, persistence and multiplayer cast snapshot tests passed\n";

@@ -34,8 +34,9 @@ jobs:
           node --check public/yatsun/social.mjs
           node --check public/yatsun/app.js
           node --test tests/yatsun-dice-resting.test.mjs
+          node --test tests/yatsun-progression.test.mjs
       - run: sudo apt-get update -qq && sudo apt-get install -y lftp
-      - name: Upload only the four changed Yatsun files
+      - name: Upload only the changed Yatsun files
         env:
           SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
           SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
@@ -50,6 +51,8 @@ jobs:
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
           put public/yatsun/api/social.php -o public/yatsun/api/social.php
           put public/yatsun/social.mjs -o public/yatsun/social.mjs
+          put public/yatsun/progression.mjs -o public/yatsun/progression.mjs
+          put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/app.js -o public/yatsun/app.js
           put public/yatsun/index.html -o public/yatsun/index.html
           bye

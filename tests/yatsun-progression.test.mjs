@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {skins,completedLevels,awardVictory,activeSkin} from '../public/yatsun/progression.mjs';
+test('one set every ten defeated opponents',()=>{assert.equal(skins.length,11);for(let n=0;n<=100;n++){const p={completed:n,unlocked:Math.min(100,n+1)};assert.equal(skins.filter(s=>s.level<=completedLevels(p)).length,1+Math.floor(n/10));}});
+test('unlock after winning ten, not reaching opponent ten',()=>{assert.equal(activeSkin({unlocked:10,activeSkin:'forest'}).id,'classic');const p=awardVictory({unlocked:10},10);assert.equal(p.newSkin,'Skog');assert.equal(p.unlocked,11);assert.equal(activeSkin({...p,activeSkin:'forest'}).id,'forest');});
+test('milestone reward once and finale requires actual win',()=>{assert.equal(awardVictory({unlocked:11},10).newSkin,null);assert.equal(completedLevels({unlocked:100}),99);const p=awardVictory({unlocked:100},100);assert.equal(p.newSkin,'Mästarguld');assert.equal(p.completed,100);assert.equal(awardVictory(p,100).newSkin,null);});
+test('old saves migrate and XP does not unlock cosmetics',()=>{assert.equal(completedLevels({unlocked:51}),50);assert.equal(activeSkin({soloXp:100000,activeSkin:'champion'}).id,'classic');assert.equal(activeSkin({completed:100,activeSkin:'unknown'}).id,'classic');});

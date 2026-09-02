@@ -6,6 +6,7 @@ function social_schema(PDO $db): void {
     $db->exec('CREATE TABLE IF NOT EXISTS yatsun_members (uid VARCHAR(191) PRIMARY KEY, name VARCHAR(80) COLLATE utf8mb4_unicode_ci NOT NULL, code CHAR(12) NOT NULL UNIQUE, seen_at BIGINT NOT NULL, INDEX(name)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin');
     $db->exec("CREATE TABLE IF NOT EXISTS yatsun_friends (a VARCHAR(191) NOT NULL, b VARCHAR(191) NOT NULL, sender VARCHAR(191) NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'pending', PRIMARY KEY(a,b)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
     $db->exec("CREATE TABLE IF NOT EXISTS yatsun_rooms (id CHAR(32) PRIMARY KEY, a VARCHAR(191) NOT NULL, b VARCHAR(191) NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'pending', revision INT NOT NULL DEFAULT 0, state_json LONGTEXT NOT NULL, updated_at BIGINT NOT NULL, INDEX(a), INDEX(b)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
+    $db->exec("CREATE TABLE IF NOT EXISTS yatsun_cosmetics (uid VARCHAR(191) PRIMARY KEY, completed INT NOT NULL DEFAULT 0, active VARCHAR(24) NOT NULL DEFAULT 'classic') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
 }
 function social_query(PDO $db,string $sql,array $params=[]): PDOStatement {$q=$db->prepare($sql);$q->execute($params);return $q;}
 function social_pair(string $uid,string $other): array {if($uid===$other||$other==='')throw new RuntimeException('Välj en annan medlem.',400);$pair=[$uid,$other];sort($pair,SORT_STRING);return $pair;}
@@ -13,6 +14,21 @@ function social_room(array $row): array {return ['id'=>$row['id'],'a'=>$row['a']
 
 function social_handle(PDO $db,string $uid,string $action,array $input): array {
     social_schema($db);$now=(int)floor(microtime(true)*1000);
+    if($action==='social_cosmetics'){
+        // Solo progression is client-owned, like the existing solo save. Cosmetics never affect scores.
+        $completed=$input['completed']??0;
+        if(!is_int($completed)||$completed<0||$completed>100)throw new RuntimeException('Ogiltig kampanjnivå.',400);
+        $styles=['classic','forest','ocean','cherry','amber','violet','ice','copper','midnight','pearl','champion'];
+        $db->beginTransaction();
+        try{
+            social_query($db,"INSERT IGNORE INTO yatsun_cosmetics(uid) VALUES(?)",[$uid]);
+            $saved=social_query($db,'SELECT completed,active FROM yatsun_cosmetics WHERE uid=? FOR UPDATE',[$uid])->fetch();
+            $completed=max($completed,(int)$saved['completed']);$active=$input['active']??$saved['active'];$index=array_search($active,$styles,true);
+            if($index===false||$index*10>$completed)throw new RuntimeException('Det tärningssetet är inte upplåst.',403);
+            social_query($db,'UPDATE yatsun_cosmetics SET completed=?,active=? WHERE uid=?',[$completed,$active,$uid]);
+            $db->commit();return ['completed'=>$completed,'active'=>$active];
+        }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+    }
     if($action==='social_register'){
         $name=trim((string)($input['name']??''));if($name===''||strlen($name)>200)throw new RuntimeException('Ogiltigt namn.',400);
         $name=mb_substr($name,0,80);
@@ -62,7 +78,8 @@ function social_handle(PDO $db,string $uid,string $action,array $input): array {
         social_query($db,'UPDATE yatsun_members SET seen_at=? WHERE uid=?',[$now,$uid]);
         $friends=social_query($db,'SELECT m.uid,m.name,m.code,m.seen_at,f.sender,f.status FROM yatsun_friends f JOIN yatsun_members m ON m.uid=CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=? ORDER BY m.name',[$uid,$uid,$uid])->fetchAll();
         $rooms=social_query($db,"SELECT r.*,m.name AS other_name FROM yatsun_rooms r JOIN yatsun_members m ON m.uid=CASE WHEN r.a=? THEN r.b ELSE r.a END WHERE (r.a=? OR r.b=?) AND r.status IN ('pending','active','done') ORDER BY r.updated_at DESC LIMIT 50",[$uid,$uid,$uid])->fetchAll();
-        return ['friends'=>$friends,'rooms'=>array_map(fn($r)=>social_room($r)+['otherName'=>$r['other_name']],$rooms)];
+        $openTables=social_query($db,"SELECT id FROM yatsun_rooms WHERE a=? AND status='open'",[$uid])->fetchAll();
+        return ['friends'=>$friends,'openTables'=>$openTables,'rooms'=>array_map(fn($r)=>social_room($r)+['otherName'=>$r['other_name']],$rooms)];
     }
     if(in_array($action,['friend_request','friend_accept','friend_remove'],true)){
         $other=(string)($input['uid']??'');[$a,$b]=social_pair($uid,$other);
@@ -106,7 +123,10 @@ function social_handle(PDO $db,string $uid,string $action,array $input): array {
                     $reaction=$input['reaction']??null;
                     if(!is_int($reaction)||$reaction<0||$reaction>7)throw new RuntimeException('Ogiltig reaktion.',400);
                     $state['reaction']=['uid'=>$uid,'id'=>$reaction,'at'=>$now];
-                }else $state=room_move($state,$uid,$action,$input);
+                }else {
+                    $state=room_move($state,$uid,$action,$input);
+                    if($action==='room_roll')$state['diceSkin']=social_query($db,'SELECT active FROM yatsun_cosmetics WHERE uid=?',[$uid])->fetchColumn()?:'classic';
+                }
                 if($state['done'])$row['status']='done';
             }
             $row['state_json']=json_encode($state);$row['revision']=(int)$row['revision']+1;$row['updated_at']=$now;

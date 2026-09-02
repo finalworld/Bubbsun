@@ -5,7 +5,9 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { planRestingLayout } from "./dice-resting.mjs";
-import { createSocial } from "./social.mjs?v=lobby1";
+import { createSocial } from "./social.mjs?v=journey1";
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs';
+let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
 
@@ -33,14 +35,15 @@ const dieOrientations={1:[-Math.PI/2,0,0],2:[0,-Math.PI/2,0],3:[0,0,0],4:[0,Math
 const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
 let activeDieViews=[];
 
-function disposeDieViews(){activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
+function disposeDieViews(){diceRoot.querySelectorAll('canvas').forEach(canvas=>canvas.ownedMaterials?.forEach(m=>m.dispose()));activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
 async function mountDieModel(canvas,fallback,die,rolling,index){
   try{
-    const value=die.value;
+    const value=die.value,skin=skinById(die.skin||'classic');
     const source=await dieModelPromise;if(!canvas.isConnected)return;
     const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.96,.96,.96,-.96,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(144,144,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
     const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),settledScale=1.06/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(settledScale);scene.add(model);
+    canvas.ownedMaterials=paintDice(model,skin,THREE);
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
     const target=dieOrientations[value],physicsToView=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0)),view={renderer,model,stopped:false,render:()=>renderer.render(scene,camera),finishPhysics(){this.render();},sync(quaternion){model.quaternion.set(quaternion.x,quaternion.y,quaternion.z,quaternion.w).premultiply(physicsToView);this.render();}};activeDieViews.push(view);canvas.dieView=view;canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
@@ -51,7 +54,12 @@ async function mountDieModel(canvas,fallback,die,rolling,index){
 
 function profileKey() { return `yatsun-profile-${authUser?.uid||"guest"}`; }
 function loadProfile() { try { return { soloXp:0, unlocked:1, winStreak:0, ...JSON.parse(localStorage.getItem(profileKey())||"{}") }; } catch { return { soloXp:0, unlocked:1, winStreak:0 }; } }
-function saveProfile() { localStorage.setItem(profileKey(), JSON.stringify(profile)); }
+function saveProfile() { localStorage.setItem(profileKey(), JSON.stringify(profile));void syncCosmetics(true).catch(console.warn); }
+let cosmeticQueue=Promise.resolve();
+function syncCosmetics(selection=false){
+  const account=authUser;if(!account)return Promise.resolve();const data={action:'social_cosmetics',completed:completedLevels(profile)};if(selection)data.active=activeSkin(profile).id;
+  const request=cosmeticQueue.catch(()=>{}).then(async()=>{const token=await account.getIdToken(),response=await fetch('./api/',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(data)}),result=await response.json();if(!response.ok)throw new Error(result.error||'Kunde inte spara tärningsvalet.');if(authUser?.uid!==account.uid)return;profile.completed=Math.max(completedLevels(profile),result.completed);profile.unlocked=Math.min(100,profile.completed+1);profile.activeSkin=result.active;localStorage.setItem(profileKey(),JSON.stringify(profile));updateProfileUi();});cosmeticQueue=request;return request;
+}
 function xpForLevel(level){return 100+(level-1)*25;}
 function playerProgress(totalXp=profile.soloXp){let level=1,xp=Math.max(0,totalXp||0),needed=xpForLevel(level);while(xp>=needed){xp-=needed;level++;needed=xpForLevel(level);}return{level,xp,needed};}
 function matchKey(){return `yatsun-active-solo-${authUser?.uid||"guest"}`;}
@@ -63,15 +71,17 @@ function clearMatch(){remoteMatch=null;localStorage.removeItem(matchKey());updat
 function updateContinueUi(){const saved=loadMatch(),button=$("#start-solo");if(!button)return;button.textContent=saved?`FORTSÄTT MOT ${opponentName(saved.opponentLevel||profile.unlocked).toLocaleUpperCase("sv-SE")} →`:`SPELA MOT ${opponentName().toLocaleUpperCase("sv-SE")} →`;}
 function opponentName(level=profile.unlocked) { return `${firstNames[(level-1)%firstNames.length]} ${lastNames[(Math.floor((level-1)/firstNames.length)+level-1)%lastNames.length]}`; }
 function updateProfileUi() { const {level,xp,needed}=playerProgress(),card=$(".solo-card"); card.querySelector(".xp-preview b").textContent=`Spelarnivå ${level}`; card.querySelector(".xp-preview small").textContent=`${xp} / ${needed} XP`; card.querySelector(".xp-preview em").style.width=`${xp/needed*100}%`; updateContinueUi(); }
-function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen"].forEach((selector)=>$(selector).classList.toggle("hidden",selector!==id)); document.body.classList.toggle("playing",id==="#game-screen"); window.scrollTo({top:0,behavior:"smooth"}); }
+function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen","#campaign-screen","#collection-screen","#mp-home-screen","#mp-join-screen"].forEach((selector)=>$(selector)?.classList.toggle("hidden",selector!==id)); document.body.classList.toggle("playing",id==="#game-screen"); window.scrollTo({top:0,behavior:"smooth"}); }
 
 function renderDice(animate=false) {
   disposeDieViews();
   diceRoot.innerHTML="";
   const trayBox=diceRoot.getBoundingClientRect(),trayWidth=trayBox.width||800,trayHeight=trayBox.height||500,rollingButtons=[];
   dice.forEach((die,index)=>{
+    die.skin=online?.active?boardSkin:activeSkin(profile).id;
     const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span"),canvas=document.createElement("canvas");
     button.type="button";
+    const appearance=skinById(die.skin);button.style.setProperty('--skin-body',appearance.body);button.style.setProperty('--skin-pips',appearance.pips);
     button.className=`die die-3d${die.held?" held":""}${animate&&!die.held?" rolling":""}`;
     shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
     const restAngle=die.rot||0,visualRadius=window.innerWidth<680?34:54,x=Math.min(trayWidth-visualRadius,Math.max(visualRadius,trayWidth/2+die.x)),y=Math.min(trayHeight-visualRadius,Math.max(visualRadius,trayHeight/2+die.y));
@@ -181,8 +191,9 @@ const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum
 const reactionPositions=[[0,0],[33.333,0],[66.667,0],[100,0],[0,100],[33.333,100],[66.667,100],[100,100]];
 function reactionStyle(element,id){const [x,y]=reactionPositions[id];element.style.backgroundPosition=`${x}% ${y}%`;}
 function showReaction(who,id){const bubble=$(who==="ai"?"#reaction-bubble-ai":"#reaction-bubble-player"),icon=bubble.querySelector("i");reactionStyle(icon,id);bubble.classList.remove("hidden");clearTimeout(bubble.hideTimer);bubble.hideTimer=setTimeout(()=>bubble.classList.add("hidden"),2600);}
-function triggerYatsun(){
+function triggerYatsun(rewardName){
   const layer=$("#yatsun-celebration"),canvas=layer.querySelector("canvas"),context=canvas.getContext("2d"),ratio=Math.min(2,devicePixelRatio||1),colors=["#ffd84a","#f07c46","#eb4f78","#4fc49a","#59aaf4","#9b6de3","#fff4c7"],particles=[];
+  layer.querySelector('small').textContent=typeof rewardName==='string'?'MILSTOLPE AVKLARAD!':'FEM LIKA!';layer.querySelector('strong').textContent=typeof rewardName==='string'?rewardName:'YATSUN!';
   const run=(layer.celebrationRun||0)+1;layer.celebrationRun=run;layer.classList.add("hidden");void layer.offsetWidth;layer.classList.remove("hidden");canvas.width=innerWidth*ratio;canvas.height=innerHeight*ratio;context.setTransform(ratio,0,0,ratio,0,0);
   for(let i=0;i<230;i++){const side=i%3,x=side===0?innerWidth*.5:side===1?-20:innerWidth+20,angle=side===0?Math.PI*(1.1+Math.random()*.8):side===1?(-.65+Math.random()*.55):Math.PI+(.1+Math.random()*.55),speed=8+Math.random()*15;particles.push({x,y:side===0?innerHeight+25:innerHeight*(.25+Math.random()*.65),vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-(side===0?8:0),gravity:.18+Math.random()*.13,drag:.985,rotation:Math.random()*Math.PI,spin:(Math.random()-.5)*.35,width:5+Math.random()*10,height:8+Math.random()*22,color:colors[i%colors.length],ribbon:i%7===0});}
   const start=performance.now();function frame(now){if(layer.celebrationRun!==run)return;context.clearRect(0,0,innerWidth,innerHeight);particles.forEach((p)=>{p.vx*=p.drag;p.vy=p.vy*p.drag+p.gravity;p.x+=p.vx;p.y+=p.vy;p.rotation+=p.spin;context.save();context.translate(p.x,p.y);context.rotate(p.rotation);context.fillStyle=p.color;if(p.ribbon){context.beginPath();context.moveTo(-p.width,0);context.bezierCurveTo(-p.width/2,-p.height,p.width/2,p.height,p.width,0);context.lineWidth=3;context.strokeStyle=p.color;context.stroke();}else context.fillRect(-p.width/2,-p.height/2,p.width,p.height);context.restore();});if(now-start<5600)requestAnimationFrame(frame);else layer.classList.add("hidden");}requestAnimationFrame(frame);
@@ -225,10 +236,21 @@ async function aiTurn(){
 }
 function restoreDice(saved){saved?.forEach((value,index)=>Object.assign(dice[index],value));}
 function startGame(){const saved=loadMatch();playerScores=saved?.playerScores||{};aiScores=saved?.aiScores||{};lastScore=saved?.lastScore||null;rolls=saved?.rolls||0;busy=false;restoreDice(saved?.dice);buildScorecard();if(!saved)resetTurn();else{renderDice();rollNumber.textContent=String(Math.max(1,rolls));rollButton.disabled=rolls>=3;rollButton.querySelector("small").textContent=`${3-rolls} kast kvar`;rollHint.textContent=rolls?"Fortsätt där du slutade.":"Kasta alla fem tärningarna.";}const name=opponentName(saved?.opponentLevel||profile.unlocked),progress=playerProgress();$$(".player-card")[0].querySelector("strong").textContent=authDisplayName;$$(".player-card")[0].querySelector("span").textContent=`Spelarnivå ${progress.level} · ${progress.xp}/${progress.needed} XP`;$(".score-panel h2").textContent=authDisplayName;$$('.ai-name').forEach((cell)=>cell.textContent=name.split(" ")[0]);$$(".player-card")[1].querySelector("strong").textContent=name;$$(".player-card")[1].querySelector("small").textContent=`MOTSTÅNDARE ${saved?.opponentLevel||profile.unlocked}/100`;$("#result-modal").classList.add("hidden");$(".turn-heading h2").textContent="Din tur!";showScreen("#game-screen");updateSuggestions();saveMatch();}
-function finishMatch(){const playerTotal=totals(playerScores),player=playerTotal.total,ai=totals(aiScores).total,won=player>ai,draw=player===ai,parts=[{label:won?"Vinst":draw?"Oavgjort":"Genomförd match",xp:won?60:draw?35:20}];profile.winStreak=won?(profile.winStreak||0)+1:0;if(playerScores.l8===50)parts.push({label:"Yatzy",xp:25});if(playerTotal.bonus)parts.push({label:"Övre bonus",xp:15});if(categories.every(({id})=>(playerScores[id]??0)>0))parts.push({label:"Inga strykningar",xp:20});if(profile.winStreak>=3)parts.push({label:`${profile.winStreak} vinster i rad`,xp:15});const reward=parts.reduce((sum,part)=>sum+part.xp,0),oldLevel=playerProgress().level;clearMatch();profile.soloXp+=reward;if(won&&profile.unlocked<100)profile.unlocked++;saveProfile();const progress=playerProgress(),levelText=progress.level>oldLevel?` · Spelarnivå ${progress.level}!`:"";updateProfileUi();$("#result-icon").textContent=won?"🏆":draw?"🤝":"🎲";$("#result-title").textContent=won?"Du vann!":draw?"Oavgjort!":"Nästa gång tar du det!";$("#result-copy").textContent=`+${reward} XP (${parts.map(({label,xp})=>`${label} +${xp}`).join(", ")})${levelText}${won&&profile.unlocked<=100?` · Nästa: ${opponentName()}`:""}`;$("#result-player").textContent=player;$("#result-ai").textContent=ai;$("#result-modal").classList.remove("hidden");busy=false;}
+function finishMatch(){
+  const opponentLevel=loadMatch()?.opponentLevel||profile.unlocked,playerTotal=totals(playerScores),player=playerTotal.total,ai=totals(aiScores).total,won=player>ai,draw=player===ai,parts=[{label:won?'Vinst':draw?'Oavgjort':'Genomförd match',xp:won?60:draw?35:20}];
+  profile.winStreak=won?(profile.winStreak||0)+1:0;
+  if(playerScores.l8===50)parts.push({label:'Yatzy',xp:25});if(playerTotal.bonus)parts.push({label:'Övre bonus',xp:15});if(categories.every(({id})=>(playerScores[id]??0)>0))parts.push({label:'Inga strykningar',xp:20});if(profile.winStreak>=3)parts.push({label:`${profile.winStreak} vinster i rad`,xp:15});
+  const oldLevel=playerProgress().level;let unlockedSet=null;
+  if(won){const reward=awardVictory(profile,opponentLevel);unlockedSet=reward.newSkin;delete reward.newSkin;profile=reward;}
+  const reward=parts.reduce((sum,p)=>sum+p.xp,0);clearMatch();profile.soloXp+=reward;saveProfile();updateProfileUi();
+  $('#result-icon').textContent=unlockedSet?'🎁':won?'🏆':draw?'🤝':'🎲';$('#result-title').textContent=unlockedSet?`Nytt tärningsset: ${unlockedSet}!`:won?'Du vann!':draw?'Oavgjort!':'Nästa gång tar du det!';
+  $('#result-copy').textContent=`+${reward} XP (${parts.map(p=>`${p.label} +${p.xp}`).join(', ')})${playerProgress().level>oldLevel?` · Spelarnivå ${playerProgress().level}!`:''}${won&&opponentLevel===100?' · Hela kartan avklarad!':won?` · Nästa: ${opponentName()}`:''}${unlockedSet?' · Välj ditt nya set under Mina tärningar.':''}`;
+  $('#result-player').textContent=player;$('#result-ai').textContent=ai;$('#result-modal').classList.remove('hidden');busy=false;
+  if(unlockedSet)triggerYatsun(unlockedSet);
+}
 
 function setAuthUi(user,name=authDisplayName){authUser=user;authDisplayName=name||user?.displayName||"Gästspelare";profile=loadProfile();updateProfileUi();const avatar=$("#profile-avatar"),profileName=$("#profile-name");profileName.textContent=user?authDisplayName:"Logga in";avatar.textContent=user?(authDisplayName.match(/\p{L}/u)?.[0]||"Y").toLocaleUpperCase("sv-SE"):"GS";if(user?.photoURL){const image=document.createElement("img");image.src=user.photoURL;image.alt="";avatar.replaceWith(image);image.id="profile-avatar";}else if(avatar.tagName==="IMG"){const span=document.createElement("span");span.id="profile-avatar";span.textContent=user?(authDisplayName[0]||"Y").toLocaleUpperCase("sv-SE"):"GS";avatar.replaceWith(span);}$("#google-login").classList.toggle("hidden",Boolean(user));$("#logout-button").classList.toggle("hidden",!user);$("#login-title").textContent=user?authDisplayName:"Spara ditt spel";$("#login-copy").textContent=user?`Du är inloggad med ${user.email||"ditt Google-konto"}. Din Yatsun-identitet är kopplad till samma konto som Bubbsun.`:"Logga in med samma Google-konto som på Bubbsun. Är du redan inloggad där känns du igen automatiskt.";$("#login-copy").classList.toggle("auth-user-copy",Boolean(user));}
-onAuthStateChanged(auth,async(user)=>{if(!user){setAuthUi(null,"Gästspelare");remoteMatch=null;return;}let name=user.displayName||"Yatsunspelare";try{const snapshot=await getDoc(doc(firestore,"users",user.uid));if(snapshot.exists())name=snapshot.data().displayName||name;}catch(error){console.warn("Kunde inte läsa Bubbsun-namnet",error);}setAuthUi(user,name);await loadRemoteMatch();});
+onAuthStateChanged(auth,async(user)=>{if(!user){setAuthUi(null,"Gästspelare");remoteMatch=null;return;}let name=user.displayName||"Yatsunspelare";try{const snapshot=await getDoc(doc(firestore,"users",user.uid));if(snapshot.exists())name=snapshot.data().displayName||name;}catch(error){console.warn("Kunde inte läsa Bubbsun-namnet",error);}setAuthUi(user,name);await loadRemoteMatch();await syncCosmetics().catch(console.warn);});
 $("#profile-button").addEventListener("click",()=>{$("#login-error").textContent="";$("#login-modal").classList.remove("hidden");});
 $("#close-login").addEventListener("click",()=>$("#login-modal").classList.add("hidden"));
 $("#login-modal").addEventListener("pointerdown",(event)=>{if(event.target===event.currentTarget)$("#login-modal").classList.add("hidden");});
@@ -244,6 +266,7 @@ let lastOnlineReaction=0;
 function applyOnlineRoom(room,initial=false,sending=false,force=false){
   const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||force||onlineRevision!==room.revision;
   busy=sending||state.done||state.turn!==uid;
+  boardSkin=state.diceSkin||'classic';
   if(initial)lastOnlineReaction=state.reaction?.at||0;
   if(state.reaction&&state.reaction.at>lastOnlineReaction){lastOnlineReaction=state.reaction.at;if(state.reaction.uid!==uid&&Date.now()-state.reaction.at<10000)showReaction('ai',state.reaction.id);}
   if(initial){showScreen('#game-screen');buildScorecard();dice.forEach((d,i)=>{d.x=(i%2?1:-1)*100;d.y=(Math.floor(i/2)-1)*145;d.rot=(i-2)*7;delete d.q;});}
@@ -253,7 +276,9 @@ function applyOnlineRoom(room,initial=false,sending=false,force=false){
   rollNumber.textContent=String(Math.max(1,rolls));rollHint.textContent='Matchen sparas efter varje kast och drag.';
   $('#restart-match').hidden=true;$('#end-match').textContent='Lämna rummet (sparas)';rollButton.classList.toggle('hidden',busy);updateSuggestions();
 }
-online=createSocial({user:()=>authUser,name:()=>authDisplayName,canEnter:()=>online.active||(!busy&&!diceRoot.querySelector('.rolling')),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;busy=false;rollButton.classList.remove('hidden');$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
+online=createSocial({show:showScreen,user:()=>authUser,name:()=>authDisplayName,canEnter:()=>online.active||(!busy&&!diceRoot.querySelector('.rolling')),applyRoom:applyOnlineRoom,login:()=>$('#login-modal').classList.remove('hidden'),leaveRoom:()=>{onlineRevision=-1;busy=false;rollButton.classList.remove('hidden');$('#restart-match').hidden=false;$('#end-match').textContent='Avsluta match';showScreen('#mode-screen');}});
+const journey=createProgression({profile:()=>profile,name:opponentName,avatar:()=>$('#profile-avatar'),show:showScreen,start:()=>{if(online.active)online.leave();startGame();},select:async id=>{const previous=profile.activeSkin,key=profileKey();profile.activeSkin=id;localStorage.setItem(key,JSON.stringify(profile));try{await syncCosmetics(true);}catch(error){if(profileKey()===key){profile.activeSkin=previous;localStorage.setItem(key,JSON.stringify(profile));}throw error;}}});
+const extras=document.createElement('div');extras.className='solo-extras';for(const [label,action] of [['🗺 Kartan',journey.openMap],['🎲 Mina tärningar',journey.openCollection]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=action;extras.append(b);}$('.solo-card').append(extras);
 for(const [id,label,path,view] of [
   ['friends-button','Vänner och matcher','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M16 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0','friends'],
   ['add-friend-button','Lägg till vänner','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M20 6v6 M17 9h6','add']

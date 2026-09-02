@@ -87,7 +87,7 @@ jobs:
           KASSUN_DB_PASSWORD: ${{ secrets.KASSUN_DB_PASSWORD }}
         run: |
           node -e 'const fs=require("fs");fs.writeFileSync("kassun-db.json",JSON.stringify({host:process.env.KASSUN_DB_HOST,name:process.env.KASSUN_DB_NAME,user:process.env.KASSUN_DB_USER,password:process.env.KASSUN_DB_PASSWORD}))'
-          node -e 'const fs=require("fs");fs.writeFileSync("yatsun-db.json",JSON.stringify({host:"database-502132677.webspace-host.com",name:"dbs16080702",user:"dbu4703673",password:process.env.KASSUN_DB_PASSWORD}))'
+          node -e 'const fs=require("fs");fs.writeFileSync("yatsun-db.json",JSON.stringify({host:"database-5021326777.webspace-host.com",name:"dbs16080702",user:"dbu4703673",password:process.env.KASSUN_DB_PASSWORD}))'
 
       - name: Ladda upp till Strato
         env:

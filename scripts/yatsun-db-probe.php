@@ -1,5 +1,5 @@
 <?php
-// Temporary, token-protected, read-only production connection check.
+// Temporary protected check. Initializes only the normal Yatsun social schema.
 declare(strict_types=1);
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
@@ -7,9 +7,13 @@ if (time()-filemtime(__FILE__)>600 || !hash_equals('__PROBE_TOKEN__', $_SERVER['
 $config=[];
 try {
     $config=json_decode(file_get_contents(__DIR__.'/yatsun-db.json'),true,512,JSON_THROW_ON_ERROR);
-    $config['host']=base64_decode('__CANDIDATE_HOST__');
+    if($config['name']!=='dbs16080702'||$config['user']!=='dbu4703673')throw new RuntimeException('Unexpected database target');
     $db=new PDO('mysql:host='.$config['host'].';dbname='.$config['name'].';charset=utf8mb4',$config['user'],$config['password'],[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
     $result=['connected'=>true,'expectedDatabase'=>$db->query('SELECT DATABASE()')->fetchColumn()==='dbs16080702','version'=>$db->query('SELECT VERSION()')->fetchColumn(),'tables'=>[]];
+    if(!$result['expectedDatabase'])throw new RuntimeException('Unexpected connected database');
+    require_once __DIR__.'/social.php';
+    social_schema($db);
+    $result['socialSchemaReady']=true;
     foreach(['yatsun_matches','yatsun_members','yatsun_friends','yatsun_rooms'] as $table){
         try {$result['tables'][$table]=$db->query('SHOW CREATE TABLE '.$table)->fetch();}
         catch(PDOException $e){$result['tables'][$table]=['sqlstate'=>$e->getCode(),'driverCode'=>$e->errorInfo[1]??null];}

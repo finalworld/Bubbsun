@@ -24,7 +24,7 @@ const firstNames = ["Maj-Britt", "Bertil", "Gunilla", "Stig", "Agneta", "Kent", 
 const lastNames = ["Blixt", "Kastrull", "Gurka", "Fjäder", "Bång", "Plommon", "Vims", "Sjöbris", "Kotte", "Rullgardin", "Nypon", "Dunder", "Fluff", "Krans", "Månskensson", "Sprätt", "Tjoff", "Hallon", "Virvel", "Socker"];
 const pipPositions = { 1:[[50,50]],2:[[27,27],[73,73]],3:[[27,27],[50,50],[73,73]],4:[[27,27],[73,27],[27,73],[73,73]],5:[[27,27],[73,27],[50,50],[27,73],[73,73]],6:[[27,23],[73,23],[27,50],[73,50],[27,77],[73,77]] };
 const cubeLanding={1:"rotateX(0deg) rotateY(0deg)",2:"rotateY(-90deg)",3:"rotateX(-90deg)",4:"rotateX(90deg)",5:"rotateY(90deg)",6:"rotateY(180deg)"};
-let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false, suggestionTimer = 0, dicePhysicsPromise = Promise.resolve();
+let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, suggestionTimer = 0, dicePhysicsPromise = Promise.resolve();
 const dieOrientations={1:[-Math.PI/2,0,0],2:[0,-Math.PI/2,0],3:[0,0,0],4:[0,Math.PI,0],5:[0,Math.PI/2,0],6:[Math.PI/2,0,0]};
 const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
 let activeDieViews=[];
@@ -145,7 +145,7 @@ function updateSuggestions(){
     else{const preview=rolls&&!busy?scoreCategory(category.id,values):null;button.textContent=preview===null?"—":String(preview);button.disabled=!rolls||busy;if(preview!==null){button.title=`Välj ${category.label}: ${preview} poäng`;row.classList.add("preview");if(preview===0)row.classList.add("zero-preview");previews.push({row,score:preview});}}
     const aiFilled=category.id in aiScores,aiActual=aiScores[category.id],aiText=displayScore(category,aiActual),aiClasses=[aiActual===0?"scratched":"",lastScore?.who==="ai"&&lastScore.id===category.id?"latest-score":""].filter(Boolean).join(" ");aiCell.innerHTML=aiFilled?`<span class="${aiClasses}">${aiActual===0?"":aiText}</span>`:"—";aiCell.classList.toggle("filled",aiFilled);
   });
-  const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;setRollButtonState();if(aiScores.l8===50&&!aiYatsunCelebrated){aiYatsunCelebrated=true;triggerYatsun();}
+  const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;setRollButtonState();
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
 function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;setRollButtonState();renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";}
@@ -191,6 +191,8 @@ async function aiTurn(){
   const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),valueCounts=counts(values),difficulty=Math.min(1,.45+profile.unlocked*.0055),ranked=open.map((category)=>{const score=scoreCategory(category.id,values);return{category,score,value:aiCategoryValue(category,score,values)+(Math.random()-.5)*(1-difficulty)*7};}).sort((a,b)=>b.value-a.value),strongMade=ranked.filter(({category,score})=>score>0&&["l8","l3","l6","l5","l4"].includes(category.id)).sort((a,b)=>b.value-a.value)[0],madeUpper=ranked.filter(({category})=>category.upper&&valueCounts[Number(category.id[1])]>=3).sort((a,b)=>b.score-a.score)[0],pick=strongMade||madeUpper||ranked[0];
   aiScores[pick.category.id]=pick.score;
   lastScore={who:"ai",id:pick.category.id};
+  // Celebrate the scoring event, never a restored or re-rendered scorecard.
+  if(pick.category.id==="l8"&&pick.score===50)triggerYatsun();
   updateSuggestions();
   showReaction("ai",pick.score>=25?[0,1,2,6][Math.floor(Math.random()*4)]:pick.score===0?[4,5,7][Math.floor(Math.random()*3)]:Math.random()<.5?3:6);
   await humanPause(900,1300);

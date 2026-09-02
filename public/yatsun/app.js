@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signO
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import * as Matter from "https://cdn.jsdelivr.net/npm/matter-js@0.20.0/+esm";
+import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 
 const firebaseApp = initializeApp({apiKey:"AIzaSyBuJP3imBBQZ7CWJzUhosSbyEhi_Z0lgj8",authDomain:"bubbsan-c3ec7.firebaseapp.com",projectId:"bubbsan-c3ec7",storageBucket:"bubbsan-c3ec7.firebasestorage.app",messagingSenderId:"999127046153",appId:"1:999127046153:web:4ddd2814db25f691d800d8"});
 const auth = getAuth(firebaseApp), firestore = getFirestore(firebaseApp);
@@ -24,7 +24,7 @@ const firstNames = ["Maj-Britt", "Bertil", "Gunilla", "Stig", "Agneta", "Kent", 
 const lastNames = ["Blixt", "Kastrull", "Gurka", "Fjäder", "Bång", "Plommon", "Vims", "Sjöbris", "Kotte", "Rullgardin", "Nypon", "Dunder", "Fluff", "Krans", "Månskensson", "Sprätt", "Tjoff", "Hallon", "Virvel", "Socker"];
 const pipPositions = { 1:[[50,50]],2:[[27,27],[73,73]],3:[[27,27],[50,50],[73,73]],4:[[27,27],[73,27],[27,73],[73,73]],5:[[27,27],[73,27],[50,50],[27,73],[73,73]],6:[[27,23],[73,23],[27,50],[73,50],[27,77],[73,77]] };
 const cubeLanding={1:"rotateX(0deg) rotateY(0deg)",2:"rotateY(-90deg)",3:"rotateX(-90deg)",4:"rotateX(90deg)",5:"rotateY(90deg)",6:"rotateY(180deg)"};
-let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false, suggestionTimer = 0;
+let rolls = 0, busy = false, playerScores = {}, aiScores = {}, lastScore = null, profile = loadProfile(), remoteMatch = null, aiYatsunCelebrated = false, suggestionTimer = 0, dicePhysicsPromise = Promise.resolve();
 const dieOrientations={1:[-Math.PI/2,0,0],2:[0,-Math.PI/2,0],3:[0,0,0],4:[0,Math.PI,0],5:[0,Math.PI/2,0],6:[Math.PI/2,0,0]};
 const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
 let activeDieViews=[];
@@ -37,11 +37,10 @@ async function mountDieModel(canvas,fallback,value,rolling,index){
     renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(144,144,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
     const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),settledScale=1.06/Math.max(size.x,size.y,size.z),rollingScale=.78/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(rolling?rollingScale:settledScale);scene.add(model);
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
-    const target=dieOrientations[value],view={renderer,stopped:false};activeDieViews.push(view);canvas.classList.add("ready");fallback.classList.add("model-ready");
+    const target=dieOrientations[value],view={renderer,model,stopped:false,render:()=>renderer.render(scene,camera),settle(){model.scale.setScalar(settledScale);model.rotation.set(...target);this.render();},sync(quaternion,speed){model.scale.setScalar(rollingScale+(settledScale-rollingScale)*Math.max(0,1-Math.min(1,speed/5)));model.quaternion.set(quaternion.x,quaternion.y,quaternion.z,quaternion.w);this.render();}};activeDieViews.push(view);canvas.dieView=view;canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
     if(!rolling){model.rotation.set(...target);render();return;}
-    const start=performance.now(),duration=2450,spinX=(3.2+index*.45)*Math.PI*2,spinY=(3.8+index%3*.5)*Math.PI*2,spinZ=(1.8+index%2*.45)*Math.PI*2;
-    const frame=(now)=>{if(view.stopped||!canvas.isConnected)return;const t=Math.min(1,(now-start)/duration),ease=1-Math.pow(1-t,3),remaining=1-ease,currentScale=rollingScale+(settledScale-rollingScale)*ease;model.scale.setScalar(currentScale);model.rotation.set(target[0]+spinX*remaining,target[1]+spinY*remaining,target[2]+spinZ*remaining);render();if(t<1)requestAnimationFrame(frame);};requestAnimationFrame(frame);
+    render();
   }catch(error){console.warn("3D-tärningen kunde inte laddas",error);}
 }
 
@@ -79,29 +78,31 @@ function renderDice(animate=false) {
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die.value,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
-  if(animate){hideSuggestions();runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
+  if(animate){hideSuggestions();rollButton.disabled=true;dicePhysicsPromise=runDicePhysics(rollingButtons,trayWidth,trayHeight);}else updateSuggestions();
 }
 function runDicePhysics(entries,width,height){
-  const {Engine,Bodies,Body,Composite}=Matter.default||Matter,engine=Engine.create({gravity:{x:0,y:0,scale:0}}),edge=24,size=window.innerWidth<680?54:84,boundary=window.innerWidth<680?8:12,wall=60;
-  const walls=[Bodies.rectangle(width/2,boundary-wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(width/2,height-boundary+wall/2,width+wall*2,wall,{isStatic:true}),Bodies.rectangle(boundary-wall/2,height/2,wall,height+wall*2,{isStatic:true}),Bodies.rectangle(width-boundary+wall/2,height/2,wall,height+wall*2,{isStatic:true})];
+  return new Promise((resolve)=>{
+  const compact=window.innerWidth<680,pixelsPerUnit=compact?72:92,dieSize=compact?.72:.88,half=dieSize/2,boundary=compact?8:12,halfWidth=(width-boundary*2)/pixelsPerUnit/2-half,halfDepth=(height-boundary*2)/pixelsPerUnit/2-half,world=new CANNON.World({gravity:new CANNON.Vec3(0,-24,0),allowSleep:true}),diceMaterial=new CANNON.Material("dice"),trayMaterial=new CANNON.Material("tray");
+  world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=18;world.defaultContactMaterial.friction=.25;world.defaultContactMaterial.restitution=.34;world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,trayMaterial,{friction:.34,restitution:.42,contactEquationStiffness:1e7}));world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,diceMaterial,{friction:.22,restitution:.36,contactEquationStiffness:1e7}));
+  const floor=new CANNON.Body({mass:0,material:trayMaterial,shape:new CANNON.Plane()});floor.quaternion.setFromEuler(-Math.PI/2,0,0);world.addBody(floor);
+  [[-halfWidth-.16,1.2,0,.16,1.6,halfDepth+1],[halfWidth+.16,1.2,0,.16,1.6,halfDepth+1],[0,1.2,-halfDepth-.16,halfWidth+1,1.6,.16],[0,1.2,halfDepth+.16,halfWidth+1,1.6,.16]].forEach(([x,y,z,hx,hy,hz])=>world.addBody(new CANNON.Body({mass:0,material:trayMaterial,position:new CANNON.Vec3(x,y,z),shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz))})));
   const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
   dice.forEach((die,index)=>{
-    const active=activeIds.has(die.id),handX=width-edge-size/2,handOffsets=[[0,-size*1.05],[-size*.9,-size*.55],[0,0],[-size*.9,size*.55],[0,size*1.05]],startX=active?handX+handOffsets[index][0]:width/2+die.x,startY=active?height/2+handOffsets[index][1]:height/2+die.y;
-    const body=Bodies.rectangle(startX,startY,size,size,{label:`die-${die.id}`,isStatic:!active,chamfer:{radius:size*.16},restitution:.68,friction:.13,frictionStatic:.28,frictionAir:.018,density:.0022,angle:(die.rot||0)*Math.PI/180});
-    body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.height=0;body.verticalVelocity=active?3.8+Math.random()*1.1:0;bodies.push(body);
-    if(active){const throwStrength=[4.3,7.8,5.6,9.2,6.7][index]*(.9+Math.random()*.2);Body.setVelocity(body,{x:-throwStrength,y:(index-2)*1.25+(Math.random()-.5)*1.5});Body.setAngularVelocity(body,(Math.random()-.5)*.2);}
+    const active=activeIds.has(die.id),handOffsets=[[0,-1.05],[-.92,-.53],[0,0],[-.92,.53],[0,1.05]],startX=active?halfWidth+handOffsets[index][0]:die.x/pixelsPerUnit,startZ=active?handOffsets[index][1]:die.y/pixelsPerUnit,body=new CANNON.Body({mass:active?1.15:0,material:diceMaterial,position:new CANNON.Vec3(startX,active?1.05+index*.08:half,startZ),shape:new CANNON.Box(new CANNON.Vec3(half,active?half:2,half)),linearDamping:.19,angularDamping:.27,allowSleep:true,sleepSpeedLimit:.22,sleepTimeLimit:.38});
+    body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.canvas=body.button?.querySelector("canvas");bodies.push(body);world.addBody(body);
+    if(active){const strength=[3.9,5.5,4.5,6.2,5][index]*(.9+Math.random()*.2);body.velocity.set(-strength,2.1+Math.random()*1.1,(index-2)*.72+(Math.random()-.5)*.65);body.angularVelocity.set((Math.random()-.5)*8,(Math.random()-.5)*9,(Math.random()-.5)*8);body.quaternion.setFromEuler(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);}
   });
-  Composite.add(engine.world,[...walls,...bodies]);
-  const start=performance.now(),fixedStep=1000/60,maxDuration=3200;
+  const start=performance.now(),fixedStep=1/60,maxDuration=4200;
   function frame(now){
-    Engine.update(engine,fixedStep);
-    bodies.forEach((body)=>{if(body.isStatic||!body.button)return;body.height+=body.verticalVelocity;body.verticalVelocity-=.58;if(body.height<0){body.height=0;body.verticalVelocity=Math.abs(body.verticalVelocity)*.32;if(body.verticalVelocity<.5)body.verticalVelocity=0;}const angle=body.angle*180/Math.PI;body.button.style.left=`${body.position.x}px`;body.button.style.top=`${body.position.y}px`;body.button.style.setProperty("--rest-angle",`${angle}deg`);body.button.style.transform=`translate(-50%,-50%) translateY(${-body.height}px) rotate(${angle}deg)`;});
-    const moving=bodies.some((body)=>!body.isStatic&&(body.speed>.22||Math.abs(body.angularSpeed)>.012||body.height>.2));
-    if(now-start<maxDuration&&(now-start<1450||moving)){requestAnimationFrame(frame);return;}
-    bodies.forEach((body)=>{if(body.isStatic)return;body.die.x=Math.round(body.position.x-width/2);body.die.y=Math.round(body.position.y-height/2);body.die.rot=Math.round(body.angle*180/Math.PI)%360;if(body.button){body.button.style.transform="";body.button.classList.remove("rolling");}});
-    Composite.clear(engine.world,false);Engine.clear(engine);saveMatch();updateSuggestions();
+    world.step(fixedStep);
+    bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
+    const moving=bodies.some((body)=>body.mass>0&&body.sleepState!==CANNON.Body.SLEEPING);
+    if(now-start<maxDuration&&(now-start<1500||moving)){requestAnimationFrame(frame);return;}
+    bodies.forEach((body)=>{if(body.mass===0)return;body.die.x=Math.round(body.position.x*pixelsPerUnit);body.die.y=Math.round(body.position.z*pixelsPerUnit);body.die.rot=0;if(body.button){body.canvas?.dieView?.settle();body.button.style.left=`${width/2+body.die.x}px`;body.button.style.top=`${height/2+body.die.y}px`;body.button.style.transform="";body.button.classList.remove("rolling");}});
+    world.bodies.slice().forEach((body)=>world.removeBody(body));saveMatch();updateSuggestions();resolve();
   }
   requestAnimationFrame(frame);
+  });
 }
 function scatterDice(){
   const compact=window.innerWidth<680,candidates=compact?[[-112,-48],[-56,-48],[0,-48],[56,-48],[112,-48],[-112,32],[-56,32],[0,32],[56,32],[112,32]]:[[-210,-92],[-105,-92],[0,-92],[105,-92],[210,-92],[-210,44],[-105,44],[0,44],[105,44],[210,44]],minimum=compact?66:112,occupied=dice.filter((die)=>die.held).map((die)=>[die.x,die.y]);
@@ -135,7 +136,7 @@ function updateSuggestions(){
   const total=totals(playerScores),aiTotal=totals(aiScores);$("#upper-total").textContent=total.upperTotal;$("#ai-upper-total").textContent=aiTotal.upperTotal;$("#bonus").textContent=total.bonus||"—";$("#ai-bonus").textContent=aiTotal.bonus||"—";$("#player-total-small").textContent=total.total;$("#ai-total").textContent=aiTotal.total;setRollButtonState();if(aiScores.l8===50&&!aiYatsunCelebrated){aiYatsunCelebrated=true;triggerYatsun();}
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
-function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";setRollButtonState();}
+function roll(){if(rolls>=3||busy)return;playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;setRollButtonState();renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";}
 function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));
@@ -164,7 +165,7 @@ async function aiTurn(){
     scatterDice();
     rollNumber.textContent=String(round);
     renderDice(true);
-    await delay(1650);
+    await dicePhysicsPromise;
     $(".turn-heading h2").textContent=`${name} funderar…`;
     await humanPause(850,1550);
     const target=[1,2,3,4,5,6].map((value)=>({value,count:dice.filter((d)=>d.value===value).length,weight:value/15})).sort((a,b)=>(b.count+b.weight)-(a.count+a.weight))[0].value;

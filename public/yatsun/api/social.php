@@ -20,6 +20,39 @@ function social_handle(PDO $db,string $uid,string $action,array $input): array {
         return ['member'=>social_query($db,'SELECT uid,name,code FROM yatsun_members WHERE uid=?',[$uid])->fetch()];
     }
     if(!social_query($db,'SELECT uid FROM yatsun_members WHERE uid=?',[$uid])->fetch())throw new RuntimeException('Öppna vänfönstret igen för att aktivera din spelprofil.',409);
+    if($action==='room_lobby'){
+        return ['tables'=>social_query($db,"SELECT r.id,r.a AS hostUid,m.name AS hostName,r.updated_at AS createdAt FROM yatsun_rooms r JOIN yatsun_members m ON m.uid=r.a WHERE r.status='open' ORDER BY r.updated_at DESC LIMIT 100")->fetchAll()];
+    }
+    if($action==='room_host'){
+        $db->beginTransaction();
+        try{
+            // Serialize host requests so a double click cannot create two tables.
+            social_query($db,'SELECT uid FROM yatsun_members WHERE uid=? FOR UPDATE',[$uid])->fetch();
+            $existing=social_query($db,"SELECT id FROM yatsun_rooms WHERE a=? AND status='open' LIMIT 1",[$uid])->fetch();
+            if($existing){$db->commit();return ['id'=>$existing['id']];}
+            $id=bin2hex(random_bytes(16));
+            social_query($db,"INSERT INTO yatsun_rooms(id,a,b,status,state_json,updated_at) VALUES(?,?,'','open','{}',?)",[$id,$uid,$now]);
+            $db->commit();return ['id'=>$id];
+        }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+    }
+    if($action==='room_join'||$action==='room_cancel_open'){
+        $id=(string)($input['id']??'');if(!preg_match('/^[a-f0-9]{32}$/',$id))throw new RuntimeException('Ogiltigt bord.',400);
+        $db->beginTransaction();
+        try{
+            $row=social_query($db,'SELECT * FROM yatsun_rooms WHERE id=? FOR UPDATE',[$id])->fetch();
+            if(!$row||$row['status']!=='open')throw new RuntimeException('Bordet är inte längre ledigt. Uppdatera listan.',409);
+            if($action==='room_cancel_open'){
+                if($row['a']!==$uid)throw new RuntimeException('Bara värden kan stänga bordet.',403);
+                social_query($db,"UPDATE yatsun_rooms SET status='cancelled',revision=revision+1,updated_at=? WHERE id=?",[$now,$id]);
+                $db->commit();return ['ok'=>true];
+            }
+            if($row['a']===$uid)throw new RuntimeException('Vänta på en annan spelare vid ditt bord.',409);
+            $row['b']=$uid;$row['status']='active';$row['revision']=(int)$row['revision']+1;$row['updated_at']=$now;$row['state_json']=json_encode(room_initial($row['a'],$uid));
+            social_query($db,"UPDATE yatsun_rooms SET b=?,status='active',revision=?,state_json=?,updated_at=? WHERE id=?",[$uid,$row['revision'],$row['state_json'],$now,$id]);
+            $name=social_query($db,'SELECT name FROM yatsun_members WHERE uid=?',[$row['a']])->fetchColumn();
+            $db->commit();return ['room'=>social_room($row)+['otherName'=>$name]];
+        }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+    }
     if($action==='social_search'){
         $term=trim((string)($input['query']??''));if(mb_strlen($term)<2||mb_strlen($term)>80)return ['members'=>[]];
         $prefix=str_replace(['!','%','_'],['!!','!%','!_'],$term).'%';

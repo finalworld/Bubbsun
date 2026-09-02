@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { planRestingLayout } from "./dice-resting.mjs";
-import { createSocial } from "./social.mjs";
+import { createSocial } from "./social.mjs?v=lobby1";
 let online = null;
 let onlineRevision = -1;
 
@@ -259,7 +259,7 @@ for(const [id,label,path,view] of [
   ['add-friend-button','Lägg till vänner','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M20 6v6 M17 9h6','add']
 ]){const b=document.createElement('button');b.id=id;b.className='social-icon';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;b.onclick=()=>online.open(view);$('#profile-button').before(b);}
 onAuthStateChanged(auth,()=>{setTimeout(()=>online.authChanged(),0);});
-$('#open-multi').addEventListener('click',e=>{e.stopImmediatePropagation();online.open();},true);
+$('#open-multi').addEventListener('click',e=>{e.stopImmediatePropagation();online.lobby();},true);
 for(const element of [$('#end-match'),$('#restart-match'),...$$('.back-to-modes'),$('#start-solo'),$('#play-again')])element.addEventListener('click',e=>{if(!online.active)return;online.leave();if(element.id==='end-match'||element.id==='restart-match'){e.stopImmediatePropagation();}},true);
 $("#restart-match").addEventListener("click",()=>{if(!confirm("Starta om matchen mot samma motståndare? Alla poäng i den här matchen försvinner."))return;clearMatch();playerScores={};aiScores={};lastScore=null;rolls=0;dice.forEach((die)=>Object.assign(die,{held:false,value:1+Math.floor(Math.random()*6)}));startGame();});
 $("#end-match").addEventListener("click",()=>{if(!confirm("Avsluta matchen? Den sparade matchen och alla poäng i den tas bort."))return;clearMatch();playerScores={};aiScores={};lastScore=null;$("#result-modal").classList.add("hidden");showScreen("#mode-screen");});

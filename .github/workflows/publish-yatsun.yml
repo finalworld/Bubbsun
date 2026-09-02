@@ -1,0 +1,56 @@
+name: Publish Yatsun only
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/bubbsun-current-release]
+    paths: [.github/workflows/publish-yatsun.yml]
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: test-only
+          MARIADB_DATABASE: yatsun_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring
+      - name: Test Yatsun before uploading
+        env:
+          YATSUN_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=yatsun_test;charset=utf8mb4
+        run: |
+          php -l public/yatsun/api/social.php
+          php tests/yatsun-rooms.test.php
+          node --check public/yatsun/social.mjs
+          node --check public/yatsun/app.js
+          node --test tests/yatsun-dice-resting.test.mjs
+      - run: sudo apt-get update -qq && sudo apt-get install -y lftp
+      - name: Upload only the four changed Yatsun files
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 20
+          set net:max-retries 1
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          put public/yatsun/api/social.php -o public/yatsun/api/social.php
+          put public/yatsun/social.mjs -o public/yatsun/social.mjs
+          put public/yatsun/app.js -o public/yatsun/app.js
+          put public/yatsun/index.html -o public/yatsun/index.html
+          bye
+          EOF

@@ -22,6 +22,11 @@ export function createSocial({user, name, applyRoom, leaveRoom, login, canEnter=
         if(current?.id===id&&latest.revision>current.revision){current={...current,...latest};applyRoom(current,false,pending);}
       }
       if(dialog.open&&view==='friends')renderFriends(data.friends);
+      if(dialog.open&&view==='lobby'){
+        const lobby=await api('room_lobby');
+        if(generation!==epoch)return;
+        if(dialog.open&&view==='lobby')renderLobby(lobby.tables);
+      }
       if(error.textContent==='Hämtar…')message('');
       document.querySelector('#friends-button').classList.toggle('has-updates',data.friends.some(f=>f.status==='pending'&&f.sender!==user().uid)||rooms.some(r=>r.status==='pending'&&r.b===user().uid||r.status==='active'&&r.state.turn===user().uid));
     })();
@@ -48,7 +53,33 @@ export function createSocial({user, name, applyRoom, leaveRoom, login, canEnter=
     }
   }
   function leave(){current=null;leaveRoom();}
+  async function openLobby(){
+    if(!user()){login();return;}
+    view='lobby';title.textContent='Multiplayer';content.replaceChildren();message('Hämtar…');
+    if(!dialog.open)dialog.showModal();
+    try{await refresh();}catch(e){message(e.message);}
+  }
+  function renderLobby(tables){
+    content.replaceChildren();
+    const intro=document.createElement('p');intro.textContent='Skapa ett öppet bord eller anslut till någon annans. Två spelare per match – spela nu eller fortsätt senare.';content.append(intro);
+    const own=tables.find(t=>t.hostUid===user().uid);
+    content.append(button(own?'Ditt bord väntar på en spelare':'＋ Skapa spel (host)',async()=>{await api('room_host');await refresh();}));
+    heading('Lediga bord');
+    if(!tables.length)line('Inga lediga bord just nu. Skapa det första!');
+    for(const table of tables){
+      const mine=table.hostUid===user().uid;
+      line(`${table.hostName} · 1 av 2 spelare`,[mine?button('Stäng bord',async()=>{await api('room_cancel_open',{id:table.id});await refresh();}):button('Anslut',async()=>{
+        if(!canEnter())throw new Error('Vänta tills ditt pågående kast eller datordrag är klart.');
+        try{const result=await api('room_join',{id:table.id});enter(result.room);}catch(e){await refresh();throw e;}
+      })]);
+    }
+    heading('Dina matcher');
+    const resumable=rooms.filter(r=>r.status==='active'||r.status==='done');
+    if(!resumable.length)line('När någon ansluter visas matchen här.');
+    for(const room of resumable)line(`${room.otherName} · ${room.status==='done'?'Klar':room.state.turn===user().uid?'Din tur':'Motståndarens tur'}`,[button('Öppna',()=>enter(room))]);
+    content.append(button('Uppdatera listan',refresh));
+  }
   setInterval(()=>{if(!document.hidden)refresh().catch(e=>message(e.message));},3000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(e=>message(e.message));});
-  return {get active(){return Boolean(current);},open,leave,hold:held=>move('room_hold',{held}),reaction:reaction=>move('room_reaction',{reaction}),roll:held=>move('room_roll',{held}),score:category=>move('room_score',{category}),authChanged(){epoch++;member=null;if(current)leave();refresh().catch(e=>message(e.message));}};
+  return {get active(){return Boolean(current);},open,lobby:openLobby,leave,hold:held=>move('room_hold',{held}),reaction:reaction=>move('room_reaction',{reaction}),roll:held=>move('room_roll',{held}),score:category=>move('room_score',{category}),authChanged(){epoch++;member=null;if(current)leave();refresh().catch(e=>message(e.message));}};
 }

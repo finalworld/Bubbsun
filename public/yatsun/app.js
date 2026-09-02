@@ -93,10 +93,15 @@ function runDicePhysics(entries,width,height){
     body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.canvas=body.button?.querySelector("canvas");bodies.push(body);world.addBody(body);
     if(active){const strength=[3.9,5.5,4.5,6.2,5][index]*(.9+Math.random()*.2);body.velocity.set(-strength,2.1+Math.random()*1.1,(index-2)*.72+(Math.random()-.5)*.65);body.angularVelocity.set((Math.random()-.5)*8,(Math.random()-.5)*9,(Math.random()-.5)*8);body.quaternion.setFromEuler(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);}
   });
-  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],start=performance.now(),fixedStep=1/60,maxDuration=5200;
+  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],up=new CANNON.Vec3(0,1,0),start=performance.now(),fixedStep=1/60,maxDuration=4600;
   function frame(now){
     world.step(fixedStep);
-    if(now-start>1200)bodies.forEach((body)=>{if(body.mass===0||body.sleepState!==CANNON.Body.SLEEPING||body.edgeNudged)return;const alignment=Math.max(...faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y));if(alignment<.86){body.edgeNudged=true;body.wakeUp();body.angularVelocity.set((Math.random()<.5?-1:1)*.32,0,(Math.random()<.5?-1:1)*.32);}});
+    if(now-start>1050)bodies.forEach((body)=>{
+      if(body.mass===0||body.velocity.length()>.24||body.angularVelocity.length()>.32||now-(body.lastEdgeTip||0)<260)return;
+      const top=faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z))).sort((a,b)=>b.y-a.y)[0];
+      if(top.y>=.91)return;
+      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.lastEdgeTip=now;body.wakeUp();body.angularVelocity.set(axis.x*1.15,.04,axis.z*1.15);body.velocity.y=Math.max(body.velocity.y,.12);
+    });
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
     const moving=bodies.some((body)=>body.mass>0&&body.sleepState!==CANNON.Body.SLEEPING);
     if(now-start<maxDuration&&(now-start<1450||moving)){requestAnimationFrame(frame);return;}

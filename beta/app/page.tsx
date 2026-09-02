@@ -1116,7 +1116,7 @@ function Header({
             aria-label={addIcon === "note" ? "Skapa en anteckning" : addIcon === "recipe" ? "Skapa ett recept" : addIcon === "calendar" ? "Ny händelse" : "Skapa en lista"}
             onClick={onAdd}
           >
-            {addIcon ? <img src={`/assets/new-icons/create-${addIcon}.png`} alt="" /> : <Plus />}
+            {addIcon ? <img src={`${import.meta.env.BASE_URL}assets/new-icons/create-${addIcon}.png`} alt="" /> : <Plus />}
           </button></div>
         ) : mode === "manage" ? (
           <button

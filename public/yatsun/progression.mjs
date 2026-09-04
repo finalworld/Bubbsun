@@ -21,6 +21,25 @@ export function paintDice(model,skin,THREE){
   return materials;
 }
 
+export function enableDragScroll(board,viewport=window){
+  let drag=null,suppressClick=false;
+  board.addEventListener('pointerdown',event=>{
+    if(event.pointerType!=='mouse'||event.button!==0)return;
+    drag={id:event.pointerId,x:event.clientX,y:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false};
+    board.setPointerCapture(event.pointerId);board.classList.add('dragging');
+  });
+  board.addEventListener('pointermove',event=>{
+    if(!drag||event.pointerId!==drag.id)return;
+    const distance=Math.hypot(event.clientX-drag.x,event.clientY-drag.y);
+    if(distance>5)drag.moved=true;
+    if(drag.moved){event.preventDefault();viewport.scrollBy({left:drag.lastX-event.clientX,top:drag.lastY-event.clientY,behavior:'instant'});}
+    drag.lastX=event.clientX;drag.lastY=event.clientY;
+  });
+  const finish=event=>{if(!drag||event.pointerId!==drag.id)return;suppressClick=drag.moved;drag=null;board.classList.remove('dragging');};
+  board.addEventListener('pointerup',finish);board.addEventListener('pointercancel',finish);
+  board.addEventListener('click',event=>{if(suppressClick){event.preventDefault();event.stopPropagation();suppressClick=false;}},true);
+}
+
 export function createProgression({profile,select,start,name,avatar,show}){
   const map=document.createElement('section'),collection=document.createElement('section');map.id='campaign-screen';collection.id='collection-screen';map.className=collection.className='journey-page hidden';document.querySelector('main').append(map,collection);
   function el(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;}
@@ -29,7 +48,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
   function openMap(){
     header(map,'Din väg till 100');const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
     map.append(el('p','Besegra motståndarna längs vägen. Var tionde seger låser upp ett nytt tärningsset.'));
-    const board=el('div','','campaign-board');map.append(board);
+    const board=el('div','','campaign-board');map.append(board);enableDragScroll(board);
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 600 8100');svg.setAttribute('preserveAspectRatio','none');svg.classList.add('campaign-road');
     const points=Array.from({length:100},(_,i)=>({x:300+Math.sin(i*Math.PI/6)*185,y:8000-i*80}));
     const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '));svg.append(path);board.append(svg);

@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { planRestingLayout } from "./dice-resting.mjs";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=mapmarker3';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=mapdrag5';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;

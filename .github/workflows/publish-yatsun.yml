@@ -54,6 +54,7 @@ jobs:
           put public/yatsun/social.mjs -o public/yatsun/social.mjs
           put public/yatsun/progression.mjs -o public/yatsun/progression.mjs
           put public/yatsun/progression.css -o public/yatsun/progression.css
+          put public/yatsun/styles.css -o public/yatsun/styles.css
           put public/yatsun/app.js -o public/yatsun/app.js
           put public/yatsun/index.html -o public/yatsun/index.html
           bye

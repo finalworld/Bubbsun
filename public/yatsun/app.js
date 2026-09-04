@@ -4,7 +4,6 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
-import { planRestingLayout } from "./dice-resting.mjs";
 import { createSocial } from "./social.mjs?v=lounge2";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials10';
 let boardSkin='classic';
@@ -124,18 +123,13 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
     const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&(body.velocity.length()>.13||body.angularVelocity.length()>.16)),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.075||alignment(body)<.985));
     if(elapsed<1200||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
-    const radius=compact?38:60,obstacle=buttonRect.width&&buttonRect.height?{left:buttonRect.left-trayRect.left-width/2-6,right:buttonRect.right-trayRect.left-width/2+6,top:buttonRect.top-trayRect.top-height/2-6,bottom:buttonRect.bottom-trayRect.top-height/2+6}:null;
-    const layout=planRestingLayout(bodies.map(b=>({id:b.die.id,held:b.mass===0,x:b.position.x*pixelsPerUnit,y:b.position.z*pixelsPerUnit})),{width:width-boundary*2,height:height-boundary*2,radius,obstacle});
-    // Never publish an overlapping result. Keep simulating if the current
-    // viewport cannot accommodate the held dice and the button safely.
-    if(!layout){requestAnimationFrame(frame);return;}
     const landings=bodies.filter(b=>b.mass>0).map(body=>{
       const topFace=faceNormals.map(([value,x,y,z])=>({value,normal:body.quaternion.vmult(new CANNON.Vec3(x,y,z))})).sort((a,b)=>b.normal.y-a.normal.y)[0];
       const resultValue=authoritativeValues?.[body.die.id]??topFace.value;
       const desiredFace=faceNormals.find(([value])=>value===resultValue);
       const resultNormal=authoritativeValues?body.quaternion.vmult(new CANNON.Vec3(...desiredFace.slice(1))):topFace.normal;
       const correction=new CANNON.Quaternion();correction.setFromVectors(resultNormal,up);
-      const target=correction.mult(body.quaternion),point=layout.find(p=>p.id===body.die.id);
+      const target=correction.mult(body.quaternion),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
       return {body,value:resultValue,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
     });
     const settleStart=now;

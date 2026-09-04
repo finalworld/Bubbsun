@@ -111,19 +111,19 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
     body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.canvas=body.button?.querySelector("canvas");bodies.push(body);world.addBody(body);
     if(active){const strength=[3.9,5.5,4.5,6.2,5][index]*(.9+Math.random()*.2);body.velocity.set(-strength,2.1+Math.random()*1.1,(index-2)*.72+(Math.random()-.5)*.65);body.angularVelocity.set((Math.random()-.5)*8,(Math.random()-.5)*9,(Math.random()-.5)*8);body.quaternion.setFromEuler(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);}
   });
-  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],up=new CANNON.Vec3(0,1,0),alignment=(body)=>Math.max(...faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y)),start=performance.now(),fixedStep=1/60,normalDuration=4600,hardLimit=6500;
+  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],up=new CANNON.Vec3(0,1,0),alignment=(body)=>Math.max(...faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y)),start=performance.now(),fixedStep=1/60,normalDuration=3300,hardLimit=4800;
   function frame(now){
     world.step(fixedStep);
-    if(now-start>1050)bodies.forEach((body)=>{
-      const elapsed=now-start;if(body.mass===0||now-(body.lastEdgeTip||0)<240||(elapsed<1900&&(body.velocity.length()>.24||body.angularVelocity.length()>.32)))return;
-      if(body.position.y>half+.08&&body.position.y<half*2.3&&Math.abs(body.velocity.y)<.55){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.lastEdgeTip=now;body.wakeUp();body.velocity.set(dx/length*1.05,.32,dz/length*1.05);body.angularVelocity.set(dz/length*1.3,.08,-dx/length*1.3);return;}
+    if(now-start>650)bodies.forEach((body)=>{
+      const elapsed=now-start;if(body.mass===0||now-(body.lastEdgeTip||0)<110||(elapsed<1250&&(body.velocity.length()>.3||body.angularVelocity.length()>.42)))return;
+      if(body.position.y>half+.07&&body.position.y<half*2.5&&Math.abs(body.velocity.y)<.7){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.lastEdgeTip=now;body.wakeUp();body.velocity.set(dx/length*1.75,.25,dz/length*1.75);body.angularVelocity.set(dz/length*2.4,.04,-dx/length*2.4);return;}
       const top=faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z))).sort((a,b)=>b.y-a.y)[0];
       if(top.y>=.965)return;
-      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.lastEdgeTip=now;body.wakeUp();body.angularVelocity.set(axis.x*1.45,.04,axis.z*1.45);body.velocity.y=Math.max(body.velocity.y,.14);
+      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.lastEdgeTip=now;body.wakeUp();body.angularVelocity.set(axis.x*2.2,.02,axis.z*2.2);body.velocity.y=Math.max(body.velocity.y,.1);
     });
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
-    const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&body.sleepState!==CANNON.Body.SLEEPING),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.1||alignment(body)<.94));
-    if(elapsed<1450||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
+    const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&(body.velocity.length()>.13||body.angularVelocity.length()>.16)),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.075||alignment(body)<.985));
+    if(elapsed<1200||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
     const radius=compact?38:60,obstacle=buttonRect.width&&buttonRect.height?{left:buttonRect.left-trayRect.left-width/2-6,right:buttonRect.right-trayRect.left-width/2+6,top:buttonRect.top-trayRect.top-height/2-6,bottom:buttonRect.bottom-trayRect.top-height/2+6}:null;
     const layout=planRestingLayout(bodies.map(b=>({id:b.die.id,held:b.mass===0,x:b.position.x*pixelsPerUnit,y:b.position.z*pixelsPerUnit})),{width:width-boundary*2,height:height-boundary*2,radius,obstacle});
     // Never publish an overlapping result. Keep simulating if the current
@@ -140,14 +140,14 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
     });
     const settleStart=now;
     function settle(time){
-      const progress=Math.min(1,(time-settleStart)/360),ease=progress*progress*(3-2*progress);
+      const progress=Math.min(1,(time-settleStart)/120),ease=progress*progress*(3-2*progress);
       landings.forEach(({body,from,rotation,target,point})=>{
         body.position.set(from.x+(point.x/pixelsPerUnit-from.x)*ease,from.y+(half-from.y)*ease,from.z+(point.y/pixelsPerUnit-from.z)*ease);
         rotation.slerp(target,ease,body.quaternion);
         if(body.button){body.button.style.left=`${width/2+body.position.x*pixelsPerUnit}px`;body.button.style.top=`${height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7}px`;body.canvas?.dieView?.sync(body.quaternion);}
       });
       if(progress<1){requestAnimationFrame(settle);return;}
-      landings.forEach(({body,value,point})=>{body.die.value=value;body.die.x=point.x;body.die.y=point.y;body.die.rot=0;body.die.q=[body.quaternion.x,body.quaternion.y,body.quaternion.z,body.quaternion.w];if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${value}`);body.button.style.transform="";body.button.classList.remove("rolling");}});
+      landings.forEach(({body,value,point})=>{body.type=CANNON.Body.STATIC;body.velocity.setZero();body.angularVelocity.setZero();body.sleep();body.die.value=value;body.die.x=point.x;body.die.y=point.y;body.die.rot=0;body.die.q=[body.quaternion.x,body.quaternion.y,body.quaternion.z,body.quaternion.w];if(body.button){body.canvas?.dieView?.finishPhysics();body.button.setAttribute("aria-label",`Tärning ${body.die.id+1}: ${value}`);body.button.style.transform="";body.button.classList.remove("rolling");}});
       world.bodies.slice().forEach(body=>world.removeBody(body));saveMatch();updateSuggestions();resolve();
     }
     requestAnimationFrame(settle);

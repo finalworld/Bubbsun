@@ -12,21 +12,21 @@ function social_query(PDO $db,string $sql,array $params=[]): PDOStatement {$q=$d
 function social_pair(string $uid,string $other): array {if($uid===$other||$other==='')throw new RuntimeException('Välj en annan medlem.',400);$pair=[$uid,$other];sort($pair,SORT_STRING);return $pair;}
 function social_room(array $row): array {return ['id'=>$row['id'],'a'=>$row['a'],'b'=>$row['b'],'status'=>$row['status'],'revision'=>(int)$row['revision'],'state'=>json_decode($row['state_json'],true),'updatedAt'=>(int)$row['updated_at']];}
 
-function social_handle(PDO $db,string $uid,string $action,array $input): array {
+function social_handle(PDO $db,string $uid,string $action,array $input,string $email=''): array {
     social_schema($db);$now=(int)floor(microtime(true)*1000);
     if($action==='social_cosmetics'){
         // Solo progression is client-owned, like the existing solo save. Cosmetics never affect scores.
         $completed=$input['completed']??0;
         if(!is_int($completed)||$completed<0||$completed>100)throw new RuntimeException('Ogiltig kampanjnivå.',400);
-        $styles=['classic','forest','ocean','cherry','amber','violet','ice','copper','midnight','pearl','champion'];
+        $styles=['classic','forest','ocean','cherry','amber','violet','ice','copper','midnight','pearl','champion'];$admin=$email==='finalworld@gmail.com';
         $db->beginTransaction();
         try{
             social_query($db,"INSERT IGNORE INTO yatsun_cosmetics(uid) VALUES(?)",[$uid]);
             $saved=social_query($db,'SELECT completed,active FROM yatsun_cosmetics WHERE uid=? FOR UPDATE',[$uid])->fetch();
             $completed=max($completed,(int)$saved['completed']);$active=$input['active']??$saved['active'];$index=array_search($active,$styles,true);
-            if($index===false||$index*10>$completed)throw new RuntimeException('Det tärningssetet är inte upplåst.',403);
+            if($index===false||(!$admin&&$index*10>$completed))throw new RuntimeException('Det tärningssetet är inte upplåst.',403);
             social_query($db,'UPDATE yatsun_cosmetics SET completed=?,active=? WHERE uid=?',[$completed,$active,$uid]);
-            $db->commit();return ['completed'=>$completed,'active'=>$active];
+            $db->commit();return ['completed'=>$completed,'active'=>$active,'admin'=>$admin];
         }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
     }
     if($action==='social_register'){

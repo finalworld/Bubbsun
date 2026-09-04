@@ -27,7 +27,7 @@ function db(): PDO {
     return $pdo;
 }
 
-function authenticated_uid(): string {
+function authenticated_identity(): array {
     $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
     if (!preg_match('/^Bearer\s+(.+)$/i', $header, $match)) reply(['ok' => false, 'error' => 'Logga in igen.'], 401);
     $url = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyBuJP3imBBQZ7CWJzUhosSbyEhi_Z0lgj8';
@@ -39,18 +39,18 @@ function authenticated_uid(): string {
     $data = json_decode((string) $response, true);
     $uid = $data['users'][0]['localId'] ?? '';
     if ($status !== 200 || !is_string($uid) || $uid === '') reply(['ok' => false, 'error' => 'Inloggningen kunde inte verifieras.'], 401);
-    return $uid;
+    return ['uid'=>$uid,'email'=>strtolower((string)($data['users'][0]['email']??''))];
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') reply(['ok' => false, 'error' => 'Fel metod.'], 405);
 $input = json_decode((string) file_get_contents('php://input'), true);
 $action = is_array($input) ? (string) ($input['action'] ?? '') : '';
-$uid = authenticated_uid();
+$identity = authenticated_identity();$uid=$identity['uid'];
 
 try {
     if(preg_match('/^(social_|friend_|room_)/',$action)){
         require_once __DIR__.'/social.php';
-        reply(['ok'=>true]+social_handle(db(),$uid,$action,$input));
+        reply(['ok'=>true]+social_handle(db(),$uid,$action,$input,$identity['email']));
     }
     if ($action === 'load_match') {
         $statement = db()->prepare('SELECT state_json, updated_at FROM yatsun_matches WHERE uid = ?');

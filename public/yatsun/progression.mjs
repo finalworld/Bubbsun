@@ -1,23 +1,25 @@
+const atlasUrl=new URL('./assets/dice-materials.png',import.meta.url).href;
 export const skins=[
-  ['classic','Original',0,'#fff8e7','#153b2d',0,.5],
-  ['forest','Skog',10,'#63876b','#fff4d2',0,.6],
-  ['ocean','Hav',20,'#368fbc','#f5fcff',0,.3],
-  ['cherry','Körsbär',30,'#b83e59','#fff2df',0,.35],
-  ['amber','Bärnsten',40,'#e7a83e','#472713',.2,.3],
-  ['violet','Ametist',50,'#8055b4','#fff0e0',.15,.3],
-  ['ice','Isblå',60,'#bce5e5','#214e70',.2,.2],
-  ['copper','Koppar',70,'#b97249','#fff4d1',.65,.3],
-  ['midnight','Midnatt',80,'#202c45','#edc36c',.25,.35],
-  ['pearl','Pärlemor',90,'#eedaf3','#694381',.35,.22],
-  ['champion','Mästarguld',100,'#f0c457','#342914',.75,.24]
-].map(([id,name,level,body,pips,metalness,roughness])=>({id,name,level,body,pips,metalness,roughness}));
+  ['classic','Original',0,'#fff8e7','#153b2d',0,.5,[99,20,310,294]],
+  ['forest','Skog',10,'#b96f2c','#302015',0,.65,[449,29,291,284]],
+  ['ocean','Hav',20,'#079de2','#f5fcff',.05,.22,[790,29,291,285]],
+  ['cherry','Körsbär',30,'#e30628','#ffd049',.1,.28,[1137,30,291,278]],
+  ['amber','Bärnsten',40,'#eaa01c','#572d12',.15,.24,[96,352,308,283]],
+  ['violet','Ametist',50,'#7b2fc4','#fff0e0',.15,.23,[456,355,287,289]],
+  ['ice','Isblå',60,'#bce5e5','#174d79',.08,.18,[788,354,296,288]],
+  ['copper','Koppar',70,'#b96937','#fff4d1',.68,.3,[1137,354,298,290]],
+  ['midnight','Midnatt',80,'#0a2854','#edc36c',.18,.28,[256,681,292,313]],
+  ['pearl','Pärlemor',90,'#eedaf3','#694381',.42,.18,[624,682,296,310]],
+  ['champion','Mästarguld',100,'#eebc36','#342914',.8,.22,[1002,681,290,311]]
+].map(([id,name,level,body,pips,metalness,roughness,atlas])=>({id,name,level,body,pips,metalness,roughness,atlas}));
 export function completedLevels(p){return Math.min(100,Math.max(0,Math.trunc(Number(p.completed)||0),Math.trunc(Number(p.unlocked)||1)-1));}
-export function activeSkin(p){return skins.find(s=>s.id===p.activeSkin&&s.level<=completedLevels(p))||skins[0];}
+export function activeSkin(p){return skins.find(s=>s.id===p.activeSkin&&(p.admin||s.level<=completedLevels(p)))||skins[0];}
 export function awardVictory(p,level){const previous=completedLevels(p),completed=Math.max(previous,Math.min(100,level));return {...p,completed,unlocked:Math.min(100,completed+1),newSkin:skins.find(s=>s.level===level&&level>previous)?.name||null};}
 export function skinById(id){return skins.find(s=>s.id===id)||skins[0];}
 export function paintDice(model,skin,THREE){
-  const materials=[];if(skin.id==='classic')return materials;
-  model.traverse(node=>{if(!node.isMesh)return;const tint=original=>{const material=original.clone();material.metalness=skin.metalness;material.roughness=skin.roughness;material.onBeforeCompile=shader=>{shader.uniforms.skinBody={value:new THREE.Color(skin.body)};shader.uniforms.skinPips={value:new THREE.Color(skin.pips)};shader.fragmentShader='uniform vec3 skinBody; uniform vec3 skinPips;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nfloat faceInk=smoothstep(0.12,0.65,dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722))); diffuseColor.rgb=mix(skinPips,skinBody,faceInk);');};material.customProgramCacheKey=()=>skin.id;materials.push(material);return material;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
+  const materials=[];let readyResolve;materials.ready=new Promise(resolve=>readyResolve=resolve);const atlasTexture=new THREE.TextureLoader().load(atlasUrl,()=>readyResolve());atlasTexture.colorSpace=THREE.SRGBColorSpace;atlasTexture.flipY=false;
+  const [x,y,w,h]=skin.atlas,region=new THREE.Vector4(x/1536,y/1024,w/1536,h/1024);
+  model.traverse(node=>{if(!node.isMesh)return;const tint=original=>{const material=original.clone();material.metalness=skin.metalness;material.roughness=skin.roughness;material.onBeforeCompile=shader=>{shader.uniforms.skinBody={value:new THREE.Color(skin.body)};shader.uniforms.skinPips={value:new THREE.Color(skin.pips)};shader.uniforms.skinAtlas={value:atlasTexture};shader.uniforms.skinRegion={value:region};shader.fragmentShader='uniform vec3 skinBody; uniform vec3 skinPips; uniform sampler2D skinAtlas; uniform vec4 skinRegion;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nfloat faceInk=smoothstep(0.12,0.65,dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722))); vec2 materialUv=clamp((vMapUv-vec2(0.02184,0.02550))/vec2(0.32362,0.15912),0.0,1.0); vec4 atlasColor=texture2D(skinAtlas,skinRegion.xy+materialUv*skinRegion.zw); vec3 surface=mix(skinBody,atlasColor.rgb,atlasColor.a); diffuseColor.rgb=mix(skinPips,surface,faceInk);');};material.customProgramCacheKey=()=>skin.id+'-atlas10';materials.push(material);return material;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
   return materials;
 }
 
@@ -61,7 +63,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
   function openCollection(){
     header(collection,'Mina tärningar');collection.append(el('p','Samma fysik och chanser – välj din stil. Nya set efter var tionde besegrad motståndare.'));
     const grid=el('div','','skin-grid');collection.append(grid);const p=profile(),selected=activeSkin(p);
-    for(const skin of skins){const available=skin.level<=completedLevels(p),card=el('article','','skin-card');const preview=el('div','','skin-preview');preview.style.background=skin.body;preview.style.color=skin.pips;for(const [x,y] of [[27,27],[73,27],[50,50],[27,73],[73,73]]){const dot=el('i','','skin-dot');dot.style.left=x+'%';dot.style.top=y+'%';preview.append(dot);}card.append(preview,el('h2',skin.name),el('p',skin.level?`Besegra motståndare ${skin.level}`:'Ditt startset'));
+    for(const skin of skins){const available=p.admin||skin.level<=completedLevels(p),card=el('article','','skin-card');const preview=el('div','','skin-preview'),[ax,ay,aw,ah]=skin.atlas;preview.style.backgroundColor=skin.body;preview.style.backgroundImage=`url('${atlasUrl}')`;preview.style.backgroundSize=`${1536*100/aw}px ${1024*100/ah}px`;preview.style.backgroundPosition=`-${ax*100/aw}px -${ay*100/ah}px`;preview.style.color=skin.pips;for(const [x,y] of [[27,27],[73,27],[50,50],[27,73],[73,73]]){const dot=el('i','','skin-dot');dot.style.left=x+'%';dot.style.top=y+'%';preview.append(dot);}card.append(preview,el('h2',skin.name),el('p',p.admin&&!skin.level?'Administratör · startset':p.admin?'Administratör · tillgänglig':skin.level?`Besegra motståndare ${skin.level}`:'Ditt startset'));
       const b=btn(!available?'🔒 Låst':skin.id===selected.id?'✓ Aktiv':'Använd',async()=>{b.disabled=true;try{await select(skin.id);openCollection();}catch(e){b.disabled=false;card.append(el('p',e.message));}});b.disabled=!available||skin.id===selected.id;card.append(b);grid.append(card);
     }show('#collection-screen');
   }

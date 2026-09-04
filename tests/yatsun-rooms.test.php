@@ -70,6 +70,9 @@ $look=$call('alice','social_cosmetics',['completed'=>10,'active'=>'forest']);che
 check($call('alice','social_cosmetics',['completed'=>0])['completed']===10,'Unlock survives older device');
 rejects(fn()=>$call('alice','social_cosmetics',['completed'=>101]),400);
 rejects(fn()=>$call('alice','social_cosmetics',['active'=>'bad']),403);
+$admin=fn($action,$input=[])=>social_handle($db,'admin-user',$action,$input,'finalworld@gmail.com');
+$look=$admin('social_cosmetics',['completed'=>0,'active'=>'champion']);check($look['admin']===true&&$look['active']==='champion'&&$look['completed']===0,'Verified admin email previews locked cosmetics without campaign progress');
+check($call('alice','social_cosmetics',['completed'=>10])['admin']===false,'Normal players are not admins');
 $publicRoom=$call('alice','room_get',['id'=>$public['id']])['room'];
 $cast=$call('alice','room_roll',['id'=>$public['id'],'revision'=>$publicRoom['revision']])['room'];check($cast['state']['diceSkin']==='forest','Server stamps caster skin');
 $scored=$call('alice','room_score',['id'=>$public['id'],'revision'=>$cast['revision'],'category'=>'l7'])['room'];check($scored['state']['diceSkin']==='forest','Score and turn change preserve visible dice skin');

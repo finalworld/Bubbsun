@@ -51,10 +51,12 @@ jobs:
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
           put public/yatsun/api/social.php -o public/yatsun/api/social.php
+          put public/yatsun/api/index.php -o public/yatsun/api/index.php
           put public/yatsun/social.mjs -o public/yatsun/social.mjs
           put public/yatsun/progression.mjs -o public/yatsun/progression.mjs
           put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/styles.css -o public/yatsun/styles.css
+          put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
           put public/yatsun/app.js -o public/yatsun/app.js
           put public/yatsun/index.html -o public/yatsun/index.html
           bye

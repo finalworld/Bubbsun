@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { planRestingLayout } from "./dice-resting.mjs";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=mapdrag5';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials10';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -43,7 +43,7 @@ async function mountDieModel(canvas,fallback,die,rolling,index){
     const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-.96,.96,.96,-.96,.1,10),model=source.scene.clone(true),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:"high-performance"});
     renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(144,144,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
     const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),settledScale=1.06/Math.max(size.x,size.y,size.z);model.position.sub(center);model.scale.setScalar(settledScale);scene.add(model);
-    canvas.ownedMaterials=paintDice(model,skin,THREE);
+    canvas.ownedMaterials=paintDice(model,skin,THREE);canvas.ownedMaterials.ready?.then(()=>canvas.dieView?.render());
     scene.add(new THREE.HemisphereLight(0xfff9e8,0x365844,2.6));const key=new THREE.DirectionalLight(0xffffff,4.2);key.position.set(-3,4,5);scene.add(key);const rim=new THREE.DirectionalLight(0xffd97a,1.8);rim.position.set(4,-2,3);scene.add(rim);camera.position.set(.38,.45,3);camera.lookAt(0,0,0);
     const target=dieOrientations[value],physicsToView=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0)),view={renderer,model,stopped:false,render:()=>renderer.render(scene,camera),finishPhysics(){this.render();},sync(quaternion){model.quaternion.set(quaternion.x,quaternion.y,quaternion.z,quaternion.w).premultiply(physicsToView);this.render();}};activeDieViews.push(view);canvas.dieView=view;canvas.classList.add("ready");fallback.classList.add("model-ready");
     const render=()=>renderer.render(scene,camera);
@@ -58,7 +58,7 @@ function saveProfile() { localStorage.setItem(profileKey(), JSON.stringify(profi
 let cosmeticQueue=Promise.resolve();
 function syncCosmetics(selection=false){
   const account=authUser;if(!account)return Promise.resolve();const data={action:'social_cosmetics',completed:completedLevels(profile)};if(selection)data.active=activeSkin(profile).id;
-  const request=cosmeticQueue.catch(()=>{}).then(async()=>{const token=await account.getIdToken(),response=await fetch('./api/',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(data)}),result=await response.json();if(!response.ok)throw new Error(result.error||'Kunde inte spara tärningsvalet.');if(authUser?.uid!==account.uid)return;profile.completed=Math.max(completedLevels(profile),result.completed);profile.unlocked=Math.min(100,profile.completed+1);profile.activeSkin=result.active;localStorage.setItem(profileKey(),JSON.stringify(profile));updateProfileUi();});cosmeticQueue=request;return request;
+  const request=cosmeticQueue.catch(()=>{}).then(async()=>{const token=await account.getIdToken(),response=await fetch('./api/',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(data)}),result=await response.json();if(!response.ok)throw new Error(result.error||'Kunde inte spara tärningsvalet.');if(authUser?.uid!==account.uid)return;profile.completed=Math.max(completedLevels(profile),result.completed);profile.unlocked=Math.min(100,profile.completed+1);profile.activeSkin=result.active;profile.admin=Boolean(result.admin);localStorage.setItem(profileKey(),JSON.stringify(profile));updateProfileUi();});cosmeticQueue=request;return request;
 }
 function xpForLevel(level){return 100+(level-1)*25;}
 function playerProgress(totalXp=profile.soloXp){let level=1,xp=Math.max(0,totalXp||0),needed=xpForLevel(level);while(xp>=needed){xp-=needed;level++;needed=xpForLevel(level);}return{level,xp,needed};}

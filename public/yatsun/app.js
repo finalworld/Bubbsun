@@ -80,6 +80,7 @@ function renderDice(animate=false) {
     die.skin=online?.active?boardSkin:activeSkin(profile).id;
     const button=document.createElement("button"),shadow=document.createElement("span"),travel=document.createElement("span"),cube=document.createElement("span"),canvas=document.createElement("canvas");
     button.type="button";
+    button.dataset.dieId=String(die.id);
     const appearance=skinById(die.skin);button.style.setProperty('--skin-body',appearance.body);button.style.setProperty('--skin-pips',appearance.pips);
     button.className=`die die-3d${die.held?" held":""}${animate&&!die.held?" rolling":""}`;
     shadow.className="die-shadow";travel.className="die-travel";cube.className="die-cube";canvas.className="die-model";
@@ -90,12 +91,13 @@ function renderDice(animate=false) {
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
     travel.append(cube,canvas);button.append(shadow,travel);
     if(animate&&!die.held)rollingButtons.push({button,die,index});
-    button.addEventListener("click",()=>{if(!rolls||busy||diceRoot.querySelector(".rolling"))return;die.held=!die.held;button.classList.toggle("held",die.held);button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);updateSuggestions();if(online?.active)void online.hold(dice.map(d=>d.held));else saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
+    button.addEventListener("click",()=>{if(!rolls||busy||diceRoot.querySelector(".rolling"))return;die.held=!die.held;syncHeldDiceUi();updateSuggestions();if(online?.active)void online.hold(dice.map(d=>d.held));else saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);
   if(animate){hideSuggestions();rollButton.disabled=true;dicePhysicsPromise=runDicePhysics(rollingButtons,trayWidth,trayHeight,online?.active?dice.map(d=>d.value):null);}else updateSuggestions();
 }
+function syncHeldDiceUi(){dice.forEach((die,index)=>{const button=diceRoot.querySelector(`button[data-die-id="${die.id}"]`);if(!button)return;button.classList.toggle("held",die.held);button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);});}
 function runDicePhysics(entries,width,height,authoritativeValues=null){
   return new Promise((resolve)=>{
   const compact=window.innerWidth<680,pixelsPerUnit=compact?72:92,dieSize=compact?.72:.88,half=dieSize/2,boundary=compact?8:12,boardHalfWidth=(width-boundary*2)/pixelsPerUnit/2,boardHalfDepth=(height-boundary*2)/pixelsPerUnit/2,halfWidth=boardHalfWidth-half,halfDepth=boardHalfDepth-half,world=new CANNON.World({gravity:new CANNON.Vec3(0,-24,0),allowSleep:true}),diceMaterial=new CANNON.Material("dice"),trayMaterial=new CANNON.Material("tray");
@@ -216,7 +218,7 @@ async function aiTurn(){
     await humanPause(850,1550);
     const target=[1,2,3,4,5,6].map((value)=>({value,count:dice.filter((d)=>d.value===value).length,weight:value/15})).sort((a,b)=>(b.count+b.weight)-(a.count+a.weight))[0].value;
     dice.forEach((die)=>die.held=die.value===target);
-    renderDice();
+    syncHeldDiceUi();
     await humanPause(450,800);
     if(dice.every((die)=>die.held))break;
   }

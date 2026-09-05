@@ -1,4 +1,6 @@
 const atlasUrl=new URL('./assets/dice-materials.png',import.meta.url).href;
+let sharedAtlas=null,sharedAtlasReady=null;
+function loadSharedAtlas(THREE){if(!sharedAtlasReady){sharedAtlasReady=new Promise(resolve=>{sharedAtlas=new THREE.TextureLoader().load(atlasUrl,resolve,undefined,resolve);sharedAtlas.colorSpace=THREE.SRGBColorSpace;sharedAtlas.minFilter=THREE.LinearFilter;sharedAtlas.magFilter=THREE.LinearFilter;});}return{texture:sharedAtlas,ready:sharedAtlasReady};}
 export const skins=[
   ['classic','Original',0,'#fff8e7','#153b2d',0,.5,[75,0,355,330]],
   ['forest','Skog',10,'#b96f2c','#302015',0,.65,[425,0,350,330]],
@@ -17,7 +19,7 @@ export function activeSkin(p){return skins.find(s=>s.id===p.activeSkin&&(p.admin
 export function awardVictory(p,level){const previous=completedLevels(p),completed=Math.max(previous,Math.min(100,level));return {...p,completed,unlocked:Math.min(100,completed+1),newSkin:skins.find(s=>s.level===level&&level>previous)?.name||null};}
 export function skinById(id){return skins.find(s=>s.id===id)||skins[0];}
 export function paintDice(model,skin,THREE){
-  const materials=[],[x,y,w,h]=skin.atlas;let readyResolve;materials.ready=new Promise(resolve=>readyResolve=resolve);const atlas=new THREE.TextureLoader().load(atlasUrl,()=>readyResolve(),undefined,()=>readyResolve());atlas.colorSpace=THREE.SRGBColorSpace;atlas.minFilter=THREE.LinearFilter;atlas.magFilter=THREE.LinearFilter;materials.texture=atlas;
+  const materials=[],[x,y,w,h]=skin.atlas,{texture:atlas,ready}=loadSharedAtlas(THREE);materials.ready=ready;
   model.traverse(node=>{if(!node.isMesh)return;const tint=original=>{const material=original.clone();material.metalness=skin.metalness;material.roughness=skin.roughness;material.onBeforeCompile=shader=>{shader.uniforms.skinPips={value:new THREE.Color(skin.pips)};shader.uniforms.skinTexture={value:atlas};shader.uniforms.skinAtlas={value:new THREE.Vector4(x/1536,1-(y+h)/1024,w/1536,h/1024)};shader.vertexShader='varying vec3 skinObjectPosition;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nskinObjectPosition=position;');shader.fragmentShader='uniform vec3 skinPips; uniform sampler2D skinTexture; uniform vec4 skinAtlas; varying vec3 skinObjectPosition;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\nfloat faceInk=smoothstep(0.12,0.65,dot(diffuseColor.rgb,vec3(0.2126,0.7152,0.0722))); vec3 p=skinObjectPosition,ap=abs(p); vec2 cubeUv=ap.x>ap.y&&ap.x>ap.z?p.zy:ap.y>ap.z?p.xz:p.xy; vec2 materialUv=clamp((cubeUv/.75)+.5,0.0,1.0); materialUv=mix(vec2(.22),vec2(.78),materialUv); vec3 surface=texture2D(skinTexture,skinAtlas.xy+materialUv*skinAtlas.zw).rgb; diffuseColor.rgb=mix(skinPips,surface,faceInk);');};material.customProgramCacheKey=()=>skin.id+'-material-core2';materials.push(material);return material;};node.material=Array.isArray(node.material)?node.material.map(tint):tint(node.material);});
   return materials;
 }

@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials17';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials18';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -131,7 +131,7 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
       const desiredFace=faceNormals.find(([value])=>value===resultValue);
       const resultNormal=authoritativeValues?body.quaternion.vmult(new CANNON.Vec3(...desiredFace.slice(1))):topFace.normal;
       const correction=new CANNON.Quaternion();correction.setFromVectors(resultNormal,up);
-      const target=correction.mult(body.quaternion),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
+      const target=authoritativeValues?correction.mult(body.quaternion):body.quaternion.clone(),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
       return {body,value:resultValue,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
     });
     const settleStart=now;

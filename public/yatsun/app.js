@@ -101,30 +101,40 @@ function syncHeldDiceUi(){dice.forEach((die,index)=>{const button=diceRoot.query
 function runDicePhysics(entries,width,height,authoritativeValues=null){
   return new Promise((resolve)=>{
   const compact=window.innerWidth<680,pixelsPerUnit=compact?72:92,dieSize=compact?.72:.88,half=dieSize/2,boundary=compact?8:12,boardHalfWidth=(width-boundary*2)/pixelsPerUnit/2,boardHalfDepth=(height-boundary*2)/pixelsPerUnit/2,halfWidth=boardHalfWidth-half,halfDepth=boardHalfDepth-half,world=new CANNON.World({gravity:new CANNON.Vec3(0,-24,0),allowSleep:true}),diceMaterial=new CANNON.Material("dice"),trayMaterial=new CANNON.Material("tray");
-  world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=24;world.defaultContactMaterial.friction=.16;world.defaultContactMaterial.restitution=.32;world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,trayMaterial,{friction:.28,restitution:.34,contactEquationStiffness:1e7,contactEquationRelaxation:4}));world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,diceMaterial,{friction:.07,restitution:.48,contactEquationStiffness:5e7,contactEquationRelaxation:3}));
+  world.broadphase=new CANNON.SAPBroadphase(world);world.solver.iterations=28;world.defaultContactMaterial.friction=.18;world.defaultContactMaterial.restitution=.28;world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,trayMaterial,{friction:.3,restitution:.28,contactEquationStiffness:1e7,contactEquationRelaxation:4}));world.addContactMaterial(new CANNON.ContactMaterial(diceMaterial,diceMaterial,{friction:.09,restitution:.32,contactEquationStiffness:5e7,contactEquationRelaxation:3}));
   const floor=new CANNON.Body({mass:0,material:trayMaterial,shape:new CANNON.Plane()});floor.quaternion.setFromEuler(-Math.PI/2,0,0);world.addBody(floor);
   [[-boardHalfWidth-.16,1.2,0,.16,1.6,boardHalfDepth+1],[boardHalfWidth+.16,1.2,0,.16,1.6,boardHalfDepth+1],[0,1.2,-boardHalfDepth-.16,boardHalfWidth+1,1.6,.16],[0,1.2,boardHalfDepth+.16,boardHalfWidth+1,1.6,.16]].forEach(([x,y,z,hx,hy,hz])=>world.addBody(new CANNON.Body({mass:0,material:trayMaterial,position:new CANNON.Vec3(x,y,z),shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz))})));
   const trayRect=diceRoot.getBoundingClientRect(),buttonRect=rollButton.getBoundingClientRect(),buttonCenterX=buttonRect.left+buttonRect.width/2-trayRect.left,buttonCenterZ=buttonRect.top+buttonRect.height/2-trayRect.top;
   if(buttonRect.width&&buttonRect.height&&buttonCenterX>-buttonRect.width/2&&buttonCenterX<width+buttonRect.width/2&&buttonCenterZ>-buttonRect.height/2&&buttonCenterZ<height+buttonRect.height/2){const obstacle=new CANNON.Body({mass:0,material:trayMaterial,position:new CANNON.Vec3((buttonCenterX-width/2)/pixelsPerUnit,2,(buttonCenterZ-height/2)/pixelsPerUnit),shape:new CANNON.Box(new CANNON.Vec3(buttonRect.width/2/pixelsPerUnit+half*.35,2,buttonRect.height/2/pixelsPerUnit+half*.35))});world.addBody(obstacle);}
   const activeIds=new Set(entries.map(({die})=>die.id)),bodies=[];
   dice.forEach((die,index)=>{
-    const active=activeIds.has(die.id),handOffsets=[[0,-1.05],[-.92,-.53],[0,0],[-.92,.53],[0,1.05]],startX=active?halfWidth+handOffsets[index][0]:die.x/pixelsPerUnit,startZ=active?handOffsets[index][1]:die.y/pixelsPerUnit,body=new CANNON.Body({mass:active?1.15:0,material:diceMaterial,position:new CANNON.Vec3(startX,active?1.05+index*.08:half,startZ),shape:new CANNON.Box(new CANNON.Vec3(half,half,half)),linearDamping:.09,angularDamping:.18,allowSleep:true,sleepSpeedLimit:.075,sleepTimeLimit:.55});
+    const active=activeIds.has(die.id),handOffsets=[[0,-1.05],[-.92,-.53],[0,0],[-.92,.53],[0,1.05]],startX=active?halfWidth+handOffsets[index][0]:die.x/pixelsPerUnit,startZ=active?handOffsets[index][1]:die.y/pixelsPerUnit,body=new CANNON.Body({mass:active?1.15:0,material:diceMaterial,position:new CANNON.Vec3(startX,active?1.05+index*.08:half,startZ),shape:new CANNON.Box(new CANNON.Vec3(half,half,half)),linearDamping:.12,angularDamping:.22,allowSleep:true,sleepSpeedLimit:.1,sleepTimeLimit:.4});
     body.die=die;body.button=diceRoot.querySelector(`[aria-label^="Tärning ${index+1}:"]`);body.canvas=body.button?.querySelector("canvas");bodies.push(body);world.addBody(body);
     if(active){const strength=[3.9,5.5,4.5,6.2,5][index]*(.9+Math.random()*.2);body.velocity.set(-strength,2.1+Math.random()*1.1,(index-2)*.72+(Math.random()-.5)*.65);body.angularVelocity.set((Math.random()-.5)*8,(Math.random()-.5)*9,(Math.random()-.5)*8);body.quaternion.setFromEuler(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);}
   });
-  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],up=new CANNON.Vec3(0,1,0),alignment=(body)=>Math.max(...faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y)),start=performance.now(),fixedStep=1/60,normalDuration=3300,hardLimit=4800;
+  const faceNormals=[[3,0,0,1],[4,0,0,-1],[2,1,0,0],[5,-1,0,0],[6,0,1,0],[1,0,-1,0]],up=new CANNON.Vec3(0,1,0),alignment=(body)=>Math.max(...faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z)).y)),start=performance.now(),fixedStep=1/60,normalDuration=2450,hardLimit=3200,separatedPairs=new Set();
   function frame(now){
     world.step(fixedStep);
+    const elapsed=now-start,activeBodies=bodies.filter((body)=>body.mass>0);
+    if(elapsed>320&&elapsed<1550){
+      for(let i=0;i<activeBodies.length;i++)for(let j=i+1;j<activeBodies.length;j++){
+        const a=activeBodies[i],b=activeBodies[j],dx=a.position.x-b.position.x,dz=a.position.z-b.position.z,horizontal=Math.hypot(dx,dz),vertical=Math.abs(a.position.y-b.position.y),key=`${a.die.id}:${b.die.id}`;
+        if(separatedPairs.has(key)||horizontal>dieSize*.7||vertical<half*.55)continue;
+        separatedPairs.add(key);const angle=horizontal>.02?Math.atan2(dz,dx):(a.die.id+1)*1.73,nx=Math.cos(angle),nz=Math.sin(angle),push=1.2;
+        a.wakeUp();b.wakeUp();a.velocity.x+=nx*push;a.velocity.z+=nz*push;b.velocity.x-=nx*push;b.velocity.z-=nz*push;a.angularVelocity.x+=nz*2.2;a.angularVelocity.z-=nx*2.2;b.angularVelocity.x-=nz*2.2;b.angularVelocity.z+=nx*2.2;
+      }
+    }
+    if(elapsed>1450)activeBodies.forEach((body)=>{body.linearDamping=.5;body.angularDamping=.58;});
     if(now-start>650)bodies.forEach((body)=>{
-      const elapsed=now-start;if(body.mass===0||body.settleNudgeUsed||elapsed>1400||(elapsed<850&&(body.velocity.length()>.3||body.angularVelocity.length()>.42)))return;
+      if(body.mass===0||body.settleNudgeUsed||elapsed>1550||(elapsed<850&&(body.velocity.length()>.3||body.angularVelocity.length()>.42)))return;
       if(body.position.y>half+.07&&body.position.y<half*2.5&&Math.abs(body.velocity.y)<.7){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.settleNudgeUsed=true;body.wakeUp();body.velocity.set(dx/length*1.75,.25,dz/length*1.75);body.angularVelocity.set(dz/length*2.4,.04,-dx/length*2.4);return;}
       const top=faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z))).sort((a,b)=>b.y-a.y)[0];
       if(top.y>=.965)return;
-      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.settleNudgeUsed=true;body.wakeUp();body.angularVelocity.set(axis.x*2.2,.02,axis.z*2.2);body.velocity.y=Math.max(body.velocity.y,.1);
+      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.settleNudgeUsed=true;body.wakeUp();body.angularVelocity.set(axis.x*3,.02,axis.z*3);body.velocity.y=Math.max(body.velocity.y,.12);
     });
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
-    const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&(body.velocity.length()>.13||body.angularVelocity.length()>.16)),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.075||alignment(body)<.985));
-    if(elapsed<1200||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
+    const moving=activeBodies.some((body)=>body.velocity.length()>.1||body.angularVelocity.length()>.13),invalid=activeBodies.some((body)=>body.position.y>half+.1||alignment(body)<.95);
+    if(elapsed<1050||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
     const landings=bodies.filter(b=>b.mass>0).map(body=>{
       const topFace=faceNormals.map(([value,x,y,z])=>({value,normal:body.quaternion.vmult(new CANNON.Vec3(x,y,z))})).sort((a,b)=>b.normal.y-a.normal.y)[0];
       const resultValue=authoritativeValues?.[body.die.id]??topFace.value;

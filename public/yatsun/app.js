@@ -90,7 +90,7 @@ function renderDice(animate=false) {
     for(let faceIndex=1;faceIndex<=6;faceIndex++){const face=document.createElement("span"),faceValue=faceIndex===1?die.value:((die.value+faceIndex-2)%6)+1;face.className=`cube-face face-${faceIndex}`;pipPositions[faceValue].forEach(([x,y])=>{const pip=document.createElement("i");pip.className="pip";pip.style.left=`calc(${x}% - 5px)`;pip.style.top=`calc(${y}% - 5px)`;face.appendChild(pip);});cube.appendChild(face);}
     travel.append(cube,canvas);button.append(shadow,travel);
     if(animate&&!die.held)rollingButtons.push({button,die,index});
-    button.addEventListener("click",()=>{if(!rolls||busy||diceRoot.querySelector(".rolling"))return;die.held=!die.held;renderDice();if(online?.active)void online.hold(dice.map(d=>d.held));else saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
+    button.addEventListener("click",()=>{if(!rolls||busy||diceRoot.querySelector(".rolling"))return;die.held=!die.held;button.classList.toggle("held",die.held);button.setAttribute("aria-label",`Tärning ${index+1}: ${die.value}${die.held?", sparad":""}`);updateSuggestions();if(online?.active)void online.hold(dice.map(d=>d.held));else saveMatch();rollHint.textContent=die.held?"Tärningen är sparad.":"Tärningen kastas igen nästa gång.";});
     diceRoot.appendChild(button);mountDieModel(canvas,cube,die,animate&&!die.held,index);
   });
   clearTimeout(suggestionTimer);

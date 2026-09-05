@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials10';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials12';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -34,7 +34,7 @@ const dieOrientations={1:[-Math.PI/2,0,0],2:[0,-Math.PI/2,0],3:[0,0,0],4:[0,Math
 const dieModelPromise=new GLTFLoader().loadAsync("./assets/3d/D6_A.gltf");
 let activeDieViews=[];
 
-function disposeDieViews(){diceRoot.querySelectorAll('canvas').forEach(canvas=>canvas.ownedMaterials?.forEach(m=>m.dispose()));activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
+function disposeDieViews(){diceRoot.querySelectorAll('canvas').forEach(canvas=>{canvas.ownedMaterials?.forEach(m=>m.dispose());canvas.ownedMaterials?.texture?.dispose();});activeDieViews.forEach((view)=>{view.stopped=true;view.renderer.dispose();});activeDieViews=[];}
 async function mountDieModel(canvas,fallback,die,rolling,index){
   try{
     const value=die.value,skin=skinById(die.skin||'classic');

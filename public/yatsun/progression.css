@@ -33,3 +33,4 @@
 .skin-preview .skin-dot:nth-child(1){left:29%!important}.skin-preview .skin-dot:nth-child(2){left:66%!important}.skin-preview .skin-dot:nth-child(4){left:29%!important;top:66%!important}.skin-preview .skin-dot:nth-child(5){left:66%!important;top:66%!important}
 .skin-preview{background-color:transparent!important;background-repeat:no-repeat!important}
 .skin-preview .skin-dot:nth-child(1){left:27%!important;top:27%!important}.skin-preview .skin-dot:nth-child(2){left:73%!important;top:27%!important}.skin-preview .skin-dot:nth-child(4){left:27%!important;top:73%!important}.skin-preview .skin-dot:nth-child(5){left:73%!important;top:73%!important}
+.skin-preview{border-radius:0!important;box-shadow:none!important;transform:none!important}

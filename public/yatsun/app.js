@@ -289,7 +289,7 @@ function updateMatchPlayers(multiplayer,room=null){
   cards[1].querySelector('.avatar').textContent=multiplayer?(room.otherName||'V').slice(0,1).toLocaleUpperCase('sv-SE'):'AI';
   if(multiplayer){cards[0].querySelector('span').textContent='Spela nu eller fortsätt senare';cards[1].querySelector('strong').textContent=room.otherName||'Vän';cards[1].querySelector('small').textContent=done?'MATCHEN KLAR':mine?'MOTSTÅNDARE':'MOTSTÅNDARENS TUR';cards[1].querySelector('span').textContent='Multiplayer · matchen sparas';}
   else cards[1].querySelector('span').textContent='Datormotståndare';
-  setScoreTurn(mine,multiplayer?(room.otherName||'Vän'):opponentName(),done);
+  setScoreTurn(mine,multiplayer?(room.otherName||'Vän'):(cards[1].querySelector('strong').textContent||'AI'),done);
 }
 function setScoreTurn(mine,otherName='AI',done=false){const panel=$('.score-panel'),banner=$('.score-turn-banner');if(!panel||!banner)return;panel.classList.toggle('player-turn',!done&&mine);panel.classList.toggle('opponent-turn',!done&&!mine);banner.textContent=done?'MATCH KLAR':mine?'DIN TUR':`${otherName.toLocaleUpperCase('sv-SE')}S TUR`;}
 function applyOnlineRoom(room,initial=false,sending=false,force=false){

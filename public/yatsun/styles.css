@@ -202,3 +202,8 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .reaction-bubble{border-color:#506f58;box-shadow:0 5px 0 #344e3b,0 16px 34px #244b374d}
 .reaction-bubble:after{border-color:#506f58}
 .game-shell .die.die-3d{transition:none!important}.game-shell .die.die-3d.held{transform:translate(-50%,-50%) rotate(var(--rest-angle))}
+
+/* A held die keeps its skin intact, but gets an unmistakable saved marker. */
+.game-shell .die.die-3d.held:not(.rolling)::after{content:"✓ SPARAD";position:absolute;z-index:8;left:50%;bottom:0;transform:translateX(-50%);padding:4px 8px;border:2px solid #fff8db;border-radius:999px;background:#315f49;color:#fff;font-size:9px;font-weight:950;line-height:1;letter-spacing:.7px;white-space:nowrap;box-shadow:0 3px 0 #1e4332,0 5px 12px #102c2266;pointer-events:none}
+.game-shell .die.die-3d.held:not(.rolling) .die-model{filter:drop-shadow(0 0 4px #fff4b8) drop-shadow(0 0 11px #ffc531) drop-shadow(0 8px 5px #173a2a55)}
+@media(max-width:680px){.game-shell .die.die-3d.held:not(.rolling)::after{bottom:-2px;padding:3px 6px;font-size:7px;letter-spacing:.45px}}

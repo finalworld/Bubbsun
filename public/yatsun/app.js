@@ -199,7 +199,7 @@ function updateSuggestions(){
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished||busy;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
 function roll(){if(rolls>=3||busy)return;if(online?.active){void online.roll(dice.map(d=>d.held));return;}playDiceSound();dice.forEach((die)=>{if(!die.held)die.value=1+Math.floor(Math.random()*6);});rolls++;setRollButtonState();renderDice(true);saveMatch();rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";}
-function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";renderDice();}
+function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";setScoreTurn(true);renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));
 const reactionPositions=[[0,0],[33.333,0],[66.667,0],[100,0],[0,100],[33.333,100],[66.667,100],[100,100]];
@@ -216,6 +216,7 @@ async function chooseScore(id){if(!rolls||busy||id in playerScores)return;if(onl
 async function aiTurn(){
   if(scorecardComplete(aiScores))return;
   const name=opponentName();
+  setScoreTurn(false,name);
   rollButton.classList.add("hidden");
   rollButton.disabled=true;
   rollHint.textContent="Motståndaren spelar sin tur…";
@@ -288,7 +289,9 @@ function updateMatchPlayers(multiplayer,room=null){
   cards[1].querySelector('.avatar').textContent=multiplayer?(room.otherName||'V').slice(0,1).toLocaleUpperCase('sv-SE'):'AI';
   if(multiplayer){cards[0].querySelector('span').textContent='Spela nu eller fortsätt senare';cards[1].querySelector('strong').textContent=room.otherName||'Vän';cards[1].querySelector('small').textContent=done?'MATCHEN KLAR':mine?'MOTSTÅNDARE':'MOTSTÅNDARENS TUR';cards[1].querySelector('span').textContent='Multiplayer · matchen sparas';}
   else cards[1].querySelector('span').textContent='Datormotståndare';
+  setScoreTurn(mine,multiplayer?(room.otherName||'Vän'):opponentName(),done);
 }
+function setScoreTurn(mine,otherName='AI',done=false){const panel=$('.score-panel'),banner=$('.score-turn-banner');if(!panel||!banner)return;panel.classList.toggle('player-turn',!done&&mine);panel.classList.toggle('opponent-turn',!done&&!mine);banner.textContent=done?'MATCH KLAR':mine?'DIN TUR':`${otherName.toLocaleUpperCase('sv-SE')}S TUR`;}
 function applyOnlineRoom(room,initial=false,sending=false,force=false){
   if(onlineAnimating){queuedOnlineRoom={room,initial,sending,force};return;}
   const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||force||onlineRevision!==room.revision;

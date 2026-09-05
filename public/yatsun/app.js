@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as CANNON from "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js";
 import { createSocial } from "./social.mjs?v=lounge2";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression,paintDice } from './progression.mjs?v=materials18';
+import { planRestingLayout } from './dice-resting.mjs?v=resting2';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -135,13 +136,14 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
     const moving=activeBodies.some((body)=>body.velocity.length()>.1||body.angularVelocity.length()>.13),invalid=activeBodies.some((body)=>body.position.y>half+.1||alignment(body)<.95);
     if(elapsed<1050||(elapsed<normalDuration&&moving)||(elapsed<hardLimit&&invalid)){requestAnimationFrame(frame);return;}
+    const restingRadius=compact?38:52,restingObstacle=buttonRect.width&&buttonRect.height?{left:buttonCenterX-width/2-buttonRect.width/2,right:buttonCenterX-width/2+buttonRect.width/2,top:buttonCenterZ-height/2-buttonRect.height/2,bottom:buttonCenterZ-height/2+buttonRect.height/2}:null,restingLayout=planRestingLayout(bodies.map(body=>({id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit,held:body.mass===0})),{width:width-boundary*2,height:height-boundary*2,radius:restingRadius,obstacle:restingObstacle}),restingById=new Map((restingLayout||[]).map(point=>[point.id,point]));
     const landings=bodies.filter(b=>b.mass>0).map(body=>{
       const topFace=faceNormals.map(([value,x,y,z])=>({value,normal:body.quaternion.vmult(new CANNON.Vec3(x,y,z))})).sort((a,b)=>b.normal.y-a.normal.y)[0];
       const resultValue=authoritativeValues?.[body.die.id]??topFace.value;
       const desiredFace=faceNormals.find(([value])=>value===resultValue);
       const resultNormal=authoritativeValues?body.quaternion.vmult(new CANNON.Vec3(...desiredFace.slice(1))):topFace.normal;
       const correction=new CANNON.Quaternion();correction.setFromVectors(resultNormal,up);
-      const target=correction.mult(body.quaternion),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
+      const target=correction.mult(body.quaternion),point=restingById.get(body.die.id)||{id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
       return {body,value:resultValue,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
     });
     const settleStart=now;

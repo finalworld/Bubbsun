@@ -1,16 +1,16 @@
 const atlasUrl=new URL('./assets/dice-materials.png',import.meta.url).href;
 export const skins=[
-  ['classic','Original',0,'#fff8e7','#153b2d',0,.5,[99,20,310,294]],
-  ['forest','Skog',10,'#b96f2c','#302015',0,.65,[449,29,291,284]],
-  ['ocean','Hav',20,'#079de2','#f5fcff',.05,.22,[790,29,291,285]],
-  ['cherry','Körsbär',30,'#e30628','#ffd049',.1,.28,[1137,30,291,278]],
-  ['amber','Bärnsten',40,'#eaa01c','#572d12',.15,.24,[96,352,308,283]],
-  ['violet','Ametist',50,'#7b2fc4','#fff0e0',.15,.23,[456,355,287,289]],
-  ['ice','Isblå',60,'#bce5e5','#174d79',.08,.18,[788,354,296,288]],
-  ['copper','Koppar',70,'#b96937','#fff4d1',.68,.3,[1137,354,298,290]],
-  ['midnight','Midnatt',80,'#0a2854','#edc36c',.18,.28,[256,681,292,313]],
-  ['pearl','Pärlemor',90,'#eedaf3','#694381',.42,.18,[624,682,296,310]],
-  ['champion','Mästarguld',100,'#eebc36','#342914',.8,.22,[1002,681,290,311]]
+  ['classic','Original',0,'#fff8e7','#153b2d',0,.5,[75,0,355,330]],
+  ['forest','Skog',10,'#b96f2c','#302015',0,.65,[425,0,350,330]],
+  ['ocean','Hav',20,'#079de2','#f5fcff',.05,.22,[765,0,350,330]],
+  ['cherry','Körsbär',30,'#e30628','#ffd049',.1,.28,[1110,0,350,330]],
+  ['amber','Bärnsten',40,'#eaa01c','#572d12',.15,.24,[70,330,360,330]],
+  ['violet','Ametist',50,'#7b2fc4','#fff0e0',.15,.23,[430,330,350,330]],
+  ['ice','Isblå',60,'#bce5e5','#174d79',.08,.18,[765,330,350,330]],
+  ['copper','Koppar',70,'#b96937','#fff4d1',.68,.3,[1110,330,350,330]],
+  ['midnight','Midnatt',80,'#0a2854','#edc36c',.18,.28,[225,655,350,369]],
+  ['pearl','Pärlemor',90,'#eedaf3','#694381',.42,.18,[600,655,350,369]],
+  ['champion','Mästarguld',100,'#eebc36','#342914',.8,.22,[975,655,350,369]]
 ].map(([id,name,level,body,pips,metalness,roughness,atlas])=>({id,name,level,body,pips,metalness,roughness,atlas}));
 export function completedLevels(p){return Math.min(100,Math.max(0,Math.trunc(Number(p.completed)||0),Math.trunc(Number(p.unlocked)||1)-1));}
 export function activeSkin(p){return skins.find(s=>s.id===p.activeSkin&&(p.admin||s.level<=completedLevels(p)))||skins[0];}

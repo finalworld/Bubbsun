@@ -116,11 +116,11 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
   function frame(now){
     world.step(fixedStep);
     if(now-start>650)bodies.forEach((body)=>{
-      const elapsed=now-start;if(body.mass===0||now-(body.lastEdgeTip||0)<110||(elapsed<1250&&(body.velocity.length()>.3||body.angularVelocity.length()>.42)))return;
-      if(body.position.y>half+.07&&body.position.y<half*2.5&&Math.abs(body.velocity.y)<.7){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.lastEdgeTip=now;body.wakeUp();body.velocity.set(dx/length*1.75,.25,dz/length*1.75);body.angularVelocity.set(dz/length*2.4,.04,-dx/length*2.4);return;}
+      const elapsed=now-start;if(body.mass===0||body.settleNudgeUsed||elapsed>1400||(elapsed<850&&(body.velocity.length()>.3||body.angularVelocity.length()>.42)))return;
+      if(body.position.y>half+.07&&body.position.y<half*2.5&&Math.abs(body.velocity.y)<.7){const neighbour=bodies.filter((other)=>other!==body).sort((a,b)=>Math.hypot(body.position.x-a.position.x,body.position.z-a.position.z)-Math.hypot(body.position.x-b.position.x,body.position.z-b.position.z))[0],dx=body.position.x-(neighbour?.position.x||0),dz=body.position.z-(neighbour?.position.z||0),length=Math.hypot(dx,dz)||1;body.settleNudgeUsed=true;body.wakeUp();body.velocity.set(dx/length*1.75,.25,dz/length*1.75);body.angularVelocity.set(dz/length*2.4,.04,-dx/length*2.4);return;}
       const top=faceNormals.map(([,x,y,z])=>body.quaternion.vmult(new CANNON.Vec3(x,y,z))).sort((a,b)=>b.y-a.y)[0];
       if(top.y>=.965)return;
-      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.lastEdgeTip=now;body.wakeUp();body.angularVelocity.set(axis.x*2.2,.02,axis.z*2.2);body.velocity.y=Math.max(body.velocity.y,.1);
+      const axis=top.cross(up);if(axis.lengthSquared()<.001)return;axis.normalize();body.settleNudgeUsed=true;body.wakeUp();body.angularVelocity.set(axis.x*2.2,.02,axis.z*2.2);body.velocity.y=Math.max(body.velocity.y,.1);
     });
     bodies.forEach((body)=>{if(body.mass===0||!body.button)return;const left=width/2+body.position.x*pixelsPerUnit,top=height/2+body.position.z*pixelsPerUnit-(body.position.y-half)*pixelsPerUnit*.7;body.button.style.left=`${left}px`;body.button.style.top=`${top}px`;body.button.style.transform="translate(-50%,-50%)";body.canvas?.dieView?.sync(body.quaternion,body.velocity.length()+body.angularVelocity.length()*.2);});
     const elapsed=now-start,moving=bodies.some((body)=>body.mass>0&&(body.velocity.length()>.13||body.angularVelocity.length()>.16)),invalid=bodies.some((body)=>body.mass>0&&(body.position.y>half+.075||alignment(body)<.985));

@@ -35,3 +35,4 @@
 .skin-preview .skin-dot:nth-child(1){left:27%!important;top:27%!important}.skin-preview .skin-dot:nth-child(2){left:73%!important;top:27%!important}.skin-preview .skin-dot:nth-child(4){left:27%!important;top:73%!important}.skin-preview .skin-dot:nth-child(5){left:73%!important;top:73%!important}
 .skin-preview{border-radius:0!important;box-shadow:none!important;transform:none!important}
 .skin-preview .skin-dot:nth-child(1){left:25%!important;top:23%!important}.skin-preview .skin-dot:nth-child(2){left:68%!important;top:20%!important}.skin-preview .skin-dot:nth-child(3){left:47%!important;top:45%!important}.skin-preview .skin-dot:nth-child(4){left:27%!important;top:67%!important}.skin-preview .skin-dot:nth-child(5){left:70%!important;top:64%!important}
+.skin-preview .skin-dot{display:none!important}

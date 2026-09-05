@@ -141,7 +141,7 @@ function runDicePhysics(entries,width,height,authoritativeValues=null){
       const desiredFace=faceNormals.find(([value])=>value===resultValue);
       const resultNormal=authoritativeValues?body.quaternion.vmult(new CANNON.Vec3(...desiredFace.slice(1))):topFace.normal;
       const correction=new CANNON.Quaternion();correction.setFromVectors(resultNormal,up);
-      const target=authoritativeValues?correction.mult(body.quaternion):body.quaternion.clone(),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
+      const target=correction.mult(body.quaternion),point={id:body.die.id,x:body.position.x*pixelsPerUnit,y:body.position.z*pixelsPerUnit};
       return {body,value:resultValue,from:body.position.clone(),rotation:body.quaternion.clone(),target,point};
     });
     const settleStart=now;

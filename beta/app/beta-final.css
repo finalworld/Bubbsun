@@ -5423,13 +5423,6 @@ html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .list-ca
   grid-row: 2 !important;
 }
 
-/* The destructive memo action is desktop-only; it breaks the mobile action row. */
-@media (max-width:700px) {
-  html body .app-shell .note-editor-page .note-editor-actions > button.danger {
-    display: none !important;
-  }
-}
-
 /* Move items: compact chooser and identical target buttons, including the first. */
 body .app-shell .modal.move-item-modal{box-sizing:border-box!important;width:min(calc(100vw - 32px),720px)!important;max-height:min(86dvh,700px)!important;padding:24px!important;overflow:hidden!important}
 body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;max-height:min(55dvh,390px)!important;padding-right:6px!important;overflow-y:auto!important}

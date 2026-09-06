@@ -398,7 +398,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     display: none !important;
   }
   .app-shell .list-notes-controls > .notes-view-tab::after {
-    content: "NOTERINGAR" !important;
+    content: "MEMO" !important;
     font: 900 16px Georgia, serif !important;
   }
 }
@@ -1164,7 +1164,7 @@ body .app-shell .saved-link-editor{grid-template-columns:repeat(12,minmax(0,1fr)
   border-color: var(--theme-outline) !important;
 }
 
-/* Slutlig kortlayout: anteckningar följer listkortens struktur. */
+/* Slutlig kortlayout: memo följer listkortens struktur. */
 .note-card {
   display: grid !important;
   grid-template-columns: 100px 9px minmax(0, 1fr) 58px !important;
@@ -1268,7 +1268,7 @@ body .app-shell .saved-link-editor{grid-template-columns:repeat(12,minmax(0,1fr)
   .note-card .note-card-body strong { font-size: 21px !important; }
 }
 
-/* Anteckningsredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
+/* Memosredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
 .app-shell .note-editor-page {
   width: min(var(--bubbsun-rail, 980px), 100%) !important;
   max-width: 980px !important;
@@ -1811,7 +1811,7 @@ body .app-shell .saved-link-editor{grid-template-columns:repeat(12,minmax(0,1fr)
   display: none !important;
 }
 
-/* Anteckningens sparknapp. */
+/* Memots sparknapp. */
 .app-shell .note-editor-page .note-editor-actions > button:last-child {
   position: relative !important;
   overflow: hidden !important;
@@ -1881,7 +1881,7 @@ body .app-shell .saved-link-editor{grid-template-columns:repeat(12,minmax(0,1fr)
   }
 }
 
-/* Anteckningskort använder listkortens exakta mått och struktur. */
+/* Memoskort använder listkortens exakta mått och struktur. */
 .notes-page .note-list-card {
   position: relative !important;
   height: 104px !important;

@@ -5390,6 +5390,23 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
   }
 }
 
+/* Memo page: page tabs first, then one full-width private/group selector. */
+html body .app-shell .notes-page .list-notes-controls > .list-view-tab {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .notes-view-tab {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .group-space-tab {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .list-filter-placeholder {
+  display: none !important;
+}
+
 /* Move items: compact chooser and identical target buttons, including the first. */
 body .app-shell .modal.move-item-modal{box-sizing:border-box!important;width:min(calc(100vw - 32px),720px)!important;max-height:min(86dvh,700px)!important;padding:24px!important;overflow:hidden!important}
 body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;max-height:min(55dvh,390px)!important;padding-right:6px!important;overflow-y:auto!important}

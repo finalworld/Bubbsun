@@ -5357,18 +5357,22 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
   }
 }
 
-/* Final mobile optical alignment: Georgia sits low inside its CSS line box. */
+/* Final mobile alignment: center the label's real line box in the button. */
 @media (max-width:700px) {
   html body .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy {
-    position: relative !important;
-    top: -7px !important;
+    position: static !important;
+    top: auto !important;
     transform: none !important;
-    justify-content: center !important;
-    line-height: 1 !important;
+    align-self: stretch !important;
+    display: grid !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    justify-items: start !important;
+    line-height: normal !important;
   }
   html body .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy > b {
     display: block !important;
-    line-height: 1 !important;
+    line-height: 1.2 !important;
     margin: 0 !important;
     padding: 0 !important;
   }

@@ -371,6 +371,38 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .list-notes-controls .desktop-category-trigger { min-height: 48px !important; }
 }
 
+/* Mobile: keep the filters airy and use a shorter notes label. */
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger {
+    grid-template-columns: minmax(0,1fr) 30px 24px !important;
+    gap: 7px !important;
+    padding-left: 14px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon,
+  .app-shell .list-notes-controls .desktop-category-copy > em {
+    display: none !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy {
+    transform: none !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy b {
+    font-size: 16px !important;
+  }
+  .app-shell .list-page .list-type-filters > button > i {
+    display: none !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab {
+    font-size: 0 !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab > svg {
+    display: none !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab::after {
+    content: "NOTERINGAR" !important;
+    font: 900 16px Georgia, serif !important;
+  }
+}
+
 /* Saved links editor — desktop layout follows the approved two-column mockup. */
 @media (min-width:1001px){
   html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){

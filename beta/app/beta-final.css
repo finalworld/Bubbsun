@@ -5361,7 +5361,7 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
 @media (max-width:700px) {
   html body .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy {
     position: relative !important;
-    top: -5px !important;
+    top: -7px !important;
     transform: none !important;
     justify-content: center !important;
     line-height: 1 !important;
@@ -5371,6 +5371,9 @@ html body .app-shell.app-shell section.content.detail-page .saved-link-editor.sa
     line-height: 1 !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+  html body .app-shell .list-page .list-type-filters {
+    display: none !important;
   }
 }
 

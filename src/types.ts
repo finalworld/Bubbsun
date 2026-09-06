@@ -70,6 +70,8 @@ export type ListItem = {
   recurrence?: string;
   dueDate?: string;
   taskType?: string;
+  linkUrl?: string;
+  linkImage?: string;
 };
 
 export type DirectChat = { id:string; participantIds:string[]; participantNames:Record<string,string>; participantColors:Record<string,number>; lastMessage:string; lastMessageAt:number; lastSenderId:string; readAt:Record<string,number> };

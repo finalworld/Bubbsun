@@ -16,6 +16,505 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   flex: 0 0 34px !important;
 }
 
+/* Saved links beta — isolated layout, intentionally independent of standard list grids. */
+@media (max-width:1000px){
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links.add-panel-links>div{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;gap:11px!important;min-height:0!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.autocomplete-wrap,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-url-input,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-image-choice,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-text-input,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-new-preview,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-empty-preview,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.add-panel-actions{grid-column:1!important;grid-row:auto!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.autocomplete-wrap,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-url-input,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-image-choice,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-text-input{width:100%!important;box-sizing:border-box!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-url-input{height:54px!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-image-choice{display:block!important;min-height:54px!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links .saved-link-image-choice>label{display:flex!important;width:100%!important;height:54px!important;box-sizing:border-box!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-text-input{height:120px!important;min-height:120px!important;resize:vertical!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-new-preview,html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-empty-preview{justify-self:center!important;align-self:auto!important;width:108px!important;height:153px!important;max-height:153px!important;margin:2px auto!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.add-panel-actions{position:static!important;display:grid!important;grid-template-columns:1fr!important;justify-self:stretch!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links .add-panel-actions>button:last-child{position:static!important;display:grid!important;place-items:center!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important}
+}
+
+/* One actual desktop rail for the four main create views. The older list/notes
+   rule is more specific than the generic page frame, so override it explicitly. */
+@media(min-width:901px){
+  body .app-shell>.content.list-page,
+  body .app-shell>.content.notes-page,
+  body .app-shell>.content.calendar-page,
+  body .app-shell>.content.recipes-page{
+    width:min(calc(100% - 48px),1200px)!important;
+    max-width:1200px!important;
+    margin-inline:auto!important;
+  }
+  body .app-shell>.topbar>.topbar-inner>.header-add-actions{
+    transform:translate(-32px,-9px)!important;
+  }
+}
+
+/* Lists/notes: one shared 2x2 control rail on desktop and mobile. */
+.app-shell .list-notes-controls {
+  position: relative !important;
+  z-index: 20 !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin: 0 0 14px !important;
+  overflow: visible !important;
+}
+.app-shell .list-notes-controls > button,
+.app-shell .list-notes-controls > .desktop-list-tab,
+.app-shell .list-notes-controls > .group-space-tab {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 50px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 13px !important;
+}
+.app-shell .list-notes-controls > button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  font-weight: 900 !important;
+}
+.app-shell .list-notes-controls > button.selected {
+  background: var(--theme-accent) !important;
+  color: #fff8e8 !important;
+}
+.app-shell .list-notes-controls .group-space-tab {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 48px !important;
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+}
+.app-shell .list-notes-controls .group-space-tab.selected {
+  background: var(--theme-accent) !important;
+  color: #fff !important;
+}
+.app-shell .list-notes-controls .group-space-main,
+.app-shell .list-notes-controls .group-space-trigger {
+  min-height: 46px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+.app-shell .list-notes-controls .group-space-main {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding-left: 48px !important;
+}
+.app-shell .list-notes-controls .group-space-main > svg,
+.app-shell .list-notes-controls .group-space-main > .group-picture {
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px !important;
+}
+.app-shell .list-notes-controls .group-space-main > span {
+  display: flex !important;
+  flex-direction: column !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+.app-shell .list-notes-controls .group-space-main small { margin-top: 4px !important; }
+.app-shell .list-notes-controls .group-space-trigger { display: grid !important; place-items: center !important; width: 48px !important; }
+.app-shell .list-notes-controls .group-space-menu {
+  position: absolute !important;
+  z-index: 999 !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  width: min(390px, calc(100vw - 32px)) !important;
+  display: grid !important;
+  gap: 7px !important;
+  padding: 9px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 16px !important;
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 14px 30px #24170f40 !important;
+}
+.app-shell .list-notes-controls .group-space-menu > button {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0,1fr) auto 22px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 54px !important;
+  padding: 7px 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  text-align: left !important;
+}
+.app-shell .list-notes-controls .group-space-menu > button.selected { border-color: var(--theme-accent) !important; }
+.app-shell .list-notes-controls .list-category-slot {
+  grid-template-columns: minmax(0,1fr) !important;
+  padding: 4px !important;
+  background: var(--theme-panel) !important;
+  color: var(--theme-text) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger {
+  display: grid !important;
+  grid-template-columns: auto minmax(0,1fr) auto 18px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  padding: 4px 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu { left: 0 !important; right: auto !important; }
+.app-shell .list-notes-controls .list-filter-placeholder { min-height: 50px !important; }
+@media (max-width:700px) {
+  .app-shell .list-notes-controls { gap: 8px !important; }
+  .app-shell .list-notes-controls > button,
+  .app-shell .list-notes-controls > .desktop-list-tab,
+  .app-shell .list-notes-controls > .group-space-tab { min-height: 48px !important; }
+  .app-shell .list-notes-controls .group-space-tab { grid-template-columns:minmax(0,1fr) 42px !important; }
+  .app-shell .list-notes-controls .group-space-main { justify-content:flex-start !important; padding:4px 4px 4px 12px !important; }
+  .app-shell .list-notes-controls .group-space-trigger { width:42px !important; }
+  .app-shell .list-notes-controls .desktop-category-trigger,
+  .app-shell .list-notes-controls .desktop-category-menu { display:grid !important; }
+}
+
+/* Category dropdown after moving it out of the LISTOR tab. */
+.app-shell .list-notes-controls .desktop-category-menu {
+  box-sizing: border-box !important;
+  width: min(100%, 390px) !important;
+  padding: 10px !important;
+  gap: 7px !important;
+  border: 2px solid var(--theme-outline) !important;
+  border-radius: 17px !important;
+  background: color-mix(in srgb, var(--theme-panel) 88%, var(--theme-paper)) !important;
+  box-shadow: 0 14px 28px rgba(36, 23, 15, .22) !important;
+  overflow: hidden !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button {
+  box-sizing: border-box !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) 34px 22px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  padding: 7px 11px !important;
+  border: 1px solid transparent !important;
+  border-radius: 13px !important;
+  background: var(--theme-paper) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  transform: none !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button:hover {
+  border-color: color-mix(in srgb, var(--theme-accent) 52%, var(--theme-outline)) !important;
+  background: color-mix(in srgb, var(--theme-accent) 7%, var(--theme-paper)) !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button.selected {
+  border-color: var(--theme-accent) !important;
+  background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-paper)) !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button > span {
+  display: grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  font-size: 20px !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button > b {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font: 800 15px Arial, sans-serif !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button > small {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  margin: 0 !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+  font: 800 13px Arial, sans-serif !important;
+}
+.app-shell .list-notes-controls .desktop-category-menu > button > svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: var(--theme-accent) !important;
+}
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-menu {
+    left: 0 !important;
+    right: auto !important;
+    width: min(calc(200% + 8px), calc(100vw - 32px)) !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-menu > button { min-height: 48px !important; }
+}
+
+/* Closed category selector: compact, readable and consistent with the group picker. */
+.app-shell .list-notes-controls .list-category-slot {
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger {
+  grid-template-columns: 42px minmax(0, 1fr) 34px 34px !important;
+  gap: 8px !important;
+  min-height: 46px !important;
+  padding: 3px 8px 3px 12px !important;
+  border-radius: 11px !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger:hover {
+  background: color-mix(in srgb, var(--theme-paper) 34%, var(--theme-panel)) !important;
+  filter: brightness(1.025) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-paper)) !important;
+  color: var(--theme-accent) !important;
+  font-size: 21px !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  line-height: 1 !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy em {
+  color: var(--theme-accent) !important;
+  font: 800 10px/1 Arial, sans-serif !important;
+  font-style: normal !important;
+  letter-spacing: .09em !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy b {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: var(--theme-text) !important;
+  font: 800 16px/1.1 Georgia, serif !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > small {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 14%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+  font: 800 13px Arial, sans-serif !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > svg {
+  width: 21px !important;
+  height: 21px !important;
+  justify-self: center !important;
+  color: var(--theme-text) !important;
+}
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger {
+    grid-template-columns: 34px minmax(0,1fr) 30px 24px !important;
+    gap: 5px !important;
+    padding-left: 7px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy b { font-size: 14px !important; }
+  .app-shell .list-notes-controls .desktop-category-trigger > small { width: 28px !important; min-width: 28px !important; height: 28px !important; }
+}
+
+/* Optical vertical centering inside the closed category selector. */
+.app-shell .list-notes-controls .desktop-category-trigger {
+  height: 100% !important;
+  min-height: 50px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+  align-self: center !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy {
+  align-self: center !important;
+  transform: translateY(2px) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > small,
+.app-shell .list-notes-controls .desktop-category-trigger > svg {
+  align-self: center !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  transform: none !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > svg.turn {
+  transform: rotate(180deg) !important;
+}
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger { min-height: 48px !important; }
+}
+
+/* Mobile: keep the filters airy and use a shorter notes label. */
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger {
+    grid-template-columns: minmax(0,1fr) 24px !important;
+    gap: 7px !important;
+    padding-left: 14px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon,
+  .app-shell .list-notes-controls .desktop-category-copy > em {
+    display: none !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy {
+    transform: translateY(-2px) !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy b {
+    font-size: 16px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-trigger > small {
+    display: none !important;
+  }
+  .app-shell .list-page .list-type-filters > button > i {
+    display: none !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab {
+    gap: 7px !important;
+    font-size: 16px !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab > svg {
+    display: block !important;
+    width: 19px !important;
+    height: 19px !important;
+  }
+  .app-shell .list-notes-controls > .notes-view-tab::after {
+    content: none !important;
+  }
+}
+
+/* Saved links editor — desktop layout follows the approved two-column mockup. */
+@media (min-width:1001px){
+  html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){
+    grid-column:1/-1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{
+    display:grid!important;
+    grid-template-columns:minmax(0,3fr) minmax(300px,2fr)!important;
+    grid-template-rows:auto auto auto auto auto!important;
+    gap:18px 36px!important;
+    width:auto!important;
+    padding:30px 34px 26px!important;
+    border-top:0!important;
+    align-items:start!important;
+    background-image:linear-gradient(to right,transparent calc(60% + 15px),color-mix(in srgb,var(--theme-outline) 38%,transparent) calc(60% + 15px),color-mix(in srgb,var(--theme-outline) 38%,transparent) calc(60% + 16px),transparent calc(60% + 16px))!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{
+    content:"Förhandsvisning";
+    grid-column:2!important;
+    grid-row:1!important;
+    align-self:end!important;
+    margin:0 0 -8px 0!important;
+    color:var(--theme-accent)!important;
+    font:800 18px/1.2 Arial,sans-serif!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:first-child{
+    grid-column:1!important;grid-row:1!important;width:100%!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field{
+    grid-column:1!important;grid-row:2!important;width:100%!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field textarea{
+    min-height:180px!important;resize:vertical!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:has(input[type="url"]){
+    grid-column:1!important;grid-row:3!important;width:100%!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-upload{
+    grid-column:1!important;grid-row:4!important;justify-self:start!important;width:auto!important;min-height:48px!important;padding:8px 18px!important;
+    background:var(--theme-paper)!important;color:var(--theme-accent)!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-edit-preview{
+    grid-column:2!important;grid-row:2/5!important;align-self:stretch!important;justify-self:stretch!important;
+    width:100%!important;height:100%!important;min-height:410px!important;max-height:520px!important;margin:0!important;
+    border:1px solid var(--theme-outline)!important;border-radius:12px!important;box-shadow:none!important;
+    object-fit:cover!important;object-position:top center!important;background:var(--theme-paper)!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{
+    grid-column:2!important;grid-row:5!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:16px!important;width:100%!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child>button{
+    width:100%!important;min-width:0!important;height:56px!important;margin:0!important;
+  }
+}
+@media (max-width:1000px) and (pointer:coarse){
+  html body .app-shell section.content.detail-page div.add-panel.add-panel-links>div{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;gap:11px!important;min-height:0!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{grid-column:1!important;grid-row:auto!important;width:100%!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{grid-column:1!important;grid-row:auto!important;width:100%!important;height:54px!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{grid-column:1!important;grid-row:auto!important;display:block!important;width:100%!important;min-height:54px!important}
+  html body .app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{display:flex!important;width:100%!important;height:54px!important;box-sizing:border-box!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{grid-column:1!important;grid-row:auto!important;width:100%!important;height:120px!important;min-height:120px!important;resize:vertical!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{grid-column:1!important;grid-row:auto!important;justify-self:center!important;align-self:auto!important;width:108px!important;height:153px!important;max-height:153px!important;margin:2px auto!important}
+  html body .app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{grid-column:1!important;grid-row:auto!important;position:static!important;display:grid!important;grid-template-columns:1fr!important;justify-self:stretch!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important}
+  html body .app-shell section.content.detail-page .add-panel-links .add-panel-actions>button:last-child{position:static!important;display:grid!important;place-items:center!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important;border-radius:12px!important}
+  html body .app-shell section.content.detail-page .saved-link-row{grid-template-columns:6px 36px minmax(0,1fr) 44px 30px!important;min-height:116px!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.like-button{display:none!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.item-copy{grid-column:3!important;grid-template-columns:76px minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;align-content:center!important;min-height:112px!important;gap:2px 9px!important;padding-right:7px!important}
+  html body .app-shell section.content.detail-page .saved-link-row .saved-link-thumb{grid-column:1!important;grid-row:1/4!important;width:76px!important;height:112px!important;min-height:112px!important;object-fit:cover!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.saved-link-open{grid-column:4!important;width:40px!important;min-width:40px!important;height:42px!important;padding:0!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.saved-link-open span{display:none!important}
+  html body .app-shell section.content.detail-page .saved-link-row>.item-combined-handle{grid-column:5!important}
+  html body .app-shell section.content.detail-page .saved-link-editor{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto!important;width:auto!important;padding:14px!important;gap:10px!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>label:first-child,html body .app-shell section.content.detail-page .saved-link-editor>.item-note-field,html body .app-shell section.content.detail-page .saved-link-editor>label:has(input[type="url"]),html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-upload,html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-edit-preview,html body .app-shell section.content.detail-page .saved-link-editor>div:last-child{grid-column:1!important;grid-row:auto!important;width:100%!important;box-sizing:border-box!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-upload{width:100%!important}
+  html body .app-shell section.content.detail-page .saved-link-editor>.saved-link-edit-preview{justify-self:center!important;width:108px!important;height:153px!important;min-height:153px!important;max-height:153px!important;margin:2px auto!important;border:1px solid var(--theme-outline)!important;border-radius:9px!important;object-fit:cover!important}
+}
+html body .app-shell section.content.detail-page div.add-panel.add-panel-links>div{display:grid!important;grid-template-columns:repeat(14,minmax(0,1fr))!important;grid-template-rows:54px 220px 54px!important;gap:12px!important;min-height:352px!important;align-items:stretch!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{grid-column:1/7!important;grid-row:1!important;width:100%!important;min-width:0!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{grid-column:7/11!important;grid-row:1!important;width:100%!important;height:54px!important;min-width:0!important;box-sizing:border-box!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{grid-column:11/13!important;grid-row:1!important;display:block!important;width:100%!important;min-width:0!important;min-height:54px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+html body .app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>span,html body .app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>button{display:none!important}
+html body .app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{display:flex!important;width:100%!important;height:54px!important;min-height:54px!important;box-sizing:border-box!important;margin:0!important;padding:8px 10px!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;color:#fff!important;white-space:nowrap!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{grid-column:1/13!important;grid-row:2/4!important;width:100%!important;height:286px!important;min-height:286px!important;box-sizing:border-box!important;margin:0!important;padding:15px!important;border:1px solid var(--theme-outline)!important;border-radius:14px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;font:15px/1.45 Arial,sans-serif!important;resize:none!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,html body .app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{grid-column:13/15!important;grid-row:1/3!important;align-self:stretch!important;justify-self:stretch!important;width:100%!important;height:286px!important;max-height:286px!important;box-sizing:border-box!important;margin:0!important;border:2px solid var(--theme-outline)!important;border-radius:14px!important;background:var(--theme-paper)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 38%,transparent)!important;object-fit:contain!important}
+html body .app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{grid-column:14/15!important;grid-row:3!important;position:static!important;display:grid!important;grid-template-columns:54px!important;align-self:end!important;justify-self:end!important;width:54px!important;min-width:54px!important;height:54px!important;margin:0!important}
+html body .app-shell section.content.detail-page .add-panel-links .add-panel-actions>button:last-child{display:grid!important;place-items:center!important;width:54px!important;min-width:54px!important;height:54px!important;margin:0!important;padding:0!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;background-image:none!important;color:#fff!important;box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 45%,transparent)!important}
+@media(max-width:700px){html body .app-shell section.content.detail-page div.add-panel.add-panel-links>div{grid-template-columns:minmax(0,1fr) 54px!important;grid-template-rows:54px 54px 104px 62px 156px 54px!important;min-height:0!important}.app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{grid-column:1/3!important;grid-row:1!important}.app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{grid-column:1/3!important;grid-row:2!important}.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{grid-column:1/3!important;grid-row:3!important;width:100%!important;height:104px!important;min-height:104px!important}.app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{grid-column:1/3!important;grid-row:4!important}.app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{width:max-content!important;max-width:100%!important}.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{grid-column:1/3!important;grid-row:5!important;justify-self:center!important;width:110px!important;height:156px!important;max-height:156px!important}.app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{grid-column:2!important;grid-row:6!important}}
+body .app-shell .add-panel.add-panel-links>div{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-rows:auto auto auto!important;gap:12px!important;align-items:stretch!important}
+body .app-shell .add-panel-links .autocomplete-wrap{grid-column:1/6!important;grid-row:1!important}
+body .app-shell .add-panel-links .saved-link-url-input{grid-column:6/12!important;grid-row:1!important;width:100%!important;height:54px!important;box-sizing:border-box!important}
+body .app-shell .add-panel-links .add-panel-actions{grid-column:12!important;grid-row:1!important;display:grid!important;grid-template-columns:54px!important;width:54px!important;min-width:54px!important;align-self:stretch!important;position:static!important}
+body .app-shell .add-panel-links .add-panel-actions button{display:grid!important;place-items:center!important;width:54px!important;min-width:54px!important;height:54px!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;color:#fff!important;box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 45%,transparent)!important}
+body .app-shell .add-panel-links .saved-link-text-input{grid-column:1/9!important;grid-row:2!important;box-sizing:border-box!important;width:100%!important;min-height:110px!important;padding:13px!important;border:1px solid var(--theme-outline)!important;border-radius:13px!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;font:15px/1.45 Arial,sans-serif!important;resize:vertical!important}
+body .app-shell .add-panel-links .saved-link-image-choice{grid-column:1/9!important;grid-row:3!important;min-height:70px!important;box-sizing:border-box!important}
+body .app-shell .add-panel-links .saved-link-new-preview,body .app-shell .add-panel-links .saved-link-empty-preview{grid-column:9/13!important;grid-row:2/4!important;align-self:center!important;justify-self:center!important;box-sizing:border-box!important;width:132px!important;height:187px!important;max-height:187px!important;margin:0!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-paper)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 38%,transparent)!important;object-fit:contain!important}
+body .app-shell .add-panel-links .saved-link-empty-preview{display:grid!important;place-items:center!important;align-content:center!important;gap:7px!important;color:color-mix(in srgb,var(--theme-text) 55%,transparent)!important;text-align:center!important}body .app-shell .saved-link-empty-preview svg{width:30px!important}body .app-shell .saved-link-empty-preview span{font:900 9px Arial,sans-serif!important;letter-spacing:.08em!important}
+body .app-shell .saved-link-row{grid-template-columns:7px 42px minmax(0,1fr) auto 42px 34px!important;min-height:132px!important;overflow:hidden!important}
+body .app-shell .saved-link-row .item-copy{display:grid!important;grid-template-columns:74px minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;gap:4px 13px!important;align-items:center!important;padding:8px!important}
+body .app-shell .saved-link-row .saved-link-thumb{grid-column:1!important;grid-row:1/4!important;width:74px!important;height:105px!important;margin:0!important;object-fit:contain!important;border:1px solid var(--theme-outline)!important;border-radius:8px!important;background:var(--theme-paper)!important}
+body .app-shell .saved-link-row .item-title-line,body .app-shell .saved-link-row .saved-link-domain,body .app-shell .saved-link-row .saved-link-description{grid-column:2!important;min-width:0!important;margin:0!important}.saved-link-row .saved-link-domain{grid-row:2!important}.saved-link-row .saved-link-description{grid-row:3!important}
+body .app-shell .saved-link-row .saved-link-open{display:flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:auto!important;min-width:64px!important;height:46px!important;padding:0 9px!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;color:#fff!important;text-decoration:none!important}body .app-shell .saved-link-row .saved-link-open span{display:inline!important;font:900 8px Arial,sans-serif!important}
+body .app-shell .saved-link-editor{grid-template-columns:repeat(12,minmax(0,1fr))!important;gap:10px!important}.saved-link-editor>label:first-child{grid-column:1/8!important}.saved-link-editor>.item-note-field{grid-column:1/8!important}.saved-link-editor>label:has(input[type="url"]){grid-column:1/6!important}.saved-link-editor>.saved-link-upload{grid-column:6/8!important;align-self:end!important;width:100%!important;box-sizing:border-box!important}.saved-link-editor>.saved-link-edit-preview{grid-column:8/13!important;grid-row:1/4!important;align-self:center!important;width:126px!important;height:178px!important;max-height:178px!important;margin:0 auto!important;object-fit:contain!important}.saved-link-editor>div:last-child{grid-column:1/13!important}
+@media(max-width:700px){body .app-shell .add-panel.add-panel-links>div{grid-template-columns:minmax(0,1fr) 54px!important;grid-template-rows:auto auto auto auto auto!important}.app-shell .add-panel-links .autocomplete-wrap{grid-column:1!important;grid-row:1!important}.app-shell .add-panel-links .add-panel-actions{grid-column:2!important;grid-row:1!important}.app-shell .add-panel-links .saved-link-url-input{grid-column:1/3!important;grid-row:2!important}.app-shell .add-panel-links .saved-link-text-input{grid-column:1/3!important;grid-row:3!important;min-height:88px!important}.app-shell .add-panel-links .saved-link-image-choice{grid-column:1/3!important;grid-row:4!important}.app-shell .add-panel-links .saved-link-new-preview,.app-shell .add-panel-links .saved-link-empty-preview{grid-column:1/3!important;grid-row:5!important;width:104px!important;height:147px!important;max-height:147px!important}.app-shell .saved-link-row{grid-template-columns:6px 36px minmax(0,1fr) 42px 29px!important}.app-shell .saved-link-row .like-button{display:none!important}.app-shell .saved-link-row .item-copy{grid-template-columns:58px minmax(0,1fr)!important;gap:3px 8px!important}.app-shell .saved-link-row .saved-link-thumb{width:58px!important;height:82px!important}.app-shell .saved-link-row .saved-link-open{min-width:40px!important;width:40px!important;padding:0!important}.app-shell .saved-link-row .saved-link-open span{display:none!important}.app-shell .saved-link-editor{grid-template-columns:1fr!important}.saved-link-editor>label:first-child,.saved-link-editor>.item-note-field,.saved-link-editor>label:has(input[type="url"]),.saved-link-editor>.saved-link-upload,.saved-link-editor>.saved-link-edit-preview,.saved-link-editor>div:last-child{grid-column:1!important;grid-row:auto!important}.saved-link-editor>.saved-link-upload{width:max-content!important}.saved-link-editor>.saved-link-edit-preview{width:104px!important;height:147px!important;max-height:147px!important}}
+
 /* Notes should visually and mechanically match list cards. */
 .app-shell .notes-page .note-list-card:hover {
   transform: none !important;
@@ -671,7 +1170,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   border-color: var(--theme-outline) !important;
 }
 
-/* Slutlig kortlayout: anteckningar följer listkortens struktur. */
+/* Slutlig kortlayout: memo följer listkortens struktur. */
 .note-card {
   display: grid !important;
   grid-template-columns: 100px 9px minmax(0, 1fr) 58px !important;
@@ -775,7 +1274,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .note-card .note-card-body strong { font-size: 21px !important; }
 }
 
-/* Anteckningsredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
+/* Memosredigeraren använder samma kortspråk som listor och övriga Bubbsun. */
 .app-shell .note-editor-page {
   width: min(var(--bubbsun-rail, 980px), 100%) !important;
   max-width: 980px !important;
@@ -959,19 +1458,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .note-editor-tools.has-follow { grid-template-columns: 1fr !important; }
   .app-shell .note-editor-tools > button { min-height: 58px !important; padding: 8px 12px !important; }
   .app-shell .note-editor-page textarea { min-height: 40vh !important; padding: 14px !important; }
-}
-
-/* Mobilens diskreta radera-länk ska inte få den globala sydda knappdekoren. */
-@media (max-width: 430px) {
-  .app-shell .note-editor-page .note-editor-actions > button.danger::after {
-    content: none !important;
-    display: none !important;
-  }
-
-  .app-shell .note-editor-page .note-editor-actions > button.danger {
-    overflow: visible !important;
-    filter: none !important;
-  }
 }
 
 /* Gemensamt formspråk för bekräftande, avbrytande och farliga åtgärder. */
@@ -1318,7 +1804,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   display: none !important;
 }
 
-/* Anteckningens sparknapp. */
+/* Memots sparknapp. */
 .app-shell .note-editor-page .note-editor-actions > button:last-child {
   position: relative !important;
   overflow: hidden !important;
@@ -1388,7 +1874,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   }
 }
 
-/* Anteckningskort använder listkortens exakta mått och struktur. */
+/* Memoskort använder listkortens exakta mått och struktur. */
 .notes-page .note-list-card {
   position: relative !important;
   height: 104px !important;
@@ -1516,34 +2002,45 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .note-editor-page .note-editor-actions > button.danger {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
-    justify-self: start !important;
-    min-height: 34px !important;
-    width: auto !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: var(--theme-text) !important;
-    box-shadow: none !important;
+    justify-self: stretch !important;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 48px !important;
+    padding: 0 18px !important;
+    overflow: hidden !important;
+    border: 1px solid #8f403a !important;
+    border-radius: 9px !important;
+    background: #b7554e !important;
+    color: #fff8ef !important;
+    box-shadow: 0 2px 3px rgba(70, 34, 34, .38), inset 0 1px 0 rgba(255, 255, 255, .28) !important;
     font: 800 13px Arial, sans-serif !important;
+    letter-spacing: .2px !important;
   }
 
   .app-shell .note-editor-page .note-editor-actions > button.danger svg {
-    width: 30px !important;
-    height: 30px !important;
-    padding: 2px !important;
+    position: relative !important;
+    z-index: 1 !important;
+    width: 20px !important;
+    height: 20px !important;
+    padding: 0 !important;
     background: transparent !important;
-    color: #bd5752 !important;
+    color: currentColor !important;
   }
 
   .app-shell .note-editor-page .note-editor-actions > button.danger::after {
-    content: none !important;
-    display: none !important;
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 4px !important;
+    border: 1px dashed rgba(255, 248, 232, .68) !important;
+    border-radius: 5px !important;
+    pointer-events: none !important;
   }
 
-  .app-shell .note-editor-page .note-editor-actions > button.danger {
-    overflow: visible !important;
-    filter: none !important;
+  .app-shell .note-editor-page .note-editor-actions > button.danger:hover,
+  .app-shell .note-editor-page .note-editor-actions > button.danger:focus-visible {
+    transform: none !important;
+    filter: brightness(1.08) !important;
   }
 }
 /* Desktop list category picker inside the selected LISTOR tab. */
@@ -1802,8 +2299,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     min-height: 53px !important;
   }
   .app-shell .add-panel > div > input { grid-column: 2 !important; grid-row: 1 !important; }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions { grid-column: 3 !important; grid-row: 1 !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .new-item-note { grid-column: 1 / -1 !important; grid-row: 2 !important; }
   .app-shell .add-panel-stacked-select select { grid-column: 1 / 3 !important; grid-row: 2 !important; }
   .app-shell .add-panel-stacked-select .add-panel-actions,
   .app-shell .add-panel-cleaning .add-panel-actions,
@@ -1887,7 +2384,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .add-panel-stacked-select .add-panel-actions,
   .app-shell .add-panel-cleaning .add-panel-actions,
   .app-shell .add-panel-homefix .add-panel-actions { grid-column: 2 !important; grid-row: 2 !important; position:static !important; align-self:end !important; justify-self:end !important; }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .new-item-note { grid-column: 1 / -1 !important; grid-row: 3 !important; position:static !important; }
   .app-shell .add-panel-stacked-select select,
   .app-shell .cleaning-quick-fields,
   .app-shell .homefix-quick-fields { grid-column: 1 !important; grid-row: 2 !important; }
@@ -1898,30 +2395,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Mobile list add: keep name, compact quantity and confirm on one row. */
 @media (max-width: 700px) {
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) {
     position: relative !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > h2 {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) > h2 {
     padding-right: 46px !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > div {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) > div {
     grid-template-columns: minmax(0, 1fr) minmax(80px, .55fr) 53px !important;
     grid-template-rows: auto auto !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .autocomplete-wrap {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .autocomplete-wrap {
     grid-column: 1 !important;
     grid-row: 1 !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) > div > input {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) > div > input {
     grid-column: 2 !important;
     grid-row: 1 !important;
     padding-inline: 10px !important;
     font-size: 14px !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions {
     display: contents !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions button:first-child {
     position: absolute !important;
     top: 4px !important;
     right: 12px !important;
@@ -1933,23 +2430,23 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     background: transparent !important;
     box-shadow: none !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button::after {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions button::after {
     content: none !important;
     display: none !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:first-child.active {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions button:first-child.active {
     color: var(--theme-accent) !important;
     background: color-mix(in srgb, var(--theme-accent) 12%, transparent) !important;
     border-radius: 50% !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .add-panel-actions button:last-child {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .add-panel-actions button:last-child {
     grid-column: 3 !important;
     grid-row: 1 !important;
     width: 53px !important;
     min-width: 53px !important;
     min-height: 53px !important;
   }
-  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix) .new-item-note {
+  .app-shell .add-panel:not(.add-panel-stacked-select):not(.add-panel-cleaning):not(.add-panel-homefix):not(.add-panel-links) .new-item-note {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
   }
@@ -3953,6 +4450,12 @@ body .app-shell .modal .budget-status-picker>button.selected{border-color:var(--
 body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;width:100%!important}body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices>*{grid-column:1!important;width:100%!important;min-width:0!important;box-sizing:border-box!important}body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices>button{display:grid!important;grid-template-columns:48px minmax(0,1fr) 22px!important;align-items:center!important;min-height:78px!important;padding:12px 15px!important;border:2px solid var(--theme-outline)!important;background:var(--theme-paper)!important;color:var(--theme-text)!important;text-align:left!important}body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices>button>span:nth-child(2){display:grid!important;grid-template-columns:1fr!important;gap:3px!important}body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices>button>span:nth-child(2)>*{grid-column:1!important}@media(max-width:600px){body .app-shell .modal-backdrop>.modal.budget-editor>.budget-creation-choices>button{grid-template-columns:42px minmax(0,1fr) 18px!important;min-height:72px!important;padding:10px!important}}
 @media(max-width:1000px){body .app-shell .modal-backdrop>.modal.budget-transfer-editor>header{display:grid!important;grid-template-columns:48px minmax(0,1fr)!important;align-items:center!important;gap:11px!important;padding-right:62px!important}body .app-shell .budget-transfer-editor>header>div{min-width:0!important}body .app-shell .budget-transfer-editor>header h2{margin:2px 0 0!important;font-size:clamp(19px,4.2vw,26px)!important;line-height:1!important;overflow-wrap:normal!important;word-break:normal!important;white-space:nowrap!important}body .app-shell .budget-transfer-editor>header small{font:900 10px Arial,sans-serif!important;letter-spacing:.12em!important}body .app-shell .budget-transfer-route{display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:stretch!important;width:100%!important;gap:7px!important}body .app-shell .budget-transfer-route>b{height:20px!important;transform:rotate(90deg)!important}body .app-shell .budget-transfer-account-field,body .app-shell .budget-transfer-account-picker{width:100%!important;min-width:0!important}body .app-shell .budget-transfer-account-menu{left:0!important;right:0!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:none!important;padding:7px!important}body .app-shell .budget-transfer-account-menu>button{display:grid!important;grid-template-columns:38px minmax(0,1fr) 18px!important;grid-template-rows:auto auto!important;width:100%!important;min-width:0!important;gap:2px 9px!important;padding:8px 9px!important}body .app-shell .budget-transfer-account-menu>button>i{grid-column:1!important;grid-row:1/3!important}body .app-shell .budget-transfer-account-menu>button>span{grid-column:2!important;grid-row:1!important;min-width:0!important}body .app-shell .budget-transfer-account-menu>button>span>*{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}body .app-shell .budget-transfer-account-menu>button>em{grid-column:2!important;grid-row:2!important;justify-self:start!important;font-size:12px!important;white-space:nowrap!important}body .app-shell .budget-transfer-account-menu>button>svg{grid-column:3!important;grid-row:1/3!important}body .app-shell .budget-transfer-editor>.budget-editor-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;gap:11px!important}}
 .budget-insights article>span{font:700 13px/1.35 Arial,sans-serif;color:color-mix(in srgb,var(--theme-text) 72%,transparent)}
+
+/* Beta: Sparade länkar — rich link cards without additional listeners. */
+.add-panel-links .saved-link-text-input{grid-column:1/-1!important;min-height:82px!important;resize:vertical!important}.saved-link-description{display:-webkit-box!important;overflow:hidden!important;-webkit-box-orient:vertical!important;-webkit-line-clamp:2!important;white-space:normal!important;line-height:1.35!important}.item-copy:has(.saved-link-thumb){grid-template-rows:auto auto auto!important}.item-copy:has(.saved-link-thumb) .saved-link-thumb{grid-row:1/4!important}.item-copy:has(.saved-link-thumb) .saved-link-description{grid-column:2!important}
+.add-panel-links .saved-link-new-preview{width:150px!important;height:212px!important;max-height:212px!important;margin:4px auto!important;aspect-ratio:1/1.414!important;object-fit:contain!important}.item-inline-editor .saved-link-edit-preview{width:220px!important;height:311px!important;max-height:311px!important}.saved-link-open{width:auto!important;min-width:52px!important;height:42px!important;padding:0 8px!important;gap:4px!important;text-decoration:none!important}.saved-link-open span{display:none;font:900 8px Arial,sans-serif;letter-spacing:.04em}@media(min-width:850px){.saved-link-open span{display:inline}}
+.saved-link-new-preview,.saved-link-edit-preview{width:min(100%,430px)!important;aspect-ratio:1/1.414!important;max-height:620px!important;margin-inline:auto!important;object-fit:contain!important;background:var(--theme-paper)!important;box-shadow:0 4px 0 color-mix(in srgb,var(--theme-outline) 35%,transparent)!important}.item-row:has(.saved-link-thumb){min-height:132px!important}.item-copy:has(.saved-link-thumb){grid-template-columns:82px minmax(0,1fr)!important}.saved-link-thumb{width:82px!important;height:116px!important;object-fit:contain!important;border-radius:8px!important;background:var(--theme-paper)!important;box-shadow:0 2px 0 color-mix(in srgb,var(--theme-outline) 30%,transparent)!important}@media(max-width:640px){.item-copy:has(.saved-link-thumb){grid-template-columns:64px minmax(0,1fr)!important}.saved-link-thumb{width:64px!important;height:90px!important}}
+.add-panel.add-panel-links>div{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto!important;gap:10px!important}.add-panel-links .saved-link-url-input,.add-panel-links .saved-link-image-choice,.add-panel-links .saved-link-new-preview{grid-column:1/-1}.saved-link-image-choice{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--theme-outline) 65%,transparent);border-radius:12px;background:color-mix(in srgb,var(--theme-paper) 78%,transparent)}.saved-link-image-choice>span{flex:1;min-width:180px;font:700 12px/1.35 Arial,sans-serif;opacity:.75}.saved-link-image-choice label,.saved-link-upload{display:inline-flex!important;align-items:center;justify-content:center;gap:7px!important;min-height:39px;padding:8px 11px!important;border:2px solid var(--theme-outline);border-radius:10px;background:var(--theme-accent);color:#fff;font:900 10px Arial,sans-serif;cursor:pointer}.saved-link-image-choice label svg,.saved-link-upload svg{width:18px}.saved-link-image-choice input,.saved-link-upload input{display:none}.saved-link-image-choice button{min-height:39px;padding:8px 11px;border:2px solid var(--theme-outline);border-radius:10px;background:var(--theme-paper);color:var(--theme-text);font:900 9px Arial,sans-serif}.saved-link-new-preview,.saved-link-edit-preview{display:block;width:100%;max-height:250px;object-fit:cover;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-panel)}.item-row:has(.saved-link-thumb){min-height:104px}.item-copy:has(.saved-link-thumb){display:grid!important;grid-template-columns:110px minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;column-gap:13px!important;text-align:left!important}.saved-link-thumb{grid-column:1;grid-row:1/3;width:110px;height:72px;object-fit:cover;border:1px solid var(--theme-outline);border-radius:10px;background:var(--theme-panel)}.item-copy:has(.saved-link-thumb) .item-title-line,.item-copy:has(.saved-link-thumb)>small{grid-column:2}.saved-link-domain{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--theme-accent)!important}.saved-link-open{display:grid;place-items:center;width:42px;height:42px;border:2px solid var(--theme-outline);border-radius:12px;background:var(--theme-accent);color:#fff}.saved-link-open svg{width:19px}.item-inline-editor .saved-link-upload{width:max-content}.saved-link-edit-preview{margin-top:8px}@media(max-width:640px){.add-panel.add-panel-links>div{grid-template-columns:minmax(0,1fr) auto!important}.add-panel-links .saved-link-title-input{grid-column:1/-1}.item-copy:has(.saved-link-thumb){grid-template-columns:72px minmax(0,1fr)!important;column-gap:9px!important}.saved-link-thumb{width:72px;height:58px}.saved-link-open{width:38px;height:38px}.saved-link-image-choice>span{min-width:100%}}
 .budget-insights article>.expense{color:#b83e4b!important}.budget-insights article>.income{color:#4d8058!important}.budget-insights article>em{color:color-mix(in srgb,var(--theme-text) 72%,transparent);font:700 12px/1.35 Arial,sans-serif;font-style:normal}
 /* Shared recipe presentation — v0.903 */
 .public-recipe-view{
@@ -4586,7 +5089,7 @@ body .app-shell .connect4-game-actions>button,body .app-shell .connect4-react{di
 body .app-shell .connect4-react{background:var(--theme-accent);color:var(--theme-paper)}
 body .app-shell .connect4-game-actions svg{width:19px;height:19px}
 body .app-shell .connect4-reaction-control{position:relative;z-index:35}
-body .app-shell .connect4-reaction-dismiss{position:fixed;z-index:40;inset:0;width:100vw;height:100vh;padding:0;border:0;background:transparent}
+body .app-shell .connect4-reaction-dismiss{position:fixed!important;z-index:40!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 body .app-shell .connect4-reaction-picker{position:absolute;z-index:44;left:0;top:calc(100% + 10px);display:grid;grid-template-columns:repeat(3,64px);gap:7px;width:auto;padding:10px;border:2px solid var(--theme-outline);border-radius:17px;background:var(--theme-paper);box-shadow:0 12px 30px color-mix(in srgb,var(--theme-text) 28%,transparent)}
 body .app-shell .connect4-reaction-picker:before{content:"";position:absolute;left:24px;top:-8px;width:13px;height:13px;border-left:2px solid var(--theme-outline);border-top:2px solid var(--theme-outline);background:var(--theme-paper);transform:rotate(45deg)}
 body .app-shell .connect4-reaction-picker>button{display:grid;place-items:center;width:64px;height:64px;padding:4px;overflow:hidden;border:1px solid color-mix(in srgb,var(--theme-outline) 55%,transparent);border-radius:13px;background:color-mix(in srgb,var(--theme-panel) 25%,var(--theme-paper));cursor:pointer}
@@ -4622,5 +5125,380 @@ body .app-shell .connect4-reaction-bubble{position:absolute;z-index:45;left:calc
     width:min(calc(100% - (2 * var(--bubbsun-page-gutter))),var(--bubbsun-page-width))!important;
     max-width:var(--bubbsun-page-width)!important;
     margin-inline:auto!important;
+  }
+}
+
+/* Saved links final composition: the preview is a section of the card, not a card inside it. */
+body .app-shell section.detail-page .add-panel.add-panel-links>div{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-rows:54px auto auto!important;gap:12px!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .autocomplete-wrap{grid-column:1/6!important;grid-row:1!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-url-input{grid-column:6/12!important;grid-row:1!important;height:54px!important;width:100%!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .add-panel-actions{grid-column:12/13!important;grid-row:1!important;position:static!important;display:grid!important;grid-template-columns:54px!important;width:54px!important;min-width:54px!important;height:54px!important;margin:0!important;align-self:stretch!important;justify-self:end!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .add-panel-actions>button:last-child{grid-column:1!important;grid-row:1!important;display:grid!important;place-items:center!important;width:54px!important;min-width:54px!important;height:54px!important;margin:0!important;padding:0!important;border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;background-image:none!important;color:#fff!important;box-shadow:0 3px 0 color-mix(in srgb,var(--theme-outline) 45%,transparent)!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-text-input{grid-column:1/9!important;grid-row:2!important;min-height:112px!important;border:1px solid var(--theme-outline)!important;border-radius:14px!important;background:var(--theme-paper)!important;padding:14px!important;font:15px/1.45 Arial,sans-serif!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-image-choice{grid-column:1/9!important;grid-row:3!important}
+body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-new-preview,body .app-shell section.detail-page .add-panel.add-panel-links .saved-link-empty-preview{grid-column:9/13!important;grid-row:2/4!important;width:132px!important;height:187px!important;max-height:187px!important;margin:auto!important}
+
+body .app-shell .saved-link-row{grid-template-columns:7px 42px minmax(0,1fr) auto 42px 34px!important;min-height:146px!important;padding:0!important}
+body .app-shell .saved-link-row>.item-owner{grid-column:1!important}
+
+body .app-shell .saved-link-row>.check-button{grid-column:2!important}
+body .app-shell .saved-link-row>.item-copy{grid-column:3!important;align-self:stretch!important;display:grid!important;grid-template-columns:118px minmax(0,1fr)!important;grid-template-rows:1fr auto auto!important;gap:3px 16px!important;align-items:center!important;min-height:142px!important;margin:0!important;padding:0 12px 0 0!important;overflow:hidden!important}
+body .app-shell .saved-link-row .saved-link-thumb{grid-column:1!important;grid-row:1/4!important;align-self:stretch!important;width:118px!important;height:100%!important;min-height:142px!important;margin:0!important;border:0!important;border-right:1px solid var(--theme-outline)!important;border-radius:0!important;background:var(--theme-panel)!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important}
+body .app-shell .saved-link-row .item-title-line{grid-column:2!important;grid-row:1!important;align-self:end!important}.saved-link-row .item-title-line strong{font-size:21px!important}.saved-link-row .saved-link-domain{grid-column:2!important;grid-row:2!important}.saved-link-row .saved-link-description{grid-column:2!important;grid-row:3!important;align-self:start!important;padding-bottom:12px!important}
+body .app-shell .saved-link-row>.saved-link-open{grid-column:4!important}body .app-shell .saved-link-row>.like-button{grid-column:5!important}body .app-shell .saved-link-row>.item-combined-handle{grid-column:6!important}
+
+body .app-shell .saved-link-editor{padding:16px!important;grid-template-columns:minmax(0,1fr) 148px!important;grid-template-rows:auto auto auto auto!important}.saved-link-editor>label:first-child,.saved-link-editor>.item-note-field,.saved-link-editor>label:has(input[type="url"]){grid-column:1!important}.saved-link-editor>.saved-link-upload{grid-column:1!important;width:max-content!important}.saved-link-editor>.saved-link-edit-preview{grid-column:2!important;grid-row:1/5!important;align-self:stretch!important;width:148px!important;height:100%!important;min-height:250px!important;max-height:330px!important;margin:0!important;border:0!important;border-left:1px solid var(--theme-outline)!important;border-radius:0!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important}.saved-link-editor>div:last-child{grid-column:1/3!important}
+
+@media(max-width:700px){body .app-shell section.detail-page .add-panel.add-panel-links>div{grid-template-columns:minmax(0,1fr) 54px!important;grid-template-rows:54px 54px auto auto auto!important}.app-shell section.detail-page .add-panel.add-panel-links .autocomplete-wrap{grid-column:1!important;grid-row:1!important}.app-shell section.detail-page .add-panel.add-panel-links .add-panel-actions{grid-column:2!important;grid-row:1!important}.app-shell section.detail-page .add-panel.add-panel-links .saved-link-url-input{grid-column:1/3!important;grid-row:2!important}.app-shell section.detail-page .add-panel.add-panel-links .saved-link-text-input{grid-column:1/3!important;grid-row:3!important;min-height:90px!important}.app-shell section.detail-page .add-panel.add-panel-links .saved-link-image-choice{grid-column:1/3!important;grid-row:4!important}.app-shell section.detail-page .add-panel.add-panel-links .saved-link-new-preview,.app-shell section.detail-page .add-panel.add-panel-links .saved-link-empty-preview{grid-column:1/3!important;grid-row:5!important;width:96px!important;height:136px!important;max-height:136px!important}.app-shell .saved-link-row{grid-template-columns:6px 36px minmax(0,1fr) 42px 29px!important;min-height:116px!important}.app-shell .saved-link-row>.like-button{display:none!important}.app-shell .saved-link-row>.item-copy{grid-column:3!important;grid-template-columns:76px minmax(0,1fr)!important;min-height:112px!important;gap:2px 9px!important;padding-right:7px!important}.app-shell .saved-link-row .saved-link-thumb{width:76px!important;min-height:112px!important}.app-shell .saved-link-row>.saved-link-open{grid-column:4!important}.app-shell .saved-link-row>.item-combined-handle{grid-column:5!important}.app-shell .saved-link-row .saved-link-open{width:38px!important;min-width:38px!important;padding:0!important}.app-shell .saved-link-row .saved-link-open span{display:none!important}.app-shell .saved-link-editor{grid-template-columns:1fr!important}.saved-link-editor>label:first-child,.saved-link-editor>.item-note-field,.saved-link-editor>label:has(input[type="url"]),.saved-link-editor>.saved-link-upload,.saved-link-editor>.saved-link-edit-preview,.saved-link-editor>div:last-child{grid-column:1!important;grid-row:auto!important}.saved-link-editor>.saved-link-edit-preview{justify-self:center!important;width:96px!important;height:136px!important;min-height:136px!important;border:1px solid var(--theme-outline)!important;border-radius:9px!important}}
+
+/* Saved link card — image panel, centered title/domain, no note preview. */
+html body .app-shell.app-shell section.content.detail-page.links-detail-page .items-list{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page.links-detail-page .items-list{grid-template-columns:minmax(0,1fr)!important}
+}
+
+/* Stable preview column: heading, image and image picker stay together. */
+html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{content:none!important}
+@media(min-width:701px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{grid-template-columns:minmax(0,1fr) 132px!important;grid-template-rows:auto auto auto auto!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{
+    grid-column:2!important;grid-row:1/4!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:9px!important;width:132px!important;min-width:0!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{color:var(--theme-accent)!important;font:800 13px/1.2 Arial,sans-serif!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview{
+    position:static!important;display:block!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;margin:0!important;border:1px solid var(--theme-outline)!important;border-radius:10px!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{
+    position:static!important;display:flex!important;justify-content:center!important;width:132px!important;min-height:42px!important;box-sizing:border-box!important;margin:0!important;padding:7px 8px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{grid-column:1/3!important;grid-row:4!important}
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{display:flex!important;flex-direction:column!important;align-items:center!important;gap:9px!important;width:100%!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{color:var(--theme-accent)!important;font:800 13px/1.2 Arial,sans-serif!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview{position:static!important;width:96px!important;height:136px!important;min-height:136px!important;margin:0!important;object-fit:cover!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{position:static!important;width:max-content!important;margin:0!important}
+}
+
+/* Open saved links stay inside their normal desktop grid cell. */
+@media(min-width:701px){
+  html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){
+    grid-column:auto!important;width:100%!important;min-width:0!important;align-self:start!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{
+    display:grid!important;grid-template-columns:minmax(0,1fr) 132px!important;grid-template-rows:auto auto auto auto!important;
+    gap:11px 14px!important;width:auto!important;min-width:0!important;margin:-2px 10px 10px!important;padding:15px!important;
+    background-image:none!important;align-items:start!important;position:relative!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{
+    content:"Förhandsvisning";position:absolute!important;right:15px!important;top:15px!important;width:132px!important;margin:0!important;
+    color:var(--theme-accent)!important;font:800 13px/1.2 Arial,sans-serif!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:first-child{grid-column:1!important;grid-row:1!important;width:100%!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field{grid-column:1!important;grid-row:2!important;width:100%!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field textarea{height:86px!important;min-height:86px!important;resize:vertical!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:has(input[type="url"]){grid-column:1!important;grid-row:3!important;width:100%!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-upload{grid-column:1!important;grid-row:4!important;justify-self:start!important;width:auto!important;min-height:42px!important;padding:7px 12px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-edit-preview{
+    position:absolute!important;right:15px!important;top:40px!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;margin:0!important;
+    border:1px solid var(--theme-outline)!important;border-radius:10px!important;box-shadow:none!important;object-fit:cover!important;object-position:top center!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-upload{
+    position:absolute!important;right:15px!important;top:238px!important;display:flex!important;justify-content:center!important;width:132px!important;box-sizing:border-box!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{
+    grid-column:1/3!important;grid-row:4!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;width:100%!important;margin:0!important;margin-top:2px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child>button{width:100%!important;min-width:0!important;height:46px!important;margin:0!important;padding:8px!important}
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{
+  position:relative!important;grid-template-columns:7px minmax(0,1fr) 64px 38px!important;height:84px!important;min-height:84px!important;padding:0!important;
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-owner{grid-column:1!important;z-index:6!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.check-button{
+  position:absolute!important;z-index:7!important;left:22px!important;top:50%!important;transform:translateY(-50%)!important;width:30px!important;height:30px!important;margin:0!important;background:color-mix(in srgb,var(--theme-paper) 88%,transparent)!important;
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-copy{
+  grid-column:2!important;grid-row:1!important;align-self:stretch!important;display:grid!important;
+  grid-template-columns:minmax(150px,32%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;
+  height:80px!important;min-height:80px!important;margin:0!important;padding:0!important;gap:1px 20px!important;overflow:hidden!important;text-align:left!important;
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-thumb{
+  grid-column:1!important;grid-row:1/5!important;align-self:stretch!important;width:100%!important;height:80px!important;min-height:80px!important;margin:0!important;
+  border:0!important;border-right:1px solid var(--theme-outline)!important;border-radius:0!important;box-shadow:none!important;background:var(--theme-panel)!important;object-fit:cover!important;object-position:top center!important;
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line{grid-column:2!important;grid-row:2!important;align-self:end!important;margin:0!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line{justify-content:flex-start!important;text-align:left!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{width:100%!important;font-size:22px!important;line-height:1.05!important;text-align:left!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-domain{grid-column:2!important;grid-row:3!important;align-self:start!important;display:block!important;min-width:0!important;margin:0!important;padding:0 8px 0 0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:15px!important;text-align:left!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-description,html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-note-marker,html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.like-button{display:none!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{grid-column:3!important;grid-row:1!important;justify-self:center!important;width:48px!important;min-width:48px!important;height:48px!important;padding:0!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open span{display:none!important}
+html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-combined-handle{grid-column:4!important;grid-row:1!important}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row{grid-template-columns:6px minmax(0,1fr) 46px 30px!important;height:76px!important;min-height:76px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.check-button{left:15px!important;width:27px!important;height:27px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.item-copy{grid-template-columns:minmax(92px,34%) minmax(0,1fr)!important;grid-template-rows:1fr auto auto 1fr!important;height:72px!important;min-height:72px!important;gap:1px 9px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-thumb{height:72px!important;min-height:72px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .item-title-line strong{font-size:18px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row .saved-link-domain{font-size:12px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-row.saved-link-row>.saved-link-open{width:40px!important;min-width:40px!important;height:42px!important}
+}
+html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor::before{content:none!important;display:none!important}
+.saved-link-edit-preview-button{display:block!important;width:132px!important;height:187px!important;min-height:187px!important;margin:0!important;padding:0!important;border:0!important;border-radius:10px!important;background:transparent!important;box-shadow:none!important;overflow:hidden!important;cursor:grab!important}.saved-link-edit-preview-button:active{cursor:grabbing!important}.saved-link-edit-preview-button>.saved-link-edit-preview{position:static!important;display:block!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;margin:0!important;border:1px solid var(--theme-outline)!important;border-radius:10px!important;object-fit:cover!important;object-position:top center!important}.link-crop-viewport{touch-action:none!important;cursor:grab!important;user-select:none!important;-webkit-user-select:none!important;overscroll-behavior:contain!important}.link-crop-viewport img{-webkit-user-drag:none!important;user-drag:none!important}.link-crop-viewport:active{cursor:grabbing!important}.link-crop-hint{margin:-5px 0 13px!important;text-align:center!important;font:700 12px/1.35 Arial,sans-serif!important;opacity:.72}@media(max-width:700px){.saved-link-edit-preview-button{width:96px!important;height:136px!important;min-height:136px!important}.saved-link-edit-preview-button>.saved-link-edit-preview{width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important}}
+.saved-link-preview-button{display:block!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}.saved-link-preview-button:disabled{opacity:1!important}.saved-link-preview-button.editable{cursor:zoom-in!important}.saved-link-preview-button .saved-link-new-preview{margin:0!important}.link-crop-backdrop{z-index:120!important}.link-crop-modal{width:min(92vw,430px);max-height:calc(100vh - 28px);overflow:auto;padding:20px;border:2px solid var(--theme-outline);border-radius:20px;background:var(--theme-panel);color:var(--theme-text);box-shadow:0 18px 55px #0008}.link-crop-modal h2{margin:0 0 14px;text-align:center}.link-crop-viewport{width:min(70vw,260px);aspect-ratio:1/1.414;margin:0 auto 15px;overflow:hidden;border:2px solid var(--theme-outline);border-radius:14px;background:var(--theme-paper)}.link-crop-viewport img{width:100%;height:100%;object-fit:contain;transform-origin:center;user-select:none;pointer-events:none}.link-crop-modal>label{display:grid;grid-template-columns:125px 1fr;align-items:center;gap:10px;margin:10px 0;font:800 11px Arial,sans-serif}.link-crop-modal input[type="range"]{width:100%;accent-color:var(--theme-accent)}.link-crop-modal>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.link-crop-modal button{min-height:48px;border:2px solid var(--theme-outline);border-radius:11px;background:var(--theme-accent);color:#fff;font-weight:900}.link-crop-modal button.cancel{background:#b15e61}@media(max-width:520px){.link-crop-modal{padding:15px}.link-crop-modal>label{grid-template-columns:1fr;gap:4px}.link-crop-viewport{width:min(62vw,230px)}}
+.link-crop-backdrop>.link-crop-modal{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-panel,#e3c99d)!important;color:var(--theme-text,#342318)!important}.link-crop-backdrop .link-crop-viewport{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-paper,#fff8e9)!important}.link-crop-backdrop .link-crop-modal button{border-color:var(--theme-outline,#a77f5f)!important;background:var(--theme-accent,#587556)!important}.link-crop-backdrop .link-crop-modal button.cancel{background:#b15e61!important}
+
+/* New-link form uses the same compact preview size as an opened link editor. */
+@media(min-width:701px){
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links>div{
+    grid-template-rows:54px 121px 54px!important;min-height:253px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{
+    height:187px!important;min-height:187px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    align-self:center!important;justify-self:center!important;width:132px!important;height:187px!important;min-height:187px!important;max-height:187px!important;
+  }
+}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{height:88px!important;min-height:88px!important}
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important;
+  }
+}
+
+/* Mobile new-link layout: fields first, preview left and image/save actions stacked right. */
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links>div{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-rows:54px 54px 112px 136px!important;
+    gap:12px!important;min-height:0!important;align-items:stretch!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.autocomplete-wrap{
+    grid-column:1/3!important;grid-row:1!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-url-input{
+    grid-column:1/3!important;grid-row:2!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-text-input{
+    grid-column:1/3!important;grid-row:3!important;width:100%!important;height:112px!important;min-height:112px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-empty-preview{
+    grid-column:1!important;grid-row:4!important;align-self:stretch!important;justify-self:center!important;
+    width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.saved-link-image-choice{
+    grid-column:2!important;grid-row:4!important;align-self:start!important;width:100%!important;min-height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links .saved-link-image-choice>label{
+    width:100%!important;max-width:none!important;height:54px!important;justify-content:center!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links>div>.add-panel-actions{
+    grid-column:2!important;grid-row:4!important;align-self:end!important;justify-self:stretch!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links .add-panel-actions>button:last-child{
+    width:100%!important;min-width:0!important;height:54px!important;
+  }
+}
+
+/* Mobile opened-link editor follows the same compact two-column footer layout. */
+.saved-link-editor-open{display:none}
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{
+    display:grid!important;grid-template-columns:minmax(0,1fr) 104px!important;
+    grid-template-rows:auto auto auto 54px 70px!important;gap:11px 12px!important;
+    align-items:stretch!important;padding:14px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:first-child{
+    grid-column:1/3!important;grid-row:1!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field{
+    grid-column:1/3!important;grid-row:2!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field textarea{
+    height:96px!important;min-height:96px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:has(input[type="url"]){
+    grid-column:1!important;grid-row:3!important;width:100%!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-editor-open{
+    grid-column:2!important;grid-row:3!important;display:grid!important;place-items:center!important;align-self:end!important;
+    width:54px!important;height:54px!important;justify-self:end!important;box-sizing:border-box!important;
+    border:2px solid var(--theme-outline)!important;border-radius:12px!important;background:var(--theme-accent)!important;color:#fff!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-editor-open svg{width:27px!important;height:27px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{display:contents!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{display:none!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview-button{
+    grid-column:1!important;grid-row:4/6!important;align-self:stretch!important;justify-self:start!important;
+    width:96px!important;height:136px!important;min-height:136px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{
+    grid-column:2!important;grid-row:4!important;position:static!important;align-self:start!important;justify-self:stretch!important;
+    display:flex!important;justify-content:center!important;width:100%!important;height:54px!important;min-height:54px!important;margin:0!important;padding:7px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{
+    grid-column:2!important;grid-row:5!important;align-self:end!important;display:grid!important;grid-template-columns:1fr 1fr!important;
+    gap:7px!important;width:100%!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child>button{
+    width:100%!important;min-width:0!important;height:54px!important;margin:0!important;padding:4px!important;font-size:12px!important;
+  }
+}
+
+/* Final mobile alignment: center the label's real line box in the button. */
+@media (max-width:700px) {
+  html body .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy {
+    position: static !important;
+    top: auto !important;
+    transform: none !important;
+    align-self: stretch !important;
+    display: grid !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    justify-items: start !important;
+    line-height: normal !important;
+  }
+  html body .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy > b {
+    display: block !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  html body .app-shell .list-page .list-type-filters {
+    display: none !important;
+  }
+}
+
+/* Keep every contextual create icon vertically centered in the mobile/tablet header. */
+@media (max-width:900px) {
+  html body .app-shell > .topbar > .topbar-inner > .header-add-actions {
+    position: relative !important;
+    top: -8px !important;
+    transform: none !important;
+  }
+}
+
+/* Memo page: page tabs first, then one full-width private/group selector. */
+html body .app-shell .notes-page .list-notes-controls > .list-view-tab {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .notes-view-tab {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .group-space-tab {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+}
+html body .app-shell .notes-page .list-notes-controls > .list-filter-placeholder {
+  display: none !important;
+}
+
+/* List page uses the same stable first two rows; its category filter gets row three. */
+html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .list-view-tab {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .notes-view-tab {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .group-space-tab {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+}
+html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .list-category-slot {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+
+/* Move items: compact chooser and identical target buttons, including the first. */
+body .app-shell .modal.move-item-modal{box-sizing:border-box!important;width:min(calc(100vw - 32px),720px)!important;max-height:min(86dvh,700px)!important;padding:24px!important;overflow:hidden!important}
+body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;max-height:min(55dvh,390px)!important;padding-right:6px!important;overflow-y:auto!important}
+body .app-shell .modal.move-item-modal>.move-target-list>button,body .app-shell .modal.move-item-modal>.move-target-list>button:first-child{box-sizing:border-box!important;min-height:60px!important;padding:8px 12px!important;border:2px solid var(--theme-outline)!important;border-radius:13px!important;background:var(--theme-accent)!important;background-image:none!important;color:#fff!important;box-shadow:none!important}
+body .app-shell .modal.move-item-modal>.move-target-list>button:hover{filter:brightness(1.05)!important;transform:none!important}
+body .app-shell .modal.move-item-modal>.item-action-cancel{position:static!important;width:100%!important;min-height:48px!important;margin:12px 0 0!important;background:#b15e61!important;color:#fff!important}
+@media(max-width:640px){body .app-shell .modal.move-item-modal{padding:18px 14px!important}body .app-shell .modal.move-item-modal>.move-target-list{grid-template-columns:1fr!important;max-height:56dvh!important}}
+
+/* Final mobile link layouts. Keep these last: older compatibility rules are very specific. */
+@media(max-width:700px){
+  html body .app-shell.app-shell section.content.detail-page.links-detail-page{
+    border-left:0!important;border-right:0!important;outline:0!important;box-shadow:none!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page.links-detail-page::before,
+  html body .app-shell.app-shell section.content.detail-page.links-detail-page::after{content:none!important;display:none!important}
+
+  html body .app-shell.app-shell section.content.detail-page div.add-panel.add-panel-links.add-panel-links>div{
+    display:grid!important;grid-template-columns:96px minmax(0,1fr)!important;
+    grid-template-rows:54px 54px 112px 136px!important;gap:12px!important;min-height:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.autocomplete-wrap{
+    grid-column:1/3!important;grid-row:1!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-url-input{
+    grid-column:1/3!important;grid-row:2!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-text-input{
+    grid-column:1/3!important;grid-row:3!important;height:112px!important;min-height:112px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-preview-button,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-new-preview,
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-empty-preview{
+    grid-column:1!important;grid-row:4!important;align-self:stretch!important;justify-self:start!important;
+    width:96px!important;height:136px!important;min-height:136px!important;max-height:136px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.saved-link-image-choice{
+    grid-column:2!important;grid-row:4!important;align-self:start!important;width:100%!important;min-height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links .saved-link-image-choice>label{
+    width:100%!important;max-width:none!important;height:54px!important;margin:0!important;justify-content:center!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links>div>.add-panel-actions{
+    grid-column:2!important;grid-row:4!important;align-self:end!important;justify-self:stretch!important;
+    display:grid!important;width:100%!important;min-width:0!important;height:54px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .add-panel-links.add-panel-links .add-panel-actions>button:last-child{
+    width:100%!important;min-width:0!important;height:54px!important;
+  }
+
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor{
+    display:grid!important;grid-template-columns:96px minmax(0,1fr) 54px!important;
+    grid-template-rows:auto auto auto 54px 70px!important;gap:11px 12px!important;padding:14px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:first-child{grid-column:1/4!important;grid-row:1!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field{grid-column:1/4!important;grid-row:2!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.item-note-field textarea{height:96px!important;min-height:96px!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>label:has(input[type="url"]){grid-column:1/3!important;grid-row:3!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-editor-open{
+    grid-column:3!important;grid-row:3!important;display:grid!important;place-items:center!important;align-self:end!important;justify-self:end!important;
+    width:54px!important;height:54px!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column{display:contents!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>strong{display:none!important}
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-edit-preview-button{
+    grid-column:1!important;grid-row:4/6!important;align-self:stretch!important;justify-self:start!important;
+    width:96px!important;height:136px!important;min-height:136px!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>.saved-link-preview-column>.saved-link-upload{
+    grid-column:2/4!important;grid-row:4!important;position:static!important;align-self:start!important;justify-self:stretch!important;
+    display:flex!important;width:100%!important;height:54px!important;min-height:54px!important;margin:0!important;justify-content:center!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child{
+    grid-column:2/4!important;grid-row:5!important;align-self:end!important;display:grid!important;
+    grid-template-columns:1fr 1fr!important;gap:8px!important;width:100%!important;margin:0!important;
+  }
+  html body .app-shell.app-shell section.content.detail-page .saved-link-editor.saved-link-editor>div:last-child>button{
+    width:100%!important;min-width:0!important;height:54px!important;margin:0!important;padding:4px!important;font-size:12px!important;
   }
 }

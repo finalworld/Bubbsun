@@ -374,7 +374,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* Mobile: keep the filters airy and use a shorter notes label. */
 @media (max-width:700px) {
   .app-shell .list-notes-controls .desktop-category-trigger {
-    grid-template-columns: minmax(0,1fr) 30px 24px !important;
+    grid-template-columns: minmax(0,1fr) 24px !important;
     gap: 7px !important;
     padding-left: 14px !important;
   }
@@ -388,18 +388,23 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .list-notes-controls .desktop-category-copy b {
     font-size: 16px !important;
   }
+  .app-shell .list-notes-controls .desktop-category-trigger > small {
+    display: none !important;
+  }
   .app-shell .list-page .list-type-filters > button > i {
     display: none !important;
   }
   .app-shell .list-notes-controls > .notes-view-tab {
-    font-size: 0 !important;
+    gap: 7px !important;
+    font-size: 16px !important;
   }
   .app-shell .list-notes-controls > .notes-view-tab > svg {
-    display: none !important;
+    display: block !important;
+    width: 19px !important;
+    height: 19px !important;
   }
   .app-shell .list-notes-controls > .notes-view-tab::after {
-    content: "MEMO" !important;
-    font: 900 16px Georgia, serif !important;
+    content: none !important;
   }
 }
 

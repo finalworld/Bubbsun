@@ -5417,12 +5417,12 @@ html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .notes-v
   grid-row: 1 !important;
 }
 html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .group-space-tab {
-  grid-column: 1 / -1 !important;
+  grid-column: 1 !important;
   grid-row: 2 !important;
 }
 html body .app-shell .list-page:not(.notes-page) .list-notes-controls > .list-category-slot {
-  grid-column: 1 / -1 !important;
-  grid-row: 3 !important;
+  grid-column: 2 !important;
+  grid-row: 2 !important;
 }
 
 /* The destructive memo action is desktop-only; it breaks the mobile action row. */

@@ -182,6 +182,9 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 /* Keep the approved sticker; tighten only its pink frame. */
 .game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{outline-offset:0;box-shadow:0 3px 0 #344a37,0 0 2px #ef6f9166!important}
 
+/* Zero-point previews are plain dashes, never green score buttons. */
+.game-shell .player-turn .zero-preview .score-choice{background:transparent!important;color:#557361!important;box-shadow:none!important;transform:none!important}
+
 /* Poängbrickorna ska ha samma fria yta över och under samt luft mot högerkanten. */
 .game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:32px!important;padding-top:0!important;padding-bottom:4px!important;vertical-align:middle!important}
 .game-shell .score-section-block tbody td{width:66px!important;padding-left:7px!important;padding-right:7px!important}

@@ -59,7 +59,6 @@ jobs:
           put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/styles.css -o public/yatsun/styles.css
           put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
-          mkdir -p public/yatsun/vendor
           put public/yatsun/vendor/rapier.mjs -o public/yatsun/vendor/rapier.mjs
           put public/yatsun/vendor/rapier.LICENSE -o public/yatsun/vendor/rapier.LICENSE
           put public/yatsun/dice-math.mjs -o public/yatsun/dice-math.mjs

@@ -272,7 +272,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   border-radius: 11px !important;
 }
 .app-shell .list-notes-controls .desktop-category-trigger:hover {
-  background: color-mix(in srgb, var(--theme-accent) 7%, transparent) !important;
+  background: color-mix(in srgb, var(--theme-paper) 34%, var(--theme-panel)) !important;
+  filter: brightness(1.025) !important;
 }
 .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
   display: grid !important;

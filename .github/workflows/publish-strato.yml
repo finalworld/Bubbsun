@@ -8,38 +8,11 @@ permissions:
 
 jobs:
   publish:
-    name: Bygg och publicera
+    name: Bygg och publicera endast Bubbsun
     runs-on: ubuntu-latest
-    services:
-      mariadb:
-        image: mariadb:11
-        env:
-          MARIADB_ROOT_PASSWORD: test-only
-          MARIADB_DATABASE: yatsun_test
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - name: Hämta koden
         uses: actions/checkout@v4
-
-      - name: PHP för Yatsuns servertester
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: pdo_mysql, mbstring
-
-      - name: Testa Yatsuns matchrum före publicering
-        env:
-          YATSUN_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=yatsun_test;charset=utf8mb4
-        run: |
-          php -l public/yatsun/api/index.php
-          php -l public/yatsun/api/social.php
-          php -l public/yatsun/api/room-rules.php
-          php tests/yatsun-rooms.test.php
-          node --test tests/yatsun-dice-resting.test.mjs
 
       - name: Installera pnpm
         uses: pnpm/action-setup@v4
@@ -52,95 +25,43 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Återanvänd RK Kassa-paket
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-rk-npm-${{ hashFiles('rk-kassa/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-rk-npm-
-
       - name: Installera beroenden
         run: |
           corepack enable
           pnpm install --frozen-lockfile
 
-      - name: Bygg vanliga sidan och beta
+      - name: Bygg Bubbsun live och beta
         run: pnpm run build:all
-
-      - name: Bygg RK Kassa
-        run: |
-          npm ci --prefix rk-kassa --prefer-offline --no-audit
-          npm install --prefix rk-kassa --no-save --no-audit @rolldown/binding-linux-x64-gnu@1.0.1 lightningcss-linux-x64-gnu@1.31.1 @tailwindcss/oxide-linux-x64-gnu@4.2.1
-          npm run build --prefix rk-kassa
 
       - name: Installera SFTP-verktyget
         run: |
           sudo apt-get update
           sudo apt-get install --yes lftp
 
-      - name: Förbered Kassuns databaskoppling
-        env:
-          KASSUN_DB_HOST: ${{ secrets.KASSUN_DB_HOST }}
-          KASSUN_DB_NAME: ${{ secrets.KASSUN_DB_NAME }}
-          KASSUN_DB_USER: ${{ secrets.KASSUN_DB_USER }}
-          KASSUN_DB_PASSWORD: ${{ secrets.KASSUN_DB_PASSWORD }}
-        run: |
-          node -e 'const fs=require("fs");fs.writeFileSync("kassun-db.json",JSON.stringify({host:process.env.KASSUN_DB_HOST,name:process.env.KASSUN_DB_NAME,user:process.env.KASSUN_DB_USER,password:process.env.KASSUN_DB_PASSWORD}))'
-          node -e 'const fs=require("fs");fs.writeFileSync("yatsun-db.json",JSON.stringify({host:"database-5021326777.webspace-host.com",name:"dbs16080702",user:"dbu4703673",password:process.env.KASSUN_DB_PASSWORD}))'
-
-      - name: Ladda upp till Strato
+      - name: Ladda endast upp Bubbsun till Strato
         env:
           SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
           SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
           SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
           SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
         run: |
-          if [ -d rk-kassa/api ]; then
-            RK_API_UPLOAD='mirror --reverse --delete --exclude rk-kassa-db.php --ignore-time --no-perms rk-kassa/api/ public/rk/api/'
-          else
-            RK_API_UPLOAD='# RK API saknas i denna version; lämna serverns kopia orörd.'
-          fi
           lftp <<EOF
           set sftp:auto-confirm yes
           set net:timeout 30
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          # Skydda konfigurationsfilen innan den laddas upp. Den kan läsas av
-          # PHP men aldrig hämtas via webben.
-          put -O public/loppis/api dist/loppis/api/.htaccess
-          put -O public/loppis/api kassun-db.json
-          # Byggartefakterna har filnamn med innehållshash. Identiska filer kan
-          # därför säkert hoppas över, medan nya CSS/JS-filer får nya namn.
-          # Startsidorna laddas alltid upp efteråt eftersom deras innehåll kan
-          # ändras trots samma filstorlek. bubbsun.se är i Strato kopplad till
-          # undermappen public, medan SFTP-kontot öppnas en nivå ovanför den.
-          mirror --reverse --ignore-time --no-perms --parallel=4 dist/ public/
-          # Yatsun använder samma hemliga Strato-lösenord men en egen MariaDB.
-          # Konfigurationen laddas separat och blockeras av API-mappens .htaccess.
-          put -O public/yatsun/api dist/yatsun/api/.htaccess
-          put -O public/yatsun/api yatsun-db.json
-          # lftp kan hoppa över dolda filer vid spegling. Den här styr
-          # webbappens routning och måste därför alltid ersätta den gamla.
+          # Yatsun, Loppis/Kassun och RK Kassa har egna publiceringsflöden.
+          # Bubbsuns publicering får aldrig skriva till deras servermappar.
+          mirror --reverse --ignore-time --no-perms --parallel=4 \
+            --exclude-glob yatsun/** \
+            --exclude-glob loppis/** \
+            --exclude-glob rk/** \
+            dist/ public/
+          # Routning och Bubbsuns båda startsidor ersätts alltid.
           put -O public dist/.htaccess
           put -O public dist/index.html
           put -O public/beta dist/beta/index.html
-          # Kassuns indexfil är liten och kan få samma filstorlek trots nya
-          # cacheversioner. Ersätt den alltid så mobilen laddar senaste appen.
-          put -O public/loppis dist/loppis/index.html
-          # RK Kassa ligger i webbplatsens public/rk.
-          # API:t har en privat databasfil som inte får rensas när statiska
-          # byggfiler byts ut. Gamla hashade filer är ofarliga och kan ligga kvar.
-          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
-          # RK:s databasfil laddas manuellt och ska inte beröras. Serverkoden
-          # ersätts explicit, så WebFTP-filen rk-kassa-db.php får ligga kvar.
-          put -O public/rk/api rk-kassa/api/index.php
-          put -O public/rk/api rk-kassa/api/.htaccess
-          # Ersätt alltid rk:s startsida. Annars kan den gamla filen peka på
-          # borttagna JavaScript-filer med tidigare innehållshash.
-          put -O public/rk rk-kassa/dist/index.html
-          # Bekräfta efteråt exakt vad som faktiskt ligger i webbrooten.
           cls -l public/index.html public/beta/index.html public/.htaccess
           cat public/.htaccess
           bye

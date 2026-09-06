@@ -239,6 +239,7 @@ import type {
   ThemePalette,
 } from "../src/types";
 import { LanguageBridge } from "../src/LanguageBridge";
+import type { FrasseProgress } from "../src/FrasseGame";
 import "./globals.css";
 import "./v700.css";
 import "./v700-fixes.css";
@@ -2289,7 +2290,7 @@ function SortableItemRow({
         transform: CSS.Transform.toString(sortable.transform),
         transition: sortable.transition,
         "--item-swipe-x":`${swipeOffset}px`,
-      }}
+      } as CSSProperties}
       className={`item-row ${item.completed ? "done" : ""} ${sortable.isDragging ? "dragging" : ""} ${swiping ? "swiping" : ""} ${Math.abs(swipeOffset)>=70 ? "swipe-ready" : ""} ${listType==="links"?"saved-link-row":""}`}
       onPointerDown={startSwipe}
       onPointerMove={moveSwipe}
@@ -5369,7 +5370,7 @@ function GlobalPinEditor() {
 function ThemeEditor({
   theme,
 }: {
-  theme: (typeof themes)[number] & Partial<ThemePalette>;
+  theme: ThemePalette & { name: string; icon: string; supporter?: boolean };
 }) {
   const makeValues = () => ({
     bg: theme.bg,
@@ -6209,7 +6210,7 @@ const frasseColumn=(board:ConnectCell[])=>{const valid=[3,2,4,1,5,0,6].filter(co
 function ConnectFourPage({account,user,profile,memberships,groups,onBack,onProfile}:{account:Account;user:User;profile:{xp:number;level:number;levelXp:number;nextLevelXp:number}|null;memberships:Membership[];groups:Record<string,Group>;onBack:()=>void;onProfile:(profile:{xp:number;level:number;levelXp:number;nextLevelXp:number})=>void}){
   const empty=()=>Array<ConnectCell>(42).fill(0),[board,setBoard]=useState<ConnectCell[]>(empty),[lastMoveIndex,setLastMoveIndex]=useState(-1),[turn,setTurn]=useState<1|2>(1),[busy,setBusy]=useState(false),[gameId,setGameId]=useState(()=>crypto.randomUUID()),[screen,setScreen]=useState<"menu"|"ai"|"lobby"|"multi">("menu"),[matches,setMatches]=useState<ConnectMatch[]>([]),[groupPeople,setGroupPeople]=useState<Record<string,Membership[]>>({}),[match,setMatch]=useState<ConnectMatch|null>(null),[error,setError]=useState(""),[reactionOpen,setReactionOpen]=useState(false),[reactionBubble,setReactionBubble]=useState<number|null>(null),rewarded=useRef(false),profiledMatch=useRef(""),seenReaction=useRef(0),reactionTimer=useRef<number|undefined>(undefined);
   const api=useCallback(async<T,>(action:string,payload:Record<string,unknown>={})=>{const token=await user.getIdToken(),response=await fetch("/api/yatzy/",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({action,displayName:account.displayName,...payload})}),data=await response.json() as T&{ok?:boolean;error?:string};if(!response.ok||data.ok===false)throw new Error(data.error||"Spelservern svarade inte.");return data},[user,account.displayName]);
-  const remote=screen==="multi"&&match,activeBoard=remote?match.board:board,activeLastMove=remote?match.lastMoveIndex??-1:lastMoveIndex,winner=remote?(match.winnerUid?match.winnerUid===user.uid?1:2:0):connectWinner(board),draw=remote?Boolean(match.draw):!winner&&board.every(Boolean),finished=remote?match.status==="finished":Boolean(winner||draw),myTurn=remote?match.turnUid===user.uid:turn===1,opponentId=remote?match.participantIds.find(id=>id!==user.uid):undefined,opponentName=opponentId?match?.players[opponentId]?.name:"AI Frasse";
+  const remote=screen==="multi"&&match,activeBoard=remote?match.board:board,activeLastMove=remote?match.lastMoveIndex??-1:lastMoveIndex,winner=remote?(match.winnerUid?match.winnerUid===user.uid?1:2:0):connectWinner(board),draw=remote?Boolean(match.draw):!winner&&board.every(Boolean),finished=remote?match.status==="finished":Boolean(winner||draw),myTurn=remote?match.turnUid===user.uid:turn===1,opponentId=remote?match.participantIds.find(id=>id!==user.uid):undefined,opponentName=(opponentId?match?.players[opponentId]?.name:"AI Frasse")??"Bubbsun-vän";
   const refreshProfile=useCallback(async()=>{try{const data=await api<{profile:{xp:number;level:number;levelXp:number;nextLevelXp:number}}>("game_profile");if(data.profile){onProfile(data.profile);localStorage.setItem("bubbsun-yatzy-profile",JSON.stringify(data.profile))}}catch{/* nästa sidbesök försöker igen */}},[api,onProfile]);
   const loadMatches=useCallback(async()=>{try{const data=await api<{matches:ConnectMatch[]}>("connect4_bootstrap");setMatches(data.matches||[])}catch(reason){setError(reason instanceof Error?reason.message:"Matcher kunde inte hämtas.")}},[api]);
   useEffect(()=>{if(screen==="lobby")void loadMatches()},[screen,loadMatches]);

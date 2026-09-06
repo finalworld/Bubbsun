@@ -2009,8 +2009,8 @@ function ListsPage({
             aria-expanded={categoryMenuOpen}
             onClick={() => setCategoryMenuOpen((open) => !open)}
           >
-            <span>{activeType?.icon || ""}</span>
-            <b>{activeType?.label || "Alla listor"}</b>
+            <span className="desktop-category-icon">{activeType?.icon || <Funnel />}</span>
+            <span className="desktop-category-copy"><em>KATEGORI</em><b>{activeType?.label || "Alla listor"}</b></span>
             <small>{activeTypeCount}</small>
             <ChevronDown className={categoryMenuOpen ? "turn" : ""} />
           </button>

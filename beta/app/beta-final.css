@@ -259,6 +259,89 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .list-notes-controls .desktop-category-menu > button { min-height: 48px !important; }
 }
 
+/* Closed category selector: compact, readable and consistent with the group picker. */
+.app-shell .list-notes-controls .list-category-slot {
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger {
+  grid-template-columns: 42px minmax(0, 1fr) 34px 34px !important;
+  gap: 8px !important;
+  min-height: 46px !important;
+  padding: 3px 8px 3px 12px !important;
+  border-radius: 11px !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger:hover {
+  background: color-mix(in srgb, var(--theme-accent) 7%, transparent) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--theme-accent) 13%, var(--theme-paper)) !important;
+  color: var(--theme-accent) !important;
+  font-size: 21px !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  line-height: 1 !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy em {
+  color: var(--theme-accent) !important;
+  font: 800 10px/1 Arial, sans-serif !important;
+  font-style: normal !important;
+  letter-spacing: .09em !important;
+}
+.app-shell .list-notes-controls .desktop-category-copy b {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  color: var(--theme-text) !important;
+  font: 800 16px/1.1 Georgia, serif !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > small {
+  display: grid !important;
+  place-items: center !important;
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--theme-accent) 14%, var(--theme-paper)) !important;
+  color: var(--theme-text) !important;
+  font: 800 13px Arial, sans-serif !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > svg {
+  width: 21px !important;
+  height: 21px !important;
+  justify-self: center !important;
+  color: var(--theme-text) !important;
+}
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger {
+    grid-template-columns: 34px minmax(0,1fr) 30px 24px !important;
+    gap: 5px !important;
+    padding-left: 7px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .app-shell .list-notes-controls .desktop-category-copy b { font-size: 14px !important; }
+  .app-shell .list-notes-controls .desktop-category-trigger > small { width: 28px !important; min-width: 28px !important; height: 28px !important; }
+}
+
 /* Saved links editor — desktop layout follows the approved two-column mockup. */
 @media (min-width:1001px){
   html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){

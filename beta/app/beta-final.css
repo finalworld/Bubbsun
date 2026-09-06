@@ -342,6 +342,35 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .app-shell .list-notes-controls .desktop-category-trigger > small { width: 28px !important; min-width: 28px !important; height: 28px !important; }
 }
 
+/* Optical vertical centering inside the closed category selector. */
+.app-shell .list-notes-controls .desktop-category-trigger {
+  height: 100% !important;
+  min-height: 50px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  align-items: center !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-icon {
+  align-self: center !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > .desktop-category-copy {
+  align-self: center !important;
+  transform: translateY(2px) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > small,
+.app-shell .list-notes-controls .desktop-category-trigger > svg {
+  align-self: center !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  transform: translateY(4px) !important;
+}
+.app-shell .list-notes-controls .desktop-category-trigger > svg.turn {
+  transform: translateY(4px) rotate(180deg) !important;
+}
+@media (max-width:700px) {
+  .app-shell .list-notes-controls .desktop-category-trigger { min-height: 48px !important; }
+}
+
 /* Saved links editor — desktop layout follows the approved two-column mockup. */
 @media (min-width:1001px){
   html body .app-shell.app-shell section.content.detail-page .items-list>.item-row-wrap.expanded:has(.saved-link-editor){

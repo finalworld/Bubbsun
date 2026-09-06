@@ -266,3 +266,6 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 
 /* The fixed header and its chat popover must stay above the scorecard. */
 .game-shell .score-panel{z-index:2}
+
+/* Lift the whole latest-score cell above the gold rail's stacking layer. */
+.game-shell .score-section-block td:has(.latest-score){z-index:105}

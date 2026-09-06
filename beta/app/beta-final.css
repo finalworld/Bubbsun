@@ -362,10 +362,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   align-self: center !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  transform: translateY(4px) !important;
+  transform: none !important;
 }
 .app-shell .list-notes-controls .desktop-category-trigger > svg.turn {
-  transform: translateY(4px) rotate(180deg) !important;
+  transform: rotate(180deg) !important;
 }
 @media (max-width:700px) {
   .app-shell .list-notes-controls .desktop-category-trigger { min-height: 48px !important; }

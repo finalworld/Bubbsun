@@ -269,3 +269,12 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 
 /* Lift the whole latest-score cell above the gold rail's stacking layer. */
 .game-shell .score-section-block td:has(.latest-score){z-index:105}
+
+/* One shared 3D scene. These controls only handle selection; physics owns pose. */
+.game-shell .dice-row{perspective:none}
+.dice-scene{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dice-hit-target{position:absolute;z-index:3;display:block;margin:0;padding:0;transform:translate(-50%,-50%);border:0;border-radius:18px;background:transparent;box-shadow:none;cursor:pointer;transition:none}
+.dice-hit-target:focus-visible{outline:2px solid #fff4bb;outline-offset:4px}
+.dice-hit-target.held::after{content:"✓ SPARAD";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:max-content;padding:4px 7px;border:1px solid #fff4cf;border-radius:999px;background:#315f49;color:#fff;font-size:9px;font-weight:900;line-height:1;letter-spacing:.5px;box-shadow:0 2px 3px #173a2a55;pointer-events:none}
+.physics-rolling .dice-hit-target{pointer-events:none}
+@media(max-width:680px){.dice-hit-target.held::after{bottom:-7px;padding:3px 5px;font-size:7px}}

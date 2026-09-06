@@ -1,0 +1,83 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="/yatsun/">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/","https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js":"/tests/yatsun-auth-stub.mjs","https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js":"/tests/yatsun-auth-stub.mjs","https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js":"/tests/yatsun-auth-stub.mjs"}}</script></head><body>
+<script type="module">
+// Local-only integration harness. Loads the actual app, renderer and worker.
+// Only auth/network and AI thinking delays are stubbed; physics time is real.
+const originalFetch=window.fetch.bind(window),html=await(await originalFetch('./index.html')).text(),parsed=new DOMParser().parseFromString(html,'text/html');
+for(const style of parsed.querySelectorAll('link[rel=stylesheet]'))document.head.append(style.cloneNode());
+document.body.innerHTML=parsed.body.innerHTML;document.body.querySelectorAll('script').forEach(s=>s.remove());
+localStorage.removeItem('yatsun-active-solo-mp-fixture-only');
+window.fetch=async(url,options)=>{
+  if(options?.method!=='POST')return originalFetch(url,options);
+  const q=JSON.parse(options.body);let data={};
+  if(q.action==='social_register')data={member:{code:'TEST',uid:'mp-fixture-only'}};
+  if(q.action==='social_list')data={friends:[],rooms:[],openTables:[]};
+  if(q.action==='social_cosmetics')data={completed:100,active:new URLSearchParams(location.search).get('skin')||'classic'};
+  return {ok:true,json:async()=>data};
+};
+const source=await(await originalFetch('./app.js')).text();
+const bridge=`\nexport const fixture={startGame,roll,renderDice,chooseScore,applyOnlineRoom,resetTurn,
+  get dice(){return dice;},get board(){return diceBoard;},get physicsBusy(){return physicsBusy;},get busy(){return busy;},
+  get scores(){return {player:playerScores,ai:aiScores};},
+  setSkin(id){profile.completed=100;profile.activeSkin=id;return renderDice();},
+  onlineRoom(room,initial=false){online={active:true};applyOnlineRoom(room,initial);return dicePhysicsPromise;},
+};`;
+const instrumented=source.replace(/from (["'])(\.\/[^"']+)\1/g,(_,quote,path)=>'from '+quote+new URL(path,document.baseURI).href+quote)
+  .replace('const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));','const humanPause=()=>delay(90);')+bridge;
+const url=URL.createObjectURL(new Blob([instrumented],{type:'text/javascript'})),{fixture:app}=await import(url);
+await new Promise(resolve=>setTimeout(resolve,100));app.startGame();await app.renderDice();
+await app.setSkin(new URLSearchParams(location.search).get('skin')||'classic');
+const toolbar=document.createElement('div');toolbar.style='position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#172b24;color:white;padding:7px;display:flex;gap:12px;align-items:center;font:12px monospace';
+toolbar.innerHTML='<button id="run-physics-test">Kör 18 kast</button><button id="run-online-test">Testa multiplayerkast</button><output id="physics-test-status">Redo</output>';document.body.append(toolbar);
+const output=toolbar.querySelector('output');let settled=0;const failures=[];
+document.querySelector('#dice').addEventListener('dice-settled',()=>{settled++;output.textContent=`${settled} kast avslutade`;});
+window.addEventListener('error',e=>failures.push(e.message));
+window.addEventListener('unhandledrejection',e=>failures.push(String(e.reason)));
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const check=(condition,message)=>{if(!condition)throw new Error(message);};
+const positions=()=>JSON.stringify(app.board.poses);
+const models=()=>[...app.board.items.values()].map(item=>[item.object.uuid,item.materials.map(m=>m.uuid)]);
+async function stableTail(){const final=positions();await wait(180);check(positions()===final,'Rörelse efter kaststopp');}
+toolbar.querySelector('#run-physics-test').onclick=async()=>{
+  toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);
+  try{
+    let categories=['u1','u2','l7'];const originalModels=JSON.stringify(models());
+    for(let turn=0;turn<3;turn++){
+      for(let round=0;round<3;round++){
+        const previous=settled,heldBefore=app.dice.filter(d=>d.held).map(d=>[d.id,JSON.stringify(d.pose)]);
+        await app.roll();check(settled===previous+1,'Kastet misslyckades');check(!app.physicsBusy,'Kastet har inte avslutats');await stableTail();
+        for(const [id,position] of heldBefore)check(JSON.stringify(app.dice[id].pose)===position,'En sparad tärning flyttades under omkastet');
+        const before=positions(),die=app.dice[round%2];
+        document.querySelector(`[data-die-id="${die.id}"]`).click();
+        check(positions()===before,'Spara flyttade en tärning');
+        const held=app.dice.filter(d=>d.held).map(d=>[d.id,JSON.stringify(d.pose)]);
+        check(JSON.stringify(models())===originalModels,'Material/modeller återskapades vid kast/spara');
+        app.heldReference=held;
+      }
+      await app.chooseScore(categories[turn]);await stableTail();
+      check(Object.keys(app.scores.ai).length===turn+1,'Datorn valde inte poäng efter kastet');
+      check(JSON.stringify(models())===originalModels,'Datorns tur återskapade modeller');
+    }
+    check(!failures.length,failures.join('; '));
+    output.textContent=`PASS: ${settled} kast, sparade modeller och stilla slutlägen`;
+  }catch(error){output.textContent='FAIL: '+error.message;console.error(error);}
+  toolbar.querySelectorAll('button').forEach(b=>b.disabled=false);
+};
+toolbar.querySelector('#run-online-test').onclick=async()=>{
+  toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);
+  try{
+    const room={id:'physics-fixture',revision:0,otherName:'Testvän',state:{players:['mp-fixture-only','other'],turn:'mp-fixture-only',rolls:0,dice:[1,2,3,4,5],held:[false,false,false,false,false],scores:{'mp-fixture-only':{},other:{}},done:false}};
+    await app.onlineRoom(room,true);await app.renderDice();
+    for(let round=1;round<=3;round++){
+      room.revision++;room.state.rolls=round;room.state.dice=room.state.dice.map((value,i)=>room.state.held[i]?value:1+(i+round)%6);
+      await app.onlineRoom(structuredClone(room));await wait(100);await stableTail();
+      check(app.dice.every((d,i)=>d.value===room.state.dice[i]),'Synligt resultat avviker från servern');
+      const before=positions();room.revision++;room.state.held[round-1]=true;await app.onlineRoom(structuredClone(room));await app.renderDice();
+      check(positions()===before,'Multiplayer-spara ändrade position');
+    }
+    output.textContent=`PASS: tre multiplayerkast, serverresultat och sparade lägen`;
+  }catch(error){output.textContent='FAIL: '+error.message;console.error(error);}
+  toolbar.querySelectorAll('button').forEach(b=>b.disabled=false);
+};
+</script></body></html>

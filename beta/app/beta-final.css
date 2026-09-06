@@ -384,7 +384,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     display: none !important;
   }
   .app-shell .list-notes-controls .desktop-category-copy {
-    transform: none !important;
+    transform: translateY(-2px) !important;
   }
   .app-shell .list-notes-controls .desktop-category-copy b {
     font-size: 16px !important;

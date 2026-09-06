@@ -185,6 +185,12 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 /* Zero-point previews are plain dashes, never green score buttons. */
 .game-shell .player-turn .zero-preview .score-choice{background:transparent!important;color:#557361!important;box-shadow:none!important;transform:none!important}
 
+/* A score becomes a tile only once it has actually been entered. Until then
+   the possible scores are just readable values in the active column, including
+   zeroes: no empty green/red capsules that look like completed choices. */
+.game-shell .score-section-block tr:not(.scored) .score-choice{width:auto!important;min-width:0!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#365943!important;box-shadow:none!important;transform:none!important}
+.game-shell .score-section-block tr.preview:hover>*{background:transparent!important}.game-shell .score-section-block tr.preview:hover .score-choice{color:#173d2a!important;text-decoration:underline;text-underline-offset:2px}
+
 /* Poängbrickorna ska ha samma fria yta över och under samt luft mot högerkanten. */
 .game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:32px!important;padding-top:0!important;padding-bottom:4px!important;vertical-align:middle!important}
 .game-shell .score-section-block tbody td{width:66px!important;padding-left:7px!important;padding-right:7px!important}

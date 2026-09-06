@@ -291,7 +291,7 @@ function updateMatchPlayers(multiplayer,room=null){
   else cards[1].querySelector('span').textContent='Datormotståndare';
   setScoreTurn(mine,multiplayer?(room.otherName||'Vän'):(cards[1].querySelector('strong').textContent||'AI'),done);
 }
-function setScoreTurn(mine,otherName='AI',done=false){const panel=$('.score-panel'),banner=$('.score-turn-banner');if(!panel||!banner)return;panel.classList.toggle('player-turn',!done&&mine);panel.classList.toggle('opponent-turn',!done&&!mine);banner.textContent=done?'MATCH KLAR':mine?'DIN TUR':`${otherName.toLocaleUpperCase('sv-SE')}S TUR`;}
+function setScoreTurn(mine,otherName='AI',done=false){const panel=$('.score-panel');if(!panel)return;panel.classList.toggle('player-turn',!done&&mine);panel.classList.toggle('opponent-turn',!done&&!mine);}
 function applyOnlineRoom(room,initial=false,sending=false,force=false){
   if(onlineAnimating){queuedOnlineRoom={room,initial,sending,force};return;}
   const state=room.state,uid=authUser.uid,other=state.players.find(id=>id!==uid),changed=initial||force||onlineRevision!==room.revision;

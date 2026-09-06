@@ -263,3 +263,6 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 /* Optical centering against the rendered score buttons. */
 .game-shell .score-panel{--turn-rail-right:76px}.game-shell .score-panel.opponent-turn{--turn-rail-right:6px}
 @media(max-width:680px){.game-shell .score-panel{--turn-rail-right:76px}.game-shell .score-panel.opponent-turn{--turn-rail-right:6px}}
+
+/* The fixed header and its chat popover must stay above the scorecard. */
+.game-shell .score-panel{z-index:2}

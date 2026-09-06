@@ -173,6 +173,9 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{box-shadow:0 3px 0 #344a37,0 0 7px 3px #ffd84dcc,0 0 16px 7px #ffe4778f,0 0 28px 11px #fff0a34f!important;animation:latest-score-glow 1.8s ease-in-out infinite alternate}
 @keyframes latest-score-glow{from{filter:brightness(1);box-shadow:0 3px 0 #344a37,0 0 6px 2px #ffd84db8,0 0 13px 5px #ffe47770,0 0 22px 8px #fff0a33d}to{filter:brightness(1.08);box-shadow:0 3px 0 #344a37,0 0 9px 4px #ffd84de6,0 0 20px 9px #ffe477a3,0 0 34px 14px #fff0a35c}}
 
+/* The most recent score must contrast with the gold turn frame. */
+.game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{position:relative;z-index:102!important;outline:3px solid #ef6f91;outline-offset:2px;box-shadow:0 3px 0 #344a37,0 0 8px 4px #ef6f918f!important;animation:latest-score-pulse 1.4s ease-in-out infinite alternate}.game-shell .latest-score::before{content:"NY";position:absolute;z-index:2;right:-9px;top:-9px;display:grid;place-items:center;min-width:19px;height:14px;padding:0 3px;border:2px solid #fff4df;border-radius:7px;background:#d94f78;color:#fff;font-size:7px;font-weight:1000;line-height:1;letter-spacing:.3px;box-shadow:0 2px 3px #51233855}@keyframes latest-score-pulse{from{filter:brightness(1)}to{filter:brightness(1.12)}}
+
 /* Poängbrickorna ska ha samma fria yta över och under samt luft mot högerkanten. */
 .game-shell .score-section-block tbody th,.game-shell .score-section-block tbody td{height:32px!important;padding-top:0!important;padding-bottom:4px!important;vertical-align:middle!important}
 .game-shell .score-section-block tbody td{width:66px!important;padding-left:7px!important;padding-right:7px!important}

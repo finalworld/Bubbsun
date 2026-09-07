@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {paintDice,skinById} from './progression.mjs?v=map19';
-import {faceQuaternion,sampleThrow,upperFace} from './dice-math.mjs?v=physics32';
+import {faceQuaternion,sampleThrow,upperFace} from './dice-math.mjs?v=physics46';
 
 const modelSource=new GLTFLoader().loadAsync(new URL('./assets/3d/D6_A.gltf',import.meta.url).href);
 const physicsToView=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
@@ -24,7 +24,7 @@ export class DiceBoard {
     gradient.addColorStop(0,'rgba(12,36,24,.42)');gradient.addColorStop(1,'rgba(12,36,24,0)');context.fillStyle=gradient;context.fillRect(0,0,64,64);
     this.shadowTexture=new THREE.CanvasTexture(shadowCanvas);
     this.resizeObserver=new ResizeObserver(()=>{if(root.clientWidth&&root.clientHeight){this.layout();this.draw();}});this.resizeObserver.observe(root);
-    this.worker=new Worker(new URL('./dice-worker.mjs?v=physics32',import.meta.url),{type:'module'});
+    this.worker=new Worker(new URL('./dice-worker.mjs?v=physics46',import.meta.url),{type:'module'});
     this.requests=new Map();this.requestId=0;
     this.worker.onmessage=({data})=>{const request=this.requests.get(data.id);if(!request)return;this.requests.delete(data.id);if(data.error)request.reject(new Error(data.error));else request.resolve(data.trace);};
     this.worker.onerror=()=>{this.workerError=new Error('Tärningsfysiken kunde inte starta. Ladda om och försök igen.');for(const request of this.requests.values())request.reject(this.workerError);this.requests.clear();};

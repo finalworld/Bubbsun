@@ -1,11 +1,11 @@
 import RAPIER from './vendor/rapier.mjs';
-import {FACES,upperFace,seededRandom,vector,rotation,array,length,multiply,between} from './dice-math.mjs?v=physics32';
-export {FACES,upperFace,faceQuaternion,sampleThrow,seededRandom} from './dice-math.mjs?v=physics32';
+import {FACES,upperFace,seededRandom,vector,rotation,array,length,multiply,between} from './dice-math.mjs?v=physics46';
+export {FACES,upperFace,faceQuaternion,sampleThrow,seededRandom} from './dice-math.mjs?v=physics46';
 await RAPIER.init();
 
 // Units are die edge lengths and seconds. No DOM or display clock enters here.
 export const PHYSICS=Object.freeze({step:1/120,substeps:2,maxPointTravel:.015,gravity:22,mass:1,radius:.065,
-  linearDamping:.25,angularDamping:.3,floorFriction:.44,floorBounce:.24,
+  linearDamping:.58,angularDamping:.72,floorFriction:.52,floorBounce:.24,
   diceFriction:.16,diceBounce:.38,solverIterations:12,ccdSubsteps:4,
   speedLimit:.035,spinLimit:.07,alignment:Math.cos(2.5*Math.PI/180),
   stableTime:.45,penetrationLimit:.006,maxDuration:30,maxRecoveryRounds:2});
@@ -48,8 +48,8 @@ export class DiceSimulation{
       // rendered model has the same outer edge length; pips are surface detail.
       const collider=this.world.createCollider(RAPIER.ColliderDesc.roundCuboid(h,h,h,PHYSICS.radius)
         .setMass(PHYSICS.mass).setFriction(PHYSICS.diceFriction).setRestitution(PHYSICS.diceBounce),rigid);
-      if(!die.held){rigid.setLinvel(vector(fixture?.velocity||[-3.5-this.random()*2,1.5+this.random()*1.5,(this.random()-.5)*3]),true);
-        rigid.setAngvel(vector(fixture?.spin||[(this.random()-.5)*16,(this.random()-.5)*18,(this.random()-.5)*16]),true);}
+      if(!die.held){rigid.setLinvel(vector(fixture?.velocity||[-7-this.random()*2,4+this.random()*1.5,(this.random()-.5)*5]),true);
+        rigid.setAngvel(vector(fixture?.spin||[(this.random()-.5)*30,(this.random()-.5)*38,(this.random()-.5)*30]),true);}
       return {rigid,collider,id:die.id,held:Boolean(die.held),heldPose:die.held?structuredClone(die.pose):null,stableFor:0,stuckFor:0,lastNudge:-2,nudges:0};
     });
     this.done=this.bodies.every(b=>b.held);

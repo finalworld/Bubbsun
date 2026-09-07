@@ -350,3 +350,39 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   body.playing .site-header .brand img{width:126px;height:72px}
   body.playing .game-shell .table-area,body.playing .game-shell .score-panel{background:transparent}
 }
+
+/* Unified Yatsun navigation, integrated tray action and settings. */
+.turn-status-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.site-header .turn-heading{width:auto}.site-header .turn-tools{display:block}.site-header .turn-tools p{display:none!important}
+.site-header .chat-button{display:grid;place-items:center;width:46px;height:46px;padding:0;border:1px solid #a7bca7;border-radius:50%;background:#f7faee;box-shadow:0 3px 8px #244b371c}
+.site-header .chat-glyph{width:27px;height:23px;background:linear-gradient(145deg,#789779,#506f58 70%,#344e3b);box-shadow:none}
+.site-header .chat-glyph:after{background:#344e3b}.site-header .social-icon,.site-header .settings-button{width:46px;height:46px}
+.settings-backdrop article{width:min(390px,100%);text-align:left}.settings-backdrop h2{margin-bottom:24px}.volume-setting{display:grid;grid-template-columns:1fr auto;gap:10px;color:#244d3b;font-weight:850}.volume-setting input{grid-column:1/-1;width:100%;accent-color:#315f49}.volume-setting output{font-variant-numeric:tabular-nums}.settings-backdrop #fullscreen-button{margin-top:24px;background:#315f49}
+.leaderboard-screen{min-width:0;padding:36px}.leaderboard-screen header small{color:#315f49;font-weight:900;letter-spacing:1.4px}.leaderboard-screen h1{margin:7px 0;font-size:40px}.leaderboard-screen header p{margin:0;color:#6f715f}.leaderboard-tabs{display:flex;gap:8px;margin:28px 0 16px}.leaderboard-tabs button{padding:10px 18px;border:0;border-radius:999px;background:#ebe5d8;color:#315f49;font-weight:850}.leaderboard-tabs .active{background:#315f49;color:#fff7df}.leaderboard-screen ol{margin:0;padding:0;list-style:none;border:1px solid #d7cbb8;border-radius:22px;background:#fffaf0;overflow:hidden}.leaderboard-screen li{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid #e7dcc9}.leaderboard-screen li:last-child{border:0}.leaderboard-screen li>span{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#e2ead9;color:#214c39;font-weight:950}.leaderboard-screen li strong{display:block;color:#183f31}.leaderboard-screen li small{color:#788074}.leaderboard-screen li>b{color:#315f49;font-size:18px}.leaderboard-screen li.me{background:#eef5df;box-shadow:inset 4px 0 #e1bd42}
+@media(min-width:901px){
+  body:not(.playing){background:#d8ceba}
+  body:not(.playing) main{max-width:1200px;min-height:100dvh;padding:84px 0 0;display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:auto 1fr;background:radial-gradient(circle at 48% 38%,#eef0df,#e4ddcc 62%,#cbbca2)}
+  body:not(.playing) .site-header{background:transparent;border-bottom:0}
+  body:not(.playing) .site-header::before{content:"";position:fixed;z-index:0;top:0;left:calc(max(0px,(100vw - 1200px)/2));width:250px;height:84px;background:#fff4e7}
+  body:not(.playing) .site-header .header-inner{position:relative;z-index:1}
+  body:not(.playing) .site-header .brand{position:fixed;top:6px;left:calc(max(0px,(100vw - 1200px)/2) + 62px);width:126px;height:72px}
+  body:not(.playing) .site-header nav{margin-left:auto}
+  .home-sidebar{grid-column:1;grid-row:1/3;position:relative;min-height:calc(100dvh - 84px);padding:28px 18px;background:#fff4e7 url('./assets/sidebar-forest-v1.webp') center bottom/100% auto no-repeat;border-right:1px solid #d9d0c1;box-shadow:8px 0 24px #5d49331c}
+  .home-sidebar::after{content:"Good dice\A Good times";position:absolute;left:0;right:0;bottom:35px;white-space:pre;text-align:center;color:#315b4d;font-family:"Segoe Script","Bradley Hand",cursive;font-size:18px;font-style:italic;line-height:1.05;transform:rotate(-5deg)}
+  .home-profile{position:relative;z-index:1;display:grid;grid-template-columns:48px 1fr;align-items:center;gap:11px;padding:13px;border:1px solid #cfe0cc;border-radius:18px;background:#fffdf8e8}.home-profile>span{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#163f32;color:#fff;font-weight:950}.home-profile small,.home-profile strong{display:block}.home-profile small{font-size:9px;color:#4c6d5c}.home-profile strong{color:#173f32}
+  .home-sidebar nav{position:relative;z-index:1;display:grid;gap:8px;margin-top:18px}.home-sidebar nav button{display:flex;align-items:center;gap:11px;min-height:46px;padding:0 15px;border:0;border-radius:14px;background:#ffffffa8;color:#315b4d;text-align:left;font-weight:850;cursor:pointer}.home-sidebar nav button.active,.home-sidebar nav button:hover{background:#315f49;color:#fff7df;box-shadow:0 5px 12px #294b3730}
+  body:not(.playing) .welcome-strip,body:not(.playing) .mode-screen,body:not(.playing) .lobby-screen,body:not(.playing) .journey-page,body:not(.playing) .leaderboard-screen,body:not(.playing) [id^="mp-"]{grid-column:2}
+  body:not(.playing) .welcome-strip{display:none!important}
+  body:not(.playing) .mode-screen{padding:34px;gap:20px}.mode-card{min-height:0;background:#fffaf0;border-color:#d8cdbb}.solo-card{background:linear-gradient(145deg,#fffaf0,#e5eee0)}.multi-card{background:linear-gradient(145deg,#fffaf0,#eee7d9)}
+}
+
+/* The artwork and the physical obstacle share this exact bottom-right action. */
+.game-shell .dice-tray{background-image:url('./assets/dice-tray-button-v2.webp')}
+body.playing .game-shell .roll-button{right:3.7%;bottom:5.9%;width:39%;min-width:0;height:12.5%;min-height:58px;margin:0;padding:8px 18px;grid-template-columns:1fr;border:0;border-radius:24px;background:transparent;color:#fff4cf;box-shadow:none;text-shadow:0 2px 2px #153e2e;z-index:8}
+body.playing .game-shell .roll-button:hover{transform:none;filter:brightness(1.12)}body.playing .game-shell .roll-button:active{transform:translateY(1px)}
+body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .game-shell .roll-button b{font-size:clamp(10px,1vw,15px);letter-spacing:.8px}body.playing .game-shell .roll-button small{color:#e9dec0}
+/* Content and pink badge stay above the rail tint; the gold outline stays last. */
+.game-shell .score-section-block td:has(.latest-score){z-index:110}.game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{z-index:111!important}.game-shell .latest-score::before{z-index:112}.game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:120}
+@media(max-width:900px){body.playing .game-shell .roll-button{right:3.7%;bottom:5.9%;width:39%;height:12.5%;min-height:48px;border-radius:18px}.home-sidebar{display:none}}
+.home-sidebar{display:none}
+@media(min-width:901px){body:not(.playing) .home-sidebar{display:block}}

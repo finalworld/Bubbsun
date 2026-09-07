@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { DiceBoard } from "./dice-view.mjs?v=held36";
-import { faceQuaternion } from "./dice-math.mjs?v=physics32";
+import { DiceBoard } from "./dice-view.mjs?v=physics46";
+import { faceQuaternion } from "./dice-math.mjs?v=physics46";
 import { createSocial } from "./social.mjs?v=lounge2";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=map19';
 let boardSkin='classic';
@@ -46,8 +46,15 @@ function saveMatch(){if(physicsBusy||online?.active||matchComplete())return;cons
 function clearMatch(){remoteMatch=null;localStorage.removeItem(matchKey());updateContinueUi();void matchApi("delete_match").catch((error)=>console.warn("Kunde inte ta bort servermatchen",error));}
 function updateContinueUi(){const saved=loadMatch(),button=$("#start-solo");if(!button)return;button.textContent=saved?`FORTSÄTT MOT ${opponentName(saved.opponentLevel||profile.unlocked).toLocaleUpperCase("sv-SE")} →`:`SPELA MOT ${opponentName().toLocaleUpperCase("sv-SE")} →`;}
 function opponentName(level=profile.unlocked) { return `${firstNames[(level-1)%firstNames.length]} ${lastNames[(Math.floor((level-1)/firstNames.length)+level-1)%lastNames.length]}`; }
-function updateProfileUi() { const {level,xp,needed}=playerProgress(),card=$(".solo-card"); card.querySelector(".xp-preview b").textContent=`Spelarnivå ${level}`; card.querySelector(".xp-preview small").textContent=`${xp} / ${needed} XP`; card.querySelector(".xp-preview em").style.width=`${xp/needed*100}%`; updateContinueUi(); }
-function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen","#campaign-screen","#collection-screen","#mp-home-screen","#mp-join-screen"].forEach((selector)=>$(selector)?.classList.toggle("hidden",selector!==id));$('.welcome-strip')?.classList.toggle('hidden',['#lobby-screen','#mp-home-screen','#mp-join-screen'].includes(id)); document.body.classList.toggle("playing",id==="#game-screen");if(id==='#game-screen'&&!online?.active)updateMatchPlayers(false); window.scrollTo({top:0,behavior:"smooth"}); }
+function updateProfileUi() { const {level,xp,needed}=playerProgress(),card=$(".solo-card"); card.querySelector(".xp-preview b").textContent=`Spelarnivå ${level}`; card.querySelector(".xp-preview small").textContent=`${xp} / ${needed} XP`; card.querySelector(".xp-preview em").style.width=`${xp/needed*100}%`; $("#home-player-name").textContent=authDisplayName; updateContinueUi(); }
+function showScreen(id) { ["#mode-screen","#lobby-screen","#game-screen","#leaderboard-screen","#campaign-screen","#collection-screen","#mp-home-screen","#mp-join-screen"].forEach((selector)=>$(selector)?.classList.toggle("hidden",selector!==id));$('.welcome-strip')?.classList.add('hidden'); document.body.classList.toggle("playing",id==="#game-screen");document.body.dataset.screen=id.slice(1);if(id==='#game-screen'&&!online?.active)updateMatchPlayers(false); window.scrollTo({top:0,behavior:"smooth"}); }
+
+function renderLeaderboard(){
+  const names=['Maja Tärning','Bertil Blixt','Siv Kastlund','Kent Plommon','Rut Rull','Göran Sexa','Maj-Britt Blixt'],me={name:authDisplayName,score:Math.max(120,Number(profile.bestScore)||0),level:playerProgress().level,me:true};
+  const rows=names.map((name,index)=>({name,score:286-index*17,level:Math.max(1,12-index)})).concat(me).sort((a,b)=>b.score-a.score).slice(0,10);
+  $('#leaderboard-list').innerHTML=rows.map((row,index)=>`<li class="${row.me?'me':''}"><span>${index+1}</span><div><strong>${row.name}</strong><small>Spelarnivå ${row.level}</small></div><b>${row.score} p</b></li>`).join('');
+}
+function openSettings(){const modal=$('#settings-modal');modal.classList.remove('hidden');$('#volume-control').focus();}
 
 
 function renderDice(animate=false) {
@@ -170,7 +177,7 @@ function finishMatch(){
   if(playerScores.l8===50)parts.push({label:'Yatzy',xp:25});if(playerTotal.bonus)parts.push({label:'Övre bonus',xp:15});if(categories.every(({id})=>(playerScores[id]??0)>0))parts.push({label:'Inga strykningar',xp:20});if(profile.winStreak>=3)parts.push({label:`${profile.winStreak} vinster i rad`,xp:15});
   const oldLevel=playerProgress().level;let unlockedSet=null;
   if(won){const reward=awardVictory(profile,opponentLevel);unlockedSet=reward.newSkin;delete reward.newSkin;profile=reward;}
-  const reward=parts.reduce((sum,p)=>sum+p.xp,0);clearMatch();profile.soloXp+=reward;saveProfile();updateProfileUi();
+  const reward=parts.reduce((sum,p)=>sum+p.xp,0);clearMatch();profile.soloXp+=reward;profile.bestScore=Math.max(Number(profile.bestScore)||0,player);saveProfile();updateProfileUi();
   $('#result-icon').textContent=unlockedSet?'🎁':won?'🏆':draw?'🤝':'🎲';$('#result-title').textContent=unlockedSet?`Nytt tärningsset: ${unlockedSet}!`:won?'Du vann!':draw?'Oavgjort!':'Nästa gång tar du det!';
   $('#result-copy').textContent=`+${reward} XP (${parts.map(p=>`${p.label} +${p.xp}`).join(', ')})${playerProgress().level>oldLevel?` · Spelarnivå ${playerProgress().level}!`:''}${won&&opponentLevel===100?' · Hela kartan avklarad!':won?` · Nästa: ${opponentName()}`:''}${unlockedSet?' · Välj ditt nya set under Mina tärningar.':''}`;
   $('#result-player').textContent=player;$('#result-ai').textContent=ai;$('#result-modal').classList.remove('hidden');busy=false;
@@ -232,4 +239,12 @@ $('#open-multi').addEventListener('click',e=>{e.stopImmediatePropagation();onlin
 for(const element of [$('#end-match'),$('#restart-match'),...$$('.back-to-modes'),$('#start-solo'),$('#play-again')])element.addEventListener('click',e=>{if(!online.active)return;if(onlineAnimating){e.stopImmediatePropagation();return;}online.leave();if(element.id==='end-match'||element.id==='restart-match'){e.stopImmediatePropagation();}},true);
 $("#restart-match").addEventListener("click",()=>{if(busy||physicsBusy||!confirm("Starta om matchen mot samma motståndare? Alla poäng i den här matchen försvinner."))return;clearMatch();playerScores={};aiScores={};lastScore=null;rolls=0;dice.forEach(die=>{die.held=false;});startGame();});
 $("#end-match").addEventListener("click",()=>{if(busy||physicsBusy||!confirm("Avsluta matchen? Den sparade matchen och alla poäng i den tas bort."))return;clearMatch();playerScores={};aiScores={};lastScore=null;$("#result-modal").classList.add("hidden");showScreen("#mode-screen");});
-$("#start-solo").addEventListener("click",startGame);$("#open-multi").addEventListener("click",()=>showScreen("#lobby-screen"));$("#refresh-games").addEventListener("click",(event)=>{event.currentTarget.textContent="↻ UPPDATERAR…";setTimeout(()=>event.currentTarget.textContent="↻ UPPDATERA",700);});$$('.back-to-modes').forEach((button)=>button.addEventListener("click",()=>{$("#result-modal").classList.add("hidden");showScreen("#mode-screen");}));$("#play-again").addEventListener("click",startGame);rollButton.addEventListener("click",roll);buildScorecard();renderDice();updateProfileUi();
+$("#start-solo").addEventListener("click",startGame);$("#open-multi").addEventListener("click",()=>showScreen("#lobby-screen"));$("#refresh-games").addEventListener("click",(event)=>{event.currentTarget.textContent="↻ UPPDATERAR…";setTimeout(()=>event.currentTarget.textContent="↻ UPPDATERA",700);});$$('.back-to-modes').forEach((button)=>button.addEventListener("click",()=>{$("#result-modal").classList.add("hidden");showScreen("#mode-screen");}));$("#play-again").addEventListener("click",startGame);rollButton.addEventListener("click",roll);
+
+const savedVolume=Math.min(1,Math.max(0,Number(localStorage.getItem('yatsun-volume')??.7)));diceSound.volume=savedVolume;$('#volume-control').value=String(Math.round(savedVolume*100));$('#volume-value').textContent=`${Math.round(savedVolume*100)}%`;
+$('#volume-control').addEventListener('input',event=>{const value=Number(event.currentTarget.value)/100;diceSound.volume=value;localStorage.setItem('yatsun-volume',String(value));$('#volume-value').textContent=`${Math.round(value*100)}%`;});
+$('#settings-button').addEventListener('click',openSettings);$('#close-settings').addEventListener('click',()=>$('#settings-modal').classList.add('hidden'));$('#settings-modal').addEventListener('pointerdown',event=>{if(event.target===event.currentTarget)event.currentTarget.classList.add('hidden');});
+$('#fullscreen-button').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();$('#fullscreen-button').textContent=document.fullscreenElement?'⛶ AVSLUTA HELSKÄRM':'⛶ HELSKÄRM';}catch(error){console.warn('Helskärm kunde inte aktiveras',error);}});
+$$('[data-home-view]').forEach(button=>button.addEventListener('click',()=>{const view=button.dataset.homeView;$$('[data-home-view]').forEach(item=>item.classList.toggle('active',item===button));if(view==='solo')showScreen('#mode-screen');else if(view==='multi')online.lobby();else if(view==='leaderboard'){renderLeaderboard();showScreen('#leaderboard-screen');}else openSettings();}));
+$('.leaderboard-tabs').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;$$('.leaderboard-tabs button').forEach(item=>item.classList.toggle('active',item===button));renderLeaderboard();});
+renderLeaderboard();buildScorecard();renderDice();updateProfileUi();

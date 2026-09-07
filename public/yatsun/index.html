@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=seamlesschrome45" />
+    <link rel="stylesheet" href="./styles.css?v=unifiednav46" />
     <link rel="stylesheet" href="./social.css?v=20260903a" />
     <link rel="stylesheet" href="./progression.css?v=map16" />
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -18,10 +18,8 @@
           <img src="./yatsun-logo.png" alt="Yatsun" />
         </a>
         <nav aria-label="Huvudmeny">
-          <button class="nav-link active" type="button">Spela</button>
-          <button class="nav-link" type="button">Topplista</button>
           <div class="turn-heading" aria-live="polite">
-            <div><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
+            <div class="turn-status-hidden"><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
             <div class="turn-tools"><p id="roll-hint" class="hidden">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button" aria-label="Öppna reaktioner"><span class="chat-glyph" aria-hidden="true"></span></button></div>
             <div id="reaction-bubble-player" class="reaction-bubble player-reaction hidden"><i></i></div>
             <div id="reaction-bubble-ai" class="reaction-bubble ai-reaction hidden"><i></i></div>
@@ -30,6 +28,7 @@
               <div id="reaction-options"></div>
             </div>
           </div>
+          <button id="settings-button" class="social-icon settings-button" type="button" aria-label="Inställningar" title="Inställningar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 9 19.37a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15 1.7 1.7 0 0 0 3.08 14H3v-4h.08A1.7 1.7 0 0 0 4.63 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63 1.7 1.7 0 0 0 10 3.08V3h4v.08A1.7 1.7 0 0 0 15 4.63a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9 1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z"/></svg></button>
           <button id="profile-button" class="profile-button" type="button" aria-label="Logga in eller öppna din profil">
             <span id="profile-avatar">GS</span><b id="profile-name">Logga in</b>
           </button>
@@ -38,6 +37,10 @@
     </header>
 
     <main>
+      <aside class="home-sidebar" aria-label="Yatsunmeny">
+        <div class="home-profile"><span>DU</span><div><small>VÄLKOMMEN</small><strong id="home-player-name">Gästspelare</strong></div></div>
+        <nav><button type="button" data-home-view="solo" class="active">🎲 <span>Singelplayer</span></button><button type="button" data-home-view="multi">♟ <span>Multiplayer</span></button><button type="button" data-home-view="leaderboard">🏆 <span>Topplista</span></button><button type="button" data-home-view="settings">⚙ <span>Inställningar</span></button></nav>
+      </aside>
       <section class="welcome-strip">
         <div>
           <small>SVENSK YATZY · SOLO ELLER MED EN VÄN</small>
@@ -52,8 +55,9 @@
       <section id="mode-screen" class="mode-screen">
         <article class="mode-card solo-card"><span class="mode-icon solo-mode-icon" aria-hidden="true"><svg viewBox="0 0 72 72"><path class="dice-glow" d="M12 26l27-14 23 14-4 31-27 6-20-17z"/><path class="dice-top" d="M12 22l27-13 23 13-27 14z"/><path class="dice-left" d="M12 22l23 14-3 27-21-16z"/><path class="dice-right" d="M35 36l27-14-4 30-26 11z"/><g class="pips-top"><ellipse cx="27" cy="19" rx="3.1" ry="2.2"/><ellipse cx="37" cy="23" rx="3.1" ry="2.2"/><ellipse cx="47" cy="25" rx="3.1" ry="2.2"/></g><g class="pips-left"><ellipse cx="19" cy="31" rx="2.7" ry="3.4"/><ellipse cx="29" cy="38" rx="2.7" ry="3.4"/><ellipse cx="21.5" cy="43" rx="2.7" ry="3.4"/><ellipse cx="14.5" cy="45" rx="2.7" ry="3.4"/><ellipse cx="26" cy="54" rx="2.7" ry="3.4"/></g><g class="pips-right"><ellipse cx="45" cy="34" rx="2.8" ry="3.4"/><ellipse cx="56" cy="29" rx="2.8" ry="3.4"/><ellipse cx="43" cy="44" rx="2.8" ry="3.4"/><ellipse cx="54" cy="40" rx="2.8" ry="3.4"/><ellipse cx="40" cy="55" rx="2.8" ry="3.4"/><ellipse cx="52" cy="50" rx="2.8" ry="3.4"/></g></svg></span><small>100 MOTSTÅNDARE</small><h2>Singelplayer</h2><p>Börja mot Maj-Britt Blixt och lås upp en ny svensk Yatsun-profil för varje seger.</p><div class="xp-preview"><span><b>Spelarnivå 1</b><small>0 / 100 XP</small></span><i><em></em></i></div><button id="start-solo" type="button">SPELA MOT MAJ-BRITT →</button></article>
         <article class="mode-card multi-card"><span class="mode-icon multi-mode-icon" aria-hidden="true"><svg viewBox="0 0 82 72"><g class="dice-behind"><path class="dice-top" d="M33 20l20-10 19 10-21 11z"/><path class="dice-left" d="M33 20l18 11-2 23-17-12z"/><path class="dice-right" d="M51 31l21-11-3 23-20 11z"/><g class="pips-top"><ellipse cx="46" cy="17" rx="2.5" ry="2"/><ellipse cx="59" cy="22" rx="2.5" ry="2"/></g><g class="pips-right"><ellipse cx="59" cy="30" rx="2.4" ry="3"/><ellipse cx="68" cy="26" rx="2.4" ry="3"/><ellipse cx="57" cy="43" rx="2.4" ry="3"/><ellipse cx="66" cy="39" rx="2.4" ry="3"/></g></g><g><path class="dice-glow" d="M7 28l25-13 22 13-3 28-25 7-20-15z"/><path class="dice-top" d="M7 24l25-12 22 12-25 13z"/><path class="dice-left" d="M7 24l22 13-3 26-20-15z"/><path class="dice-right" d="M29 37l25-13-3 27-25 12z"/><g class="pips-top"><ellipse cx="22" cy="21" rx="3" ry="2.2"/><ellipse cx="39" cy="27" rx="3" ry="2.2"/></g><g class="pips-left"><ellipse cx="17" cy="34" rx="2.6" ry="3.3"/><ellipse cx="25" cy="40" rx="2.6" ry="3.3"/><ellipse cx="13" cy="47" rx="2.6" ry="3.3"/><ellipse cx="22" cy="54" rx="2.6" ry="3.3"/></g><g class="pips-right"><ellipse cx="42" cy="33" rx="2.8" ry="3.4"/><ellipse cx="50" cy="29" rx="2.8" ry="3.4"/><ellipse cx="40" cy="43" rx="2.8" ry="3.4"/><ellipse cx="35" cy="55" rx="2.8" ry="3.4"/><ellipse cx="47" cy="50" rx="2.8" ry="3.4"/></g></g></svg></span><small>ÖPPNA BORD · 2 SPELARE</small><h2>Multiplayer</h2><p>Skapa ett eget spel eller anslut till ett ledigt bord. Spela nu eller fortsätt en annan dag – matchen sparas efter varje kast.</p><button id="open-multi" type="button">SKAPA ELLER HITTA SPEL →</button></article>
-        <aside class="coming-panel"><b>Spela i din takt</b><span>Samma inloggning som Bubbsun</span><span>Lägg till vänner med medlemskod</span><span>Fortsätt matchen när du vill</span><span>Automatiska uppdateringar när ni spelar</span></aside>
       </section>
+
+      <section id="leaderboard-screen" class="leaderboard-screen hidden"><header><small>YATSUNS BÄSTA</small><h1>Topplista</h1><p>De skickligaste tärningskastarna just nu.</p></header><div class="leaderboard-tabs"><button class="active" type="button">Singelplayer</button><button type="button">Multiplayer</button></div><ol id="leaderboard-list"></ol></section>
 
       <section id="lobby-screen" class="lobby-screen hidden">
         <header><div><small>MULTIPLAYER</small><h2>Hitta ett Yatsun-bord</h2><p>Publika spel uppdateras när du trycker på knappen.</p></div><button id="refresh-games" type="button">↻ UPPDATERA</button></header>
@@ -83,10 +87,10 @@
           <div class="dice-tray" aria-label="Tärningsbricka">
             <div id="dice" class="dice-row"></div>
             <div class="tray-shadow"></div>
+            <button id="roll-button" class="roll-button" type="button">
+              <span class="roll-die-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>KASTA TÄRNINGARNA</b><small>3 kast kvar</small>
+            </button>
           </div>
-          <button id="roll-button" class="roll-button" type="button">
-            <span class="roll-die-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>KASTA TÄRNINGARNA</b><small>3 kast kvar</small>
-          </button>
         </section>
 
         <aside class="score-panel">
@@ -128,6 +132,8 @@
       </article>
     </div>
 
-    <script type="module" src="./app.js?v=score36"></script>
+    <div id="settings-modal" class="result-backdrop settings-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><article><button id="close-settings" class="modal-close" type="button" aria-label="Stäng">×</button><small>YATSUN</small><h2 id="settings-title">Inställningar</h2><label class="volume-setting"><span>Ljudeffekter</span><output id="volume-value">70%</output><input id="volume-control" type="range" min="0" max="100" value="70" /></label><button id="fullscreen-button" type="button">⛶ HELSKÄRM</button></article></div>
+
+    <script type="module" src="./app.js?v=unifiednav46"></script>
   </body>
 </html>

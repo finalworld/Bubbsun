@@ -59,6 +59,16 @@ jobs:
           put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/styles.css -o public/yatsun/styles.css
           put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
+          put public/yatsun/assets/campaign-map-01.webp -o public/yatsun/assets/campaign-map-01.webp
+          put public/yatsun/assets/campaign-map-02.webp -o public/yatsun/assets/campaign-map-02.webp
+          put public/yatsun/assets/campaign-map-03.webp -o public/yatsun/assets/campaign-map-03.webp
+          put public/yatsun/assets/campaign-map-04.webp -o public/yatsun/assets/campaign-map-04.webp
+          put public/yatsun/assets/campaign-map-05.webp -o public/yatsun/assets/campaign-map-05.webp
+          put public/yatsun/assets/campaign-map-06.webp -o public/yatsun/assets/campaign-map-06.webp
+          put public/yatsun/assets/campaign-map-07.webp -o public/yatsun/assets/campaign-map-07.webp
+          put public/yatsun/assets/campaign-map-08.webp -o public/yatsun/assets/campaign-map-08.webp
+          put public/yatsun/assets/campaign-map-09.webp -o public/yatsun/assets/campaign-map-09.webp
+          put public/yatsun/assets/campaign-map-10.webp -o public/yatsun/assets/campaign-map-10.webp
           put public/yatsun/vendor/rapier.mjs -o public/yatsun/vendor/rapier.mjs
           put public/yatsun/vendor/rapier.LICENSE -o public/yatsun/vendor/rapier.LICENSE
           put public/yatsun/dice-math.mjs -o public/yatsun/dice-math.mjs

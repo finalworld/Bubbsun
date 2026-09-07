@@ -1,4 +1,5 @@
 const atlasUrl=new URL('./assets/dice-materials.png',import.meta.url).href;
+const campaignBiomes=Array.from({length:10},(_,index)=>new URL(`./assets/campaign-map-${String(index+1).padStart(2,'0')}.webp`,import.meta.url).href);
 let sharedAtlas=null,sharedAtlasReady=null;
 function loadSharedAtlas(THREE){if(!sharedAtlasReady){sharedAtlasReady=new Promise(resolve=>{sharedAtlas=new THREE.TextureLoader().load(atlasUrl,resolve,undefined,resolve);sharedAtlas.colorSpace=THREE.SRGBColorSpace;sharedAtlas.minFilter=THREE.LinearFilter;sharedAtlas.magFilter=THREE.LinearFilter;});}return{texture:sharedAtlas,ready:sharedAtlasReady};}
 export const skins=[
@@ -51,7 +52,9 @@ export function createProgression({profile,select,start,name,avatar,show}){
   function openMap(){
     header(map,'Din väg till 100');const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
     map.append(el('p','Besegra motståndarna längs vägen. Var tionde seger låser upp ett nytt tärningsset.'));
-    const board=el('div','','campaign-board');map.append(board);enableDragScroll(board);
+    const board=el('div','','campaign-board'),biomes=el('div','','campaign-biomes');
+    campaignBiomes.forEach((source,index)=>{const image=document.createElement('img');image.src=source;image.alt='';image.decoding='async';image.loading=index===Math.floor((current-1)/10)?'eager':'lazy';image.style.top=`${(9-index)*810-20}px`;biomes.append(image);});
+    board.append(biomes);map.append(board);enableDragScroll(board);
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 600 8100');svg.setAttribute('preserveAspectRatio','none');svg.classList.add('campaign-road');
     const points=Array.from({length:100},(_,i)=>({x:300+Math.sin(i*Math.PI/6)*185,y:8000-i*80}));
     const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' '));svg.append(path);board.append(svg);

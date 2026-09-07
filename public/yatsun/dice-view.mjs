@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {paintDice,skinById} from './progression.mjs?v=materials18';
+import {paintDice,skinById} from './progression.mjs?v=map19';
 import {faceQuaternion,sampleThrow,upperFace} from './dice-math.mjs?v=physics32';
 
 const modelSource=new GLTFLoader().loadAsync(new URL('./assets/3d/D6_A.gltf',import.meta.url).href);

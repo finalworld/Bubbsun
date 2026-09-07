@@ -48,7 +48,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
   const map=document.createElement('section'),collection=document.createElement('section');map.id='campaign-screen';collection.id='collection-screen';map.className=collection.className='journey-page hidden';document.querySelector('main').append(map,collection);
   function el(tag,text,cls){const e=document.createElement(tag);e.textContent=text;if(cls)e.className=cls;return e;}
   function btn(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
-  function header(root,title){root.replaceChildren();root.append(btn('← Till spellägen',()=>show('#mode-screen')),el('h1',title));}
+  function header(root,title,showBack=true){root.replaceChildren();if(showBack)root.append(btn('← Till spellägen',()=>show('#mode-screen')));root.append(el('h1',title));}
   function openMap(){
     header(map,'Din väg till 100');const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
     map.append(el('p','Besegra motståndarna längs vägen. Var tionde seger låser upp ett nytt tärningsset.'));
@@ -65,7 +65,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
     });show('#campaign-screen');requestAnimationFrame(()=>map.querySelector('#campaign-current').scrollIntoView({block:'center'}));
   }
   function openCollection(){
-    header(collection,'Mina tärningar');collection.append(el('p','Samma fysik och chanser – välj din stil. Nya set efter var tionde besegrad motståndare.'));
+    header(collection,'Mina tärningar',false);collection.append(el('p','Samma fysik och chanser – välj din stil. Nya set efter var tionde besegrad motståndare.'));
     const grid=el('div','','skin-grid');collection.append(grid);const p=profile(),selected=activeSkin(p);
     for(const skin of skins){const available=p.admin||skin.level<=completedLevels(p),card=el('article','','skin-card');const preview=el('div','','skin-preview'),[ax,ay,aw,ah]=skin.atlas;preview.style.backgroundColor=skin.body;preview.style.backgroundImage=`url('${atlasUrl}')`;preview.style.backgroundSize=`${1536*100/aw}px ${1024*100/ah}px`;preview.style.backgroundPosition=`-${ax*100/aw}px -${ay*100/ah}px`;preview.style.color=skin.pips;for(const [x,y] of [[27,27],[73,27],[50,50],[27,73],[73,73]]){const dot=el('i','','skin-dot');dot.style.left=x+'%';dot.style.top=y+'%';preview.append(dot);}card.append(preview,el('h2',skin.name),el('p',p.admin&&!skin.level?'Administratör · startset':p.admin?'Administratör · tillgänglig':skin.level?`Besegra motståndare ${skin.level}`:'Ditt startset'));
       const b=btn(!available?'🔒 Låst':skin.id===selected.id?'✓ Aktiv':'Använd',async()=>{b.disabled=true;try{await select(skin.id);openCollection();}catch(e){b.disabled=false;card.append(el('p',e.message));}});b.disabled=!available||skin.id===selected.id;card.append(b);grid.append(card);

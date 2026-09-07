@@ -4,7 +4,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12
 import { DiceBoard } from "./dice-view.mjs?v=physics46";
 import { faceQuaternion } from "./dice-math.mjs?v=physics46";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=map19';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=sidebar20';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -248,6 +248,6 @@ const savedVolume=Math.min(1,Math.max(0,Number(localStorage.getItem('yatsun-volu
 $('#volume-control').addEventListener('input',event=>{const value=Number(event.currentTarget.value)/100;diceSound.volume=value;$('#volume-value').textContent=`${Math.round(value*100)}%`;});
 $('#settings-button').addEventListener('click',openSettings);$('#close-settings').addEventListener('click',cancelSettings);$('#cancel-settings').addEventListener('click',cancelSettings);$('#save-settings').addEventListener('click',saveSettings);$('#settings-modal').addEventListener('pointerdown',event=>{if(event.target===event.currentTarget)cancelSettings();});
 $('#fullscreen-button').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();$('#fullscreen-button').textContent=document.fullscreenElement?'⛶ AVSLUTA HELSKÄRM':'⛶ HELSKÄRM';}catch(error){console.warn('Helskärm kunde inte aktiveras',error);}});
-$$('[data-home-view]').forEach(button=>button.addEventListener('click',()=>{const view=button.dataset.homeView;$$('[data-home-view]').forEach(item=>item.classList.toggle('active',item===button));if(view==='solo')showScreen('#mode-screen');else if(view==='multi')online.lobby();else if(view==='leaderboard'){renderLeaderboard();showScreen('#leaderboard-screen');}else openSettings();}));
+$$('[data-home-view]').forEach(button=>button.addEventListener('click',()=>{const view=button.dataset.homeView;$$('[data-home-view]').forEach(item=>item.classList.toggle('active',item===button));if(view==='solo')showScreen('#mode-screen');else if(view==='multi')online.lobby();else if(view==='leaderboard'){renderLeaderboard();showScreen('#leaderboard-screen');}else if(view==='collection')journey.openCollection();else openSettings();}));
 $('.leaderboard-tabs').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;$$('.leaderboard-tabs button').forEach(item=>item.classList.toggle('active',item===button));renderLeaderboard();});
 renderLeaderboard();buildScorecard();renderDice();updateProfileUi();

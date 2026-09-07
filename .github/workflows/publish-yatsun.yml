@@ -60,6 +60,7 @@ jobs:
           put public/yatsun/styles.css -o public/yatsun/styles.css
           put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
           put public/yatsun/assets/dice-tray-luxury-v1.webp -o public/yatsun/assets/dice-tray-luxury-v1.webp
+          put public/yatsun/assets/sidebar-forest-v1.webp -o public/yatsun/assets/sidebar-forest-v1.webp
           put public/yatsun/assets/campaign-map-01.webp -o public/yatsun/assets/campaign-map-01.webp
           put public/yatsun/assets/campaign-map-02.webp -o public/yatsun/assets/campaign-map-02.webp
           put public/yatsun/assets/campaign-map-03.webp -o public/yatsun/assets/campaign-map-03.webp

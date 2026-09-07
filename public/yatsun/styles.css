@@ -388,8 +388,8 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
 /* The computer reaction belongs to the opponent card, not between the tray
    and scorecard. Anchor it at the right edge of the desktop player panel. */
 @media(min-width:901px){
-  body.playing .site-header .ai-reaction{position:fixed;top:235px!important;left:calc(max(0px,(100vw - 1200px)/2) + 170px)!important;right:auto!important;transform-origin:0 50%}
-  body.playing .site-header .ai-reaction::after{top:34px!important;left:-11px!important;right:auto!important}
+  body.playing .site-header .ai-reaction{position:absolute;top:55px!important;right:0!important;left:auto!important;transform-origin:90% 0}
+  body.playing .site-header .ai-reaction::after{top:-11px!important;right:14px!important;left:auto!important}
   body.playing .game-shell .dice-tray{inset:-21px 16px 92px}
 }
 .home-sidebar{display:none}

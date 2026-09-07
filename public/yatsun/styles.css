@@ -328,3 +328,16 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   .game-shell #end-match::before{content:"◌";margin-right:9px;font-size:17px;vertical-align:-2px}
   .game-shell .test-yatsun{display:none}
 }
+
+/* Desktop match chrome: the illustrated sidebar owns the full viewport edge,
+   including the former logo area, while the rest uses the table palette. */
+@media(min-width:901px){
+  body.playing{background:#d8ceba}
+  body.playing main{background:radial-gradient(circle at 48% 38%,#eef0df 0 20%,#e4ddcc 62%,#cbbca2 100%)}
+  body.playing .site-header{background:transparent;border-bottom-color:#bba98e}
+  body.playing .game-shell{overflow:visible;background:transparent}
+  body.playing .game-shell .players-panel{z-index:20;top:-84px;height:100dvh;margin-bottom:-84px;padding-top:102px;box-shadow:8px 0 24px #5d49331c}
+  body.playing .site-header .brand{position:fixed;z-index:55;top:6px;left:calc(max(0px,(100vw - 1200px)/2) + 62px);width:126px;height:72px}
+  body.playing .site-header .brand img{width:126px;height:72px}
+  body.playing .game-shell .table-area{background:radial-gradient(circle at 50% 38%,#edf0df 0 18%,#e4decc 66%,#cdbfa5 100%)}
+}

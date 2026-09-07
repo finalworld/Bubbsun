@@ -329,6 +329,14 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   .game-shell .test-yatsun{display:none}
 }
 
+/* The newest score belongs above the translucent turn rail. Its compact pink
+   outline stays inside the gold edges, while the tilted NY sticker remains
+   completely visible. */
+.game-shell .score-section-block td:has(.latest-score){z-index:121}
+.game-shell .scored .score-choice.latest-score,
+.game-shell .ai-score.filled span.latest-score{z-index:122!important}
+.game-shell .latest-score::before{z-index:123}
+
 /* Desktop match chrome: the illustrated sidebar owns the full viewport edge,
    including the former logo area, while the rest uses the table palette. */
 @media(min-width:901px){

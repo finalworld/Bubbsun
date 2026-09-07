@@ -346,8 +346,8 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   body.playing .site-header .header-inner{position:relative;z-index:1}
   body.playing .game-shell{overflow:visible;background:transparent}
   body.playing .game-shell .players-panel{z-index:20;top:0;height:auto;margin-bottom:0;padding-top:23px;background-color:#fff4e7;box-shadow:8px 0 24px #5d49331c}
-  body.playing .site-header .brand{position:fixed;z-index:55;top:6px;left:calc(max(0px,(100vw - 1200px)/2) + 30px);width:190px;height:72px}
-  body.playing .site-header .brand img{width:190px;height:72px}
+  .site-header .brand{position:fixed;z-index:55;top:4px;left:calc(max(0px,(100vw - 1200px)/2) + 15px);width:220px;height:76px}
+  .site-header .brand img{width:220px;height:76px}
   body.playing .game-shell .table-area,body.playing .game-shell .score-panel{background:transparent}
 }
 
@@ -364,7 +364,6 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   body:not(.playing) .site-header{background:transparent;border-bottom:0}
   body:not(.playing) .site-header::before{content:"";position:fixed;z-index:0;top:0;left:calc(max(0px,(100vw - 1200px)/2));width:250px;height:84px;background:#fff4e7}
   body:not(.playing) .site-header .header-inner{position:relative;z-index:1}
-  body:not(.playing) .site-header .brand{position:fixed;top:6px;left:calc(max(0px,(100vw - 1200px)/2) + 30px);width:190px;height:72px}
   body:not(.playing) .site-header nav{margin-left:auto}
   .home-sidebar{grid-column:1;grid-row:1/3;position:sticky;top:84px;align-self:start;height:calc(100dvh - 84px);min-height:0;padding:28px 18px;background:#fff4e7 url('./assets/sidebar-forest-v1.webp') center bottom/100% auto no-repeat;border-right:1px solid #d9d0c1;box-shadow:8px 0 24px #5d49331c}
   .home-sidebar::after{content:"Good dice\A Good times";position:absolute;left:0;right:0;bottom:35px;white-space:pre;text-align:center;color:#315b4d;font-family:"Segoe Script","Bradley Hand",cursive;font-size:18px;font-style:italic;line-height:1.05;transform:rotate(-5deg)}

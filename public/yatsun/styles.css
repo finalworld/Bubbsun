@@ -341,10 +341,12 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 @media(min-width:901px){
   body.playing{background:#d8ceba}
   body.playing main{background:radial-gradient(circle at 48% 38%,#eef0df 0 20%,#e4ddcc 62%,#cbbca2 100%)}
-  body.playing .site-header{background:transparent;border-bottom-color:#bba98e}
+  body.playing .site-header{background:transparent;border-bottom-color:transparent}
+  body.playing .site-header::before{content:"";position:fixed;z-index:0;inset:0 auto auto calc(max(0px,(100vw - 1200px)/2));width:250px;height:84px;background:#fff4e7}
+  body.playing .site-header .header-inner{position:relative;z-index:1}
   body.playing .game-shell{overflow:visible;background:transparent}
-  body.playing .game-shell .players-panel{z-index:20;top:-84px;height:100dvh;margin-bottom:-84px;padding-top:102px;box-shadow:8px 0 24px #5d49331c}
+  body.playing .game-shell .players-panel{z-index:20;top:0;height:auto;margin-bottom:0;padding-top:23px;background-color:#fff4e7;box-shadow:8px 0 24px #5d49331c}
   body.playing .site-header .brand{position:fixed;z-index:55;top:6px;left:calc(max(0px,(100vw - 1200px)/2) + 62px);width:126px;height:72px}
   body.playing .site-header .brand img{width:126px;height:72px}
-  body.playing .game-shell .table-area{background:radial-gradient(circle at 50% 38%,#edf0df 0 18%,#e4decc 66%,#cdbfa5 100%)}
+  body.playing .game-shell .table-area,body.playing .game-shell .score-panel{background:transparent}
 }

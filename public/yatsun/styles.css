@@ -288,3 +288,9 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .dice-hit-target.held::after{content:"✓ SPARAD";position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);width:max-content;padding:4px 7px;border:1px solid #fff4cf;border-radius:999px;background:#315f49;color:#fff;font-size:9px;font-weight:900;line-height:1;letter-spacing:.5px;box-shadow:0 2px 3px #173a2a55;pointer-events:none}
 .physics-rolling .dice-hit-target{pointer-events:none}
 @media(max-width:680px){.dice-hit-target.held::after{bottom:-7px;padding:3px 5px;font-size:7px}}
+
+/* The artwork includes the rails. Physics/rendering live only inside the inner
+   gold line, so a whole die can settle on green felt but never on an edge. */
+.game-shell .dice-tray{border:0;outline:0;border-radius:8%;background:transparent url('./assets/dice-tray-luxury-v1.webp') center/100% 100% no-repeat;box-shadow:none}
+.game-shell .dice-tray::after{display:none}
+.game-shell .dice-row{inset:10.2%}

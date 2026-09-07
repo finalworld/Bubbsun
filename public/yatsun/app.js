@@ -54,7 +54,10 @@ function renderLeaderboard(){
   const rows=names.map((name,index)=>({name,score:286-index*17,level:Math.max(1,12-index)})).concat(me).sort((a,b)=>b.score-a.score).slice(0,10);
   $('#leaderboard-list').innerHTML=rows.map((row,index)=>`<li class="${row.me?'me':''}"><span>${index+1}</span><div><strong>${row.name}</strong><small>Spelarnivå ${row.level}</small></div><b>${row.score} p</b></li>`).join('');
 }
-function openSettings(){const modal=$('#settings-modal');modal.classList.remove('hidden');$('#volume-control').focus();}
+let settingsOriginalVolume=.7;
+function openSettings(){settingsOriginalVolume=diceSound.volume;const percent=Math.round(settingsOriginalVolume*100);$('#volume-control').value=String(percent);$('#volume-value').textContent=`${percent}%`;$('#settings-modal').classList.remove('hidden');$('#volume-control').focus();}
+function cancelSettings(){diceSound.volume=settingsOriginalVolume;$('#settings-modal').classList.add('hidden');}
+function saveSettings(){localStorage.setItem('yatsun-volume',String(diceSound.volume));$('#settings-modal').classList.add('hidden');}
 
 
 function renderDice(animate=false) {
@@ -242,8 +245,8 @@ $("#end-match").addEventListener("click",()=>{if(busy||physicsBusy||!confirm("Av
 $("#start-solo").addEventListener("click",startGame);$("#open-multi").addEventListener("click",()=>showScreen("#lobby-screen"));$("#refresh-games").addEventListener("click",(event)=>{event.currentTarget.textContent="↻ UPPDATERAR…";setTimeout(()=>event.currentTarget.textContent="↻ UPPDATERA",700);});$$('.back-to-modes').forEach((button)=>button.addEventListener("click",()=>{$("#result-modal").classList.add("hidden");showScreen("#mode-screen");}));$("#play-again").addEventListener("click",startGame);rollButton.addEventListener("click",roll);
 
 const savedVolume=Math.min(1,Math.max(0,Number(localStorage.getItem('yatsun-volume')??.7)));diceSound.volume=savedVolume;$('#volume-control').value=String(Math.round(savedVolume*100));$('#volume-value').textContent=`${Math.round(savedVolume*100)}%`;
-$('#volume-control').addEventListener('input',event=>{const value=Number(event.currentTarget.value)/100;diceSound.volume=value;localStorage.setItem('yatsun-volume',String(value));$('#volume-value').textContent=`${Math.round(value*100)}%`;});
-$('#settings-button').addEventListener('click',openSettings);$('#close-settings').addEventListener('click',()=>$('#settings-modal').classList.add('hidden'));$('#settings-modal').addEventListener('pointerdown',event=>{if(event.target===event.currentTarget)event.currentTarget.classList.add('hidden');});
+$('#volume-control').addEventListener('input',event=>{const value=Number(event.currentTarget.value)/100;diceSound.volume=value;$('#volume-value').textContent=`${Math.round(value*100)}%`;});
+$('#settings-button').addEventListener('click',openSettings);$('#close-settings').addEventListener('click',cancelSettings);$('#cancel-settings').addEventListener('click',cancelSettings);$('#save-settings').addEventListener('click',saveSettings);$('#settings-modal').addEventListener('pointerdown',event=>{if(event.target===event.currentTarget)cancelSettings();});
 $('#fullscreen-button').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();$('#fullscreen-button').textContent=document.fullscreenElement?'⛶ AVSLUTA HELSKÄRM':'⛶ HELSKÄRM';}catch(error){console.warn('Helskärm kunde inte aktiveras',error);}});
 $$('[data-home-view]').forEach(button=>button.addEventListener('click',()=>{const view=button.dataset.homeView;$$('[data-home-view]').forEach(item=>item.classList.toggle('active',item===button));if(view==='solo')showScreen('#mode-screen');else if(view==='multi')online.lobby();else if(view==='leaderboard'){renderLeaderboard();showScreen('#leaderboard-screen');}else openSettings();}));
 $('.leaderboard-tabs').addEventListener('click',event=>{const button=event.target.closest('button');if(!button)return;$$('.leaderboard-tabs button').forEach(item=>item.classList.toggle('active',item===button));renderLeaderboard();});

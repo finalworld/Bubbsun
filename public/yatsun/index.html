@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=unifiednav46" />
+    <link rel="stylesheet" href="./styles.css?v=navfix47" />
     <link rel="stylesheet" href="./social.css?v=20260903a" />
     <link rel="stylesheet" href="./progression.css?v=map16" />
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -20,7 +20,7 @@
         <nav aria-label="Huvudmeny">
           <div class="turn-heading" aria-live="polite">
             <div class="turn-status-hidden"><small>KAST <b id="roll-number">1</b> AV 3</small><h2>Din tur!</h2></div>
-            <div class="turn-tools"><p id="roll-hint" class="hidden">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button" aria-label="Öppna reaktioner"><span class="chat-glyph" aria-hidden="true"></span></button></div>
+            <div class="turn-tools"><p id="roll-hint" class="hidden">Kasta alla fem tärningarna.</p><button id="chat-button" class="chat-button" type="button" aria-label="Öppna reaktioner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 15a4 4 0 0 1-4 4H8l-5 3 1.5-5A7 7 0 0 1 3 13V9a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></button></div>
             <div id="reaction-bubble-player" class="reaction-bubble player-reaction hidden"><i></i></div>
             <div id="reaction-bubble-ai" class="reaction-bubble ai-reaction hidden"><i></i></div>
             <div id="reaction-picker" class="reaction-picker hidden" aria-label="Välj en reaktion">
@@ -132,8 +132,8 @@
       </article>
     </div>
 
-    <div id="settings-modal" class="result-backdrop settings-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><article><button id="close-settings" class="modal-close" type="button" aria-label="Stäng">×</button><small>YATSUN</small><h2 id="settings-title">Inställningar</h2><label class="volume-setting"><span>Ljudeffekter</span><output id="volume-value">70%</output><input id="volume-control" type="range" min="0" max="100" value="70" /></label><button id="fullscreen-button" type="button">⛶ HELSKÄRM</button></article></div>
+    <div id="settings-modal" class="result-backdrop settings-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><article><button id="close-settings" class="modal-close" type="button" aria-label="Stäng">×</button><small>YATSUN</small><h2 id="settings-title">Inställningar</h2><label class="volume-setting"><span>Ljudeffekter</span><output id="volume-value">70%</output><input id="volume-control" type="range" min="0" max="100" value="70" /></label><button id="fullscreen-button" type="button">⛶ HELSKÄRM</button><div class="settings-actions"><button id="cancel-settings" class="subtle" type="button">AVBRYT</button><button id="save-settings" type="button">OK</button></div></article></div>
 
-    <script type="module" src="./app.js?v=unifiednav46"></script>
+    <script type="module" src="./app.js?v=navfix47"></script>
   </body>
 </html>

@@ -209,7 +209,7 @@ function updateMatchPlayers(multiplayer,room=null){
   cards[0].classList.toggle('current',!done&&mine);cards[1].classList.toggle('current',!done&&!mine);
   cards[1].querySelector('.avatar').textContent=multiplayer?(room.otherName||'V').slice(0,1).toLocaleUpperCase('sv-SE'):'AI';
   if(multiplayer){cards[0].querySelector('span').textContent='Spela nu eller fortsätt senare';cards[1].querySelector('strong').textContent=room.otherName||'Vän';cards[1].querySelector('small').textContent=done?'MATCHEN KLAR':mine?'MOTSTÅNDARE':'MOTSTÅNDARENS TUR';cards[1].querySelector('span').textContent='Multiplayer · matchen sparas';}
-  else{cards[1].querySelector('small').textContent='';cards[1].querySelector('span').textContent=`Nivå: ${loadMatch()?.opponentLevel||profile.unlocked}/100`;}
+  else{cards[1].querySelector('small').textContent='';cards[1].querySelector('span').textContent=`Nivå: ${typeof profile==='undefined'?1:profile.unlocked}/100`;}
   setScoreTurn(mine,multiplayer?(room.otherName||'Vän'):(cards[1].querySelector('strong').textContent||'AI'),done);
 }
 function setScoreTurn(mine,otherName='AI',done=false){const panel=$('.score-panel');if(!panel)return;panel.classList.toggle('player-turn',!done&&mine);panel.classList.toggle('opponent-turn',!done&&!mine);}

@@ -58,6 +58,7 @@ jobs:
           put public/yatsun/progression.mjs -o public/yatsun/progression.mjs
           put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/styles.css -o public/yatsun/styles.css
+          put public/yatsun/yatsun-logo.png -o public/yatsun/yatsun-logo.png
           put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
           put public/yatsun/assets/dice-tray-luxury-v1.webp -o public/yatsun/assets/dice-tray-luxury-v1.webp
           put public/yatsun/assets/dice-tray-button-v2.webp -o public/yatsun/assets/dice-tray-button-v2.webp

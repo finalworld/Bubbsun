@@ -77,9 +77,8 @@ export class DiceBoard {
         const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z);
         model.scale.setScalar(scale);model.position.copy(center).multiplyScalar(-scale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
-        const ring=new THREE.Mesh(new THREE.RingGeometry(.67,.705,64),new THREE.MeshBasicMaterial({color:0xffd76a,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;this.world.add(ring);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
-        item={object,model,shadow,ring,button,skin:null,materials:[]};this.items.set(die.id,item);
+        item={object,model,shadow,button,skin:null,materials:[]};this.items.set(die.id,item);
       }
       if(item.skin!==die.skin) {
         const materials=paintDice(item.model,skinById(die.skin),THREE);await materials.ready;
@@ -92,7 +91,7 @@ export class DiceBoard {
   syncHeld(dice) {
     for(const die of dice) {
       const item=this.items.get(die.id);if(!item)continue;
-      item.button.classList.toggle('held',die.held);item.ring.visible=die.held;
+      item.button.classList.toggle('held',die.held);
       item.button.setAttribute('aria-label',`Tärning ${die.id+1}: ${die.value}${die.held?', sparad':''}`);
       item.button.setAttribute('aria-pressed',String(die.held));
     }
@@ -104,7 +103,6 @@ export class DiceBoard {
       const item=this.items.get(pose.id);if(!item)continue;
       item.object.position.fromArray(pose.position);item.object.quaternion.fromArray(pose.quaternion);
       item.shadow.position.set(pose.position[0],.002,pose.position[2]);item.shadow.material.opacity=1/(1+Math.max(0,pose.position[1]-.5)*.55);
-      item.ring.position.set(pose.position[0],.006,pose.position[2]);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
       item.button.style.width=`${this.scale*1.2}px`;item.button.style.height=`${this.scale*1.2}px`;

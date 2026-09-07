@@ -273,8 +273,8 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 /* The fixed header and its chat popover must stay above the scorecard. */
 .game-shell .score-panel{z-index:2}
 
-/* Lift the whole latest-score cell above the gold rail's stacking layer. */
-.game-shell .score-section-block td:has(.latest-score){z-index:105}
+/* Keep the gold turn rail continuous even when the NY sticker overlaps it. */
+.game-shell .score-section-block td:has(.latest-score){z-index:auto}
 
 /* The latest-score cell may carry the NY sticker, but it must never cut a gap
    through the gold frame that identifies whose turn it is. */
@@ -294,3 +294,8 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 .game-shell .dice-tray{border:0;outline:0;border-radius:8%;background:transparent url('./assets/dice-tray-luxury-v1.webp') center/100% 100% no-repeat;box-shadow:none}
 .game-shell .dice-tray::after{display:none}
 .game-shell .dice-row{inset:10.2%}
+
+/* Preview the complete scorecard row, without turning an unchosen score into
+   a filled button. */
+.game-shell .score-section-block tr.preview:hover>*{box-shadow:inset 0 -2px 0 #416c53}
+.game-shell .score-section-block tr.preview:hover .score-choice{text-decoration:none}

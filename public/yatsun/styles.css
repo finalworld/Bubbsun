@@ -377,11 +377,11 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 
 /* The artwork and the physical obstacle share this exact bottom-right action. */
 .game-shell .dice-tray{background-image:url('./assets/dice-tray-soft-v3.png')}
-body.playing .game-shell .roll-button{right:3.7%;bottom:5.9%;width:39%;min-width:0;height:12.5%;min-height:58px;margin:0;padding:8px 18px;grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;row-gap:3px;border:0;border-radius:24px;background:transparent;color:#fff4cf;box-shadow:none;text-shadow:0 2px 2px #153e2e;z-index:8}
+body.playing .game-shell .roll-button{right:6.2%;bottom:8.6%;width:39%;min-width:0;height:12.5%;min-height:58px;margin:0;padding:8px 18px;grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;row-gap:3px;border:0;border-radius:24px;background:transparent;color:#fff4cf;box-shadow:none;text-shadow:0 2px 2px #153e2e;z-index:8}
 body.playing .game-shell .roll-button:hover{transform:none;filter:brightness(1.12)}body.playing .game-shell .roll-button:active{transform:translateY(1px)}
 body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .game-shell .roll-button b{font-size:clamp(10px,1vw,15px);line-height:1.1;letter-spacing:.8px}body.playing .game-shell .roll-button small{color:#e9dec0;line-height:1.1}
 /* Content and pink badge stay above the rail tint; the gold outline stays last. */
 .game-shell .score-section-block td:has(.latest-score){z-index:110}.game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{z-index:111!important}.game-shell .latest-score::before{z-index:112}.game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:120}
-@media(max-width:900px){body.playing .game-shell .roll-button{right:3.7%;bottom:5.9%;width:39%;height:12.5%;min-height:48px;border-radius:18px}.home-sidebar{display:none}}
+@media(max-width:900px){body.playing .game-shell .roll-button{right:6.2%;bottom:8.6%;width:39%;height:12.5%;min-height:48px;border-radius:18px}.home-sidebar{display:none}}
 .home-sidebar{display:none}
 @media(min-width:901px){body:not(.playing) .home-sidebar{display:block}}

@@ -5,6 +5,7 @@ import { DiceBoard } from "./dice-view.mjs?v=physics46";
 import { faceQuaternion } from "./dice-math.mjs?v=physics46";
 import { createSocial } from "./social.mjs?v=lounge2";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=sidebar20';
+import {chooseAiHolds,chooseAiScore} from './ai-engine.mjs?v=ai1';
 let boardSkin='classic';
 let online = null;
 let onlineRevision = -1;
@@ -99,13 +100,6 @@ function syncHeldDiceUi(){diceBoard?.syncHeld(dice);}
 function playDiceSound(){diceSound.currentTime=0;void diceSound.play().catch(()=>{});}
 function counts(values){const result=Array(7).fill(0);values.forEach((value)=>result[value]++);return result;}
 function scoreCategory(id,values){const c=counts(values),sum=values.reduce((a,b)=>a+b,0),groups=c.slice(1).map((amount,value)=>({amount,value:value+1})).filter((g)=>g.amount);if(id[0]==="u"){const value=Number(id[1]);return c[value]*value;}if(id==="l0"){const pairs=groups.filter((g)=>g.amount>=2).map((g)=>g.value);return pairs.length?Math.max(...pairs)*2:0;}if(id==="l1"){const pairs=groups.filter((g)=>g.amount>=2).map((g)=>g.value).sort((a,b)=>b-a);return pairs.length>=2?(pairs[0]+pairs[1])*2:0;}if(id==="l2"){const group=groups.filter((g)=>g.amount>=3).sort((a,b)=>b.value-a.value)[0];return group?group.value*3:0;}if(id==="l3"){const group=groups.filter((g)=>g.amount>=4).sort((a,b)=>b.value-a.value)[0];return group?group.value*4:0;}if(id==="l4")return[1,2,3,4,5].every((value)=>c[value]===1)?15:0;if(id==="l5")return[2,3,4,5,6].every((value)=>c[value]===1)?20:0;if(id==="l6"){const pair=groups.find((g)=>g.amount===2),three=groups.find((g)=>g.amount===3);return pair&&three?pair.value*2+three.value*3:0;}if(id==="l7")return sum;if(id==="l8")return groups.some((g)=>g.amount===5)?50:0;return 0;}
-function aiCategoryValue(category,score,values){
-  const id=category.id,c=counts(values),sum=values.reduce((total,value)=>total+value,0);
-  if(score===0){const scratchCost={l8:34,l5:24,l4:22,l6:20,l3:18,l1:15,l2:12,l0:8,l7:26};return-(scratchCost[id]??Number(id[1])*3);}
-  if(id==="l8")return 140;if(id==="l3")return 92+score;if(id==="l6")return 82+score;if(id==="l5"||id==="l4")return 76+score;if(id==="l1")return 48+score;if(id==="l2")return 38+score;if(id==="l0")return 25+score;if(id==="l7")return sum-8;
-  const face=Number(id[1]),amount=c[face],target=face*3,bonusPressure=totals(aiScores).upperTotal<63?1:0;
-  return score-(target-score)*1.15+(amount>=3?24:0)+(amount>=4?16:0)+bonusPressure*face*.7;
-}
 function totals(scores){const upperTotal=upper.reduce((sum,_,index)=>sum+(scores[`u${index+1}`]??0),0),bonus=upperTotal>=63?50:0,lowerTotal=lower.reduce((sum,_,index)=>sum+(scores[`l${index}`]??0),0);return{upperTotal,bonus,total:upperTotal+bonus+lowerTotal};}
 function scoreCount(scores){return categories.reduce((count,{id})=>count+(id in scores?1:0),0);}
 function scorecardComplete(scores){return scoreCount(scores)===categories.length;}
@@ -159,15 +153,14 @@ async function aiTurn(){
     if(!await renderDice(true))throw new Error("Motståndarens kast kunde inte slutföras.");
     $(".turn-heading h2").textContent=`${name} funderar…`;
     await humanPause(850,1550);
-    const target=[1,2,3,4,5,6].map((value)=>({value,count:dice.filter((d)=>d.value===value).length,weight:value/15})).sort((a,b)=>(b.count+b.weight)-(a.count+a.weight))[0].value;
-    dice.forEach((die)=>die.held=die.value===target);
+    if(round<3){const level=loadMatch()?.opponentLevel||profile.unlocked,open=categories.filter(category=>!(category.id in aiScores)),decision=chooseAiHolds({values:dice.map(die=>die.value),open,scores:aiScores,rerolls:3-round,level});dice.forEach((die,index)=>die.held=decision.hold[index]);}
     syncHeldDiceUi();
     await humanPause(450,800);
     if(dice.every((die)=>die.held))break;
   }
   $(".turn-heading h2").textContent=`${name} väljer…`;
   await humanPause(950,1650);
-  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),valueCounts=counts(values),difficulty=Math.min(1,.45+profile.unlocked*.0055),ranked=open.map((category)=>{const score=scoreCategory(category.id,values);return{category,score,value:aiCategoryValue(category,score,values)+(Math.random()-.5)*(1-difficulty)*7};}).sort((a,b)=>b.value-a.value),strongMade=ranked.filter(({category,score})=>score>0&&["l8","l3","l6","l5","l4"].includes(category.id)).sort((a,b)=>b.value-a.value)[0],madeUpper=ranked.filter(({category})=>category.upper&&valueCounts[Number(category.id[1])]>=3).sort((a,b)=>b.score-a.score)[0],pick=strongMade||madeUpper||ranked[0];
+  const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),level=loadMatch()?.opponentLevel||profile.unlocked,decision=chooseAiScore({values,open,scores:aiScores,level}),pick={category:open.find(category=>category.id===decision.id),score:decision.score};
   aiScores[pick.category.id]=pick.score;
   lastScore={who:"ai",id:pick.category.id};
   // Celebrate the scoring event, never a restored or re-rendered scorecard.

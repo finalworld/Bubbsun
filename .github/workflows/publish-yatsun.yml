@@ -33,11 +33,13 @@ jobs:
           php tests/yatsun-rooms.test.php
           node --check public/yatsun/social.mjs
           node --check public/yatsun/app.js
+          node --check public/yatsun/ai-engine.mjs
           node --check public/yatsun/dice-view.mjs
           node --check public/yatsun/dice-worker.mjs
           node --test tests/yatsun-dice-resting.test.mjs
           node --test tests/yatsun-progression.test.mjs
           node --test tests/yatsun-online-view.test.mjs
+          node --test tests/yatsun-ai.test.mjs
       - run: sudo apt-get update -qq && sudo apt-get install -y lftp
       - name: Upload only the changed Yatsun files
         env:
@@ -81,6 +83,7 @@ jobs:
           put public/yatsun/dice-worker.mjs -o public/yatsun/dice-worker.mjs
           put public/yatsun/dice-view.mjs -o public/yatsun/dice-view.mjs
           put public/yatsun/app.js -o public/yatsun/app.js
+          put public/yatsun/ai-engine.mjs -o public/yatsun/ai-engine.mjs
           put public/yatsun/index.html -o public/yatsun/index.html
           bye
           EOF

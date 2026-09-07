@@ -395,3 +395,10 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
 .home-sidebar{display:none}
 @media(min-width:901px){body:not(.playing) .home-sidebar{display:block}}
 .solo-card .opponent-bio{max-width:560px;min-height:0;margin-bottom:22px;padding:14px 16px;border-left:4px solid #d8b950;border-radius:0 14px 14px 0;background:#fffaf0b8;color:#52665a;font-size:13px;font-weight:600;line-height:1.55}
+
+/* Latest score is self-contained above the turn rail. Keeping the NY label
+   inside the score chip prevents the header/table boundary from clipping it. */
+.game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:40}
+.game-shell .score-section-block td{z-index:50}
+.game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{z-index:80!important;padding-top:7px!important;outline:0!important;box-shadow:0 3px 0 #344a37,inset 0 0 0 2px #ef6f91,0 0 4px 1px #ef6f9173!important}
+.game-shell .latest-score::before{z-index:81;top:1px;right:1px;height:12px;min-width:18px;border-width:1px;transform:rotate(7deg)}

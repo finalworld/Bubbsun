@@ -544,7 +544,17 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
 @media(max-width:680px){
   body.playing .latest-score::before{content:none!important;display:none!important}
   body.playing .site-header .turn-tools{top:10px}
-  body.playing .site-header .chat-button{transform:translateY(-12px)}
+  body.playing .site-header .chat-button{position:fixed!important;z-index:80;top:18px!important;right:10px!important;transform:none!important}
   body.playing .dice-hit-target.held{border:0;border-radius:18px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
   body.playing .dice-hit-target.held::after{content:none!important;display:none!important}
+  body.playing .score-section-block>strong{font-size:11px;line-height:1}
+  body.playing .score-section-block>strong::after{font-size:9px}
+  body.playing .score-section-block table{font-size:11px}
+  body.playing .score-section-block tbody th{font-size:11px;line-height:.88}
+  body.playing .score-scroll tbody th>i{font-size:11px}
+  body.playing .score-section-block tbody td{font-size:12px}
+  body.playing .score-section-block .score-choice{font-size:12px!important;line-height:1}
+  body.playing .scored .score-choice,body.playing .score-section-block .ai-score.filled span{font-size:12px!important;line-height:1}
+  body.playing .summary th,body.playing .summary td{font-size:11px!important}
+  body.playing .final-total th,body.playing .final-total td{font-size:14px!important}
 }

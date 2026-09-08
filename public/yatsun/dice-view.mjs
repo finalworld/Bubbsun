@@ -75,8 +75,8 @@ export class DiceBoard {
     await Promise.all(dice.map(async die=>{
       let item=this.items.get(die.id);
       if(!item) {
-        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z);
-        model.scale.setScalar(scale);model.position.copy(center).multiplyScalar(-scale);object.add(model);this.world.add(object);
+        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.2:1);
+        model.scale.setScalar(visualScale);model.position.copy(center).multiplyScalar(-visualScale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
         item={object,model,shadow,button,skin:null,materials:[]};this.items.set(die.id,item);
@@ -106,7 +106,8 @@ export class DiceBoard {
       item.shadow.position.set(pose.position[0],.002,pose.position[2]);item.shadow.material.opacity=1/(1+Math.max(0,pose.position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
-      item.button.style.width=`${this.scale*1.2}px`;item.button.style.height=`${this.scale*1.2}px`;
+      const hitScale=window.innerWidth<680?1.42:1.2;
+      item.button.style.width=`${this.scale*hitScale}px`;item.button.style.height=`${this.scale*hitScale}px`;
     }
     this.renderer.render(this.scene,this.camera);
   }

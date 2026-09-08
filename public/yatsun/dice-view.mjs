@@ -33,10 +33,10 @@ export class DiceBoard {
     const width=this.root.clientWidth||600,height=this.root.clientHeight||500;
     if(width===this.width&&height===this.height)return {width:width/this.scale-.4,depth:height/this.scale-.4};
     this.width=width;this.height=height;
-    const nominal=window.innerWidth<680?50:80;
-    this.scale=Math.min(nominal,(this.width-18)/5.5,(this.height-18)/5.5);
+    const mobile=window.innerWidth<680,nominal=mobile?58:80;
+    this.scale=Math.min(nominal,(this.width-18)/5.5,(this.height-18)/(mobile?2.6:5.5));
     // A resize changes the camera, never saved world positions.
-    if(!this.playing&&this.poses.length) {
+    if(!mobile&&!this.playing&&this.poses.length) {
       for(const p of this.poses) this.scale=Math.min(this.scale,(this.width-18)/(2*(Math.abs(p.position[0])+.9)),(this.height-18)/(2*(Math.abs(p.position[2])+.9)));
     }
     this.renderer.setSize(this.width,this.height,false);
@@ -99,10 +99,11 @@ export class DiceBoard {
   }
   draw(poses=this.poses) {
     this.poses=poses;this.camera.updateMatrixWorld();
-    for(const pose of poses) {
+    for(const [index,pose] of poses.entries()) {
       const item=this.items.get(pose.id);if(!item)continue;
-      item.object.position.fromArray(pose.position);item.object.quaternion.fromArray(pose.quaternion);
-      item.shadow.position.set(pose.position[0],.002,pose.position[2]);item.shadow.material.opacity=1/(1+Math.max(0,pose.position[1]-.5)*.55);
+      const docked=window.innerWidth<680&&!this.playing,position=docked?[(index-2)*1.34,.5,0]:pose.position;
+      item.object.position.fromArray(position);item.object.quaternion.fromArray(pose.quaternion);
+      item.shadow.position.set(position[0],.002,position[2]);item.shadow.material.opacity=1/(1+Math.max(0,position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
       item.button.style.width=`${this.scale*1.2}px`;item.button.style.height=`${this.scale*1.2}px`;

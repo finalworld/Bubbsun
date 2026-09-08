@@ -451,3 +451,87 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
 .home-profile{width:100%;font:inherit;text-align:left;cursor:pointer}.home-profile:hover{border-color:#9fc6a7;background:#fff}.home-profile:focus-visible{outline:3px solid #d8b96a;outline-offset:3px}
 .profile-stats-page{grid-column:2;max-width:860px;width:calc(100% - 64px);margin:76px auto 50px;color:#244837}.profile-stats-hero{display:grid;grid-template-columns:86px 1fr;align-items:center;gap:22px;padding:28px;border:1px solid #cbd9c5;border-radius:28px;background:linear-gradient(135deg,#fffaf0,#e6efe1);box-shadow:0 7px 0 #c8d9cb}.profile-stats-avatar{display:grid;place-items:center;width:86px;height:86px;border-radius:50%;background:#174536;color:#fff;font-size:24px;font-weight:950}.profile-stats-hero small{font-weight:950;letter-spacing:1.4px;color:#7d55ad}.profile-stats-hero h1{margin:5px 0 2px;font-size:36px}.profile-stats-hero p{margin:0;color:#567064;font-weight:750}.profile-stats-hero i{display:block;height:8px;margin-top:11px;border-radius:99px;background:#d7e2d2;overflow:hidden}.profile-stats-hero em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3e9976,#e1bb45)}.profile-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.profile-stat-grid article{padding:18px;border:1px solid #ded4c1;border-radius:18px;background:#fffaf0}.profile-stat-grid span{display:block;min-height:28px;color:#718075;font-size:11px;font-weight:800}.profile-stat-grid b{display:block;margin-top:5px;font-size:27px}.profile-progress-card{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:22px 25px;border-radius:21px;background:#315f49;color:#fff8e7}.profile-progress-card small{color:#efd28b;font-weight:900;letter-spacing:1.3px}.profile-progress-card h2{margin:5px 0}.profile-progress-card p{margin:0;color:#d8e3d7}.profile-progress-card>strong{font-size:36px}
 @media(max-width:900px){.profile-stats-page{width:calc(100% - 24px);margin:20px auto}.profile-stat-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* Mobile is a dedicated, app-like composition. Desktop declarations above
+   remain untouched. */
+@media(max-width:680px){
+  body{min-height:100dvh;background:radial-gradient(circle at 78% 8%,#fff0bc 0 8%,transparent 23%),linear-gradient(160deg,#edf0df,#ddd4bf);}
+  .site-header{height:74px;border:0;background:linear-gradient(180deg,#fff7e8f5,#eef1e3e8);backdrop-filter:blur(12px)}
+  .header-inner{position:relative;height:74px;padding:7px 12px;justify-content:center}
+  .site-header .brand{position:absolute;top:2px;left:50%;width:154px;height:70px;transform:translateX(-50%)}
+  .site-header .brand img{width:154px;height:70px}
+  .site-header nav{position:absolute;inset:0 9px;justify-content:space-between;pointer-events:none}
+  .site-header nav>button,.site-header .turn-heading{pointer-events:auto}
+  body:not(.playing) .site-header .turn-heading,body:not(.playing) #friends-button,body:not(.playing) #add-friend-button{display:none!important}
+  body:not(.playing) .site-header nav{justify-content:space-between}
+  body:not(.playing) #settings-button{order:-1}
+  .site-header .social-icon,.site-header .settings-button,.site-header .profile-button{width:42px;height:42px;background:#f5f8ec;border-color:#b9cbb7}
+  .site-header .profile-button img,.site-header .profile-button span{width:34px;height:34px}
+
+  body:not(.playing) main{padding:150px 12px 88px}
+  body:not(.playing) .welcome-strip{display:none!important}
+  body:not(.playing) .home-sidebar{display:block;position:static;height:0;padding:0;background:none;border:0;box-shadow:none}
+  body:not(.playing) .home-sidebar::after{content:none}
+  body:not(.playing) .home-profile{position:fixed;z-index:31;top:78px;left:12px;right:12px;display:grid;width:auto;height:62px;grid-template-columns:44px 1fr;align-items:center;gap:11px;padding:8px 13px;border:1px solid #cbd9c5;border-radius:18px;background:#fffdf8ee;box-shadow:0 5px 16px #334a3420}
+  body:not(.playing) .home-profile>span{width:44px;height:44px}
+  body:not(.playing) .home-profile>span{display:grid;place-items:center;border-radius:50%;background:#174536;color:#fff;font-size:13px;font-weight:950}
+  body:not(.playing) .home-profile strong,body:not(.playing) .home-profile small{display:block}
+  body:not(.playing) .home-profile strong{color:#173f32;font-size:15px}
+  body:not(.playing) .home-profile small{margin-top:2px;color:#567064;font-size:9px}
+  body:not(.playing) .home-sidebar nav{position:fixed;z-index:70;left:7px;right:7px;bottom:max(7px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0;padding:6px;border:1px solid #c8d2bf;border-radius:20px;background:#fff9edee;box-shadow:0 7px 25px #173d2d35;backdrop-filter:blur(14px)}
+  body:not(.playing) .home-sidebar nav button{display:grid;place-items:center;align-content:center;gap:2px;min-width:0;min-height:50px;padding:4px 2px;border-radius:14px;text-align:center;font-size:16px}
+  body:not(.playing) .home-sidebar nav button>svg{width:17px;height:17px}
+  body:not(.playing) .home-sidebar nav button>span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:7px;white-space:nowrap}
+  body:not(.playing) .mode-screen{gap:12px}
+  body:not(.playing) .mode-screen .multi-card{display:none}
+  body:not(.playing) .mode-card{min-height:0;padding:22px;border-radius:24px}
+  body:not(.playing) .mode-card .mode-icon{width:55px;height:55px;margin-bottom:18px;border-radius:17px}
+  body:not(.playing) .mode-card h2{font-size:30px}
+  body:not(.playing) .mode-card p{min-height:0;margin-bottom:18px;font-size:12px}
+  body:not(.playing) .solo-extras{margin-top:12px}
+  body:not(.playing) .leaderboard-screen,body:not(.playing) .journey-page,body:not(.playing) .profile-stats-page{padding-left:0;padding-right:0}
+
+  body.playing{--mobile-tray-h:clamp(250px,35dvh,320px);height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none;background:linear-gradient(#eef1df,#e1d7c1)}
+  body.playing .site-header{height:78px;background:linear-gradient(180deg,#fff6e6,#e6ebd9);border-bottom:1px solid #c8d1bd}
+  body.playing .header-inner{height:78px}
+  body.playing .site-header .brand{width:166px;height:76px}
+  body.playing .site-header .brand img{width:166px;height:76px}
+  body.playing .site-header .header-inner::before{content:none}
+  body.playing .site-header nav{inset:0 10px}
+  body.playing .site-header #friends-button,body.playing .site-header #add-friend-button,body.playing .site-header .profile-button{display:none!important}
+  body.playing .site-header .turn-heading{display:contents}
+  body.playing .site-header .turn-tools{position:absolute;right:0;top:18px}
+  body.playing .site-header .chat-button{width:42px;height:42px}
+  body.playing .site-header #settings-button{display:grid!important;place-items:center;position:fixed!important;z-index:80;left:10px!important;top:18px!important}
+  body.playing main{height:100dvh;padding:78px 0 0;overflow:hidden}
+  body.playing .game-shell{position:relative;display:block;width:100%;height:calc(100dvh - 78px);min-height:0;border:0;background:transparent;overflow:hidden}
+  body.playing .players-panel{display:none!important}
+  body.playing .score-panel{position:absolute;z-index:10;inset:4px 5px calc(var(--mobile-tray-h) + 4px);display:block;height:auto;margin:0;border:3px solid #9a7257;border-radius:20px;background:#fff7e9;box-shadow:0 5px 0 #9a7257;overflow:hidden}
+  body.playing .score-card-head{display:none}
+  body.playing .score-scroll{display:grid;grid-template-columns:1fr 1fr;gap:3px;height:100%;padding:5px;background:#fff7e9;overflow:hidden;border-radius:16px}
+  body.playing .score-section-block{display:flex;min-width:0;height:100%;margin:0;border:1px solid #cbaa82;border-radius:13px;flex-direction:column;overflow:hidden}
+  body.playing .score-section-block>strong{display:flex;flex:0 0 32px;align-items:center;justify-content:space-between;padding:5px 8px;background:linear-gradient(#315f49,#234735);writing-mode:horizontal-tb;transform:none;font-size:10px;white-space:nowrap}
+  body.playing .score-section-block>strong::after{content:"DU    " attr(data-opponent);font-size:8px;letter-spacing:.4px}
+  body.playing .score-section-block table{height:calc(100% - 32px);table-layout:fixed;font-size:9px}
+  body.playing .score-section-block tr{height:clamp(21px,3.05dvh,27px)}
+  body.playing .score-section-block tbody th,body.playing .score-section-block tbody td{height:clamp(21px,3.05dvh,27px)!important;padding-top:0!important;padding-bottom:0!important}
+  body.playing .score-section-block tbody th{width:auto;padding-left:28px!important;padding-right:2px!important;font-size:9px;line-height:.92}
+  body.playing .score-scroll tbody th>i{left:4px;width:21px;height:21px;border-radius:6px;font-size:10px}
+  body.playing .score-section-block tbody td{width:34px!important;padding:0 2px!important;font-size:10px}
+  body.playing .score-section-block tbody td:last-child{width:34px!important;padding-right:3px!important}
+  body.playing .score-section-block .score-choice{font-size:10px!important}
+  body.playing .scored .score-choice,body.playing .score-section-block .ai-score.filled span{width:30px!important;height:20px!important;min-width:30px!important;min-height:20px!important;border-radius:7px!important;font-size:10px!important}
+  body.playing .summary th{padding-left:5px!important;font-size:9px}
+  body.playing .score-panel::before,body.playing .score-panel::after,body.playing .score-turn-banner{display:none!important}
+  body.playing .player-turn .score-card-head>b:nth-of-type(1),body.playing .opponent-turn .score-card-head>b:nth-of-type(2){all:unset}
+
+  body.playing .table-area{position:fixed;z-index:11;left:0;right:0;bottom:0;height:var(--mobile-tray-h);min-height:0;padding:7px;background:linear-gradient(180deg,#e9ddc7,#f7ebd5);overflow:hidden}
+  body.playing .dice-tray{position:absolute;inset:7px 7px max(6px,env(safe-area-inset-bottom));min-height:0;clip-path:none;border:3px solid #d6b876;border-radius:24px;background:radial-gradient(circle at 50% 20%,#1f6047,#0f3e2e 72%);box-shadow:inset 0 0 0 3px #fff2be66,0 -3px 15px #44321d38}
+  body.playing .dice-row{position:absolute;inset:9px 7px 72px;padding:0;border-radius:18px;background:linear-gradient(90deg,transparent 19%,#ffffff0c 19% 20%,transparent 20% 39%,#ffffff0c 39% 40%,transparent 40% 59%,#ffffff0c 59% 60%,transparent 60% 79%,#ffffff0c 79% 80%,transparent 80%)}
+  body.playing .game-shell .roll-button{right:50%;bottom:10px;width:min(54%,230px);height:54px;min-height:54px;transform:translateX(50%);border:2px solid #ecd38d;border-radius:19px;background:linear-gradient(#386c51,#204a38);box-shadow:0 4px 0 #163728;color:#fff5d3}
+  body.playing .game-shell .roll-button:hover{transform:translateX(50%)}body.playing .game-shell .roll-button:active{transform:translate(50%,1px)}
+  body.playing .roll-button b{font-size:13px}body.playing .roll-button small{font-size:9px}
+  body.playing .ai-status{top:4px;left:8px;right:8px;min-height:28px;padding:4px 9px;font-size:9px}
+  body.playing .ai-status::before{width:20px;height:20px;flex-basis:20px;font-size:7px}
+  body.playing .reaction-picker{z-index:200;bottom:calc(var(--mobile-tray-h) + 8px)}
+}

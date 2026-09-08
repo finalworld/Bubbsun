@@ -36,6 +36,8 @@ jobs:
           node --check public/yatsun/ai-engine.mjs
           node --check public/yatsun/dice-view.mjs
           node --check public/yatsun/dice-worker.mjs
+          node --check public/yatsun/pwa.mjs
+          node --check public/yatsun/sw.js
           node --test tests/yatsun-dice-resting.test.mjs
           node --test tests/yatsun-progression.test.mjs
           node --test tests/yatsun-online-view.test.mjs
@@ -61,6 +63,11 @@ jobs:
           put public/yatsun/progression.css -o public/yatsun/progression.css
           put public/yatsun/styles.css -o public/yatsun/styles.css
           put public/yatsun/yatsun-logo.png -o public/yatsun/yatsun-logo.png
+          put public/yatsun/manifest.webmanifest -o public/yatsun/manifest.webmanifest
+          put public/yatsun/pwa.mjs -o public/yatsun/pwa.mjs
+          put public/yatsun/sw.js -o public/yatsun/sw.js
+          put public/yatsun/app-icon-192.png -o public/yatsun/app-icon-192.png
+          put public/yatsun/app-icon-512.png -o public/yatsun/app-icon-512.png
           put public/yatsun/assets/dice-materials.png -o public/yatsun/assets/dice-materials.png
           put public/yatsun/assets/dice-tray-luxury-v1.webp -o public/yatsun/assets/dice-tray-luxury-v1.webp
           put public/yatsun/assets/dice-tray-button-v2.webp -o public/yatsun/assets/dice-tray-button-v2.webp

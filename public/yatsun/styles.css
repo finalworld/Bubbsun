@@ -324,6 +324,9 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
   .game-shell .test-yatsun{display:none}
 }
 
+.pwa-install-help{margin:8px 0 14px;color:#315846;font-size:.82rem;line-height:1.45;text-align:center}
+#install-app{margin-bottom:10px}
+
 /* The newest score belongs above the translucent turn rail. Its compact pink
    outline stays inside the gold edges, while the tilted NY sticker remains
    completely visible. */

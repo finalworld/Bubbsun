@@ -444,3 +444,6 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body:not(.playing) main{padding-top:0}
   body:not(.playing) .home-sidebar{top:0;height:100dvh;padding-top:112px}
 }
+
+/* Join the logo cap to the in-match sidebar without a boxed seam. */
+@media(min-width:901px){body.playing .site-header .header-inner::before{bottom:-3px}}

@@ -375,7 +375,7 @@ body.playing .game-shell .roll-button{right:52px;bottom:130px}
 }
 
 /* The artwork and the physical obstacle share this exact bottom-right action. */
-.game-shell .dice-tray{background-image:url('./assets/dice-tray-soft-v3.png?v=3');clip-path:inset(2px round 8%)}
+.game-shell .dice-tray{background-image:url('./assets/dice-tray-soft-v3.png?v=4');clip-path:inset(6px round 8%)}
 body.playing .game-shell .roll-button{right:6.2%;bottom:8.6%;width:39%;min-width:0;height:12.5%;min-height:58px;margin:0;padding:8px 18px;grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;row-gap:3px;border:0;border-radius:24px;background:transparent;color:#fff4cf;box-shadow:none;text-shadow:0 2px 2px #153e2e;z-index:8}
 body.playing .game-shell .roll-button:hover{transform:none;filter:brightness(1.12)}body.playing .game-shell .roll-button:active{transform:translateY(1px)}
 body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .game-shell .roll-button b{font-size:clamp(10px,1vw,15px);line-height:1.1;letter-spacing:.8px}body.playing .game-shell .roll-button small{color:#e9dec0;line-height:1.1}
@@ -389,7 +389,7 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
 @media(min-width:901px){
   body.playing .site-header .ai-reaction{position:absolute;top:55px!important;right:0!important;left:auto!important;transform-origin:90% 0}
   body.playing .site-header .ai-reaction::after{top:-11px!important;right:14px!important;left:auto!important}
-  body.playing .game-shell .dice-tray{inset:-11px 16px 92px}
+  body.playing .game-shell .dice-tray{inset:-12px 16px 92px}
 }
 .home-sidebar{display:none}
 @media(min-width:901px){body:not(.playing) .home-sidebar{display:block}}
@@ -401,3 +401,31 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
 .game-shell .score-section-block td{z-index:50}
 .game-shell .scored .score-choice.latest-score,.game-shell .ai-score.filled span.latest-score{z-index:80!important;padding-top:7px!important;outline:0!important;box-shadow:0 3px 0 #344a37,inset 0 0 0 2px #ef6f91,0 0 4px 1px #ef6f9173!important}
 .game-shell .latest-score::before{z-index:81;top:1px;right:1px;height:12px;min-width:18px;border-width:1px;transform:rotate(7deg)}
+
+/* Shared desktop canvas: every Yatsun page continues the match background
+   across the full viewport, with one header cap aligned to the sidebar. */
+@media(min-width:901px){
+  body,body.playing,body:not(.playing){background:radial-gradient(circle at 48% 38%,#eef0df 0 20%,#e4ddcc 62%,#cbbca2 100%) fixed}
+  body.playing main,body:not(.playing) main{background:transparent}
+  body.playing .site-header::before,body:not(.playing) .site-header::before{content:none}
+  .site-header .header-inner{position:relative}
+  .site-header .header-inner::before{content:"";position:absolute;z-index:0;inset:0 auto 0 0;width:250px;background:#fff4e7}
+  .site-header .brand,.site-header nav{position:relative;z-index:1}
+}
+
+/* Match controls use the same compact circular language as the header tools. */
+body.playing .match-actions{display:flex;justify-content:center;gap:12px;margin-top:14px}
+body.playing .match-actions button{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;min-height:46px;padding:0;border:1px solid #b9cbb8;border-radius:50%;background:#edf3e8;color:transparent;font-size:0;box-shadow:0 3px 8px #244b3724}
+body.playing .match-actions button::before{display:block;color:#52735a;font-size:24px;font-weight:800;line-height:1}
+body.playing #restart-match::before{content:"↻"}
+body.playing #end-match{border-color:#dec4b7;background:#f7ebe4}
+body.playing #end-match::before{content:"×";color:#9a5b4b;font-size:27px}
+body.playing .match-actions button:hover{filter:brightness(.96);transform:translateY(-1px)}
+
+/* The opponent's live thought bubble occupies the quiet strip above the tray. */
+.ai-status{position:absolute;z-index:18;top:-48px;left:20px;right:20px;min-height:38px;display:flex;align-items:center;justify-content:center;padding:8px 18px;border:1px solid #c6d4bd;border-radius:999px;background:#f5f8eddb;color:#315b49;font-size:12px;font-weight:800;text-align:center;box-shadow:0 5px 14px #294b3720;backdrop-filter:blur(5px)}
+.ai-status::before{content:"AI";display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;margin-right:9px;border-radius:50%;background:#ffddc2;color:#315744;font-size:9px;font-weight:950}
+
+/* The gold active-turn frame is the final foreground layer. It must remain
+   continuous over the green header cap, score chips and the NY sticker. */
+.game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:220!important}

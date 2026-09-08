@@ -122,9 +122,11 @@ function updateSuggestions(){
 }
 function setRollButtonState(){const finished=rolls>=3;rollButton.disabled=finished||busy||physicsBusy;rollButton.classList.toggle("finished",finished);rollButton.querySelector("b").textContent=finished?"VÄLJ POÄNG I PROTOKOLLET":"KASTA TÄRNINGARNA";rollButton.querySelector("small").textContent=finished?"Kastet är klart":`${3-rolls} kast kvar`;}
 async function roll(){if(rolls>=3||busy||physicsBusy)return;if(online?.active){void online.roll(dice.map(d=>d.held));return;}playDiceSound();rolls++;rollNumber.textContent=String(rolls);rollHint.textContent=rolls===3?"Välj en rad i protokollet.":"Spara tärningar eller kasta igen.";if(!await renderDice(true)){rolls--;rollNumber.textContent=String(Math.max(1,rolls));updateSuggestions();}}
-function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";setScoreTurn(true);renderDice();}
+function resetTurn(){rolls=0;dice.forEach((d)=>{d.held=false;});rollButton.classList.remove("hidden");rollNumber.textContent="1";setRollButtonState();rollHint.textContent="Kasta alla fem tärningarna.";$(".turn-heading h2").textContent="Din tur!";setScoreTurn(true);setAiStatus(null);renderDice();}
 const delay=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
 const humanPause=(minimum,maximum)=>delay(minimum+Math.random()*(maximum-minimum));
+const aiStatusLines={thinking:["{name} tänker så det knakar…","{name} kliar sig på skallen…","{name} räknar prickar och tappar räkningen…","{name} pillar sig diskret i näsan och grubblar…","{name} försöker se väldigt strategisk ut…"],throwing:["{name} skakar tärningarna…","{name} blåser på tärningarna för säkerhets skull…","{name} kastar med stor dramatik…","{name} mumlar ‘kom igen nu då’…"],choosing:["{name} letar efter den minst dumma raden…","{name} granskar protokollet misstänksamt…","{name} fattar ett livsavgörande beslut…","{name} pekar på en rad och hoppas på det bästa…"]};
+function setAiStatus(phase,name){const status=$("#ai-status");if(!status)return;if(!phase){status.classList.add("hidden");status.textContent="";return;}const lines=aiStatusLines[phase],line=lines[Math.floor(Math.random()*lines.length)];status.textContent=line.replace("{name}",name);status.classList.remove("hidden");}
 const reactionPositions=[[0,0],[33.333,0],[66.667,0],[100,0],[0,100],[33.333,100],[66.667,100],[100,100]];
 function reactionStyle(element,id){const [x,y]=reactionPositions[id];element.style.backgroundPosition=`${x}% ${y}%`;}
 function showReaction(who,id){const bubble=$(who==="ai"?"#reaction-bubble-ai":"#reaction-bubble-player"),icon=bubble.querySelector("i");reactionStyle(icon,id);bubble.classList.remove("hidden");clearTimeout(bubble.hideTimer);bubble.hideTimer=setTimeout(()=>bubble.classList.add("hidden"),2600);}
@@ -144,14 +146,17 @@ async function aiTurn(){
   rollButton.disabled=true;
   rollHint.textContent="Motståndaren spelar sin tur…";
   dice.forEach((d)=>d.held=false);syncHeldDiceUi();
+  setAiStatus("thinking",name);
   await humanPause(650,1100);
   for(let round=1;round<=3;round++){
     $(".turn-heading h2").textContent=`${name} kastar…`;
+    setAiStatus("throwing",name);
     await humanPause(round===1?450:750,round===1?850:1350);
     playDiceSound();
     rollNumber.textContent=String(round);
     if(!await renderDice(true))throw new Error("Motståndarens kast kunde inte slutföras.");
     $(".turn-heading h2").textContent=`${name} funderar…`;
+    setAiStatus("thinking",name);
     await humanPause(850,1550);
     if(round<3){const level=loadMatch()?.opponentLevel||profile.unlocked,open=categories.filter(category=>!(category.id in aiScores)),decision=chooseAiHolds({values:dice.map(die=>die.value),open,scores:aiScores,rerolls:3-round,level});dice.forEach((die,index)=>die.held=decision.hold[index]);}
     syncHeldDiceUi();
@@ -159,6 +164,7 @@ async function aiTurn(){
     if(dice.every((die)=>die.held))break;
   }
   $(".turn-heading h2").textContent=`${name} väljer…`;
+  setAiStatus("choosing",name);
   await humanPause(950,1650);
   const open=categories.filter((c)=>!(c.id in aiScores)),values=dice.map((d)=>d.value),level=loadMatch()?.opponentLevel||profile.unlocked,decision=chooseAiScore({values,open,scores:aiScores,level}),pick={category:open.find(category=>category.id===decision.id),score:decision.score};
   aiScores[pick.category.id]=pick.score;
@@ -168,6 +174,7 @@ async function aiTurn(){
   updateSuggestions();
   showReaction("ai",pick.score>=25?[0,1,2,6][Math.floor(Math.random()*4)]:pick.score===0?[4,5,7][Math.floor(Math.random()*3)]:Math.random()<.5?3:6);
   await humanPause(900,1300);
+  setAiStatus(null);
 }
 async function catchUpAiScores(){while(scoreCount(aiScores)<scoreCount(playerScores))await aiTurn();}
 function restoreDice(saved){saved?.forEach((value,index)=>{delete dice[index].pose;Object.assign(dice[index],value);});}

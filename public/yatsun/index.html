@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=sharedlogo65" />
+    <link rel="stylesheet" href="./styles.css?v=matchchrome66" />
     <link rel="stylesheet" href="./social.css?v=20260903a" />
     <link rel="stylesheet" href="./progression.css?v=opponent17" />
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -76,13 +76,14 @@
             <div><small></small><strong>Maj-Britt Blixt</strong><span>Nivå: 1/100</span></div>
           </article>
           <div class="match-actions">
-            <button id="restart-match" type="button">↻ Starta om</button>
-            <button id="end-match" type="button">Avsluta match</button>
+            <button id="restart-match" type="button" aria-label="Starta om matchen" title="Starta om matchen">↻ Starta om</button>
+            <button id="end-match" type="button" aria-label="Avsluta matchen" title="Avsluta matchen">Avsluta match</button>
           </div>
           <button id="test-yatsun" class="test-yatsun" type="button">✦ YATSUN!</button>
         </aside>
 
         <section class="table-area">
+          <div id="ai-status" class="ai-status hidden" role="status" aria-live="polite"></div>
           <div class="dice-tray" aria-label="Tärningsbricka">
             <div id="dice" class="dice-row"></div>
             <div class="tray-shadow"></div>
@@ -133,6 +134,6 @@
 
     <div id="settings-modal" class="result-backdrop settings-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><article><button id="close-settings" class="modal-close" type="button" aria-label="Stäng">×</button><small>YATSUN</small><h2 id="settings-title">Inställningar</h2><label class="volume-setting"><span>Ljudeffekter</span><output id="volume-value">70%</output><input id="volume-control" type="range" min="0" max="100" value="70" /></label><button id="fullscreen-button" type="button">⛶ HELSKÄRM</button><div class="settings-actions"><button id="cancel-settings" class="subtle" type="button">AVBRYT</button><button id="save-settings" type="button">OK</button></div></article></div>
 
-    <script type="module" src="./app.js?v=mpback56"></script>
+    <script type="module" src="./app.js?v=aistatus57"></script>
   </body>
 </html>

@@ -50,7 +50,7 @@ export function createProgression({profile,select,start,name,avatar,show}){
   function btn(text,fn){const b=el('button',text);b.type='button';b.onclick=fn;return b;}
   function header(root,title,showBack=true){root.replaceChildren();if(showBack)root.append(btn('← Till spellägen',()=>show('#mode-screen')));root.append(el('h1',title));}
   function openMap(){
-    header(map,'Din väg till 100');const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
+    header(map,'Din väg till 100',false);const p=profile(),done=completedLevels(p),current=Math.min(100,done+1);
     map.append(el('p','Besegra motståndarna längs vägen. Var tionde seger låser upp ett nytt tärningsset.'));
     const board=el('div','','campaign-board'),biomes=el('div','','campaign-biomes');
     campaignBiomes.forEach((source,index)=>{const image=document.createElement('img');image.src=source;image.alt='';image.decoding='async';image.loading=index===Math.floor((current-1)/10)?'eager':'lazy';image.style.top=`${(9-index)*810-20}px`;biomes.append(image);});

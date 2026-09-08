@@ -4,7 +4,7 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12
 import { DiceBoard } from "./dice-view.mjs?v=physics46";
 import { faceQuaternion } from "./dice-math.mjs?v=physics46";
 import { createSocial } from "./social.mjs?v=lounge2";
-import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=sidebar20';
+import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=map-clean21';
 import {chooseAiHolds,chooseAiScore} from './ai-engine.mjs?v=ai1';
 let boardSkin='classic';
 let online = null;

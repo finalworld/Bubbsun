@@ -409,9 +409,10 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
   body.playing main,body:not(.playing) main{background:transparent}
   body.playing .site-header::before,body:not(.playing) .site-header::before{content:none}
   .site-header .header-inner{position:relative}
-  .site-header .header-inner::before{content:"";position:absolute;z-index:0;inset:0 auto 0 0;width:250px;background:#fff4e7}
+  .site-header .header-inner::before{content:"";position:absolute;z-index:0;inset:0 auto 0 0;width:250px;border-inline:1px solid #d9d0c1;background:#fff4e7}
   .site-header .brand{z-index:1}
   .site-header nav{position:relative;z-index:1}
+  .home-sidebar,body.playing .game-shell .players-panel{border-left:1px solid #d9d0c1}
 }
 
 /* Match controls borrow the header icons' soft colours and round shape while

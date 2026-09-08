@@ -7,6 +7,7 @@ function social_schema(PDO $db): void {
     $db->exec("CREATE TABLE IF NOT EXISTS yatsun_friends (a VARCHAR(191) NOT NULL, b VARCHAR(191) NOT NULL, sender VARCHAR(191) NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'pending', PRIMARY KEY(a,b)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
     $db->exec("CREATE TABLE IF NOT EXISTS yatsun_rooms (id CHAR(32) PRIMARY KEY, a VARCHAR(191) NOT NULL, b VARCHAR(191) NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'pending', revision INT NOT NULL DEFAULT 0, state_json LONGTEXT NOT NULL, updated_at BIGINT NOT NULL, INDEX(a), INDEX(b)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
     $db->exec("CREATE TABLE IF NOT EXISTS yatsun_cosmetics (uid VARCHAR(191) PRIMARY KEY, completed INT NOT NULL DEFAULT 0, active VARCHAR(24) NOT NULL DEFAULT 'classic') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
+    $db->exec("CREATE TABLE IF NOT EXISTS yatsun_stats (uid VARCHAR(191) PRIMARY KEY, solo_xp INT NOT NULL DEFAULT 0, matches INT NOT NULL DEFAULT 0, wins INT NOT NULL DEFAULT 0, draws INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, yatzy INT NOT NULL DEFAULT 0, total_score INT NOT NULL DEFAULT 0, best_score INT NOT NULL DEFAULT 0, best_streak INT NOT NULL DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin");
 }
 function social_query(PDO $db,string $sql,array $params=[]): PDOStatement {$q=$db->prepare($sql);$q->execute($params);return $q;}
 function social_pair(string $uid,string $other): array {if($uid===$other||$other==='')throw new RuntimeException('Välj en annan medlem.',400);$pair=[$uid,$other];sort($pair,SORT_STRING);return $pair;}
@@ -26,6 +27,8 @@ function social_handle(PDO $db,string $uid,string $action,array $input,string $e
             $completed=max($completed,(int)$saved['completed']);$active=$input['active']??$saved['active'];$index=array_search($active,$styles,true);
             if($index===false||(!$admin&&$index*10>$completed))throw new RuntimeException('Det tärningssetet är inte upplåst.',403);
             social_query($db,'UPDATE yatsun_cosmetics SET completed=?,active=? WHERE uid=?',[$completed,$active,$uid]);
+            $stats=$input['stats']??[];$values=[];foreach(['soloXp','matches','wins','draws','losses','yatzy','totalScore','bestScore','bestStreak'] as $key){$value=$stats[$key]??0;if(!is_int($value)||$value<0||$value>100000000)throw new RuntimeException('Ogiltig spelarstatistik.',400);$values[]=$value;}
+            social_query($db,'INSERT INTO yatsun_stats(uid,solo_xp,matches,wins,draws,losses,yatzy,total_score,best_score,best_streak) VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE solo_xp=GREATEST(solo_xp,VALUES(solo_xp)),matches=GREATEST(matches,VALUES(matches)),wins=GREATEST(wins,VALUES(wins)),draws=GREATEST(draws,VALUES(draws)),losses=GREATEST(losses,VALUES(losses)),yatzy=GREATEST(yatzy,VALUES(yatzy)),total_score=GREATEST(total_score,VALUES(total_score)),best_score=GREATEST(best_score,VALUES(best_score)),best_streak=GREATEST(best_streak,VALUES(best_streak))',array_merge([$uid],$values));
             $db->commit();return ['completed'=>$completed,'active'=>$active,'admin'=>$admin];
         }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
     }
@@ -76,7 +79,7 @@ function social_handle(PDO $db,string $uid,string $action,array $input,string $e
     }
     if($action==='social_list'){
         social_query($db,'UPDATE yatsun_members SET seen_at=? WHERE uid=?',[$now,$uid]);
-        $friends=social_query($db,'SELECT m.uid,m.name,m.code,m.seen_at,f.sender,f.status FROM yatsun_friends f JOIN yatsun_members m ON m.uid=CASE WHEN f.a=? THEN f.b ELSE f.a END WHERE f.a=? OR f.b=? ORDER BY m.name',[$uid,$uid,$uid])->fetchAll();
+        $friends=social_query($db,'SELECT m.uid,m.name,m.code,m.seen_at,f.sender,f.status,COALESCE(c.completed,0) AS completed,COALESCE(s.solo_xp,0) AS solo_xp,COALESCE(s.matches,0) AS matches,COALESCE(s.wins,0) AS wins,COALESCE(s.draws,0) AS draws,COALESCE(s.losses,0) AS losses,COALESCE(s.yatzy,0) AS yatzy,COALESCE(s.total_score,0) AS total_score,COALESCE(s.best_score,0) AS best_score,COALESCE(s.best_streak,0) AS best_streak FROM yatsun_friends f JOIN yatsun_members m ON m.uid=CASE WHEN f.a=? THEN f.b ELSE f.a END LEFT JOIN yatsun_cosmetics c ON c.uid=m.uid LEFT JOIN yatsun_stats s ON s.uid=m.uid WHERE f.a=? OR f.b=? ORDER BY m.name',[$uid,$uid,$uid])->fetchAll();
         $rooms=social_query($db,"SELECT r.*,m.name AS other_name FROM yatsun_rooms r JOIN yatsun_members m ON m.uid=CASE WHEN r.a=? THEN r.b ELSE r.a END WHERE (r.a=? OR r.b=?) AND r.status IN ('pending','active','done') ORDER BY r.updated_at DESC LIMIT 50",[$uid,$uid,$uid])->fetchAll();
         $openTables=social_query($db,"SELECT id FROM yatsun_rooms WHERE a=? AND status='open'",[$uid])->fetchAll();
         return ['friends'=>$friends,'openTables'=>$openTables,'rooms'=>array_map(fn($r)=>social_room($r)+['otherName'=>$r['other_name']],$rooms)];

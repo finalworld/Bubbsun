@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f1ff" />
     <meta name="description" content="Yatsun – svensk Yatzy med singelspel, vänner och livematcher." />
     <title>Yatsun – Yatzy med karaktär</title>
-    <link rel="stylesheet" href="./styles.css?v=joined-game-sidebar72" />
+    <link rel="stylesheet" href="./styles.css?v=player-profile73" />
     <link rel="stylesheet" href="./social.css?v=20260903a" />
     <link rel="stylesheet" href="./progression.css?v=mp-spacing18" />
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
@@ -38,7 +38,7 @@
 
     <main>
       <aside class="home-sidebar" aria-label="Yatsunmeny">
-        <div class="home-profile"><span>DU</span><div><strong id="home-player-name">Gästspelare</strong><small id="home-player-progress">Nivå 1 · 0/100 XP</small><i class="home-xp-meter" aria-hidden="true"><em></em></i></div></div>
+        <button class="home-profile" id="home-profile-button" type="button" aria-label="Visa min spelarprofil"><span>DU</span><div><strong id="home-player-name">Gästspelare</strong><small id="home-player-progress">Nivå 1 · 0/100 XP</small><i class="home-xp-meter" aria-hidden="true"><em></em></i></div></button>
         <nav><button type="button" data-home-view="solo" class="active">🎲 <span>Singelplayer</span></button><button type="button" data-home-view="multi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20M8 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM22 20v-1.5a4 4 0 0 0-3-3.87M16.5 3.63a3.5 3.5 0 0 1 0 6.74"/></svg><span>Multiplayer</span></button><button type="button" data-home-view="leaderboard">🏆 <span>Topplista</span></button><button type="button" data-home-view="collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="10" rx="2"/><rect x="11" y="3" width="10" height="10" rx="2"/><path d="M7 11h.01M9 14h.01M15 7h.01M18 9h.01"/></svg><span>Mina tärningar</span></button><button type="button" data-home-view="settings">⚙ <span>Inställningar</span></button></nav>
       </aside>
       <section class="welcome-strip">
@@ -134,6 +134,6 @@
 
     <div id="settings-modal" class="result-backdrop settings-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title"><article><button id="close-settings" class="modal-close" type="button" aria-label="Stäng">×</button><small>YATSUN</small><h2 id="settings-title">Inställningar</h2><label class="volume-setting"><span>Ljudeffekter</span><output id="volume-value">70%</output><input id="volume-control" type="range" min="0" max="100" value="70" /></label><button id="fullscreen-button" type="button">⛶ HELSKÄRM</button><div class="settings-actions"><button id="cancel-settings" class="subtle" type="button">AVBRYT</button><button id="save-settings" type="button">OK</button></div></article></div>
 
-    <script type="module" src="./app.js?v=map-clean58"></script>
+    <script type="module" src="./app.js?v=player-profile59"></script>
   </body>
 </html>

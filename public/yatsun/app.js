@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { DiceBoard } from "./dice-view.mjs?v=mobile-dock47";
+import { DiceBoard } from "./dice-view.mjs?v=mobile-size48";
 import { faceQuaternion } from "./dice-math.mjs?v=physics46";
 import { createSocial } from "./social.mjs?v=profiles3";
 import { activeSkin,skinById,completedLevels,awardVictory,createProgression } from './progression.mjs?v=map-clean21';

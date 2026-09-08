@@ -33,11 +33,12 @@ export class DiceBoard {
     const width=this.root.clientWidth||600,height=this.root.clientHeight||500;
     if(width===this.width&&height===this.height)return {width:width/this.scale-.4,depth:height/this.scale-.4};
     this.width=width;this.height=height;
-    const mobile=window.innerWidth<680,nominal=mobile?58:80;
-    this.scale=Math.min(nominal,(this.width-18)/5.5,(this.height-18)/(mobile?2.6:5.5));
+    const mobile=window.innerWidth<680,nominal=mobile?62:80;
+    this.scale=Math.min(nominal,(this.width-18)/(mobile?5.25:5.5),(this.height-18)/(mobile?2.6:5.5));
     // A resize changes the camera, never saved world positions.
     if(!this.playing&&this.poses.length) {
-      for(const p of this.poses) this.scale=Math.min(this.scale,(this.width-18)/(2*(Math.abs(p.position[0])+.9)),(this.height-18)/(2*(Math.abs(p.position[2])+.9)));
+      const posePadding=mobile ? .72 : .9;
+      for(const p of this.poses) this.scale=Math.min(this.scale,(this.width-18)/(2*(Math.abs(p.position[0])+posePadding)),(this.height-18)/(2*(Math.abs(p.position[2])+posePadding)));
     }
     this.renderer.setSize(this.width,this.height,false);
     this.camera.left=-this.width/this.scale/2;this.camera.right=-this.camera.left;

@@ -538,3 +538,13 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .ai-status::before{width:20px;height:20px;flex-basis:20px;font-size:7px}
   body.playing .reaction-picker{z-index:200;bottom:calc(var(--mobile-tray-h) + 8px)}
 }
+
+/* Mobile-only polish: the newest score keeps its pink frame without a label,
+   held dice use a quiet ring, and the chat control aligns with the header. */
+@media(max-width:680px){
+  body.playing .latest-score::before{content:none!important;display:none!important}
+  body.playing .site-header .turn-tools{top:10px}
+  body.playing .site-header .chat-button{transform:translateY(-12px)}
+  body.playing .dice-hit-target.held{border:0;border-radius:18px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
+  body.playing .dice-hit-target.held::after{content:none!important;display:none!important}
+}

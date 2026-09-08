@@ -433,3 +433,14 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
    continuous over the green header cap, score chips and the NY sticker. */
 .game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:220!important}
 .game-shell .score-section-block{overflow:hidden}
+
+/* Outside an active match the sidebar is the only fixed shell. The page
+   content and utility icons start at the top and scroll together. */
+@media(min-width:901px){
+  body:not(.playing) .site-header{position:absolute;inset:0 0 auto;height:0;background:transparent;border:0;backdrop-filter:none}
+  body:not(.playing) .site-header .header-inner{height:0;padding:0}
+  body:not(.playing) .site-header .header-inner::before{content:none}
+  body:not(.playing) .site-header nav{position:absolute;top:18px;right:24px;margin:0}
+  body:not(.playing) main{padding-top:0}
+  body:not(.playing) .home-sidebar{top:0;height:100dvh;padding-top:112px}
+}

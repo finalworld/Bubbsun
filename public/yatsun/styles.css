@@ -418,7 +418,7 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
 /* Match controls borrow the header icons' soft colours and round shape while
    retaining the labels that explain these destructive actions. */
 body.playing .match-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:14px}
-body.playing .match-actions button{display:grid;grid-template-columns:30px 1fr;align-items:center;width:100%;height:46px;min-height:46px;padding:0 13px 0 8px;border:1px solid #b9cbb8;border-radius:999px;background:#edf3e8;color:#456950;font-size:10px;font-weight:850;text-align:left;box-shadow:0 3px 8px #244b3724}
+body.playing .match-actions button{display:grid;grid-template-columns:30px 1fr;column-gap:9px;align-items:center;width:100%;height:46px;min-height:46px;padding:0 13px 0 8px;border:1px solid #b9cbb8;border-radius:999px;background:#edf3e8;color:#456950;font-size:10px;font-weight:850;text-align:left;box-shadow:0 3px 8px #244b3724}
 body.playing .match-actions button::before{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#dfeadd;color:#52735a;font-size:20px;font-weight:800;line-height:1}
 body.playing #restart-match::before{content:"↻"}
 body.playing #end-match{border-color:#dec4b7;background:#f7ebe4}

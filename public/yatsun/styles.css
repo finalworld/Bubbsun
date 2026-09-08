@@ -410,16 +410,18 @@ body.playing .game-shell .roll-button .roll-die-icon{display:none}body.playing .
   body.playing .site-header::before,body:not(.playing) .site-header::before{content:none}
   .site-header .header-inner{position:relative}
   .site-header .header-inner::before{content:"";position:absolute;z-index:0;inset:0 auto 0 0;width:250px;background:#fff4e7}
-  .site-header .brand,.site-header nav{position:relative;z-index:1}
+  .site-header .brand{z-index:1}
+  .site-header nav{position:relative;z-index:1}
 }
 
-/* Match controls use the same compact circular language as the header tools. */
-body.playing .match-actions{display:flex;justify-content:center;gap:12px;margin-top:14px}
-body.playing .match-actions button{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;min-height:46px;padding:0;border:1px solid #b9cbb8;border-radius:50%;background:#edf3e8;color:transparent;font-size:0;box-shadow:0 3px 8px #244b3724}
-body.playing .match-actions button::before{display:block;color:#52735a;font-size:24px;font-weight:800;line-height:1}
+/* Match controls borrow the header icons' soft colours and round shape while
+   retaining the labels that explain these destructive actions. */
+body.playing .match-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:14px}
+body.playing .match-actions button{display:grid;grid-template-columns:30px 1fr;align-items:center;width:100%;height:46px;min-height:46px;padding:0 13px 0 8px;border:1px solid #b9cbb8;border-radius:999px;background:#edf3e8;color:#456950;font-size:10px;font-weight:850;text-align:left;box-shadow:0 3px 8px #244b3724}
+body.playing .match-actions button::before{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#dfeadd;color:#52735a;font-size:20px;font-weight:800;line-height:1}
 body.playing #restart-match::before{content:"↻"}
 body.playing #end-match{border-color:#dec4b7;background:#f7ebe4}
-body.playing #end-match::before{content:"×";color:#9a5b4b;font-size:27px}
+body.playing #end-match::before{content:"×";background:#efdcd4;color:#9a5b4b;font-size:23px}
 body.playing .match-actions button:hover{filter:brightness(.96);transform:translateY(-1px)}
 
 /* The opponent's live thought bubble occupies the quiet strip above the tray. */
@@ -429,3 +431,4 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
 /* The gold active-turn frame is the final foreground layer. It must remain
    continuous over the green header cap, score chips and the NY sticker. */
 .game-shell .score-panel.player-turn::after,.game-shell .score-panel.opponent-turn::after{z-index:220!important}
+.game-shell .score-section-block{overflow:hidden}

@@ -24,8 +24,37 @@ export async function getDocs(reference: CollectionRef) { const data = await req
 export async function setDoc(reference: Ref, value: Record<string, unknown>, options?: { merge?: boolean }) { await request({ action: "set", collection: reference.collection, id: reference.id, value, merge: Boolean(options?.merge) }); }
 export async function deleteDoc(reference: Ref) { await request({ action: "delete", collection: reference.collection, id: reference.id }); }
 
-// En enda surfplatta använder kassan: läs vid start, aldrig genom kontinuerlig polling.
 export function onSnapshot(reference: Ref | CollectionRef, success: (value: { data: () => Record<string, unknown> | undefined; docs: Array<{ id: string; data: () => Record<string, unknown> }> }) => void, failure?: () => void) {
-  void (async () => { try { if ("id" in reference) { const value = await getDoc(reference); success({ data: value.data, docs: [] }); } else { const value = await getDocs(reference); success({ data: () => undefined, docs: value.docs }); } } catch { failure?.(); } })();
-  return () => undefined;
+  let stopped = false;
+  let loading = false;
+  const refresh = async () => {
+    if (stopped || loading || document.visibilityState === "hidden") return;
+    loading = true;
+    try {
+      if ("id" in reference) {
+        const value = await getDoc(reference);
+        if (!stopped) success({ data: value.data, docs: [] });
+      } else {
+        const value = await getDocs(reference);
+        if (!stopped) success({ data: () => undefined, docs: value.docs });
+      }
+    } catch {
+      if (!stopped) failure?.();
+    } finally {
+      loading = false;
+    }
+  };
+  const refreshWhenVisible = () => { if (document.visibilityState === "visible") void refresh(); };
+  const timer = window.setInterval(() => void refresh(), 15_000);
+  window.addEventListener("focus", refreshWhenVisible);
+  window.addEventListener("online", refreshWhenVisible);
+  document.addEventListener("visibilitychange", refreshWhenVisible);
+  void refresh();
+  return () => {
+    stopped = true;
+    window.clearInterval(timer);
+    window.removeEventListener("focus", refreshWhenVisible);
+    window.removeEventListener("online", refreshWhenVisible);
+    document.removeEventListener("visibilitychange", refreshWhenVisible);
+  };
 }

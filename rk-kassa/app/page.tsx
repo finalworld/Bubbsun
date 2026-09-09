@@ -100,6 +100,8 @@ export default function Home() {
   const [historySessionId, setHistorySessionId] = useState("all");
   const [activeSessionId, setActiveSessionId] = useState("");
   const [endDayConfirm, setEndDayConfirm] = useState(false);
+  const [deleteDayConfirm, setDeleteDayConfirm] = useState(false);
+  const [deletingDay, setDeletingDay] = useState(false);
   const [calculator, setCalculator] = useState(false);
   const [editingLine, setEditingLine] = useState<number | null>(null);
   const [editPrice, setEditPrice] = useState("");
@@ -271,7 +273,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
-  }, [cropSource, calculator, endDayConfirm, saleDraft, swishConfirm, clearCartConfirm, deleteCategory, addCategory, manageCategories, editingLine, refundOpen, manageUsers, passwordUser, editingCashier, manageCashiers, cashierPicker, choosingSubcategory, selected, menu]);
+  }, [cropSource, calculator, endDayConfirm, deleteDayConfirm, saleDraft, swishConfirm, clearCartConfirm, deleteCategory, addCategory, manageCategories, editingLine, refundOpen, manageUsers, passwordUser, editingCashier, manageCashiers, cashierPicker, choosingSubcategory, selected, menu]);
 
   useEffect(() => {
     const savedUser = sessionStorage.getItem("rk-kassa-user");
@@ -293,14 +295,11 @@ export default function Home() {
         // temporarily unreachable.
         const pendingRaw = localStorage.getItem(PENDING_SALES_KEY);
         const pending = pendingRaw ? JSON.parse(pendingRaw) as Sale[] : [];
-        const savedRaw = localStorage.getItem("rk-kassa-sales");
-        const saved = savedRaw ? JSON.parse(savedRaw) as Sale[] : [];
         const combined = new Map<number, Sale>();
-        // An empty response must never erase the device backup. There is no
-        // "remove all sales" action in the app, so a non-empty local ledger
-        // is always safer than replacing it with an empty remote array.
-        [...saved, ...pending, ...state.sales].forEach((sale) => combined.set(sale.id, sale));
-        setSales([...combined.values()].sort((a, b) => b.id - a.id));
+        [...state.sales, ...pending].forEach((sale) => combined.set(sale.id, sale));
+        const next = [...combined.values()].sort((a, b) => b.id - a.id);
+        setSales(next);
+        localStorage.setItem("rk-kassa-sales", JSON.stringify(next));
       }
       if (state?.days) setDayRecords(state.days);
       if (state?.activeSessionId) setActiveSessionId(state.activeSessionId);
@@ -332,12 +331,12 @@ export default function Home() {
       hasSeparateSalesState.current = true;
       const remote = snapshot.docs.map((item) => item.data() as Sale);
       const pendingRaw = localStorage.getItem(PENDING_SALES_KEY);
-      const savedRaw = localStorage.getItem("rk-kassa-sales");
       const pending = pendingRaw ? JSON.parse(pendingRaw) as Sale[] : [];
-      const saved = savedRaw ? JSON.parse(savedRaw) as Sale[] : [];
       const combined = new Map<number, Sale>();
-      [...saved, ...pending, ...remote].forEach((sale) => combined.set(sale.id, sale));
-      setSales([...combined.values()].sort((a, b) => b.id - a.id));
+      [...remote, ...pending].forEach((sale) => combined.set(sale.id, sale));
+      const next = [...combined.values()].sort((a, b) => b.id - a.id);
+      setSales(next);
+      localStorage.setItem("rk-kassa-sales", JSON.stringify(next));
     });
   }, [user]);
 
@@ -630,9 +629,12 @@ export default function Home() {
     };
     const onOnline = () => { void retryWhenBack(); };
     const onVisibility = () => { if (document.visibilityState === "visible") void retryWhenBack(); };
+    const retryTimer = window.setInterval(() => void retryWhenBack(), 10_000);
     window.addEventListener("online", onOnline);
+    window.addEventListener("focus", onOnline);
     document.addEventListener("visibilitychange", onVisibility);
-    return () => { window.removeEventListener("online", onOnline); document.removeEventListener("visibilitychange", onVisibility); };
+    void retryWhenBack();
+    return () => { window.clearInterval(retryTimer); window.removeEventListener("online", onOnline); window.removeEventListener("focus", onOnline); document.removeEventListener("visibilitychange", onVisibility); };
   }, [user, salesWaitingForSync]);
 
   async function saveCompletedSale() {
@@ -912,6 +914,53 @@ export default function Home() {
     setHistorySessionId(sessionId); setEndDayConfirm(false); setView("history");
   }
 
+  async function deleteSelectedDay() {
+    if (!isAdmin || deletingDay) return;
+    const removedSales = sales.filter((sale) => dayKey(new Date(sale.id)) === historyDay);
+    const remainingSales = sales.filter((sale) => dayKey(new Date(sale.id)) !== historyDay);
+    const remainingDays = dayRecords.filter((day) => day.date !== historyDay);
+    const removesActiveSession = activeSessionId.startsWith(`${historyDay}-`);
+    setDeletingDay(true);
+    try {
+      await Promise.all([
+        ...removedSales.map((sale) => deleteDoc(doc(database, "kassa-sales", String(sale.id)))),
+        setDoc(kassaStateRef, { days: remainingDays, ...(removesActiveSession ? { activeSessionId: "" } : {}), updatedAt: Date.now() }, { merge: true }),
+      ]);
+    } catch {
+      window.alert("Dagen kunde inte tas bort helt från databasen. Försök igen när anslutningen är tillbaka.");
+      setDeletingDay(false);
+      return;
+    }
+
+    setSales(remainingSales);
+    localStorage.setItem("rk-kassa-sales", JSON.stringify(remainingSales));
+    const pendingRaw = localStorage.getItem(PENDING_SALES_KEY);
+    if (pendingRaw) {
+      const remainingPending = (JSON.parse(pendingRaw) as Sale[]).filter((sale) => dayKey(new Date(sale.id)) !== historyDay);
+      if (remainingPending.length) {
+        localStorage.setItem(PENDING_SALES_KEY, JSON.stringify(remainingPending));
+        setSalesWaitingForSync(true);
+      } else {
+        localStorage.removeItem(PENDING_SALES_KEY);
+        setSalesWaitingForSync(false);
+      }
+    }
+    setDayRecords(remainingDays);
+    localStorage.setItem("rk-kassa-days", JSON.stringify(remainingDays));
+    if (removesActiveSession) {
+      setActiveSessionId("");
+      localStorage.removeItem("rk-kassa-active-session");
+    }
+    if (lastCompletedSaleId && removedSales.some((sale) => sale.id === lastCompletedSaleId)) {
+      setLastCompletedSaleId(null);
+      localStorage.removeItem("rk-kassa-last-completed-sale");
+    }
+    setHistorySessionId("all");
+    setDeleteDayConfirm(false);
+    setDeletingDay(false);
+    setView("days");
+  }
+
   async function reopenDay() {
     const sessionId = historySessionId === "all" ? dayRecords.find((day) => day.date === historyDay)?.id : historySessionId;
     if (!sessionId) return;
@@ -1093,6 +1142,7 @@ export default function Home() {
         {historyClosed ? <button className="reopen-day-button" onClick={reopenDay}>↻ FORTSÄTT DETTA PASS</button> : historyHasActiveSession && historySessionId !== "all" ? <button className="end-day-button" onClick={() => setEndDayConfirm(true)}>✓ AVSLUTA PASSET</button> : historyDay === todayKey && !historyHasActiveSession ? <button className="reopen-day-button" onClick={startNewSession}>＋ STARTA NYTT PASS</button> : null}
         <button className="print-day-button" onClick={() => printHistory("detailed")}>🖨 SKRIV UT DETALJER</button>
         <button className="print-day-button" onClick={() => printHistory("summary")}>🖨 SKRIV UT ÖVERSIKT</button>
+        {isAdmin && <button className="delete-day-button" onClick={() => setDeleteDayConfirm(true)}>🗑 TA BORT HELA DAGEN</button>}
       </div>
     </div>
     <div className="day-stats"><article><span>TOTALT</span><strong>{money(historyTotal)}</strong></article><article className="cash-stat"><span>💵 KONTANT</span><strong>{money(historyCash)}</strong></article><article className="swish-stat"><span><img src="/swish.png" alt=""/> SWISH</span><strong>{money(historySwish)}</strong></article><article className="items-stat"><span>▦ SÅLDA VAROR</span><strong>{historyItems} st</strong></article><article className="customers-stat"><span>👤 KUNDER</span><strong>{historyCustomers} st</strong></article></div>
@@ -1115,6 +1165,7 @@ export default function Home() {
     {deleteCategory && <div className="edit-backdrop" role="alertdialog" aria-modal="true" aria-label="Bekräfta borttagning av kategori"><div className="confirm-card"><div className="warning">!</div><h1>Ta bort kategorin?</h1><p>Vill du ta bort <strong>{deleteCategory.name}</strong>?</p><div className="edit-actions"><button className="cancel-edit" onClick={() => {setDeleteCategory(null);setManageCategories(true)}}>Nej, behåll</button><button className="remove-confirm" onClick={() => removeCategory(deleteCategory)}>JA, TA BORT</button></div></div></div>}
     {saleDraft && <div className="edit-backdrop" role="dialog" aria-modal="true" aria-label="Ändra försäljning"><div className="sale-edit-card"><h1>Ändra köp</h1><p>Klockan {saleDraft.time}</p><h2>Betalsätt</h2><div className="edit-payment"><button className={saleDraft.payment === "Swish" ? "chosen" : ""} onClick={() => setSaleDraft({...saleDraft,payment:"Swish"})}><img src="/swish.png" alt=""/> Swish</button><button className={saleDraft.payment === "Kontant" ? "chosen" : ""} onClick={() => setSaleDraft({...saleDraft,payment:"Kontant"})}>💵 Kontant</button></div><h2>Varor</h2><div className="sale-edit-lines">{saleDraft.lines.map((line,index) => <div key={index}><strong>{line.name}</strong><label>Antal<input inputMode="numeric" value={line.qty || 1} onChange={(e) => setSaleDraft({...saleDraft,lines:saleDraft.lines.map((l,i) => i===index?{...l,qty:Math.max(1,Number(e.target.value)||1)}:l)})}/></label><label>Pris<input inputMode="numeric" value={line.price} onChange={(e) => setSaleDraft({...saleDraft,lines:saleDraft.lines.map((l,i) => i===index?{...l,price:Number(e.target.value)||0}:l)})}/></label><button aria-label={`Ta bort ${line.name}`} onClick={() => setSaleDraft({...saleDraft,lines:saleDraft.lines.filter((_,i)=>i!==index)})}>×</button></div>)}</div><div className="edit-actions"><button className="cancel-edit" onClick={() => setSaleDraft(null)}>Avbryt</button><button className="save-edit" disabled={!saleDraft.lines.length} onClick={() => updateHistorySale(saleDraft)}>SPARA ÄNDRINGAR</button></div></div></div>}
     {endDayConfirm && <div className="edit-backdrop" role="alertdialog" aria-modal="true" aria-label="Bekräfta avsluta pass"><div className="confirm-card"><div className="day-check">✓</div><h1>Avsluta passet?</h1><p>Passet sparas under den här dagen. Du kan senare fortsätta just detta pass eller starta ett nytt.</p><div className="edit-actions"><button className="cancel-edit" onClick={() => setEndDayConfirm(false)}>Avbryt</button><button className="save-edit" onClick={closeDay}>JA, AVSLUTA</button></div></div></div>}
+    {deleteDayConfirm && <div className="edit-backdrop" role="alertdialog" aria-modal="true" aria-label="Bekräfta borttagning av dag"><div className="confirm-card"><div className="warning">!</div><h1>Ta bort hela dagen?</h1><p><strong>{dayLabel(historyDay)}</strong> och dagens {historyDaySales.length} poster tas bort från alla enheter.</p><p>Det går inte att ångra.</p><div className="edit-actions"><button className="cancel-edit" disabled={deletingDay} onClick={() => setDeleteDayConfirm(false)}>Nej, behåll</button><button className="remove-confirm" disabled={deletingDay} onClick={() => void deleteSelectedDay()}>{deletingDay ? "TAR BORT…" : "JA, TA BORT DAGEN"}</button></div></div></div>}
     {calculator && <div className="calculator" role="dialog" aria-modal="true" aria-label="Miniräknare"><header><div className="calc-title"><img src="/calculator-icon.png" alt=""/><h1>Miniräknare</h1></div><button onClick={() => setCalculator(false)}>× Stäng</button></header><div className="calc-body"><div className="calc-display-row"><output><span className="calc-expression">{calcDisplayExpression || "0"}</span><span className="calc-answer">{calcAnswer}</span></output><button className="copy-result" disabled={!Number.isFinite(Number(calcAnswer))} onClick={() => {setCopiedValue(String(Math.max(0,Math.round(Number(calcAnswer)))));setCalculator(false)}}><span className="copy-symbol" aria-hidden="true"/> KOPIERA</button></div><div className="calc-grid">{["C","⌫","÷","×","7","8","9","−","4","5","6","+","1","2","3","=","0","."].map(key => <button key={key} className={key === "=" ? "equals" : /[÷×−+]/.test(key) ? "operator" : ""} onClick={() => calcPress(key)}>{key}</button>)}</div></div></div>}
   </main>;
 }

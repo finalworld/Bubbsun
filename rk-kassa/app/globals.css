@@ -148,11 +148,12 @@ body{background:radial-gradient(circle at 20% 10%,#fffdf6 0 20%,transparent 48%)
 .day-stats .items-stat{background:#f4ead6}.day-stats .customers-stat{background:#f2dfda}
 .history-top{display:grid;grid-template-columns:2fr 1fr;align-items:stretch;gap:14px;margin-bottom:24px}
 .history-top .history-date{margin-bottom:0}
-.history-actions{display:grid;grid-template-rows:1fr 1fr;gap:10px}
-.end-day-button,.reopen-day-button,.day-closed-label,.print-day-button{width:100%;min-height:62px;margin:0;border-radius:16px;padding:8px;font-size:1.12rem;font-weight:900}
+.history-actions{display:grid;gap:10px}
+.end-day-button,.reopen-day-button,.day-closed-label,.print-day-button,.delete-day-button{width:100%;min-height:62px;margin:0;border-radius:16px;padding:8px;font-size:1.12rem;font-weight:900}
 .end-day-button{border:5px solid #46633d;background:#638457;color:#fff}
 .reopen-day-button{border:5px solid #9b402f;background:#d05f46;color:#fff}.day-closed-label{border:4px solid var(--olive);background:#ede5d1;color:var(--olive-dark);display:grid;place-items:center;text-align:center}
 .print-day-button{border:5px solid var(--olive-dark);background:#fffdf6;color:var(--olive-dark)}
+.delete-day-button{border:5px solid #7d2e24;background:#a94335;color:#fff}
 .days-view{max-width:1000px;margin:auto;padding:38px 34px 130px;background:#fff8e8;min-height:calc(100dvh - 92px)}
 .days-view h1{margin:0;color:var(--olive-dark);font-size:2.3rem}
 .days-view>p{font-size:1.2rem;color:var(--muted)}
@@ -323,13 +324,13 @@ body{background:radial-gradient(circle at 20% 10%,#fffdf6 0 20%,transparent 48%)
 .end-day-button{background:linear-gradient(145deg,#dc714e,#ae4129)!important;border-color:#843421!important;box-shadow:inset 0 2px #ffc9ac,0 5px 0 #813521!important}
 .reopen-day-button{background:linear-gradient(145deg,#7d9b6d,#526f47)!important;border-color:#394b33!important;box-shadow:inset 0 2px #cae4b8,0 5px 0 #394b33!important}
 @media print{
-  .print-day-sheet{font-family:Verdana,Arial,sans-serif!important;font-size:11.5pt!important;letter-spacing:.2px!important;line-height:1.25!important}
-  .print-day-meta strong{font-size:11.5pt!important;letter-spacing:.2px!important}
-  .print-day-sheet th,.print-day-sheet td{height:23px!important;font-size:11.5pt!important;letter-spacing:.2px!important}
-  .print-day-sheet .print-purchase-row td{height:21px!important;font-size:11pt!important;letter-spacing:.2px!important}
-  .print-empty-row td{height:23px!important}
-  .print-purchase-count-row td{height:21px!important;padding:3px 6px!important;border-top:0!important;font-size:10.5pt!important;white-space:nowrap!important}
-  .print-grand-total{font-size:14pt!important;letter-spacing:.2px!important}
+  .print-day-sheet{font-family:Verdana,Arial,sans-serif!important;font-size:15pt!important;letter-spacing:.2px!important;line-height:1.25!important}
+  .print-day-meta strong{font-size:15pt!important;letter-spacing:.2px!important}
+  .print-day-sheet th,.print-day-sheet td{height:29px!important;font-size:15pt!important;letter-spacing:.2px!important}
+  .print-day-sheet .print-purchase-row td{height:26px!important;font-size:13.5pt!important;letter-spacing:.2px!important}
+  .print-empty-row td{height:29px!important}
+  .print-purchase-count-row td{height:26px!important;padding:4px 6px!important;border-top:0!important;font-size:13.5pt!important;white-space:nowrap!important}
+  .print-grand-total{font-size:18pt!important;letter-spacing:.2px!important}
 }
 .user-log-list{display:grid;gap:12px;max-width:880px}.user-log-list article{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;border:4px solid var(--olive-dark);border-radius:16px;background:#fffdf6;padding:15px 18px;box-shadow:0 4px 0 #c1ad81}.user-log-list article>span{font-size:1.45rem}.user-log-list strong{font-size:1.2rem;color:var(--olive-dark)}.user-log-list small{font-size:1rem;font-weight:800;color:#693629;text-align:right}@media(max-width:650px){.user-log-list article{grid-template-columns:34px 1fr}.user-log-list small{grid-column:2;text-align:left}}
 

@@ -27,6 +27,7 @@ jobs:
         working-directory: rk-kassa
         run: |
           npm ci
+          npm install --no-save @rolldown/binding-linux-x64-gnu
           npm run build
 
       - name: Installera SFTP-verktyget

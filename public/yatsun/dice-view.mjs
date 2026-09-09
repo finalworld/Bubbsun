@@ -9,7 +9,9 @@ const physicsToView=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/
 export class DiceBoard {
   constructor(root,rollButton,onHold) {
     this.root=root;this.rollButton=rollButton;this.onHold=onHold;this.items=new Map();this.poses=[];this.playing=false;
-    this.canvas=document.createElement('canvas');this.canvas.className='dice-scene';this.canvas.setAttribute('aria-hidden','true');root.replaceChildren(this.canvas);
+    this.canvas=document.createElement('canvas');this.canvas.className='dice-scene';this.canvas.setAttribute('aria-hidden','true');
+    this.slotRack=document.createElement('div');this.slotRack.className='dice-slot-rack';this.slotRack.setAttribute('aria-hidden','true');this.slotRack.replaceChildren(...Array.from({length:5},()=>document.createElement('i')));
+    root.replaceChildren(this.slotRack,this.canvas);
     this.renderer=new THREE.WebGLRenderer({canvas:this.canvas,alpha:true,antialias:true,powerPreference:'high-performance'});
     this.renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.22;
@@ -76,7 +78,7 @@ export class DiceBoard {
     await Promise.all(dice.map(async die=>{
       let item=this.items.get(die.id);
       if(!item) {
-        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.18:1);
+        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.08:1);
         model.scale.setScalar(visualScale);model.position.copy(center).multiplyScalar(-visualScale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
@@ -110,7 +112,7 @@ export class DiceBoard {
       item.shadow.position.set(position[0],.002,position[2]);item.shadow.material.opacity=mobile?.7:1/(1+Math.max(0,pose.position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
-      const hitScale=mobile?1.34:1.2;
+      const hitScale=mobile?1.15:1.2;
       item.button.style.width=`${this.scale*hitScale}px`;item.button.style.height=`${this.scale*hitScale}px`;
     }
     this.renderer.render(this.scene,this.camera);

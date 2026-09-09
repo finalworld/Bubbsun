@@ -547,9 +547,12 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .site-header .turn-tools{top:10px}
   body.playing .site-header .chat-button{position:fixed!important;z-index:80;top:18px!important;right:10px!important;transform:none!important}
   body.playing .site-header .reaction-option{aspect-ratio:1}
-  body.playing .dice-row{overflow:visible;background:radial-gradient(ellipse at 50% 43%,#082c20 0 42%,#123d2d 44% 54%,transparent 56%) 0 0/20% 78% repeat-x}
+  body.playing .dice-row{overflow:visible;background:transparent}
+  body.playing .dice-slot-rack{position:absolute;z-index:0;inset:1px 2px 25px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:0 2px;pointer-events:none}
+  body.playing .dice-slot-rack>i{display:block;border:1px solid #245541;border-radius:13px;background:linear-gradient(180deg,#092f23,#123f2f);box-shadow:inset 0 5px 11px #031b13aa,inset 0 -2px 4px #2d6a4e66}
+  body.playing .dice-scene{z-index:1}
   body.playing .dice-hit-target{border-radius:15px}
-  body.playing .dice-hit-target::after{content:"HÅLL"!important;display:grid!important;position:absolute;left:50%;bottom:-22px;width:54px;height:18px;place-items:center;transform:translateX(-50%);border:1px solid #eed99c;border-radius:999px;background:linear-gradient(#376b50,#214a38);color:#fff5d5;font-size:8px;font-weight:950;line-height:1;letter-spacing:.7px;box-shadow:0 2px 0 #153629;pointer-events:none}
+  body.playing .dice-hit-target::after{content:"HÅLL"!important;display:grid!important;position:absolute;left:50%;bottom:-22px;width:64px;height:18px;place-items:center;transform:translateX(-50%);border:1px solid #eed99c;border-radius:999px;background:linear-gradient(#376b50,#214a38);color:#fff5d5;font-size:8px;font-weight:950;line-height:1;letter-spacing:.7px;box-shadow:0 2px 0 #153629;pointer-events:none}
   body.playing .dice-hit-target.held{border:0;border-radius:15px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
   body.playing .dice-hit-target.held::after{content:"✓ HÅLLD"!important;background:linear-gradient(#e55a8b,#bc3669);border-color:#ffd4e3;box-shadow:0 2px 0 #7c2447,0 0 8px #f06b9c99}
   body.playing .score-section-block>strong{gap:2px;padding-inline:5px;font-size:12px;line-height:1;letter-spacing:.2px}

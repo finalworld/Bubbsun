@@ -35,7 +35,7 @@ export class DiceBoard {
     if(width===this.width&&height===this.height)return mobile?{width:7,depth:4.2}:{width:width/this.scale-.4,depth:height/this.scale-.4};
     this.width=width;this.height=height;
     const nominal=mobile?64:80;
-    this.scale=mobile?Math.min(nominal,(this.width-24)/6.7,(this.height-12)/1.5):Math.min(nominal,(this.width-18)/5.5,(this.height-18)/5.5);
+    this.scale=mobile?Math.min(nominal,(this.width-24)/7.2,(this.height-12)/1.5):Math.min(nominal,(this.width-18)/5.5,(this.height-18)/5.5);
     // A resize changes the camera, never saved world positions.
     if(!mobile&&!this.playing&&this.poses.length) {
       const posePadding=.9;
@@ -76,7 +76,7 @@ export class DiceBoard {
     await Promise.all(dice.map(async die=>{
       let item=this.items.get(die.id);
       if(!item) {
-        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.28:1);
+        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.38:1);
         model.scale.setScalar(visualScale);model.position.copy(center).multiplyScalar(-visualScale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
@@ -104,13 +104,13 @@ export class DiceBoard {
     const mobile=window.innerWidth<680;
     for(const [index,pose] of poses.entries()) {
       const item=this.items.get(pose.id);if(!item)continue;
-      const position=mobile?[(index-2)*1.4,.5,0]:pose.position;
+      const position=mobile?[(index-2)*1.5,.5,0]:pose.position;
       const visualQuaternion=mobile&&!this.playing?faceQuaternion(upperFace(pose.quaternion).value,0):pose.quaternion;
       item.object.position.fromArray(position);item.object.quaternion.fromArray(visualQuaternion);
       item.shadow.position.set(position[0],.002,position[2]);item.shadow.material.opacity=mobile?.7:1/(1+Math.max(0,pose.position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
-      const hitScale=mobile?1.55:1.2;
+      const hitScale=mobile?1.34:1.2;
       item.button.style.width=`${this.scale*hitScale}px`;item.button.style.height=`${this.scale*hitScale}px`;
     }
     this.renderer.render(this.scene,this.camera);

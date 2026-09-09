@@ -117,7 +117,7 @@ export class DiceBoard {
       const slot=this.slotRack.children[index];
       if(slot&&mobile) {
         slot.style.left=item.button.style.left;slot.style.top=item.button.style.top;
-        slot.style.width=`${this.scale*1.22}px`;slot.style.height=`${this.scale*1.28}px`;
+        slot.style.width=`${this.scale*1.4}px`;slot.style.height=`${this.scale*1.55}px`;
       }
     }
     this.renderer.render(this.scene,this.camera);

@@ -529,12 +529,12 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .player-turn .score-card-head>b:nth-of-type(1),body.playing .opponent-turn .score-card-head>b:nth-of-type(2){all:unset}
 
   body.playing .table-area{position:fixed;z-index:11;left:0;right:0;bottom:0;height:var(--mobile-tray-h);min-height:0;padding:7px;background:linear-gradient(180deg,#e9ddc7,#f7ebd5);overflow:hidden}
-  body.playing .dice-tray{position:absolute;inset:7px 7px max(6px,env(safe-area-inset-bottom));min-height:0;clip-path:none;border:3px solid #d6b876;border-radius:24px;background:radial-gradient(circle at 50% 20%,#1f6047,#0f3e2e 72%);box-shadow:inset 0 0 0 3px #fff2be66,0 -3px 15px #44321d38}
-  body.playing .dice-row{position:absolute;inset:9px 7px 72px;padding:0;border-radius:18px;background:linear-gradient(90deg,transparent 19%,#ffffff0c 19% 20%,transparent 20% 39%,#ffffff0c 39% 40%,transparent 40% 59%,#ffffff0c 59% 60%,transparent 60% 79%,#ffffff0c 79% 80%,transparent 80%)}
-  body.playing .game-shell .roll-button{right:50%;bottom:10px;width:min(54%,230px);height:54px;min-height:54px;transform:translateX(50%);border:2px solid #ecd38d;border-radius:19px;background:linear-gradient(#386c51,#204a38);box-shadow:0 4px 0 #163728;color:#fff5d3}
+  body.playing .game-shell .dice-tray{position:absolute;inset:7px 7px 36px;min-height:0;clip-path:none;border:3px solid #d6b876;border-radius:24px;background:radial-gradient(circle at 50% 20%,#1f6047,#0f3e2e 72%);box-shadow:inset 0 0 0 3px #fff2be66,0 -3px 15px #44321d38}
+  body.playing .dice-row{position:absolute;inset:9px 7px 106px;padding:0;border-radius:18px;background:linear-gradient(90deg,transparent 19%,#ffffff0c 19% 20%,transparent 20% 39%,#ffffff0c 39% 40%,transparent 40% 59%,#ffffff0c 59% 60%,transparent 60% 79%,#ffffff0c 79% 80%,transparent 80%)}
+  body.playing .game-shell .roll-button{right:50%;bottom:44px;width:min(54%,230px);height:54px;min-height:54px;transform:translateX(50%);border:2px solid #ecd38d;border-radius:19px;background:linear-gradient(#386c51,#204a38);box-shadow:0 4px 0 #163728;color:#fff5d3}
   body.playing .game-shell .roll-button:hover{transform:translateX(50%)}body.playing .game-shell .roll-button:active{transform:translate(50%,1px)}
   body.playing .roll-button b{font-size:13px}body.playing .roll-button small{font-size:9px}
-  body.playing .ai-status{top:4px;left:8px;right:8px;min-height:28px;padding:4px 9px;font-size:9px}
+  body.playing .ai-status{top:auto;bottom:1px;left:8px;right:8px;min-height:30px;padding:4px 9px;font-size:9px}
   body.playing .ai-status::before{width:20px;height:20px;flex-basis:20px;font-size:7px}
   body.playing .reaction-picker{z-index:200;bottom:calc(var(--mobile-tray-h) + 8px)}
 }
@@ -543,6 +543,7 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
    held dice use a quiet ring, and the chat control aligns with the header. */
 @media(max-width:680px){
   body.playing .latest-score::before{content:none!important;display:none!important}
+  body.playing .score-section-block .score-choice.latest-score,body.playing .score-section-block .ai-score.filled span.latest-score{display:inline-grid!important;place-items:center!important;padding:0!important;line-height:20px!important;vertical-align:middle}
   body.playing .site-header .turn-tools{top:10px}
   body.playing .site-header .chat-button{position:fixed!important;z-index:80;top:18px!important;right:10px!important;transform:none!important}
   body.playing .dice-hit-target.held{border:0;border-radius:18px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
@@ -557,4 +558,8 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .scored .score-choice,body.playing .score-section-block .ai-score.filled span{font-size:12px!important;line-height:1}
   body.playing .summary th,body.playing .summary td{font-size:11px!important}
   body.playing .final-total th,body.playing .final-total td{font-size:14px!important}
+}
+
+@media(min-width:681px){
+  body.playing .table-area>.ai-status{top:8px;bottom:auto;left:20px;right:20px}
 }

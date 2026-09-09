@@ -31,19 +31,20 @@ export class DiceBoard {
   }
   layout() {
     const width=this.root.clientWidth||600,height=this.root.clientHeight||500;
-    if(width===this.width&&height===this.height)return {width:width/this.scale-.4,depth:height/this.scale-.4};
+    const mobile=window.innerWidth<680;
+    if(width===this.width&&height===this.height)return mobile?{width:7,depth:4.2}:{width:width/this.scale-.4,depth:height/this.scale-.4};
     this.width=width;this.height=height;
-    const mobile=window.innerWidth<680,nominal=mobile?62:80;
-    this.scale=Math.min(nominal,(this.width-18)/(mobile?5.25:5.5),(this.height-18)/(mobile?2.6:5.5));
+    const nominal=mobile?64:80;
+    this.scale=mobile?Math.min(nominal,(this.width-24)/6.7,(this.height-12)/1.5):Math.min(nominal,(this.width-18)/5.5,(this.height-18)/5.5);
     // A resize changes the camera, never saved world positions.
-    if(!this.playing&&this.poses.length) {
-      const posePadding=mobile ? .72 : .9;
+    if(!mobile&&!this.playing&&this.poses.length) {
+      const posePadding=.9;
       for(const p of this.poses) this.scale=Math.min(this.scale,(this.width-18)/(2*(Math.abs(p.position[0])+posePadding)),(this.height-18)/(2*(Math.abs(p.position[2])+posePadding)));
     }
     this.renderer.setSize(this.width,this.height,false);
     this.camera.left=-this.width/this.scale/2;this.camera.right=-this.camera.left;
     this.camera.top=this.height/this.scale/2;this.camera.bottom=-this.camera.top;this.camera.updateProjectionMatrix();
-    return {width:this.width/this.scale-.4,depth:this.height/this.scale-.4};
+    return mobile?{width:7,depth:4.2}:{width:this.width/this.scale-.4,depth:this.height/this.scale-.4};
   }
   obstacle() {
     // Reserve the same area on both turns, even when the AI hides the button.
@@ -75,7 +76,7 @@ export class DiceBoard {
     await Promise.all(dice.map(async die=>{
       let item=this.items.get(die.id);
       if(!item) {
-        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.2:1);
+        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.28:1);
         model.scale.setScalar(visualScale);model.position.copy(center).multiplyScalar(-visualScale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
@@ -100,13 +101,16 @@ export class DiceBoard {
   }
   draw(poses=this.poses) {
     this.poses=poses;this.camera.updateMatrixWorld();
-    for(const pose of poses) {
+    const mobile=window.innerWidth<680;
+    for(const [index,pose] of poses.entries()) {
       const item=this.items.get(pose.id);if(!item)continue;
-      item.object.position.fromArray(pose.position);item.object.quaternion.fromArray(pose.quaternion);
-      item.shadow.position.set(pose.position[0],.002,pose.position[2]);item.shadow.material.opacity=1/(1+Math.max(0,pose.position[1]-.5)*.55);
+      const position=mobile?[(index-2)*1.4,.5,0]:pose.position;
+      const visualQuaternion=mobile&&!this.playing?faceQuaternion(upperFace(pose.quaternion).value,0):pose.quaternion;
+      item.object.position.fromArray(position);item.object.quaternion.fromArray(visualQuaternion);
+      item.shadow.position.set(position[0],.002,position[2]);item.shadow.material.opacity=mobile?.7:1/(1+Math.max(0,pose.position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
-      const hitScale=window.innerWidth<680?1.42:1.2;
+      const hitScale=mobile?1.55:1.2;
       item.button.style.width=`${this.scale*hitScale}px`;item.button.style.height=`${this.scale*hitScale}px`;
     }
     this.renderer.render(this.scene,this.camera);
@@ -117,7 +121,7 @@ export class DiceBoard {
     return new Promise((resolve,reject)=>{this.requests.set(id,{resolve,reject});this.worker.postMessage({id,options});});
   }
   async roll(dice,values=null) {
-    await this.setDice(dice);const board=this.layout(),obstacle=this.obstacle();
+    await this.setDice(dice);const board=this.layout(),obstacle=window.innerWidth<680?null:this.obstacle();
     const seed=crypto.getRandomValues(new Uint32Array(1))[0];
     const trace=await this.plan({...board,obstacle,dice:dice.map(d=>({id:d.id,held:d.held,pose:d.pose})),seed,values});
     this.playing=true;this.root.setAttribute('aria-busy','true');

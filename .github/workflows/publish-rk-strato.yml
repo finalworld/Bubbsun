@@ -16,20 +16,6 @@ jobs:
         with:
           ref: codex/bubbsun-current-release
 
-      - name: Installera Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: rk-kassa/package-lock.json
-
-      - name: Bygg RK Kassa
-        working-directory: rk-kassa
-        run: |
-          npm ci
-          npm install --no-save @rolldown/binding-linux-x64-gnu lightningcss-linux-x64-gnu
-          npm run build
-
       - name: Installera SFTP-verktyget
         run: |
           sudo apt-get update -qq
@@ -48,7 +34,7 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          mirror --reverse --ignore-time --no-perms --parallel=3 rk-kassa/deploy/ public/rk/
           cls -l public/rk/index.html
           bye
           EOF

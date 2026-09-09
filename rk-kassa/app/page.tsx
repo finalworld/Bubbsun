@@ -283,6 +283,17 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const handleExpiredSession = () => {
+      sessionStorage.removeItem("rk-kassa-user");
+      setUser(null);
+      setHasLoadedRemote(false);
+      setAuthError("Inloggningen har gått ut. Logga in igen så synkas sparade köp automatiskt.");
+    };
+    window.addEventListener("rk-auth-expired", handleExpiredSession);
+    return () => window.removeEventListener("rk-auth-expired", handleExpiredSession);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     return onSnapshot(kassaStateRef, (snapshot) => {
       const state = snapshot.data() as {

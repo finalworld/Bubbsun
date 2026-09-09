@@ -14,6 +14,7 @@ const endpoint = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/`;
 const request = async <T>(payload: Record<string, unknown>) => {
   const response = await fetch(endpoint, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   const data = await response.json().catch(() => ({})) as T & { ok?: boolean; error?: string };
+  if (response.status === 401) window.dispatchEvent(new Event("rk-auth-expired"));
   if (!response.ok || data.ok === false) throw new Error(data.error || "Databasen svarar inte.");
   return data;
 };

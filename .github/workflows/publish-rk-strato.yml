@@ -1,0 +1,53 @@
+name: Publicera RK Kassa till Strato
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Bygg och publicera endast RK Kassa
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta RK-koden
+        uses: actions/checkout@v4
+        with:
+          ref: codex/bubbsun-current-release
+
+      - name: Installera Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rk-kassa/package-lock.json
+
+      - name: Bygg RK Kassa
+        working-directory: rk-kassa
+        run: |
+          npm ci
+          npm run build
+
+      - name: Installera SFTP-verktyget
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes lftp
+
+      - name: Ladda endast upp RK Kassa
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 30
+          set net:max-retries 2
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          mirror --reverse --ignore-time --no-perms --parallel=4 rk-kassa/dist/ public/rk/
+          cls -l public/rk/index.html
+          bye
+          EOF

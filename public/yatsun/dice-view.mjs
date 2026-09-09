@@ -138,6 +138,30 @@ export class DiceBoard {
     });
     document.removeEventListener('visibilitychange',resetClock);
     const final=trace.frames.at(-1);
+    const mobile=window.innerWidth<680;
+    const parked=mobile?final.map(pose=>{
+      const value=upperFace(pose.quaternion).value;
+      return {...pose,quaternion:faceQuaternion(value,0)};
+    }):null;
+    if(mobile) {
+      // Finish the roll in the exact upright pose used by the fixed mobile slots.
+      // This keeps the post-animation render from visibly snapping into place.
+      const settleDuration=.24,start=performance.now();
+      await new Promise(resolve=>{
+        const settle=now=>{
+          const progress=Math.min(1,(now-start)/(settleDuration*1000));
+          const eased=1-Math.pow(1-progress,3);
+          const poses=final.map((pose,index)=>{
+            const quaternion=new THREE.Quaternion().fromArray(pose.quaternion);
+            quaternion.slerp(new THREE.Quaternion().fromArray(parked[index].quaternion),eased);
+            return {...pose,quaternion:quaternion.toArray()};
+          });
+          this.draw(poses);
+          if(progress<1)requestAnimationFrame(settle);else resolve();
+        };
+        requestAnimationFrame(settle);
+      });
+    }
     dice.forEach((die,i)=>{
       if(!die.held) {
         die.pose={position:[...final[i].position],quaternion:[...final[i].quaternion]};

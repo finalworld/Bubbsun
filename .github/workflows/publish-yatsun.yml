@@ -92,5 +92,6 @@ jobs:
           put public/yatsun/app.js -o public/yatsun/app.js
           put public/yatsun/ai-engine.mjs -o public/yatsun/ai-engine.mjs
           put public/yatsun/index.html -o public/yatsun/index.html
+          put public/yatsun/mobile-preview.html -o public/yatsun/mobile-preview.html
           bye
           EOF

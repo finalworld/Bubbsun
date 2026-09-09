@@ -76,7 +76,7 @@ export class DiceBoard {
     await Promise.all(dice.map(async die=>{
       let item=this.items.get(die.id);
       if(!item) {
-        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.38:1);
+        const object=new THREE.Group(),model=source.scene.clone(true),box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=1/Math.max(size.x,size.y,size.z),visualScale=scale*(window.innerWidth<680?1.18:1);
         model.scale.setScalar(visualScale);model.position.copy(center).multiplyScalar(-visualScale);object.add(model);this.world.add(object);
         const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1.9,1.9),new THREE.MeshBasicMaterial({map:this.shadowTexture,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.renderOrder=-2;this.world.add(shadow);
         const button=document.createElement('button');button.type='button';button.className='dice-hit-target';button.dataset.dieId=String(die.id);button.addEventListener('click',()=>this.onHold(die.id));this.root.append(button);
@@ -105,7 +105,7 @@ export class DiceBoard {
     for(const [index,pose] of poses.entries()) {
       const item=this.items.get(pose.id);if(!item)continue;
       const position=mobile?[(index-2)*1.5,.5,0]:pose.position;
-      const visualQuaternion=pose.quaternion;
+      const visualQuaternion=mobile&&!this.playing?faceQuaternion(upperFace(pose.quaternion).value,0):pose.quaternion;
       item.object.position.fromArray(position);item.object.quaternion.fromArray(visualQuaternion);
       item.shadow.position.set(position[0],.002,position[2]);item.shadow.material.opacity=mobile?.7:1/(1+Math.max(0,pose.position[1]-.5)*.55);
       const screen=item.object.position.clone().applyQuaternion(physicsToView).project(this.camera);
@@ -124,6 +124,8 @@ export class DiceBoard {
     await this.setDice(dice);const board=this.layout(),obstacle=window.innerWidth<680?null:this.obstacle();
     const seed=crypto.getRandomValues(new Uint32Array(1))[0];
     const trace=await this.plan({...board,obstacle,dice:dice.map(d=>({id:d.id,held:d.held,pose:d.pose})),seed,values});
+    const mobile=window.innerWidth<680,final=trace.frames.at(-1);
+    const mobileTargets=mobile?final.map(pose=>faceQuaternion(upperFace(pose.quaternion).value,0)):null;
     this.playing=true;this.root.setAttribute('aria-busy','true');
     for(const die of dice) this.items.get(die.id).button.classList.toggle('rolling',!die.held);
     let elapsed=0,previous=null;
@@ -131,13 +133,24 @@ export class DiceBoard {
     await new Promise(resolve=>{
       const frame=now=>{
         if(previous!==null&&!document.hidden) elapsed+=Math.min(.1,(now-previous)/1000);
-        previous=now;this.draw(sampleThrow(trace,elapsed));
+        previous=now;
+        let poses=sampleThrow(trace,elapsed);
+        if(mobile) {
+          const progress=Math.min(1,elapsed/trace.duration),remaining=1-progress;
+          poses=poses.map((pose,index)=>{
+            if(dice[index].held)return {...pose,quaternion:mobileTargets[index]};
+            const turnsX=2+(index%2),turnsY=2+((index+1)%2);
+            const spin=new THREE.Quaternion().setFromEuler(new THREE.Euler(remaining*Math.PI*2*turnsX,remaining*Math.PI*2*turnsY,remaining*Math.PI*2));
+            const target=new THREE.Quaternion().fromArray(mobileTargets[index]);
+            return {...pose,quaternion:target.multiply(spin).toArray()};
+          });
+        }
+        this.draw(poses);
         if(elapsed<trace.duration) requestAnimationFrame(frame);else resolve();
       };
       requestAnimationFrame(frame);
     });
     document.removeEventListener('visibilitychange',resetClock);
-    const final=trace.frames.at(-1);
     dice.forEach((die,i)=>{
       if(!die.held) {
         die.pose={position:[...final[i].position],quaternion:[...final[i].quaternion]};

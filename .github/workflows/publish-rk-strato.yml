@@ -35,6 +35,7 @@ jobs:
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
           mirror --reverse --ignore-time --no-perms --parallel=3 rk-kassa/deploy/ public/rk/
+          put -O public/rk rk-kassa/deploy/index.html
           cls -l public/rk/index.html
           bye
           EOF

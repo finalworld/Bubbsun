@@ -549,16 +549,17 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .site-header .reaction-option{aspect-ratio:1}
   body.playing .dice-hit-target.held{border:0;border-radius:18px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
   body.playing .dice-hit-target.held::after{content:none!important;display:none!important}
-  body.playing .score-section-block>strong{font-size:11px;line-height:1}
-  body.playing .score-section-block>strong::after{font-size:9px}
-  body.playing .score-section-block table{font-size:11px}
-  body.playing .score-section-block tbody th{font-size:11px;line-height:.88}
-  body.playing .score-scroll tbody th>i{font-size:11px}
-  body.playing .score-section-block tbody td{font-size:12px}
-  body.playing .score-section-block .score-choice{font-size:12px!important;line-height:1}
-  body.playing .scored .score-choice,body.playing .score-section-block .ai-score.filled span{font-size:12px!important;line-height:1}
-  body.playing .summary th,body.playing .summary td{font-size:11px!important}
-  body.playing .final-total th,body.playing .final-total td{font-size:14px!important}
+  body.playing .score-section-block>strong{gap:2px;padding-inline:5px;font-size:12px;line-height:1;letter-spacing:.2px}
+  body.playing .score-section-block>strong::after{font-size:10px;letter-spacing:0}
+  body.playing .score-section-block table{font-size:13px}
+  body.playing .score-section-block tbody th{font-size:13px;line-height:.78}
+  body.playing .score-section-block tr[data-category="l4"] th span,body.playing .score-section-block tr[data-category="l5"] th span{line-height:.62}
+  body.playing .score-scroll tbody th>i{font-size:12px}
+  body.playing .score-section-block tbody td{font-size:14px}
+  body.playing .score-section-block .score-choice{font-size:14px!important;line-height:1}
+  body.playing .scored .score-choice,body.playing .score-section-block .ai-score.filled span{font-size:14px!important;line-height:1}
+  body.playing .summary th,body.playing .summary td{font-size:13px!important}
+  body.playing .final-total th,body.playing .final-total td{font-size:17px!important}
 }
 
 @media(min-width:681px){

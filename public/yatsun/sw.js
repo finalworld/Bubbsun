@@ -1,8 +1,8 @@
-const CACHE='yatsun-app-v5';
+const CACHE='yatsun-app-v6';
 const SHELL=[
   '/yatsun/',
   '/yatsun/index.html',
-  '/yatsun/styles.css?v=mobile-layout78',
+  '/yatsun/styles.css?v=mobile-layout79',
   '/yatsun/social.css?v=20260903a',
   '/yatsun/progression.css?v=mp-spacing18',
   '/yatsun/app.js?v=mobile-layout63',

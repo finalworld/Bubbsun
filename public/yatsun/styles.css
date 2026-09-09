@@ -536,7 +536,7 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .roll-button b{font-size:13px}body.playing .roll-button small{font-size:9px}
   body.playing .ai-status{top:auto;bottom:1px;left:8px;right:8px;min-height:30px;padding:4px 9px;font-size:9px}
   body.playing .ai-status::before{width:20px;height:20px;flex-basis:20px;font-size:7px}
-  body.playing .reaction-picker{z-index:200;bottom:calc(var(--mobile-tray-h) + 8px)}
+  body.playing .site-header .reaction-picker{position:fixed!important;z-index:300!important;top:68px!important;right:8px!important;bottom:auto!important;left:8px!important;width:auto!important;max-height:calc(100dvh - 76px);overflow:auto}
 }
 
 /* Mobile-only polish: the newest score keeps its pink frame without a label,
@@ -546,6 +546,7 @@ body.playing .match-actions button:hover{filter:brightness(.96);transform:transl
   body.playing .score-section-block .score-choice.latest-score,body.playing .score-section-block .ai-score.filled span.latest-score{display:inline-grid!important;place-items:center!important;padding:0!important;line-height:20px!important;vertical-align:middle}
   body.playing .site-header .turn-tools{top:10px}
   body.playing .site-header .chat-button{position:fixed!important;z-index:80;top:18px!important;right:10px!important;transform:none!important}
+  body.playing .site-header .reaction-option{aspect-ratio:1}
   body.playing .dice-hit-target.held{border:0;border-radius:18px;outline:2px solid #f2d581;outline-offset:2px;box-shadow:0 0 0 4px #315f4973,0 0 10px 4px #f2d58178}
   body.playing .dice-hit-target.held::after{content:none!important;display:none!important}
   body.playing .score-section-block>strong{font-size:11px;line-height:1}

@@ -114,6 +114,11 @@ export class DiceBoard {
       item.button.style.left=`${(screen.x+1)*this.width/2}px`;item.button.style.top=`${(1-screen.y)*this.height/2}px`;
       const hitScale=mobile?1.15:1.2;
       item.button.style.width=`${this.scale*hitScale}px`;item.button.style.height=`${this.scale*hitScale}px`;
+      const slot=this.slotRack.children[index];
+      if(slot&&mobile) {
+        slot.style.left=item.button.style.left;slot.style.top=item.button.style.top;
+        slot.style.width=`${this.scale*1.22}px`;slot.style.height=`${this.scale*1.28}px`;
+      }
     }
     this.renderer.render(this.scene,this.camera);
   }

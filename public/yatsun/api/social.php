@@ -29,7 +29,8 @@ function social_handle(PDO $db,string $uid,string $action,array $input,string $e
             social_query($db,'UPDATE yatsun_cosmetics SET completed=?,active=? WHERE uid=?',[$completed,$active,$uid]);
             $stats=$input['stats']??[];$values=[];foreach(['soloXp','matches','wins','draws','losses','yatzy','totalScore','bestScore','bestStreak'] as $key){$value=$stats[$key]??0;if(!is_int($value)||$value<0||$value>100000000)throw new RuntimeException('Ogiltig spelarstatistik.',400);$values[]=$value;}
             social_query($db,'INSERT INTO yatsun_stats(uid,solo_xp,matches,wins,draws,losses,yatzy,total_score,best_score,best_streak) VALUES(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE solo_xp=GREATEST(solo_xp,VALUES(solo_xp)),matches=GREATEST(matches,VALUES(matches)),wins=GREATEST(wins,VALUES(wins)),draws=GREATEST(draws,VALUES(draws)),losses=GREATEST(losses,VALUES(losses)),yatzy=GREATEST(yatzy,VALUES(yatzy)),total_score=GREATEST(total_score,VALUES(total_score)),best_score=GREATEST(best_score,VALUES(best_score)),best_streak=GREATEST(best_streak,VALUES(best_streak))',array_merge([$uid],$values));
-            $db->commit();return ['completed'=>$completed,'active'=>$active,'admin'=>$admin];
+            $savedStats=social_query($db,'SELECT solo_xp,matches,wins,draws,losses,yatzy,total_score,best_score,best_streak FROM yatsun_stats WHERE uid=?',[$uid])->fetch();
+            $db->commit();return ['completed'=>$completed,'active'=>$active,'admin'=>$admin,'stats'=>$savedStats?:[]];
         }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
     }
     if($action==='social_register'){

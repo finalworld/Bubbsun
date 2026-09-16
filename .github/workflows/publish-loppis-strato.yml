@@ -1,0 +1,52 @@
+name: Publicera endast Kassun till Strato
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/bubbsun-current-release
+    paths:
+      - public/loppis/**
+      - .github/workflows/publish-loppis-strato.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-kassun-strato
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publicera endast /public/loppis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hamta koden
+        uses: actions/checkout@v4
+
+      - name: Installera SFTP-verktyget
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lftp
+
+      - name: Ladda endast upp Kassun
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.STRATO_SFTP_PORT }}
+          SFTP_USERNAME: ${{ secrets.STRATO_SFTP_USERNAME }}
+          SFTP_PASSWORD: ${{ secrets.STRATO_SFTP_PASSWORD }}
+        run: |
+          lftp <<EOF
+          set sftp:auto-confirm yes
+          set net:timeout 30
+          set net:max-retries 2
+          set cmd:fail-exit yes
+          open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
+          mkdir -p public/loppis/api
+          mirror --reverse --ignore-time --no-perms --parallel=4 \
+            --exclude-glob api/kassun-db.json \
+            public/loppis/ public/loppis/
+          put -O public/loppis/api public/loppis/api/.htaccess
+          cls -l public/loppis/index.html public/loppis/app.js public/loppis/api/index.php
+          bye
+          EOF

@@ -1,5 +1,18 @@
 .quick-prices {
   margin-top: 12px;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.quick-prices button.clear-price {
+  background: #f3d7d8;
+  color: #9d383f;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.quick-prices button.clear-price:active {
+  background: #eabfc2;
+  transform: scale(0.94);
 }
 
 .topbar .brand {

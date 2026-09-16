@@ -45,6 +45,7 @@ jobs:
           mirror --reverse --ignore-time --no-perms --parallel=4 \
             --exclude-glob api/kassun-db.json \
             public/loppis/ public/loppis/
+          put -O public/loppis public/loppis/index.html
           put -O public/loppis/api public/loppis/api/.htaccess
           cls -l public/loppis/index.html public/loppis/app.js public/loppis/api/index.php
           bye

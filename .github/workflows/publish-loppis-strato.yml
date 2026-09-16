@@ -42,7 +42,6 @@ jobs:
           set net:max-retries 2
           set cmd:fail-exit yes
           open -u "$SFTP_USERNAME","$SFTP_PASSWORD" sftp://$SFTP_HOST:$SFTP_PORT
-          mkdir -p public/loppis/api
           mirror --reverse --ignore-time --no-perms --parallel=4 \
             --exclude-glob api/kassun-db.json \
             public/loppis/ public/loppis/
